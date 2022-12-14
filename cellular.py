@@ -359,3 +359,22 @@ class Grid:
         print()  # new line
       print()  # new line
 
+def simulation():
+  # create a grid
+  grid = Grid(10, 10)
+  
+  # add individuals to the grid
+  for i in range(10):
+    for j in range(10):
+      if i == 0 and j == 0:
+        # add a susceptible individual at the top left corner of the grid
+        individual = Individual((i, j), "susceptible")
+      else:
+        # add an infected individual at all other locations
+        individual = Individual((i, j), "infected")
+      grid.add_individual(individual)
+      
+  # run the simulation
+  grid.run_simulation()
+  
+simulation() 
