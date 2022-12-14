@@ -264,98 +264,98 @@ class Grid:
     x, y = individual.location
     self.grid[x][y] = individual
     
-def simulate_movement(self):
-  for i in range(self.width):
-    for j in range(self.height):
-      individual = self.grid[i][j]
-      if individual is not None:
-        # use a random walk algorithm to determine the individual's next move
-        move_probabilities = [0.25, 0.25, 0.25, 0.25]  # equal probability of moving up, down, left, or right
-        move_direction = np.random.choice([0, 1, 2, 3], p=move_probabilities)
-        if move_direction == 0:  # move up
-          next_x, next_y = i-1, j
-        elif move_direction == 1:  # move down
-          next_x, next_y = i+1, j
-        elif move_direction == 2:  # move left
-          next_x, next_y = i, j-1
-        else:  # move right
-          next_x, next_y = i, j+1
+  def simulate_movement(self):
+    for i in range(self.width):
+      for j in range(self.height):
+        individual = self.grid[i][j]
+        if individual is not None:
+          # use a random walk algorithm to determine the individual's next move
+          move_probabilities = [0.25, 0.25, 0.25, 0.25]  # equal probability of moving up, down, left, or right
+          move_direction = np.random.choice([0, 1, 2, 3], p=move_probabilities)
+          if move_direction == 0:  # move up
+            next_x, next_y = i-1, j
+          elif move_direction == 1:  # move down
+            next_x, next_y = i+1, j
+          elif move_direction == 2:  # move left
+            next_x, next_y = i, j-1
+          else:  # move right
+            next_x, next_y = i, j+1
           
-        # check if the next move is valid (i.e. within the grid and not occupied by another individual)
-        if (0 <= next_x < self.width) and (0 <= next_y < self.height) and (self.grid[next_x][next_y] is None):
-          # update the individual's location
-          individual.location = (next_x, next_y)
-          self.grid[i][j] = None  # remove the individual from their current location
-          self.grid[next_x][next_y] = individual  # add the individual to their new location
+          # check if the next move is valid (i.e. within the grid and not occupied by another individual)
+          if (0 <= next_x < self.width) and (0 <= next_y < self.height) and (self.grid[next_x][next_y] is None):
+            # update the individual's location
+            individual.location = (next_x, next_y)
+            self.grid[i][j] = None  # remove the individual from their current location
+            self.grid[next_x][next_y] = individual  # add the individual to their new location
 
-def simulate_movement(self):
-  for i in range(self.width):
-    for j in range(self.height):
-      individual = self.grid[i][j]
-      if individual is not None:
-        # use the A* algorithm to find the shortest path to the nearest exit
-        start = (i, j)
-        exits = [(0, 0), (0, self.width-1), (self.height-1, 0), (self.height-1, self.width-1)]  # the four corners of the grid
-        distances, previous = self.a_star(start, exits)
-        path = self.reconstruct_path(previous, start, exits[0])  # use the first exit as the destination
+  def simulate_movement(self):
+    for i in range(self.width):
+      for j in range(self.height):
+        individual = self.grid[i][j]
+        if individual is not None:
+          # use the A* algorithm to find the shortest path to the nearest exit
+          start = (i, j)
+          exits = [(0, 0), (0, self.width-1), (self.height-1, 0), (self.height-1, self.width-1)]  # the four corners of the grid
+          distances, previous = self.a_star(start, exits)
+          path = self.reconstruct_path(previous, start, exits[0])  # use the first exit as the destination
         
-        # move to the next cell in the shortest path to the nearest exit
-        if len(path) > 1:  # check if there is a valid path to the nearest exit
-          next_x, next_y = path[1]
-          # update the individual's location
-          individual.location = (next_x, next_y)
-          self.grid[i][j] = None  # remove the individual from their current location
-          self.grid[next_x][next_y] = individual  # add the individual to their new location
+          # move to the next cell in the shortest path to the nearest exit
+          if len(path) > 1:  # check if there is a valid path to the nearest exit
+            next_x, next_y = path[1]
+            # update the individual's location
+            individual.location = (next_x, next_y)
+            self.grid[i][j] = None  # remove the individual from their current location
+            self.grid[next_x][next_y] = individual  # add the individual to their new location
 
   def a_star(self, start, goals):
     # implement the A* algorithm to find the shortest path from the start to one of the goals
     # returns the distances and previous nodes for each node in the grid
     pass
-  
+
   def reconstruct_path(self, previous, start, goal):
     # implement the algorithm to reconstruct the path from the previous nodes
     # returns the shortest path from the start to the goal
     pass
     
-def simulate_infection(self):
-  # create a list of infected individuals
-  infected_individuals = []
-  for i in range(self.width):
-    for j in range(self.height):
-      individual = self.grid[i][j]
-      if individual is not None and individual.infection_status == "infected":
-        infected_individuals.append((i, j))
-  
-  # simulate the spread of the infection from each infected individual to any non-infected individuals in adjacent cells
-  for x, y in infected_individuals:
-    for dx in [-1, 0, 1]:  # check the cells to the left, center, and right of the infected individual
-      for dy in [-1, 0, 1]:  # check the cells above, at the same level, and below the infected individual
-        next_x, next_y = x + dx, y + dy
-        # check if the adjacent cell is valid (i.e. within the grid and not occupied by another individual)
-        if (0 <= next_x < self.width) and (0 <= next_y < self.height) and (self.grid[next_x][next_y] is not None):
-          next_individual = self.grid[next_x][next_y]
-          # check if the adjacent individual is not already infected
-          if next_individual.infection_status != "infected":
-            # use a random probability to determine if the adjacent individual becomes infected
-            infection_probability = 0.5  # 50% chance of becoming infected
-            if np.random.random() < infection_probability:
-              next_individual.infection_status = "infected"
-
-    
-def run_simulation(self):
-  for time_step in range(1000):  # run the simulation for 1000 time steps
-    self.simulate_movement()
-    self.simulate_infection()
-    
-    # output the state of the grid at each time step (e.g. to visualize the simulation)
-    print("Time step:", time_step)
+  def simulate_infection(self):
+    # create a list of infected individuals
+    infected_individuals = []
     for i in range(self.width):
       for j in range(self.height):
         individual = self.grid[i][j]
-        if individual is None:
-          print("-", end="")
-        else:
-          print(individual.infection_status[0], end="")  # print the first letter of the infection status (I/S)
+        if individual is not None and individual.infection_status == "infected":
+          infected_individuals.append((i, j))
+  
+    # simulate the spread of the infection from each infected individual to any non-infected individuals in adjacent cells
+    for x, y in infected_individuals:
+      for dx in [-1, 0, 1]:  # check the cells to the left, center, and right of the infected individual
+        for dy in [-1, 0, 1]:  # check the cells above, at the same level, and below the infected individual
+          next_x, next_y = x + dx, y + dy
+          # check if the adjacent cell is valid (i.e. within the grid and not occupied by another individual)
+          if (0 <= next_x < self.width) and (0 <= next_y < self.height) and (self.grid[next_x][next_y] is not None):
+            next_individual = self.grid[next_x][next_y]
+            # check if the adjacent individual is not already infected
+            if next_individual.infection_status != "infected":
+              # use a random probability to determine if the adjacent individual becomes infected
+              infection_probability = 0.5  # 50% chance of becoming infected
+              if np.random.random() < infection_probability:
+                next_individual.infection_status = "infected"
+
+    
+  def run_simulation(self):
+    for time_step in range(1000):  # run the simulation for 1000 time steps
+      self.simulate_movement()
+      self.simulate_infection()
+    
+      # output the state of the grid at each time step (e.g. to visualize the simulation)
+      print("Time step:", time_step)
+      for i in range(self.width):
+        for j in range(self.height):
+          individual = self.grid[i][j]
+          if individual is None:
+            print("-", end="")
+          else:
+            print(individual.infection_status[0], end="")  # print the first letter of the infection status (I/S)
+        print()  # new line
       print()  # new line
-    print()  # new line
 

@@ -20,6 +20,7 @@ Here is a possible python simulation of a person's behavior during a zombie apoc
 
 """
 
+
 # define the possible states
 HIDING = "hiding"
 SEARCHING = "searching"
@@ -37,25 +38,29 @@ WEAPON = "weapon"
 
 # define the state transition function
 def transition(state, event):
-    if state == HIDING:
-        if event == NOISE:
-            return SEARCHING
-        else:
-            return HIDING
-    elif state == SEARCHING:
-        if event == ZOMBIE:
-            return FIGHTING
-        elif event == WEAPON:
-            return HIDING
-        else:
-            return SEARCHING
-    elif state == FIGHTING:
-        if event == ZOMBIE:
-            return HIDING
-        elif event == WEAPON:
-            return SEARCHING
-        else:
-            return FIGHTING
+    # define the matrix of states for each state and event
+    states = {
+        HIDING: {
+            NOISE: SEARCHING,
+            ZOMBIE: FIGHTING,
+            WEAPON: HIDING,
+        },
+        SEARCHING: {
+            NOISE: SEARCHING,
+            ZOMBIE: FIGHTING,
+            WEAPON: HIDING,
+        },
+        FIGHTING: {
+            NOISE: HIDING,
+            ZOMBIE: FIGHTING,
+            WEAPON: SEARCHING,
+        },
+    }
+    
+    # select the next state based on the current state and event
+    return states[state][event]
+
+
 
 # define the action selection function
 def select_action(state, event):
@@ -81,20 +86,55 @@ def select_action(state, event):
     # select the action based on the state and event
     return actions[state][event]
 
-# simulate the person's behavior
-state = HIDING
-while True:
-    # observe the current environment and select an event
-    event = input("Enter an event: ")
-    if event == "exit":
-        break
+# define the event selection function
+def select_event(state, event):
+    # define the matrix of events for each state and event
+    events = {
+        HIDING: {
+            NOISE: NOISE,
+            ZOMBIE: ZOMBIE,
+            WEAPON: WEAPON,
+        },
+        SEARCHING: {
+            NOISE: NOISE,
+            ZOMBIE: ZOMBIE,
+            WEAPON: WEAPON,
+        },
+        FIGHTING: {
+            NOISE: NOISE,
+            ZOMBIE: ZOMBIE,
+            WEAPON: WEAPON,
+        },
+    }
     
-    # transition to the next state
-    state = transition(state, event)
-    
-    # select an action based on the current state and event
+    # select the event based on the state and event
+    return events[state][event]
+
+def simulate(state, event):
+    # select the next state
+    next_state = transition(state, event)
+    # select the next action
     action = select_action(state, event)
-    print(f"The person is {action}.")
+    # select the next event
+    next_event = select_event(state, event)
+    # return the next state, action, and event
+    return next_state, action, next_event
+
+# visualise the simulation
+def simulation(state, event, steps):
+    # print the initial state
+    print("Initial state: {}".format(state))
+    # print the initial event
+    print("Initial event: {}".format(event))
+    
+    # for each step
+    for i in range(steps):
+        # simulate the next state, action, and event
+        state, action, event = simulate(state, event)
+        # print the next state, action, and event
+        print("Step {}: state={}, action={}, event={}".format(i + 1, state, action, event))
+
+
 
 
 """
