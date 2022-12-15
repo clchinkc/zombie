@@ -1,3 +1,41 @@
+"""
+moved two boxes each time: assign direction and move ascending to the id (a list that may change to other order)
+(consider the possibility that every action like movement, get weapon, physical training, make weapon, turn into zombie take time in the future)
+show info according to index
+1. based on own condition (random, born, previous condition)
+2. based on environment (place condition, proximity of others)
+human when health < 0, either eat human or turn human into zombies (in grid)
+turn checking of if a move is legal or not to separate function in grid
+spawn food = 100 is the max, spawn health is the max, make use of other spawn info
+food and weapon and armour turn into resources that human can store
+weapon replacement
+win condition
+list comprehension
+map, filter function
+Dictionary for storage
+Refactoring, extract function, early exit
+https://www.programiz.com/python-programming/decorator
+can use @classmethod to return counter which depends on class instead of instance,
+so either class.return or instance.return will give counter of class
+can use @staticmethod to convert human to zombie
+so as to control the activity of the class using a outside variable, without depending on class and instance, 
+so function related to class but does not interact with class and instance can be grouped under the class
+use @abstractmethod for method that must be reimplemented in subclass and do not interact with instance and class
+pathfinding to a specific spot in the determination of direction
+teacher one class, student one class
+change to float for faster performance
+group of zombies and groups of humans
+call method vs init method (__call__ can return an arbitrary value whereas __init__ must return None, init is called when instantiating the class: myfoo = Foo(1,4,7.8) call is a template to call the already instantiated class to do something, 
+__call__ not only allows an instance to be used as a function, it defines the function body that is executed when an instance is used as a function.)
+a = A()     init
+a()        call
+better way to store objects in python
+https://realpython.com/inner-functions-what-are-they-good-for/
+functional programming 教學
+https://medium.com/onedegree-tech-blog/%E7%82%BA%E4%BB%80%E9%BA%BC%E6%88%91%E8%A6%81%E5%AD%B8-functional-programming-%E5%8F%AF%E8%AE%80-%E5%8F%AF%E9%9D%A0-%E6%9C%89%E4%BF%A1%E5%BF%83-160e39f1632b
+https://www.youtube.com/watch?v=ZtInesLXD-Y
+"""
+
 from typing import Optional
 import random
 
