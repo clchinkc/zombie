@@ -379,11 +379,11 @@ class Grid:
 #                        print("character healed", Food.counter)
                 else:                    
                     if character == None:
-                        if random.random() > self.food_prob: # SIR model
+                        if random.random() < self.food_prob: # SIR model
                           food = Food(row, col)
                           self.add(food)
 #                          print("food added", Food.counter)
-                        elif random.random() > self.weapon_prob: # SIR model
+                        elif random.random() < self.weapon_prob: # SIR model
                           weapon = Weapon(row, col)
                           self.add(weapon)
 #                          print("food added", Food.counter)
