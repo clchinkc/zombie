@@ -9,6 +9,7 @@ turn checking of if a move is legal or not to separate function in grid
 spawn food = 100 is the max, spawn health is the max, make use of other spawn info
 food and weapon and armour turn into resources that human can store
 weapon replacement
+function to control the spawn rate of food and weapon in different terrain
 win condition
 list comprehension
 map, filter function
