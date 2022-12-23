@@ -135,7 +135,8 @@ def simulation(state, event, steps):
         print("Step {}: state={}, action={}, event={}".format(i + 1, state, action, event))
 
 
-
+# run the simulation
+simulation(HIDING, NOISE, 100)
 
 """
 One potential advanced way to implement this would be to use a reinforcement learning (RL) algorithm 

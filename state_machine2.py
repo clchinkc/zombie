@@ -33,6 +33,7 @@ class School:
         self.is_overrun = False
         self.is_noise = True
 
+
 class State:
     def __init__(self):
         self.is_hiding = False
@@ -64,35 +65,37 @@ class State:
         self.is_fighting = False
         self.is_running = True
 
+
 class Person:
-  def __init__(self, name):
-    self.name = name
-    self.school = School()
-    self.state = State()
+    def __init__(self, name):
+        self.name = name
+        self.school = School()
+        self.state = State()
 
-  def hide(self):
-    self.state.set_hiding()
+    def hide(self):
+        self.state.set_hiding()
 
-  def fight(self):
-    self.state.set_fighting()
+    def fight(self):
+        self.state.set_fighting()
 
-  def run(self):
-    self.state.set_running()
+    def run(self):
+        self.state.set_running()
 
-  def set_school_safe(self):
-    self.school.set_safe()
+    def set_school_safe(self):
+        self.school.set_safe()
 
-  def set_school_overrun(self):
-    self.school.set_overrun()
+    def set_school_overrun(self):
+        self.school.set_overrun()
 
-  def set_school_noise(self):
-    self.school.set_noise()
+    def set_school_noise(self):
+        self.school.set_noise()
 
-  def get_status(self):
-    return self.name + " is currently " + self.state.get_status() + " and the school is " + self.school.get_status()
+    def get_status(self):
+        return self.name + " is currently " + self.state.get_status() + " and the school is " + self.school.get_status()
+
 
 # Define a probability transition matrix of state and events to actions
-transition_matrix = np.array([
+transition_matrix = [
     # Hide, Fight, Run
     [[0.11, 0.21, 0.31],    # Noise, hiding
      [0.41, 0.51, 0.61],    # Overrun, hiding
@@ -103,7 +106,7 @@ transition_matrix = np.array([
     [[0.13, 0.23, 0.33],    # Noise, running
      [0.43, 0.53, 0.63],    # Overrun, running
      [0.73, 0.83, 0.93]],   # Safe, running
-])
+]
 
 """
 # use neural network in the action selection process
@@ -146,6 +149,13 @@ def train_nn(nn, steps, epochs):
     return True
 """
 
+# Define a list of events
+events = ["Safe", "Overrun", "Noise"]
+
+# Define a list of actions
+actions = ["Hide", "Fight", "Run"]
+
+
 # Define a function to select the next action based on the current state and event
 def select_action(person, event, use_randomness=1):
     # Get the person's current state
@@ -155,7 +165,7 @@ def select_action(person, event, use_randomness=1):
     event_index = events.index(event)
 
     # Set the transition probabilities for the current state and event
-    transition_probs = transition_matrix[state_index, event_index]
+    transition_probs = transition_matrix[state_index][event_index]
     # If we are using randomness, then select the next action randomly
     if use_randomness:
         # Select the next action randomly based on the transition probabilities
@@ -165,12 +175,6 @@ def select_action(person, event, use_randomness=1):
         # Select the next action based on the maximum probability
         return actions[np.argmax(transition_probs)]
 
-# Define a list of events
-events = ["Safe", "Overrun", "Noise"]
-
-# Define a list of actions
-actions = ["Hide", "Fight", "Run"]
-
 # Define a function to select the next event
 def select_next_event(person):
     # If the school is overrun, return "Overrun"
@@ -178,26 +182,38 @@ def select_next_event(person):
         return "Overrun"
 
     # If the school is not overrun and there is noise, return "Overrun" with probability 0.1
-    if not person.school.is_overrun and person.school.is_noise and random.random() < 0.1:
+    if not person.school.is_overrun and random.random() < 0.1:
         return "Overrun"
-    elif not person.school.is_overrun and person.school.is_noise:
+    elif not person.school.is_overrun:
         return "Noise"
 
-    # If the person is fighting and there is noise, return "Overrun" with probability 0.5
-    if person.state.is_fighting and person.school.is_noise and random.random() < 0.5:
+    if person.school.is_noise and random.random() < 0.1:
         return "Overrun"
-    elif person.state.is_fighting and person.school.is_noise:
-        return "Noise"
-
-    # If the person is running and there is noise, return "Overrun" with probability 0.3
-    if person.state.is_running and person.school.is_noise and random.random() < 0.3:
-        return "Overrun"
-    elif person.state.is_running and person.school.is_noise:
+    elif person.school.is_noise:
         return "Noise"
 
     # If the school is safe, return "Safe"
-    if person.school.is_safe:
+    if person.school.is_safe and random.random() < 0.3:
         return "Safe"
+    elif person.school.is_safe:
+        return "Noise"
+
+    # If the person is fighting and there is noise, return "Overrun" with probability 0.5
+    if person.state.is_fighting and random.random() < 0.5:
+        return "Overrun"
+    elif person.state.is_fighting:
+        return "Noise"
+
+    # If the person is running and there is noise, return "Overrun" with probability 0.3
+    if person.state.is_running and random.random() < 0.3:
+        return "Overrun"
+    elif person.state.is_running:
+        return "Noise"
+
+    if person.state.is_hiding and random.random() < 0.3:
+        return "Safe"
+    elif person.state.is_hiding:
+        return "Noise"
 
     # If none of the above conditions are met, return "Unknown"
     return "Unknown"
@@ -234,17 +250,18 @@ def simulate(person, steps, use_randomness=1):
         else:
             raise RuntimeError
 
-
         # Add the action to the list of actions taken
         actions_taken.append(action)
 
     # Return the list of actions taken
     return actions_taken
-        
-#Create a person
-person = Person("John")
 
-#Simulate the person's behavior
+
+# Create a person
+person = Person("John")
+person.hide()
+
+# Simulate the person's behavior
 process = simulate(person, 10)
 print(process)
 
@@ -262,6 +279,8 @@ Overall, a more detailed and realistic simulation would require a significant am
 and development to accurately represent the complex and dynamic situation of a zombie apocalypse at school.
 """
 # Person class include information about the person's physical abilities
+
+"""
 class Person:
     def __init__(self, name, health, speed, strength):
         self.name = name
@@ -295,6 +314,8 @@ class Person:
 # 2D map
 
 # map information about the layout of the school and surrounding area, the availability of supplies and weapons, and the movements and actions of other survivors and zombies.
+
+
 class Map:
     def __init__(self, size, supplies, weapons, survivors, zombies):
         self.layout = None
@@ -304,7 +325,10 @@ class Map:
         self.zombies = zombies
 
     def set_layout(self, layout):
-        self.layout = np.random.choice(["Hallway", "Classroom", "Gym", "Cafeteria", "Library", "Auditorium", "Office", "Bathroom", "Locker Room", "Playground", "Parking Lot", "Field"], size=self.size)
+        self.layout = np.random.choice(["Hallway", "Classroom", "Gym", "Cafeteria", "Library", "Auditorium",
+                                       "Office", "Bathroom", "Locker Room", "Playground", "Parking Lot", "Field"], size=self.size)
 
     def get_status(self):
         return "There are " + str(self.supplies) + " supplies, " + str(self.weapons) + " weapons, " + str(self.survivors) + " survivors, and " + str(self.zombies) + " zombies."
+
+"""
