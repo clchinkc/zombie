@@ -1,3 +1,4 @@
+import math
 import random
     
 class Entity:
@@ -10,6 +11,60 @@ class Entity:
     def __init__(self, position=(-1, -1), health=100):
         self.position = position
         self.health = health
+        
+    def distance_to_entity(self, other_entity):
+        """Calculate the distance between this entity and another entity.
+    
+        Args:
+            other_entity (Entity): The other entity to calculate the distance to.
+    
+        Returns:
+            float: The distance between the two entities.
+        """
+        x1, y1 = self.position
+        x2, y2 = other_entity.position
+        return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+
+class EntityManager:
+    """Manages entities in the game world.
+
+    Attributes:
+        entities (list): A list of entities in the game world.
+    """
+    def __init__(self):
+        self.entities = []
+    
+    def add_entity(self, entity):
+        """Add an entity to the game world.
+    
+        Args:
+            entity (Entity): The entity to add.
+        """
+        self.entities.append(entity)
+    
+    def remove_entity(self, entity):
+        """Remove an entity from the game world.
+    
+        Args:
+            entity (Entity): The entity to remove.
+        """
+        self.entities.remove(entity)
+    
+    def get_entities_in_range(self, entity, range):
+        """Get a list of entities within a certain range of a given entity.
+    
+        Args:
+            entity (Entity): The entity to check the range from.
+            range (float): The range to check for entities within.
+        
+        Returns:
+            list: A list of entities within the specified range.
+        """
+        in_range = []
+        for other_entity in self.entities:
+            if entity.distance_to_entity(other_entity) <= range:
+                in_range.append(other_entity)
+        return in_range
 
 class Player(Entity):
     """Represents a player in the game world. Inherits from Entity.
@@ -21,22 +76,9 @@ class Player(Entity):
         super().__init__(position, health)
         self.inventory = []
         
-    def move(self, dx, dy):
-        """Move the player on the map by calling the move_entity method of the Gameworld class.
-        
-        Args:
-            dx (int): The change in x position.
-            dy (int): The change in y position.
-            
-        Returns:
-            bool: True if the player was successfully moved, False otherwise.
-        """
-        return gameworld.move_entity(self, dx, dy)
-        
-    def interaction_with_npc(self):
+    def interaction_with_npc(self, npcs):
         """Interact with an NPC within a certain range.
         """
-        npcs = gameworld.get_entities_in_range(self, 1)
         for npc in npcs:
             if npc.interacting_with is None:
                 npc.interacting_with = self
@@ -209,25 +251,6 @@ class Gameworld:
             
         return False
     
-    def get_entities_in_range(self, entity, range):
-        """Get a list of entities within a certain range of an entity.
-        
-        Args:
-            entity (Entity): The entity to get nearby entities for.
-            range (int): The range to search within.
-            
-        Returns:
-            list: A list of entities within the specified range of the entity.
-        """
-        entities = []
-        for i in range(-range, range + 1):
-            for j in range(-range, range + 1):
-                if 0 <= entity.position[0] + i < len(self.map) and 0 <= entity.position[1] + j < len(self.map[0]):
-                    if self.map[entity.position[0] + i][entity.position[1] + j] != 0:
-                        entities.append(self.map[entity.position[0] + i][entity.position[1] + j])
-                        
-        return entities
-    
     def print_map(self):
         """Print a representation of the game map.
         """
@@ -279,7 +302,7 @@ def simulate_gameworld(steps, num_players, num_npcs):
             
         # Have players interact with NPCs if they are within range
         for player in gameworld.player_manager.players:
-            player.interaction_with_npc()
+            player.interaction_with_npc(gameworld.player_manager.get_entities_in_range(player, 1))
             
         # Print information about the players and NPCs
         for player in gameworld.player_manager.players:

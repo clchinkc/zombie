@@ -9,12 +9,15 @@ turn checking of if a move is legal or not to separate function in grid
 spawn food = 100 is the max, spawn health is the max, make use of other spawn info
 food and weapon and armour turn into resources that human can store
 weapon replacement
-function to control the spawn rate of food and weapon in different terrain
+function to control the spawn rate of food and weapon in different terrain to allow different playing experience
+use normal distribution or the Poisson distribution for human and zombie attribute
 win condition
 list comprehension
 map, filter function
 Dictionary for storage
 Refactoring, extract function, early exit
+setattr can put a attribute dictionary into a class using for loop (dynamically)
+getattr can get a attribute dictionary from a class using for loop (dynamically)
 https://www.programiz.com/python-programming/decorator
 can use @classmethod to return counter which depends on class instead of instance,
 so either class.return or instance.return will give counter of class
@@ -37,6 +40,31 @@ https://medium.com/onedegree-tech-blog/%E7%82%BA%E4%BB%80%E9%BA%BC%E6%88%91%E8%A
 https://www.youtube.com/watch?v=ZtInesLXD-Y
 """
 
+# python decorator to count time it take for a function using time.time()
+def time_it(func):
+    import time
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+        print(f"Total time taken in : {func.__name__} is {end - start}")
+        return result
+    return wrapper
+
+# use functools for debugging
+def debug(func):
+    import functools
+    @functools.wraps(func)
+    def wrapper_debug(*args, **kwargs):
+        args_repr = [repr(a) for a in args]                      # 1
+        kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]  # 2
+        signature = ", ".join(args_repr + kwargs_repr)           # 3
+        print(f"Calling {func.__name__}({signature})")
+        value = func(*args, **kwargs)
+        print(f"{func.__name__!r} returned {value!r}")           # 4
+        return value
+    return wrapper_debug
+
 from typing import Optional
 import random
 
@@ -51,165 +79,6 @@ class Object:
         # set name
         self.name = name
         
-# character class
-class Character(Object):
-    
-    # init health, damage, aoe
-    HEALTH = 0
-    DAMAGE = 0
-    AOE = 0
-
-    def __init__(self, row:int, column:int, name:Optional[str]=None, health:int=-1, damage:int=-1, aoe:int=-1, food:int=100, *args, **kwargs):
-        super().__init__(row, column, name)
-        
-        # set health, damage, aoe, food
-        if health == -1:
-          health = random.choice(self.HEALTH)
-        self.health = health
-        self.spawn_health = health
-
-        if damage == -1:
-          damage = random.choice(self.DAMAGE)
-        self.damage = damage
-        self.spawn_damage = damage
-
-        if aoe == -1:
-          aoe = random.choice(self.AOE)
-        self.aoe = aoe
-        self.spawn_aoe = aoe
-
-        self.food = food
-
-    # find new method (deterministic + random)
-    # move speed to init
-    
-    # get direction
-    def direction(self):
-        move_row = 0
-        move_column = 0
-        move_speed = random.choice(range(-1,2))
-        if(random.random() > 0.5):
-            move_row = move_speed
-        else:
-            move_column = move_speed
-        return move_row, move_column
-    
-    # move
-    def move(self, destination_row, destination_column):
-        if self.row != destination_row:
-            self.food -=1
-        if self.column != destination_column:
-            self.food -=1
-        self.row = destination_row
-        self.column = destination_column
-        
-    # attack
-    def attack(self, damage:float):
-        self.health -= damage
-        
-    # eat
-    def eat(self, food: Object):
-        self.food += food.amount
-        
-    # starve
-    def starve(self):
-        if self.food <= 0:
-          self.health -= 1
-          
-    # heal
-    def heal(self, amount:float):
-          self.health = min(self.health + amount, self.spawn_health)
-          
-    # name
-    def __str__(self):
-        if self.name:
-          return self.name
-        else:
-          return self.__class__.__name__
-
-# human class
-class Human(Character):
-    counter = 0
-
-    # init human health, damage, aoe
-    HEALTH = range(10, 50)
-    DAMAGE = range(1, 3)
-    AOE = range(1, 2)
-
-    # make use of character id and counter (faster calculation or import models)
-    # separate count method
-    
-    def __init__(self, row:int, column:int, name:Optional[str]=None, health:int=-1, damage:int=-1, aoe:int=-1, food:int=100, weapon:str=None, *args, **kwargs):
-        
-        # get human health, damage, aoe
-        super().__init__(row, column, name, health, damage, aoe, food)
-        
-        # count humans
-        Human.counter += 1
-        self.id = Human.counter
-        
-        # init weapon
-        self.weapon = None
-    
-    # arm
-    def arm(self, weapon: Object):
-        
-        if self.weapon == None:
-            self.weapon = weapon
-
-            if self.weapon.attribute == "health":
-                self.health += self.weapon.amount
-            elif self.weapon.attribute == "damage":
-                self.damage += self.weapon.amount
-            elif self.weapon.attribute == "aoe":
-                self.aoe += self.weapon.amount
-            else:
-                raise RuntimeError("Invalid weapon attribute")
-            
-    # weapon info
-    def own_weapon(self):
-        if self.weapon != None:
-            return str(self.weapon.info())
-        else:
-            return "None"
-        
-    # info
-    def info(self):
-        return (self.name if self.name else self.__class__.__name__) + \
-        " {0.id}, row={0.row}, column={0.column}, health={0.health}, damage={0.damage}, aoe={0.aoe}, food={0.food}, ".format(self) + \
-        self.own_weapon()
-
-    # delete
-    def __del__(self):
-        Human.counter -= 1
-
-# zombie class
-class Zombie(Character):
-    counter = 0
-
-    # init zombie health, damage, aoe
-    HEALTH = range(10, 50)
-    DAMAGE = range(1, 3)
-    AOE = range(1, 2)
-
-    def __init__(self, row:int, column:int, name:Optional[str]=None, health:int=-1, damage:int=-1, aoe:int=-1, food:int=100, *args, **kwargs):
-        
-        # get human health, damage, aoe
-        super().__init__(row, column, name, health, damage, aoe, food)
-        
-        # count zombies
-        Zombie.counter += 1
-        self.id = Zombie.counter
-    
-    # info    
-    def info(self):
-        return (self.name if self.name else self.__class__.__name__) + \
-        " {0.id}, row={0.row}, column={0.column}, health={0.health}, damage={0.damage}, aoe={0.aoe}, food={0.food}".format(self)
-
-    # delete
-    def __del__(self):
-        Zombie.counter -= 1
-
 # food class
 class Food(Object):
     counter = 0
@@ -253,8 +122,8 @@ class Weapon(Object):
         self.amount = random.choice(self.ATTRIBUTE[self.attribute])
     
     # info    
-    def info(self):
-        return self.attribute, self.amount
+    def info(self)->str:
+        return "{0.self.attribute}, amount= {0.self.amount}".format(self)
 
     # delete
     def __del__(self):
@@ -262,7 +131,168 @@ class Weapon(Object):
 
     # name
     def __str__(self):
-        return self.__class__.__name__
+        return self.__class__.__name__        
+
+# character class
+class Character(Object):
+    
+    # init health, damage, aoe
+    HEALTH = range(0, 1)
+    DAMAGE = range(0, 1)
+    AOE = range(0, 1)
+
+    def __init__(self, row:int, column:int, name:Optional[str]=None, health:int=-1, damage:int=-1, aoe:int=-1, food:int=100, *args, **kwargs):
+        super().__init__(row, column, name)
+        
+        # set health, damage, aoe, food
+        if health == -1:
+          health = random.choice(self.HEALTH)
+        self.health = health
+        self.spawn_health = health
+
+        if damage == -1:
+          damage = random.choice(self.DAMAGE)
+        self.damage = damage
+        self.spawn_damage = damage
+
+        if aoe == -1:
+          aoe = random.choice(self.AOE)
+        self.aoe = aoe
+        self.spawn_aoe = aoe
+
+        self.food = food
+
+    # find new method (deterministic + random)
+    # move speed to init
+    
+    # get direction
+    def direction(self)->tuple:
+        move_row = 0
+        move_column = 0
+        move_speed = random.choice(range(-1,2))
+        if(random.random() > 0.5):
+            move_row = move_speed
+        else:
+            move_column = move_speed
+        return move_row, move_column
+    
+    # move
+    def move(self, destination_row, destination_column)->None:
+        if self.row != destination_row:
+            self.food -=1
+        if self.column != destination_column:
+            self.food -=1
+        self.row = destination_row
+        self.column = destination_column
+        
+    # attack
+    def attack(self, damage:int)->None:
+        self.health -= damage
+        
+    # eat
+    def eat(self, food: Food)->None:
+        self.food += food.amount
+        
+    # starve
+    def starve(self)->None:
+        if self.food <= 0:
+          self.health -= 1
+          
+    # heal
+    def heal(self, amount:int)->None:
+          self.health = min(self.health + amount, self.spawn_health)
+          
+    # name
+    def __str__(self):
+        if self.name:
+          return self.name
+        else:
+          return self.__class__.__name__
+
+# human class
+class Human(Character):
+    counter = 0
+
+    # init human health, damage, aoe
+    HEALTH = range(10, 50)
+    DAMAGE = range(1, 3)
+    AOE = range(1, 2)
+
+    # make use of character id and counter (faster calculation or import models)
+    # separate count method
+    
+    def __init__(self, row:int, column:int, name:Optional[str]=None, health:int=-1, damage:int=-1, aoe:int=-1, food:int=100, weapon:Optional[Weapon]=None, *args, **kwargs):
+        
+        # get human health, damage, aoe
+        super().__init__(row, column, name, health, damage, aoe, food)
+        
+        # count humans
+        Human.counter += 1
+        self.id = Human.counter
+        
+        # init weapon
+        self.weapon = weapon
+    
+    # arm
+    def arm(self, weapon: Weapon)->None:
+        
+        if self.weapon == None:
+            self.weapon = weapon
+
+            if self.weapon.attribute == "health":
+                self.health += self.weapon.amount
+            elif self.weapon.attribute == "damage":
+                self.damage += self.weapon.amount
+            elif self.weapon.attribute == "aoe":
+                self.aoe += self.weapon.amount
+            else:
+                raise RuntimeError("Invalid weapon attribute")
+            
+    # weapon info
+    def own_weapon(self)->str:
+        if self.weapon != None:
+            return "weapon: " + self.weapon.info()
+        else:
+            return "None"
+        
+    # info
+    def info(self)->str:
+        return (self.name if self.name else self.__class__.__name__) + \
+        " {0.id}, row={0.row}, column={0.column}, health={0.health}, damage={0.damage}, aoe={0.aoe}, food={0.food}, ".format(self) + \
+        self.own_weapon()
+
+    # delete
+    def __del__(self):
+        Human.counter -= 1
+
+# zombie class
+class Zombie(Character):
+    counter = 0
+
+    # init zombie health, damage, aoe
+    HEALTH = range(10, 50)
+    DAMAGE = range(1, 3)
+    AOE = range(1, 2)
+
+    def __init__(self, row:int, column:int, name:Optional[str]=None, health:int=-1, damage:int=-1, aoe:int=-1, food:int=100, *args, **kwargs):
+        
+        # get human health, damage, aoe
+        super().__init__(row, column, name, health, damage, aoe, food)
+        
+        # count zombies
+        Zombie.counter += 1
+        self.id = Zombie.counter
+    
+    # info    
+    def info(self)->str:
+        return (self.name if self.name else self.__class__.__name__) + \
+        " {0.id}, row={0.row}, column={0.column}, health={0.health}, damage={0.damage}, aoe={0.aoe}, food={0.food}".format(self)
+
+    # delete
+    def __del__(self):
+        Zombie.counter -= 1
+
+
 
 # test characters
 def test_characters():
@@ -315,19 +345,19 @@ class Grid:
         self.weapon_prob = weapon_prob
 
     # add object to grid
-    def add(self, obj: Object):
+    def add(self, obj: Object)->None:
         if self.grid[obj.row][obj.column] is None:
             self.grid[obj.row][obj.column] = obj
         else:
             raise RuntimeError("Cannot add object to occupied position")
     
     # grid size
-    def size(self):
+    def size(self)->str:
         """Return the size of the grid"""
         return str(self.m) + " * " + str(self.n)
 
     # count character
-    def count(self):
+    def count(self)->str:
         count = ""
         for objects in {Human, Zombie, Food, Weapon}:
             count += "\n" + str(objects.__name__) + ": " + str(objects.counter)
@@ -336,7 +366,7 @@ class Grid:
         return count
 
     # calculate damage received by a character
-    def attacked(self, character):
+    def attacked(self, character)->int:
         blood = 0
         if isinstance(character, Zombie) == True:
             for enemy_row in range(self.m):
@@ -345,18 +375,17 @@ class Grid:
                     if isinstance(enemy, Human):
                         if euclidean_distance([enemy_row, enemy_col], [character.row, character.column]) <= enemy.aoe:
                             blood += enemy.damage
-            return blood
-        if isinstance(character, Human) == True:
+        elif isinstance(character, Human) == True:
             for enemy_row in range(self.m):
                 for enemy_col in range(self.n):
                     enemy = self.grid[enemy_row][enemy_col]
                     if isinstance(enemy, Zombie):
                         if euclidean_distance([enemy_row, enemy_col], [character.row, character.column]) <= enemy.aoe:
                             blood += enemy.damage
-            return blood
+        return blood
         
     # update grid
-    def update(self):
+    def update(self)->None:
         for row in range(self.m):
             for col in range(self.n):
                 character = self.grid[row][col]
@@ -406,7 +435,7 @@ class Grid:
                     blood = self.attacked(character)
 #                    print("character attacked", Food.counter)
                     character.attack(blood)
-#                    print("*character attack", Food.counter)
+                    print("*character attack", Food.counter)
                     character.starve()
 #                    print("character starve", Food.counter)
                     if character.health <= 0:
@@ -430,12 +459,12 @@ class Grid:
     # new describe method after other method works
     
     # print grid
-    def show(self):
+    def show(self)->str:
         return '\n'.join('\t'.join(f'{str(o):3s}' if o else ' . 'for o in row)
             for row in self.grid)
 
     # describe grid
-    def describe(self):
+    def describe(self)->str:
         all_characters = ""
         for row in range(self.m):
             for col in range(self.n):
