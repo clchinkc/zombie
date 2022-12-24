@@ -1,207 +1,3 @@
-
-import random
-
-# define the possible states
-HIDING = "hiding"
-SEARCHING = "searching"
-FIGHTING = "fighting"
-
-# define the possible actions
-HIDE = "hide"
-SEARCH = "search"
-FIGHT = "fight"
-
-# define the possible events
-NOISE = "noise"
-ZOMBIE = "zombie"
-WEAPON = "weapon"
-
-# define the state transition function
-def transition(state, event):
-    if state == HIDING:
-        if event == NOISE:
-            return SEARCHING
-        else:
-            return HIDING
-    elif state == SEARCHING:
-        if event == ZOMBIE:
-            return FIGHTING
-        elif event == WEAPON:
-            return HIDING
-        else:
-            return SEARCHING
-    elif state == FIGHTING:
-        if event == ZOMBIE:
-            return HIDING
-        elif event == WEAPON:
-            return SEARCHING
-        else:
-            return FIGHTING
-
-# define the action selection function using reinforcement learning
-def select_action(state, q_values):
-    # choose a random action with probability epsilon, to encourage exploration
-    epsilon = 0.2
-    if random.random() < epsilon:
-        return random.choice([HIDE, SEARCH, FIGHT])
-    
-    # choose the action with the highest expected reward (i.e., the maximum value in the q_values table)
-    return max(q_values[state], key=q_values[state].get)
-
-# define the function to update the q_values table using the Q-learning algorithm
-def update_q_values(state, action, reward, next_state, q_values):
-    # get the old q-value for the current state and action
-    old_q_value = q_values[state][action]
-    
-    # get the best q-value for the next state
-    next_q_values = q_values[next_state]
-    next_max_q_value = max(next_q_values.values())
-    
-    # update the q-value using the Q-learning update rule
-    new_q_value = old_q_value + 0.1 * (reward + 0.9 * next_max_q_value - old_q_value)
-    q_values[state][action] = new_q_value
-
-# define the rewards for each state and action
-rewards = {
-    HIDING: {
-        HIDE: 0.1,
-        SEARCH: -0.1,
-        FIGHT: -0.1,
-    },
-    SEARCHING: {
-        HIDE: 0.1,
-        SEARCH: 0.1,
-        FIGHT: -0.1,
-    },
-    FIGHTING: {
-        HIDE: 0.1,
-        SEARCH: -0.1,
-        FIGHT: 0.1,
-    },
-}
-
-# initialize the q_values table with 0 for all state-action pairs
-q_values = {
-    HIDING: {
-        HIDE: 0,
-        SEARCH: 0,
-        FIGHT: 0,
-    },
-    SEARCHING: {
-        HIDE: 0,     
-        SEARCH: 0,
-        FIGHT: 0,
-    },
-    FIGHTING: {
-        HIDE: 0,
-        SEARCH: 0,
-        FIGHT: 0,
-    },
-}
-
-# simulate the person's behavior for a number of steps
-num_steps = 1000
-for step in range(num_steps):
-    # if this is the first step, start in the HIDING state
-    if step == 0:
-        state = HIDING
-        
-    # choose a random event
-    event = random.choice([NOISE, ZOMBIE, WEAPON])
-
-    # transition to the next state
-    next_state = transition(state, event)
-
-    # select an action based on the current state and the q_values table
-    action = select_action(state, q_values)
-
-    # receive a reward based on the current state, action, and next state
-    reward = rewards[state][action]
-
-    # update the q_values table using the Q-learning algorithm
-    update_q_values(state, action, reward, next_state, q_values)
-
-    # set the current state to the next state
-    state = next_state
-
-# print the final q_values table
-print("Final q_values:")
-for state, actions in q_values.items():
-    print(f"State: {state}")
-for action, q_value in actions.items():
-    print(f" Action: {action}, Q-value: {q_value:.2f}")
-    
-
-# inference to simulate the person's behavior
-state = HIDING
-event = NOISE
-
-# generates the next event based on the previous event and action using a probabilistic model
-def generate_events(previous_event, previous_action):
-    # define the probabilities of each event given the previous event and action
-    probabilities = {
-        (NOISE, HIDE): {
-            NOISE: 0.5,
-            ZOMBIE: 0.3,
-            WEAPON: 0.2,
-        },
-        (NOISE, SEARCH): {
-            NOISE: 0.3,
-            ZOMBIE: 0.4,
-            WEAPON: 0.3,
-        },
-        (NOISE, FIGHT): {
-            NOISE: 0.2,
-            ZOMBIE: 0.5,
-            WEAPON: 0.3,
-        },
-        (ZOMBIE, HIDE): {
-            NOISE: 0.1,
-            ZOMBIE: 0.8,
-            WEAPON: 0.1,
-        },
-        (ZOMBIE, SEARCH): {
-            NOISE: 0.1,
-            ZOMBIE: 0.6,
-            WEAPON: 0.3,
-        },
-        (ZOMBIE, FIGHT): {
-            NOISE: 0.1,
-            ZOMBIE: 0.3,
-            WEAPON: 0.6,
-        },
-        (WEAPON, HIDE): {
-            NOISE: 0.2,
-            ZOMBIE: 0.3,
-            WEAPON: 0.5,
-        },
-        (WEAPON, SEARCH): {
-            NOISE: 0.3,
-            ZOMBIE: 0.4,
-            WEAPON: 0.3,
-        },
-        (WEAPON, FIGHT): {
-            NOISE: 0.4,
-            ZOMBIE: 0.3,
-            WEAPON: 0.3,
-        },
-    }
-    
-    # choose the next event based on the probabilities for the given previous event and action
-    event_probabilities = probabilities[(previous_event, previous_action)]
-    event = random.choices([NOISE, ZOMBIE, WEAPON], weights=event_probabilities.values())[0]
-    return event
-
-# simulate the person's behavior for the sequence of events
-for _ in range(10):
-    event = generate_events(event, action)
-    # transition to the next state
-    state = transition(state, event)
-    
-    # select an action based on the current state and the q_values table
-    action = select_action(state, q_values)
-    print(f"The person is {action}.")
-        
 """
 Use a reinforcement learning (RL) algorithm to train the person's behavior in the zombie apocalypse.
 
@@ -228,3 +24,329 @@ This allows the agent to learn from a variety of different scenarios and improve
 At the end of the simulation, we print the final q_values table to see how the agent has learned to select actions in each state.
 """
 
+import numpy as np
+import matplotlib.pyplot as plt
+import random
+
+# define the possible states as a list
+states = ["hiding", "searching", "fighting"]
+HIDING = "hiding"
+SEARCHING = "searching"
+FIGHTING = "fighting"
+
+# define the possible actions as a list
+actions = ["hide", "search", "fight"]
+HIDE = "hide"
+SEARCH = "search"
+FIGHT = "fight"
+
+# define the possible events as a list
+events = ["noise", "zombie", "weapon"]
+NOISE = "noise"
+ZOMBIE = "zombie"
+WEAPON = "weapon"
+
+# define the rewards
+KILL_ZOMBIE = 10
+DIE_BY_ZOMBIE = -100
+SURVIVE = 1
+FIND_RESOURCES = 5
+LEARNING_RATE = 0.001
+DISCOUNT_RATE = 0.999
+
+# define the number of states and actions
+num_states = len(states)
+num_actions = len(actions)
+
+# initialize the Q-table with all zeros
+Q = np.zeros((num_states, num_actions))
+
+# define the reinforcement learning algorithm
+def update_q_values(Q, state, action, reward, next_state):
+    # calculate the maximum expected reward for the next state
+    state_index = states.index(state)
+    action_index = actions.index(action)
+    next_state_index = states.index(next_state)
+    next_max_reward = max(Q[next_state_index][:])
+
+    # update the Q-value for the current state and action
+    Q[state_index][action_index] = (1 - LEARNING_RATE) * Q[state_index][action_index] + \
+        LEARNING_RATE * (reward + DISCOUNT_RATE * next_max_reward)
+
+# define the function for checking the end condition
+def end_condition(reward):
+    # end the simulation if the person is killed by a zombie
+    if reward == DIE_BY_ZOMBIE:
+        return True
+    else:
+        return False
+
+# define the state transition function
+def state_transition(state, event):
+    if state == HIDING:
+        if event == NOISE:
+            return SEARCHING
+        elif event == ZOMBIE:
+            return FIGHTING
+        else:
+            return HIDING
+    elif state == SEARCHING:
+        if event == ZOMBIE:
+            return FIGHTING
+        elif event == WEAPON:
+            return SEARCHING
+        else:
+            return HIDING
+    elif state == FIGHTING:
+        if event == ZOMBIE:
+            return FIGHTING
+        elif event == WEAPON:
+            return SEARCHING
+        else:
+            return HIDING
+        
+def execute_action(state, action):
+    if state == HIDING:
+        if action == HIDE:
+            event = np.random.choice(events)
+            reward = SURVIVE
+        elif action == SEARCH:
+            if np.random.random() < 0.5:
+                event = NOISE
+                reward = SURVIVE
+            else:
+                event = ZOMBIE
+                reward = SURVIVE
+        elif action == FIGHT:
+            event = ZOMBIE
+            reward = SURVIVE
+        else:
+            raise ValueError("Invalid action")
+    elif state == SEARCHING:
+        if action == HIDE:
+            event = np.random.choice(events)
+            reward = SURVIVE
+        elif action == SEARCH:
+            if np.random.random() < 0.5:
+                event = WEAPON
+                reward = FIND_RESOURCES
+            else:
+                event = NOISE
+                reward = SURVIVE
+        elif action == FIGHT:
+            event = np.random.choice(events)
+            reward = SURVIVE
+        else:
+            raise ValueError("Invalid action")
+    elif state == FIGHTING:
+        if action == HIDE:
+            if np.random.random() < 0.5:
+                event = NOISE
+                reward = SURVIVE
+            else:
+                event = ZOMBIE
+                reward = DIE_BY_ZOMBIE
+        elif action == SEARCH:
+            if np.random.random() < 0.3:
+                event = WEAPON
+                reward = SURVIVE
+            elif np.random.random() < 0.5:
+                event = ZOMBIE
+                reward = SURVIVE
+            else:
+                event = ZOMBIE
+                reward = DIE_BY_ZOMBIE
+        elif action == FIGHT:
+            if np.random.random() < 0.9:
+                if np.random.random() < 0.5:
+                    event = WEAPON
+                else:
+                    event = ZOMBIE
+                reward = KILL_ZOMBIE
+            else:
+                event = ZOMBIE
+                reward = DIE_BY_ZOMBIE
+        else:
+            raise ValueError("Invalid action")
+    else:
+        raise ValueError("Invalid state")
+    return event, reward
+
+# select an action using the learned epsilon-greedy policy
+def choose_action(Q, state, epsilon):
+    if np.random.random() < epsilon:
+        # choose a random action
+        action = np.random.choice(actions)
+    else:
+        # choose the action with the highest Q-value
+        state_index = states.index(state)
+        action_index = np.argmax(Q[state_index, :])
+        action = actions[action_index]
+    return action
+
+# Print the Q-table
+def print_q_table():
+    print("Q-table:")
+    for i in range(num_states):
+        print(f"State: {states[i]}")
+        for j in range(num_actions):
+            print(f"Action: {actions[j]} - Q-value: {Q[i][j]}")
+        print()
+        
+# define the training function
+def train(num_episodes):
+    # Loop through episodes
+    for i in range(num_episodes):
+        # Set initial state
+        current_state = np.random.choice(states)
+
+        # Loop through steps
+        while True:
+            # Select an action using the epsilon-greedy policy
+            epsilon = 0.25
+            action = choose_action(Q, current_state, epsilon)
+
+            # Execute the action and observe the resulting state and reward
+            event, reward = execute_action(current_state, action)
+            
+            next_state = state_transition(current_state, event)
+
+            print(f"episode: {i}, current state: {current_state}, action: {action}, event: {event}, reward: {reward}, next_state: {next_state}")
+
+            # Update the Q-table using the reinforcement learning algorithm
+            update_q_values(Q, current_state, action, reward, next_state)
+
+            # Set the current state to the next state
+            current_state = next_state
+
+            # Check if the episode should end
+            if end_condition(reward):
+                break
+    print_q_table()
+    
+# simulate the person's behavior using the learned policy
+def simulate(Q):
+    # Set initial state
+    current_state = np.random.choice(states)
+
+    # Loop through steps
+    while True:
+        # Select an action using the epsilon-greedy policy
+        epsilon = 0.0
+        action = choose_action(Q, current_state, epsilon)
+
+        # Execute the action and observe the resulting state and reward
+        event, reward = execute_action(current_state, action)
+            
+        next_state = state_transition(current_state, event)
+
+        print(f"current state: {current_state}, action: {action}, event: {event}, reward: {reward}, next_state: {next_state}")
+
+        # Check if the simulation should end
+        if end_condition(reward):
+            break
+                
+        # Set the current state to the next state
+        current_state = next_state
+
+        """
+        for _ in range(num_steps):
+        simulate_learned_policy(100, Q)
+        """
+# Train the Q-learning algorithm
+train(num_episodes=1000)
+
+# Simulate the person's behavior
+# simulate(Q)
+
+"""
+The code is implementing a reinforcement learning algorithm to teach a person to survive in a zombie apocalypse. It is using a Q-learning algorithm to determine the best actions to take in different states (such as "safe_house", "fighting", or "resources"). The person can either stay, move, or fight in each state. The rewards for these actions are defined as KILL_ZOMBIE, DIE_BY_ZOMBIE, SURVIVE, and FIND_RESOURCES. The Q-table is initialized with all zeros and is updated using the Q-learning formula, which takes into account the current reward and the expected maximum reward for the next state. The person's actions are selected using an epsilon-greedy policy, which sometimes chooses a random action and other times chooses the action with the highest Q-value. The training function loops through a specified number of episodes and performs the Q-learning update and action selection for each step until the end condition is reached (the person is killed by a zombie).
+"""
+
+def try_effect_of_discount_rate():
+    # define the discount rate
+    discount_rates = [0.1, 0.5, 0.9, 0.99]
+
+    # define the reward values
+    rewards = list(range(100))
+
+    # define the number of steps
+    num_steps = len(rewards)
+
+    # loop through the discount rates
+    for discount_rate in discount_rates:
+        # calculate the discounted rewards
+        discounted_rewards = []
+        for i in range(num_steps):
+            discounted_rewards.append(
+                rewards[i] * (discount_rate ** i))
+
+        # plot the discounted rewards
+        plt.plot(discounted_rewards, label=f"discount_rate: {discount_rate}")
+
+    # add labels and legend
+    plt.xlabel("step")
+    plt.ylabel("discounted reward")
+    plt.legend()
+    plt.show()
+    
+def try_effect_of_learning_rate():
+    # define the learning rates
+    learning_rates = [0.1, 0.5, 0.9, 0.99]
+
+    # define the reward values
+    rewards = list(range(100))
+
+    # define the number of steps
+    num_steps = len(rewards)
+
+    # loop through the learning rates
+    for learning_rate in learning_rates:
+        # calculate the discounted rewards
+        discounted_rewards = []
+        for i in range(num_steps):
+            discounted_rewards.append(
+                rewards[i] * (learning_rate ** i))
+
+        # plot the discounted rewards
+        plt.plot(discounted_rewards, label=f"learning_rate: {learning_rate}")
+
+    # add labels and legend
+    plt.xlabel("step")
+    plt.ylabel("discounted reward")
+    plt.legend()
+    plt.show()
+    
+def try_effect_of_learning_rate_discount_rate():
+    # define the learning rates
+    learning_rates = [0.1, 0.5, 0.9, 0.99]
+
+    # define the discount rates
+    discount_rates = [0.1, 0.5, 0.9, 0.99]
+
+    # define the reward values
+    rewards = list(range(100))
+
+    # define the number of steps
+    num_steps = len(rewards)
+
+    # loop through the learning rates
+    for learning_rate in learning_rates:
+        # loop through the discount rates
+        for discount_rate in discount_rates:
+            # calculate the discounted rewards
+            discounted_rewards = []
+            for i in range(num_steps):
+                discounted_rewards.append(
+                    rewards[i] * (learning_rate ** i) * (discount_rate ** i))
+
+            # plot the discounted rewards
+            plt.plot(discounted_rewards, label=f"learning_rate: {learning_rate}, discount_rate: {discount_rate}")
+
+    # add labels and legend
+    plt.xlabel("step")
+    plt.ylabel("discounted reward")
+    plt.legend()
+    plt.show()
+    
+# try_effect_of_learning_rate_discount_rate()
