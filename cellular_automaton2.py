@@ -1,301 +1,298 @@
-"""
-Combine a population method that connect individual on a grid and a cellular automaton method to simulate a person's activity during a zombie apocalypse at school.
 
-It sounds like you're looking to combine two different methods to simulate a person's activity during a zombie apocalypse at a school. A population method that connects individuals on a grid could be used to simulate the movement of people within the school, while a cellular automaton method could be used to model the spread of the zombie infection.
-
-To use a population method to simulate the movement of people within the school, you could start by defining a grid that represents the layout of the school, with each cell of the grid representing a different location within the school (e.g. a classroom, hallway, cafeteria, etc.). You could then define a set of rules that dictate how individuals move within the grid, such as avoiding obstacles or following paths that lead to safety.
-
-To use a cellular automaton method to simulate the spread of the zombie infection, you could define a set of rules that determine how the infection spreads from one individual to another. For example, the infection could spread when an infected individual comes into contact with a non-infected individual, or when an infected individual bites a non-infected individual. You could also define rules that determine how the infection affects an individual's behavior, such as making them more aggressive or less coordinated.
-
-By combining these two methods, you could simulate the movement and behavior of individuals within a school during a zombie apocalypse, and model how the infection spreads throughout the population. This could provide insights into how different strategies (e.g. evacuating the school, locking down certain areas, etc.) might affect the outcome of the apocalypse.
-"""
-
+import random
 import numpy as np
-
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 
 class Agent:
-    def __init__(self, position, speed, strength):
-        self.position = position
-        self.speed = speed
+    def __init__(self, location, health, strength):
+        self.location = location
+        self.health = health
         self.strength = strength
 
-    def move(self):
-        # get the state of the cell at the agent's current position
-        current_cell = self.grid[self.position[0]][self.position[1]]
+    def move(self, direction):
+        self.location += direction
 
-        # if the current cell is infected, try to move to a safe cell
-        if current_cell.state == "infected":
-            # get the states of the surrounding cells
-            surrounding_cells = [self.grid[self.position[0]+1][self.position[1]],
-                                 self.grid[self.position[0] -
-                                           1][self.position[1]],
-                                 self.grid[self.position[0]
-                                           ][self.position[1]+1],
-                                 self.grid[self.position[0]][self.position[1]-1]]
+    def attack(self, agent):
+        agent.health -= self.strength
 
-            # find the first safe cell and move the agent to it
-            for cell in surrounding_cells:
-                if cell.state == "safe":
-                    self.position = cell.position
-                    break
+class Human(Agent):
+    def __init__(self, location, health, strength):
+        super().__init__(location, health, strength)
 
-        # if the current cell is safe, move to a random adjacent cell
-        else:
-            # generate a random number between 0 and 3 to choose a direction
-            direction = random.randint(0, 3)
+    def move(self, direction):
+        super().move(direction)
 
-            # update the agent's position based on the chosen direction
-            if direction == 0:
-                self.position[0] += 1
-            elif direction == 1:
-                self.position[0] -= 1
-            elif direction == 2:
-                self.position[1] += 1
-            elif direction == 3:
-                self.position[1] -= 1
-
-        # check if the new position is out of bounds and wrap the agent around to the other side if necessary
-        if self.position[0] >= self.grid_size[0]:
-            self.position[0] = 0
-        elif self.position[0] < 0:
-            self.position[0] = self.grid_size[0] - 1
-        if self.position[1] >= self.grid_size[1]:
-            self.position[1] = 0
-        elif self.position[1] < 0:
-            self.position[1] = self.grid_size[1] - 1
-
-    def fight(self):
-        # get the state of the cell at the agent's current position
-        current_cell = self.grid[self.position[0]][self.position[1]]
-        # if the current cell is infected and the agent's strength is greater than or equal to the number of zombies, defeat the zombies and make the cell safeif current_cell.state == "infected" and self.strength >= current_cell.zombie_count:
-        current_cell.state = "safe"
-        current_cell.zombie_count = 0
+    def attack(self, agent):
+        super().attack(agent)
 
 
-class Cell:
-    def __init__(self, position, state, zombie_count):
-        self.position = position
-        self.state = state
-        self.zombie_count = zombie_count
+class Zombie(Agent):
+    def __init__(self, location, health, strength):
+        super().__init__(location, health, strength)
 
-    def update_state(self):
-        # get the positions of the surrounding cells
-        surrounding_cells = [(self.position[0]+1, self.position[1]),
-                             (self.position[0]-1, self.position[1]),
-                             (self.position[0], self.position[1]+1),
-                             (self.position[0], self.position[1]-1)]
+    def move(self, direction):
+        super().move(direction)
 
-        # check if any surrounding cells are infected and update the current cell's state accordingly
-        for cell in surrounding_cells:
-            if self.grid[cell[0]][cell[1]].state == "infected":
-                self.state = "infected"
-                break
-
-
-class ZombieSimulation:
-    def __init__(self, grid_size, agent_count):
-        self.grid_size = grid_size
-        self.agent_count = agent_count
-        self.grid = self.initialize_grid()
-        self.agents = self.place_agents()
-
-    def initialize_grid(self):
-        # create an empty grid with the specified size
-        grid = [[0 for i in range(self.grid_size[1])]
-                for j in range(self.grid_size[0])]
-
-        # randomly assign initial states and zombie counts to the cells
-        for i in range(self.grid_size[0]):
-            for j in range(self.grid_size[1]):
-                # generate a random number between 0 and 1 to determine the cell's state
-                state = "safe" if random.randint(0, 1) == 0 else "infected"
-
-                # if the cell is infected, generate a random number between 1 and 5 to determine the number of zombies
-                zombie_count = 0
-                if state == "infected":
-                    zombie_count = random.randint(1, 5)
-
-                # create a Cell object with the specified position, state, and zombie count and add it to the grid
-                grid[i][j] = Cell((i, j), state, zombie_count)
-
-        return grid
-
-    def place_agents(self):
-        agents = []
-
-        # create the specified number of agents with random positions, speeds, and strengths
-        for i in range(self.agent_count):
-            position = (random.randint(
-                0, self.grid_size[0]-1), random.randint(0, self.grid_size[1]-1))
-            speed = random.randint(1, 5)
-            strength = random.randint(1, 5)
-            agents.append(Agent(position, speed, strength))
-
-        return agents
-
-
-def run_simulation(self, iterations):
-    for _ in range(iterations):
-        # update the positions of the agents and the states of the cells
-        for agent in self.agents:
-            agent.move()
-            agent.fight()
-        for row in self.grid:
-            for cell in row:
-                cell.update_state()
-
-
-"""
-To implement this simulation in Python, you could start by defining a class that represents an individual within the simulation. This class could have attributes that store the individual's location on the grid, their infection status, and any other relevant information.
-
-Next, you could define a class that represents the grid and the individuals within it. This class could have a method that initializes the grid and places individuals at random locations within it. It could also have methods that simulate the movement of individuals within the grid, as well as the spread of the zombie infection.
-
-To simulate the movement of individuals within the grid, you could use a random walk algorithm, where each individual has a certain probability of moving in each of the four cardinal directions (up, down, left, right) at each time step. You could also incorporate rules that govern how individuals avoid obstacles or follow paths, such as using pathfinding algorithms like A* or Dijkstra's algorithm.
-
-To simulate the spread of the zombie infection, you could use a cellular automaton algorithm, where the infection spreads from an infected individual to any non-infected individuals in adjacent cells at each time step. You could also define rules that determine how the infection affects an individual's behavior, such as making them more aggressive or less coordinated.
-"""
-
-
-class Individual:
-    def __init__(self, location, infection_status):
-        self.location = location
-        self.infection_status = infection_status
+    def attack(self, agent):
+        super().attack(agent)
 
 
 class Grid:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.grid = [[None for x in range(width)] for y in range(height)]
+        self.grid = [[None for _ in range(self.width)]
+                     for _ in range(self.height)]
+        self.init_agents()
 
-    def add_individual(self, individual):
-        x, y = individual.location
-        self.grid[x][y] = individual
+    def set_cell(self, x, y, agent):
+        self.grid[x][y] = agent
+        
+    def get_cell(self, x, y):
+        return self.grid[x][y]
 
-    def simulate_movement(self):
+    def init_agents(self):
+        # set the initial state of the cells
         for i in range(self.width):
             for j in range(self.height):
-                individual = self.grid[i][j]
-                if individual is not None:
-                    # use a random walk algorithm to determine the individual's next move
-                    # equal probability of moving up, down, left, or right
-                    move_probabilities = [0.25, 0.25, 0.25, 0.25]
-                    move_direction = np.random.choice(
-                        [0, 1, 2, 3], p=move_probabilities)
-                    if move_direction == 0:  # move up
-                        next_x, next_y = i-1, j
-                    elif move_direction == 1:  # move down
-                        next_x, next_y = i+1, j
-                    elif move_direction == 2:  # move left
-                        next_x, next_y = i, j-1
-                    else:  # move right
-                        next_x, next_y = i, j+1
+                if np.random.random() < 0.1:
+                    # Place a human individual with probability 0.1
+                    human = Human((i, j), 100, 10)
+                    self.set_cell(i, j, human)
+                elif np.random.random() < 0.1:
+                    # Place a zombie individual with probability 0.1
+                    zombie = Zombie((i, j), 100, 10)
+                    self.set_cell(i, j, zombie)
+                else:
+                    continue
+        """
+        while True:
+            # Place one more zombie individual 
+            random_i = np.random.randint(0, self.width)
+            random_j = np.random.randint(0, self.height)
+            if self.get_cell(random_i, random_j) == None:
+                self.set_cell(random_i, random_j, Zombie)
+                break
+        """
 
-                    # check if the next move is valid (i.e. within the grid and not occupied by another individual)
-                    if (0 <= next_x < self.width) and (0 <= next_y < self.height) and (self.grid[next_x][next_y] is None):
-                        # update the individual's location
-                        individual.location = (next_x, next_y)
-                        # remove the individual from their current location
-                        self.grid[i][j] = None
-                        # add the individual to their new location
-                        self.grid[next_x][next_y] = individual
+    def legal_move(self, agent, direction):
+        if direction == (0, 0):
+            return True
+        if agent.location[0] + direction[0] < 0 or agent.location[0] + direction[0] > self.width - 1:
+            return False
+        if agent.location[1] + direction[1] < 0 or agent.location[1] + direction[1] > self.height - 1:
+            return False
+        if self.grid[agent.location[0] + direction[0]][agent.location[1] + direction[1]] != None:
+            return False
+        return True
 
-    def simulate_movement(self):
-        for i in range(self.width):
-            for j in range(self.height):
-                individual = self.grid[i][j]
-                if individual is not None:
-                    # use the A* algorithm to find the shortest path to the nearest exit
-                    start = (i, j)
-                    # the four corners of the grid
-                    exits = [(0, 0), (0, self.width-1),
-                             (self.height-1, 0), (self.height-1, self.width-1)]
-                    distances, previous = self.a_star(start, exits)
-                    # use the first exit as the destination
-                    path = self.reconstruct_path(previous, start, exits[0])
+    def move_agent(self, agent, direction):
+        if self.legal_move(agent, direction):
+            old_location = agent.location
+            agent.move(direction)
+            self.grid[agent.location[0]][agent.location[1]] = agent
+            self.grid[old_location[0]][old_location[1]] = None
+            return True
+        else:
+            return False
 
-                    # move to the next cell in the shortest path to the nearest exit
-                    if len(path) > 1:  # check if there is a valid path to the nearest exit
-                        next_x, next_y = path[1]
-                        # update the individual's location
-                        individual.location = (next_x, next_y)
-                        # remove the individual from their current location
-                        self.grid[i][j] = None
-                        # add the individual to their new location
-                        self.grid[next_x][next_y] = individual
+    def attack_agent(self, agent, target):
+        agent.attack(target)
+        if target.health <= 0:
+            if isinstance(target, Human):
+                zombie = Zombie(target.location, 100, 10)
+                self.set_cell(target.location[0],target.location[1], zombie)
+            else:
+                self.set_cell(target.location[0],target.location[1], None)
+            return True
+        else:
+            return False
+        """
+        self.infection_rate and even if health > 0, still have a chance to get infected
+        zombie health == human health before infection
+        """
 
-    def a_star(self, start, goals):
-        # implement the A* algorithm to find the shortest path from the start to one of the goals
-        # returns the distances and previous nodes for each node in the grid
-        pass
+    def get_neighbors(self, agent):
+        neighbors = []
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                if i == 0 and j == 0:
+                    continue
+                if agent.location[0] + i < 0 or agent.location[0] + i > self.width - 1:
+                    continue
+                if agent.location[1] + j < 0 or agent.location[1] + j > self.height - 1:
+                    continue
+                if self.grid[agent.location[0] + i][agent.location[1] + j] == None:
+                    continue
+                neighbors.append(
+                    self.grid[agent.location[0] + i][agent.location[1] + j])
+        return neighbors
 
-    def reconstruct_path(self, previous, start, goal):
-        # implement the algorithm to reconstruct the path from the previous nodes
-        # returns the shortest path from the start to the goal
-        pass
-
-    def simulate_infection(self):
-        # create a list of infected individuals
-        infected_individuals = []
-        for i in range(self.width):
-            for j in range(self.height):
-                individual = self.grid[i][j]
-                if individual is not None and individual.infection_status == "infected":
-                    infected_individuals.append((i, j))
-
-        # simulate the spread of the infection from each infected individual to any non-infected individuals in adjacent cells
-        for x, y in infected_individuals:
-            # check the cells to the left, center, and right of the infected individual
-            for dx in [-1, 0, 1]:
-                # check the cells above, at the same level, and below the infected individual
-                for dy in [-1, 0, 1]:
-                    next_x, next_y = x + dx, y + dy
-                    # check if the adjacent cell is valid (i.e. within the grid and not occupied by another individual)
-                    if (0 <= next_x < self.width) and (0 <= next_y < self.height) and (self.grid[next_x][next_y] is not None):
-                        next_individual = self.grid[next_x][next_y]
-                        # check if the adjacent individual is not already infected
-                        if next_individual.infection_status != "infected":
-                            # use a random probability to determine if the adjacent individual becomes infected
-                            infection_probability = 0.5  # 50% chance of becoming infected
-                            if np.random.random() < infection_probability:
-                                next_individual.infection_status = "infected"
-
-    def run_simulation(self):
-        for time_step in range(1000):  # run the simulation for 1000 time steps
-            self.simulate_movement()
-            self.simulate_infection()
-
-            # output the state of the grid at each time step (e.g. to visualize the simulation)
-            print("Time step:", time_step)
+    def choose_direction(self, agent):
+        neighbors = self.get_neighbors(agent)
+        if len(neighbors) == 0:
+            while True:
+                random_direction = (random.randint(-1, 1),
+                                    random.randint(-1, 1))
+                if self.legal_move(agent, random_direction):
+                    return random_direction
+        if isinstance(agent, Human):
+            for neighbor in neighbors:
+                if isinstance(neighbor, Zombie) and self.legal_move(agent, (agent.location[0] - neighbor.location[0], agent.location[1] - neighbor.location[1])):
+                    return (agent.location[0] - neighbor.location[0], agent.location[1] - neighbor.location[1])
+            human_locations = []
+            for neighbor in neighbors:
+                    if isinstance(neighbor, Human):
+                        human_locations.append(neighbor.location)
+            while True:
+                human_distances = [np.linalg.norm(
+                    agent.location - hp) for hp in human_locations]
+                closest_human = human_locations[np.argmin(human_distances)]
+                direction = closest_human - agent.location
+                if self.legal_move(agent, direction):
+                    return direction
+                else:
+                    human_locations.remove(closest_human)
+                if len(human_locations) == 0:
+                    break
+        elif isinstance(agent, Zombie):
+            for neighbor in neighbors:
+                if isinstance(neighbor, Human):
+                    if self.legal_move(agent, (neighbor.location[0] - agent.location[0], neighbor.location[1] - agent.location[1])):
+                        return (neighbor.location[0] - agent.location[0], neighbor.location[1] - agent.location[1])
+        else:
+            random_direction = (random.randint(-1, 1), random.randint(-1, 1))
+            return random_direction
+        
+        """
+        cases of more than one zombie and human
+        cases when both zombie and human are in neighbors
+        """
+        """
+        use random walk algorithm to simulate movement based on probability adjusted by cell's infection status and location
+        """
+        """
+        def simulate_movement(self):
             for i in range(self.width):
                 for j in range(self.height):
                     individual = self.grid[i][j]
-                    if individual is None:
-                        print("-", end="")
-                    else:
-                        # print the first letter of the infection status (I/S)
-                        print(individual.infection_status[0], end="")
-                print()  # new line
-            print()  # new line
+                    if individual is not None:
+                        # use the A* algorithm to find the shortest path to the nearest exit
+                        start = (i, j)
+                        # the four corners of the grid
+                        exits = [(0, 0), (0, self.width-1),
+                                (self.height-1, 0), (self.height-1, self.width-1)]
+                        distances, previous = self.a_star(start, exits)
+                        # use the first exit as the destination
+                        path = self.reconstruct_path(previous, start, exits[0])
 
+                        # move to the next cell in the shortest path to the nearest exit
+                        if len(path) > 1:  # check if there is a valid path to the nearest exit
+                            next_x, next_y = path[1]
+                            # update the individual's location
+                            individual.location = (next_x, next_y)
+                            # remove the individual from their current location
+                            self.grid[i][j] = None
+                            # add the individual to their new location
+                            self.grid[next_x][next_y] = individual
 
-def simulation():
-    # create a grid
-    grid = Grid(10, 10)
+        def a_star(self, start, goals):
+            # implement the A* algorithm to find the shortest path from the start to one of the goals
+            # returns the distances and previous nodes for each node in the grid
+            pass
 
-    # add individuals to the grid
-    for i in range(10):
-        for j in range(10):
-            if i == 0 and j == 0:
-                # add a susceptible individual at the top left corner of the grid
-                individual = Individual((i, j), "susceptible")
+        def reconstruct_path(self, previous, start, goal):
+            # implement the algorithm to reconstruct the path from the previous nodes
+            # returns the shortest path from the start to the goal
+            pass
+        """
+        
+    def attack_neighbors(self, agent):
+        neighbors = self.get_neighbors(agent)
+        if isinstance(agent, Human):
+            for neighbor in neighbors:
+                if isinstance(neighbor, Zombie):
+                    self.attack_agent(agent, neighbor)
+        elif isinstance(agent, Zombie):
+            for neighbor in neighbors:
+                if isinstance(neighbor, Human):
+                    self.attack_agent(agent, neighbor)
+
+    def choose_action(self, agent):
+        neighbors = self.get_neighbors(agent)
+        if isinstance(agent, Human):
+            for neighbor in neighbors:
+                if isinstance(neighbor, Zombie):
+                    return "attack"
+            return "move"
+        elif isinstance(agent, Zombie):
+            for neighbor in neighbors:
+                if isinstance(neighbor, Human):
+                    return "attack"
+            return "move"
+
+    def update(self):
+        all_agents = []
+        for i in range(self.width):
+            for j in range(self.height):
+                agent = self.grid[i][j]
+                if agent == None:
+                    continue
+                all_agents.append(agent)
+        for agent in all_agents:    
+            action = self.choose_action(agent)
+            if action == "move":
+                direction = self.choose_direction(agent)
+                self.move_agent(agent, direction)
+            elif action == "attack":
+                self.attack_neighbors(agent)
             else:
-                # add an infected individual at all other locations
-                individual = Individual((i, j), "infected")
-            grid.add_individual(individual)
+                continue
+        """
+        # check if any surrounding cells are infected and update the current cell's state accordingly
+        for cell in surrounding_cells:
+            if self.grid[cell[0]][cell[1]].state == "infected":
+                self.state = "infected"
+                break
+        """
 
-    # run the simulation
-    grid.run_simulation()
+    def plot_grid(self):
+        grid_plot = np.zeros((self.width, self.height))
+        color_plot = np.zeros((self.width, self.height))
+        for i in range(self.width):
+            for j in range(self.width):
+                if self.grid[i][j] == None:
+                    grid_plot[i][j] = "-"
+                    color_plot[i][j] = "gray"                  
+                elif isinstance(self.grid[i][j], Human):
+                    grid_plot[i][j] = "H"
+                    color_plot[i][j] = "green"
+                elif isinstance(self.grid[i][j], Zombie):
+                    grid_plot[i][j] = "Z"
+                    color_plot[i][j] = "red"
+        plt.scatter(range(self.width), range(self.height), c=color_plot)
+        plt.figure()
+        plt.show()
+        plt.pause(0.1)
+            
+def run_simulation(width, height, num_steps):
+    grid = Grid(width, height)
+    for i in range(num_steps):
+        grid.update()
+    return grid
 
-
-simulation()
+"""
+def run_simulation(self, iterations):
+    for _ in range(iterations):
+        # update the locations of the agents and the states of the cells
+        for agent in self.agents:
+            agent.move()
+            agent.fight()
+        for row in self.grid:
+            for cell in row:
+                cell.update_state()
+    """
+    
+grid = run_simulation(100, 100, 100)
+grid.plot_grid()

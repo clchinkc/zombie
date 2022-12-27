@@ -27,57 +27,6 @@ class Population:
         new_grid[row][col] = new_state
         """
 
-    def set_cell(self, x, y, value):
-        self.grid[x][y] = value
-
-    def get_cell(self, x, y):
-        return self.grid[x][y]
-
-    def init_grid(self):
-
-        # set the initial state of the cells
-        for i in range(grid_size):
-            for j in range(grid_size):
-                if np.random.random() < 0.1:
-                    # Place a human individual with probability 0.1
-                    self.set_cell(i, j, 1)
-                elif np.random.random() < 0.1:
-                    # Place a zombie individual with probability 0.1
-                    self.set_cell(i, j, 2)
-                else:
-                    continue                    
-        while True:
-            # Place one more zombie individual 
-            random_i = np.random.randint(0, grid_size)
-            random_j = np.random.randint(0, grid_size)
-            if self.get_cell(random_i, random_j) == 0:
-                self.set_cell(random_i, random_j, 2)
-                break
-
-    def get_neighbor_count(self, x, y, kind=(HUMAN or ZOMBIE)):
-        count = 0
-        for dx in range(x-1, x+2):
-            for dy in range(y-1, y+2):
-                if x+dx >= 0 and x+dx < self.grid_size and y+dy >= 0 and y+dy < self.grid_size and (dx != 0 or dy != 0):
-                    if self.grid[x+dx][y+dy] == kind:    
-                        count += 1
-        return count
-
-    # if the surrounding cells is 2, then current cell move away from the 2
-    def get_migration_pos(self, x, y):
-        if self.get_neighbor_count(x, y, kind=ZOMBIE):
-            for dx in range(x-1, x+2):
-                for dy in range(y-1, y+2):
-                    if x+dx >= 0 and x+dx < self.grid_size and y+dy >= 0 and y+dy < self.grid_size and (dx != 0 or dy != 0):
-                        surrounding_cells = self.grid[x+dx][y+dy]
-                        if surrounding_cells == 2:
-                            return (x-dx, y-dy)
-        else:
-            while True:
-                dx = random.choice([-1, 0, 1])
-                dy = random.choice([-1, 0, 1])
-                if x+dx >= 0 and x+dx < self.grid_size and y+dy >= 0 and y+dy < self.grid_size and (dx != 0 or dy != 0):
-                    return (x+dx, y+dy)
 
     # Implement the population method
     def move_individual(self):
@@ -130,7 +79,7 @@ class Population:
 
         self.grid = new_grid
     """
-
+    """
     # Implement the cellular automaton method
     def spread_infection(self):
         new_grid = [[0 for _ in range(self.grid_size)]
@@ -148,20 +97,9 @@ class Population:
                     else:
                         new_grid[x][y] = 2
         self.grid = new_grid
+    """
 
-    def update(self):
-        self.move_individual()
-        self.spread_infection()
-
-# print the updated state of the cells
-def print_population(population):
-    grid_size = population.grid_size
-    for i in range(grid_size):
-        for j in range(grid_size):
-            print(population.get_cell(i, j), end=" ")
-        print()
-
-
+"""
 grid_size = 10
 birth_rate = 0.1
 death_rate = 0.05
@@ -171,27 +109,13 @@ min_neighbors = 0
 
 population = Population(grid_size, birth_rate, death_rate,
                         migration_rate, infection_rate, min_neighbors)
+"""
 
-population.init_grid()
-
-print_population(population)
-print()
-
-# simulate the dynamics of the population over multiple time steps
-for i in range(100):
-    population.update()
-
-
-print_population(population)
-
-# Update the display of the simulation
-plt.imshow(population.grid, cmap='gray')
-plt.show()
-plt.pause(0.01)
 
 """
 May alter the rates using other functions
 May add speed of individual
+May use cell class to represent some infection rate danger value etc based on neighboring cells
 """
 """
 One potential improvement to the CA model could be to add more complex rules for transitioning between states. 

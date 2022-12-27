@@ -14,3 +14,8 @@ Add the new students to the population.
 Repeat the process until the simulation ends or the population reaches a predetermined size.
 This process would allow the students in the population to adapt and evolve over time based on their actions and the rules of the simulation, potentially resulting in a more efficient and effective strategy for surviving a zombie apocalypse.
 """
+
+"""
+https://github.com/topics/natural-selection?l=python
+https://stackoverflow.com/questions/46337156/python-genetic-algorithm-natural-selection
+"""
