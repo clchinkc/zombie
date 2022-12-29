@@ -17,6 +17,8 @@ list comprehension
 map, filter function
 Dictionary for storage
 Refactoring, extract function, early exit
+no multiple inheritance
+custom error class inherit from Exception, it can raise error to pass through useful attributes
 setattr can put a attribute dictionary into a class using for loop (dynamically)
 getattr can get a attribute dictionary from a class using for loop (dynamically)
 https://www.programiz.com/python-programming/decorator

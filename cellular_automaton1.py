@@ -27,89 +27,48 @@ class Population:
         new_grid[row][col] = new_state
         """
 
-
     # Implement the population method
     def move_individual(self):
         new_grid = [[0 for _ in range(self.grid_size)]
                     for _ in range(self.grid_size)]
         for x in range(self.grid_size):
             for y in range(self.grid_size):
-                neighbors = self.get_neighbor_count(x, y)
+                neighbors = self.get_neighbors(x, y)
+
                 if self.grid[x][y] == 0 and neighbors >= self.min_neighbors:
-                    if random.random() < self.birth_rate:
+                    if random.random() < self.migration_rate * sum(1 if neighbor == 1 else 0 for neighbor in neighbors):
+                        # migrate from random neighbor
+                        while True:
+                            dx = random.randint(-1, 1)
+                            dy = random.randint(-1, 1)
+                            if dx != 0 and dy != 0 and self.grid[x + dx][y + dy] == 1:
+                                self.grid[x + dx][y + dy] = 0
+                                new_grid[x][y] = 1
+                                break
+                            else:
+                                continue
+                    else:
+                        continue
+                elif self.grid[x][y] == 0:
+                    if random.random() < (self.birth_rate * (1 - self.birth_rate)):
                         new_grid[x][y] = 1
                     else:
                         new_grid[x][y] = 0
                 elif self.grid[x][y] == 1:
                     if random.random() < self.death_rate:
                         new_grid[x][y] = 0
-                    elif random.random() < self.migration_rate:
-                        new_pos = self.get_migration_pos(x, y)
-                        new_grid[new_pos[0]][new_pos[1]] = 1
-                    else:
-                        new_grid[x][y] = 1
-                else:
-                    new_grid[x][y] = self.grid[x][y]
-        self.grid = new_grid
-
-        """
-    def move_individual(self):
-        new_grid = [[0 for _ in range(self.grid_size)] for j in range(self.grid_size)]
-        for i in range(self.grid_size):
-            for j in range(self.grid_size):
-                neighbor_count = self.get_neighbor_count(i, j)
-                cell_value = self.get_cell(i, j)
-
-                # calculate number of births and deaths
-                births = self.birth_rate * cell_value * (1 - cell_value)
-                deaths = self.death_rate * cell_value
-
-                # calculate number of individuals that migrate
-                migrants = 0
-                # only consider cells with at least min_neighbors for migration
-                if neighbor_count >= self.min_neighbors:
-                    for dx in range(-1, 2):
-                        for dy in range(-1, 2):
-                            if i+dx >= 0 and i+dx < self.grid_size and j+dy >= 0 and j+dy < self.grid_size and (dx != 0 or dy != 0):
-                                migrants += self.migration_rate * cell_value * self.get_cell(i+dx, j+dy)
-
-                # update cell value
-                new_value = cell_value + births - deaths + migrants
-                new_grid[i][j] = new_value
-
-        self.grid = new_grid
-    """
-    """
-    # Implement the cellular automaton method
-    def spread_infection(self):
-        new_grid = [[0 for _ in range(self.grid_size)]
-                    for _ in range(self.grid_size)]
-        for x in range(grid_size):
-            for y in range(grid_size):
-                if self.grid[x][y] == 1:
-                    if random.random() < self.infection_rate * self.get_neighbor_count(x, y, kind=ZOMBIE):
+                    elif random.random() < self.infection_rate * sum(1 if neighbor == 2 else 0 for neighbor in neighbors):
                         new_grid[x][y] = 2
                     else:
                         new_grid[x][y] = 1
                 elif self.grid[x][y] == 2:
-                    if random.random() < self.death_rate * self.get_neighbor_count(x, y, kind=HUMAN):
+                    if random.random() < self.death_rate:
                         new_grid[x][y] = 0
                     else:
                         new_grid[x][y] = 2
+                else:
+                    new_grid[x][y] = self.grid[x][y]
         self.grid = new_grid
-    """
-
-"""
-grid_size = 10
-birth_rate = 0.1
-death_rate = 0.05
-migration_rate = 0.1
-infection_rate = 0.1
-min_neighbors = 0
-
-population = Population(grid_size, birth_rate, death_rate,
-                        migration_rate, infection_rate, min_neighbors)
-"""
 
 
 """

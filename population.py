@@ -44,38 +44,54 @@ class Individual:
                 self.state = State.INFECTED
         elif self.state == State.INFECTED:
             self.infection_severity += 0.1
-            if self.has_turned():
+            if self.is_turned():
                 self.state = State.ZOMBIE
-            elif self.has_died(severity):
+            elif self.is_died(severity):
                 self.state = State.DEAD
         elif self.state == State.ZOMBIE:
-            if self.has_died(severity):
+            if self.is_died(severity):
                 self.state = State.DEAD
 
     def is_infected(self, severity):
+        infection_probability = 1 - (1 / (1 + math.exp(-severity)))
         for individual in self.connections:
             if individual.state == State.ZOMBIE:
-                infection_probability = 1 - (1 / (1 + math.exp(-severity)))
                 if random.random() < infection_probability:
                     return True
         return False
 
-    def has_turned(self):
+    def is_turned(self):
         turning_probability = self.infection_severity
         if random.random() < turning_probability:
             return True
         return False
 
-    def has_died(self, severity):
+    def is_died(self, severity):
+        death_probability = 1 - (1 / (1 + math.exp(severity)))
         for individual in self.connections:
             if individual.state == State.ALIVE or individual.state == State.INFECTED:
-                death_probability = 1 - (1 / (1 + math.exp(severity)))
                 if random.random() < death_probability:
                     return True
         return False
+    
+    """
+    def attack_neighbors(self, agent):
+        neighbors = self.get_neighbors(agent)
+        if isinstance(agent, Human):
+            for neighbor in neighbors:
+                if isinstance(neighbor, Zombie):
+                    self.attack_agent(agent, neighbor)
+        elif isinstance(agent, Zombie):
+            for neighbor in neighbors:
+                if isinstance(neighbor, Human):
+                    self.attack_agent(agent, neighbor)
+    """
 
     def get_info(self):
         return f"Individual {self.id} is {self.state} and is located at {self.location}, having connections with {self.connections} and infection severity {self.infection_severity}"
+
+# seperate inheritance for human and zombie class
+# zombie health == human health before infection
 
 
 class School:
@@ -83,7 +99,9 @@ class School:
         self.school_size = school_size
         # Create a 2D grid representing the school with each cell can contain a Individual object
         self.grid = [[None for _ in range(school_size)]
-                       for _ in range(school_size)]
+                     for _ in range(school_size)]
+
+        # may turn to width and height
 
     def add_individual(self, individual):
         self.grid[individual.location[0]][individual.location[1]] = individual
@@ -94,74 +112,175 @@ class School:
     def remove_individual(self, location):
         self.grid[location[0]][location[1]] = None
 
+    # may change the add/remove function to accept individual class as well as location
+
     def update_connections(self):
         for i in range(len(self.grid)):
             for j in range(len(self.grid[i])):
-                cell = self.grid[i][j]
+                cell = self.get_individual((i, j))
                 if cell == None:
                     continue
                 neighbors = self.get_neighbors(i, j, cell.interact_range)
-                cell.add_connections(neighbors)
+                for neighbor in neighbors:
+                    cell.add_connections(neighbor)
 
     # update the states of each individual in the population based on their interactions with other people
-    def update_grid(self, migration_probability):
-        for i in range(len(self.grid)):
-            for j in range(len(self.grid[i])):
-                cell = self.grid[i][j]
-                if cell == None:
-                    continue
-                # no legal moves in the grid, so skip the cell
-                if not self.is_valid_location([[x, y] for x in range(i - 1, i + 2) for y in range(j - 1, j + 2)]):
-                    continue
-                if random.random() < migration_probability:
-                    if cell.state == State.ZOMBIE:
-                        while True:
-                            direction = [random.randint(-1, 1),
-                                        random.randint(-1, 1)]
-                            new_location = [cell.location[0] + direction[0],
-                                            cell.location[1] + direction[1]]
-                            if self.is_valid_location(new_location):
-                                    self.move_individual(cell, new_location)
-                                    break
+    def update_grid(self, population, migration_probability):
+        for individuals in population:
+            i, j = individuals.location
+            cell = self.get_individual((i, j))
+            if cell == None:
+                raise Exception(
+                    f"Individual {individuals.id} is not in the grid")
+            # no legal moves in the grid, so skip the cell
+            if not self.legal_location([[x, y] for x in range(i - 1, i + 2) for y in range(j - 1, j + 2)]):
+                continue
+            if random.random() < migration_probability:
+                neighbors = self.get_neighbors(i, j, cell.interact_range)
+                if len(neighbors) == 0:
+                    while True:
+                        direction = [random.randint(-1, 1),
+                                     random.randint(-1, 1)]
+                        new_location = [cell.location[0] + direction[0],
+                                        cell.location[1] + direction[1]]
+                        if self.legal_location(new_location):
+                            self.move_individual(cell, new_location)
+                            break
 
-                    # Update the positions of the survivors
-                    elif cell.state == State.ALIVE or cell.state == State.INFECTED:
-                        nearest_zombie_distance = float("inf")
-                        nearest_zombie = None
-                        for zombie in self.get_neighbors(i, j, cell.interact_range):
-                            if zombie.state == State.ZOMBIE:
-                                distance = abs(
-                                    cell.location[0] - zombie.location[0]) + abs(cell.location[1] - zombie.location[1])
-                                if distance < nearest_zombie_distance:
-                                    nearest_zombie_distance = distance
-                                    nearest_zombie = zombie
-                        if nearest_zombie != None and nearest_zombie_distance != 1:
-                            new_location = [-1, -1]
-                            new_location[0] = cell.location[0] - \
-                                1 if nearest_zombie.location[0] > cell.location[0] else cell.location[0] + 1
-                            new_location[1] = cell.location[1] - \
-                                1 if nearest_zombie.location[1] > cell.location[1] else cell.location[1] + 1
-                            if self.is_valid_location(new_location):
-                                self.move_individual(cell, new_location)
-                            else:
-                                while True:
-                                    direction = [random.randint(-1, 1),
-                                                random.randint(-1, 1)]
-                                    new_location = [cell.location[0] + direction[0],
-                                                    cell.location[1] + direction[1]]
-                                    if self.is_valid_location(new_location):
-                                        self.move_individual(
-                                            cell, new_location)
-                                        break
+                # Update the positions of the zombies
+                elif cell.state == State.ZOMBIE:
+                    alive_locations = []
+                    for alive in neighbors:
+                        if alive.state == State.ALIVE:
+                            alive_locations.append(alive.location)
+                    while True:
+                        if len(alive_locations) == 0:
+                            break
+                        alive_distances = [np.linalg.norm(cell.location - alive_location)
+                                           for alive_location in alive_locations]
+                        closest_alive = alive_locations[np.argmin(alive_distances)]
+                        new_location = [cell.location[0] + np.sign(closest_alive[0] - cell.location[0]),
+                                        cell.location[1] + np.sign(closest_alive[1] - cell.location[1])]
+                        if self.legal_location(new_location):
+                            self.move_individual(cell, new_location)
+                            break
                         else:
                             while True:
-                                direction = [random.randint(-1, 1),
-                                            random.randint(-1, 1)]
-                                new_location = [cell.location[0] + direction[0],
-                                                cell.location[1] + direction[1]]
-                                if self.is_valid_location(new_location):
-                                    self.move_individual(cell, new_location)
+                                direction = [random.randint(-1, 1)]
+                                new_location_x = [new_location[0],
+                                                  cell.location[1] + direction]
+                                new_location_y = [cell.location[0] + direction,
+                                                  new_location[1]]
+                                if self.legal_location(new_location_x):
+                                    self.move_individual(cell, new_location_x)
                                     break
+                                elif self.legal_location(new_location_y):
+                                    self.move_individual(cell, new_location_y)
+                                    break
+                                else:
+                                    continue
+                
+                # if right next to then don't move
+                # get neighbors with larger and larger range until there is a human
+                # sight range is different from interact range
+
+                # Update the positions of the survivors
+                elif cell.state == State.ALIVE or cell.state == State.INFECTED:
+                    zombie_locations = []
+                    for zombie in neighbors:
+                        if zombie.state == State.ZOMBIE:
+                            zombie_locations.append(zombie.location)
+                    while True:
+                        if len(zombie_locations) == 0:
+                            break
+                        zombie_distances = [np.linalg.norm(cell.location - zombie_location)
+                                            for zombie_location in zombie_locations]
+                        closest_zombie = zombie_locations[np.argmin(zombie_distances)]
+                        new_location = [cell.location[0] + np.sign(closest_zombie[0] - cell.location[0]),
+                                        cell.location[1] + np.sign(closest_zombie[1] - cell.location[1])]
+                    
+                        if self.legal_location(new_location):
+                            self.move_individual(cell, new_location)
+                        else:
+                            while True:
+                                direction = [random.randint(-1, 1)]
+                                new_location_x = [new_location[0],
+                                                  cell.location[1] + direction]
+                                new_location_y = [cell.location[0] + direction,
+                                                  new_location[1]]
+                                if self.legal_location(new_location_x):
+                                    self.move_individual(cell, new_location_x)
+                                    break
+                                elif self.legal_location(new_location_y):
+                                    self.move_individual(cell, new_location_y)
+                                    break
+                                else:
+                                    continue
+                else:
+                    while True:
+                        direction = [random.randint(-1, 1),
+                                     random.randint(-1, 1)]
+                        new_location = [cell.location[0] + direction[0],
+                                        cell.location[1] + direction[1]]
+                        if self.legal_location(new_location):
+                            self.move_individual(cell, new_location)
+                            break
+
+    # divide movement function into three parts, one for random, one for zombie, one for survivor
+    # cases of more than one zombie and human, remove unwanted individuals
+    # cases when both zombie and human are in neighbors, move towards human away from zombie
+    """
+    def choose_action(self, agent):
+        neighbors = self.get_neighbors(agent)
+        if isinstance(agent, Human):
+            for neighbor in neighbors:
+                if isinstance(neighbor, Zombie):
+                    return "attack"
+            return "move"
+        elif isinstance(agent, Zombie):
+            for neighbor in neighbors:
+                if isinstance(neighbor, Human):
+                    return "attack"
+            return "move"
+    """
+    """
+    use random walk algorithm to simulate movement based on probability adjusted by cell's infection status and location
+    """
+    """
+    def simulate_movement(self):
+        for i in range(self.width):
+            for j in range(self.height):
+                individual = self.grid[i][j]
+                if individual is not None:
+                    # use the A* algorithm to find the shortest path to the nearest exit
+                    start = (i, j)
+                    # the four corners of the grid
+                    exits = [(0, 0), (0, self.width-1),
+                            (self.height-1, 0), (self.height-1, self.width-1)]
+                    distances, previous = self.a_star(start, exits)
+                    # use the first exit as the destination
+                    path = self.reconstruct_path(previous, start, exits[0])
+
+                    # move to the next cell in the shortest path to the nearest exit
+                    if len(path) > 1:  # check if there is a valid path to the nearest exit
+                        next_x, next_y = path[1]
+                        # update the individual's location
+                        individual.location = (next_x, next_y)
+                        # remove the individual from their current location
+                        self.grid[i][j] = None
+                        # add the individual to their new location
+                        self.grid[next_x][next_y] = individual
+
+    def a_star(self, start, goals):
+        # implement the A* algorithm to find the shortest path from the start to one of the goals
+        # returns the distances and previous nodes for each node in the grid
+        pass
+
+    def reconstruct_path(self, previous, start, goal):
+        # implement the algorithm to reconstruct the path from the previous nodes
+        # returns the shortest path from the start to the goal
+        pass
+    """
 
     def within_distance(self, individual1, individual2, interact_range):
         # check if the two individuals are within a certain distance of each other
@@ -179,7 +298,25 @@ class School:
                     neighbors.append(self.grid[i][j])
         return neighbors
 
-    def is_valid_location(self, location):
+    """
+    def get_neighbors(self, agent):
+        neighbors = []
+        for i in range(-1, 2):
+            for j in range(-1, 2):
+                if i == 0 and j == 0:
+                    continue
+                if agent.location[0] + i < 0 or agent.location[0] + i > self.width - 1:
+                    continue
+                if agent.location[1] + j < 0 or agent.location[1] + j > self.height - 1:
+                    continue
+                if self.grid[agent.location[0] + i][agent.location[1] + j] == None:
+                    continue
+                neighbors.append(
+                    self.grid[agent.location[0] + i][agent.location[1] + j])
+        return neighbors
+    """
+
+    def legal_location(self, location):
         return 0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size and self.grid[location[0]][location[1]] == None
 
     def move_individual(self, individual, direction):
@@ -218,11 +355,11 @@ class Population:
             while True:
                 location = (random.randint(0, school_size-1),
                             random.randint(0, school_size-1))
-                if self.school.is_valid_location(location):
+                if self.school.legal_location(location):
                     break
                 else:
                     continue
-            self.add_individual(Individual(i, state=state, location=location))
+            self.add_individual(Individual(i, state, location))
 
     def run_population(self, num_time_steps):
         for time in range(num_time_steps):
@@ -234,9 +371,22 @@ class Population:
             self.update_population_metrics()
             self.get_all_individual_info()
             self.school.get_info()
+            
+    """
+    def update(self):
+        for agent in self.population:    
+            action = self.choose_action(agent)
+            if action == "move":
+                direction = self.choose_direction(agent)
+                self.move_agent(agent, direction)
+            elif action == "attack":
+                self.attack_neighbors(agent)
+            else:
+                continue
+    """
 
     def update_grid(self):
-        self.school.update_grid(self.migration_probability)
+        self.school.update_grid(self.population, self.migration_probability)
 
     def update_state(self):
         for individual in self.population:
@@ -245,26 +395,20 @@ class Population:
                 self.remove_individual(individual)
 
     def update_population_metrics(self):
-        self.num_healthy = sum(
-            1 for individual in self.population if individual.state == State.ALIVE)
-        self.num_infected = sum(
-            1 for individual in self.population if individual.state == State.INFECTED)
-        self.num_zombie = sum(
-            1 for individual in self.population if individual.state == State.ZOMBIE)
-        self.num_dead = sum(
-            1 for individual in self.population if individual.state == State.DEAD)
-        self.population_size = self.num_healthy + \
-            self.num_infected + self.num_zombie + self.num_dead
+        self.num_healthy = sum(1 for individual in self.population if individual.state == State.ALIVE)
+        self.num_infected = sum(1 for individual in self.population if individual.state == State.INFECTED)
+        self.num_zombie = sum(1 for individual in self.population if individual.state == State.ZOMBIE)
+        self.num_dead = sum(1 for individual in self.population if individual.state == State.DEAD)
+        self.population_size = self.num_healthy + self.num_infected + self.num_zombie + self.num_dead
         self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity)))
         self.turning_probability = 1 - (1 / (1 + math.exp(-self.severity)))
         self.death_probability = self.severity
-        self.migration_probability = self.population_size / \
-            (self.population_size + 1)
+        self.migration_probability = self.population_size / (self.population_size + 1)
 
     def get_all_individual_info(self):
         return f'Population of size {self.population_size}' + '\n' + \
-                '\n'.join([individual.get_info()
-                          for individual in self.population])
+            '\n'.join([individual.get_info()
+                       for individual in self.population])
 
     def observe_population(self):
         # Count the number of individuals in each state
@@ -310,13 +454,15 @@ class Population:
                 elif cell == "empty":
                     print("E", end="")
             print()
-
+            
+    def plot_school(self):
+        
         # create a scatter plot of the population
-        # x = [individual.location[0] for individual in self.population]
-        # y = [individual.location[1] for individual in self.population]
-        cell_states = [individual.state for individual in self.population]
-        # plt.scatter(x, y, c=cell_states)
-        plt.scatter(*zip(*self.population), c=cell_states)
+        cell_states_value = [individual.state.value for individual in self.population]
+        x = [individual.location[0] for individual in self.population]
+        y = [individual.location[1] for individual in self.population]
+        plt.scatter(x, y, c=cell_states_value)
+        plt.figure()
         plt.show()
 
         # Analyze the results by observing the changes in the population over time
@@ -339,6 +485,7 @@ school_sim.run_population(10)
 # Observe the changes in the population and school over time
 school_sim.observe_population()
 school_sim.observe_school()
+school_sim.plot_school()
 
 """
 # Define the rules or events that trigger transitions between states
@@ -348,107 +495,40 @@ def is_infected(self, school, severity, tau, sigma, effectiveness):
     for individual in self.interactions:
         if individual.state == State.ZOMBIE or individual.state == State.INFECTED:
             # Calculate the probability of infection based on the duration of the interaction
-            """
+            
             # The probability of infection is being calculated based on the duration of the interaction between the individual and another individual. The longer the interaction, the higher the probability of infection. The probability is being calculated using the formula 1 - e^(-duration/tau), where tau is a parameter representing the average time it takes for the infection to be transmitted. The exponent in the formula is negative because a longer duration means a higher probability of infection, and the negative exponent means that the probability decreases as the duration increases. The final probability is calculated by subtracting this value from 1, meaning that the probability increases as the duration increases.
-            """
+            
             probability = 1 - math.exp(-self.interaction_duration / tau)
 
             # Calculate the probability of infection based on the distance between the two individuals
             row1, col1 = self.location
             row2, col2 = individual.location
             distance = math.sqrt((row1 - row2)**2 + (col1 - col2)**2)
-            """
+            
             # This line of code is updating the probability of infection based on the distance between the two individuals. The probability is being calculated using the formula 1 - e^(-distance/sigma), where sigma is a parameter representing the average distance at which the infection can be transmitted. The exponent in the formula is negative because a shorter distance means a higher probability of infection, and the negative exponent means that the probability decreases as the distance increases. The probability is then being updated by multiplying it by this value, meaning that the overall probability will decrease as the distance increases.
-            """
+            
             probability *= 1 - math.exp(-distance / sigma)
 
             # Multiply the probability by the effectiveness of any protective measures
-            """
+            
             # This line of code is updating the probability of infection based on the effectiveness of any protective measures that the individual may be using. For example, if the individual is wearing a mask or gloves, the probability of infection may be lower. The probability is being updated by multiplying it by the effectiveness value, which represents the degree to which the protective measures are effective at preventing infection. If the effectiveness value is 1, it means that the measures are completely effective and the probability will not change. If the effectiveness value is less than 1, it means that the measures are less effective and the probability will increase.
-            """
+            
             probability *= effectiveness
 
             # Multiply the probability by the overall severity of the outbreak
-            """
+            
             # This line of code is updating the probability of infection based on the overall severity of the zombie outbreak. The probability is being updated by multiplying it by the severity value, which represents the overall severity of the outbreak on a scale from 0 to max_severity. If the severity value is 0, it means that the outbreak is not severe and the probability will not change. If the severity value is greater than 0, it means that the outbreak is more severe and the probability will increase. The probability is also being divided by the max_severity value, which represents the maximum possible severity of the outbreak. This is being done to normalize the probability so that it is always between 0 and 1.
-            """
+            
             probability *= severity / school.max_severity
 
             # Return True if the probability is greater than a random number, False otherwise
             return random.random() < probability
     return False
 
-# Determine whether the individual has turned into a zombie based on the passage of time or the severity of the infection
-def has_turned(self):
-    # Calculate the probability of turning based on the infection severity
-    """
-    # calculates the probability of turning into a zombie based on the severity of the infection. The higher the severity, the higher the probability of turning.
-    """
-    p_severity = 1 - (1 / (1 + self.infection_severity))
-    
-    # Calculate the probability of turning based on the effectiveness of treatment
-    """
-    # calculates the probability of turning into a zombie based on the effectiveness of treatment. The higher the treatment effectiveness, the lower the probability of turning.
-    """
-    p_treatment = 1 - self.treatment_effectiveness
-    
-    # Calculate the overall probability of turning
-    """
-    # calculates the overall probability of turning into a zombie based on both the severity of the infection and the effectiveness of treatment.
-    """
-    p_turning = p_severity * p_treatment
-    
-    # Check if the individual has turned based on the calculated probability
-    if random.random() < p_turning:
-        return True
-    
-    return False
+# defense that will decrease the probability of infection and death
 
+# use probability to define the rules or events that trigger transitions between states
 
-# Determine whether the individual has died based on the severity of the infection or other causes such as injuries or starvation
-def has_died(self):
-    if self.state == State.ZOMBIE:
-        # Calculate the probability of death based on the age of the zombie
-        """
-        # This code calculates the probability of death for a zombie based on the value of DEATH_THRESHOLD.
-        """
-        death_probability = 1 - (1 / (1 + math.exp(DEATH_THRESHOLD)))
-        
-        # Adjust the probability of death based on the availability of resources or external factors
-        if self.has_resources:
-            death_probability *= 0.5
-        if self.exposed_to_sunlight:
-            death_probability *= 0.75
-        if self.injuries > 0:
-            death_probability *= 1.25
-        
-        # Check if the zombie has died based on the calculated probability
-        if random.random() < death_probability:
-            return True
-        
-        return False
-    else:
-        # Calculate the probability of death based on the severity of the infection
-        """
-        # This code calculates the probability of death for a individual who is not a zombie based on the severity of their infection and a value called DEATH_THRESHOLD. By subtracting DEATH_THRESHOLD from the individual's infection severity, this code is able to take into account the fact that people with more severe infections are more likely to die.
-        """
-        death_probability = 1 - (1 / (1 + math.exp(-(self.infection_severity - DEATH_THRESHOLD))))
-        
-        # Adjust the probability of death based on the availability of medical treatment or resources
-        if self.has_treatment:
-            death_probability *= 0.5
-        if self.has_resources:
-            death_probability *= 0.75
-        if self.injuries > 0:
-            death_probability *= 1.25
-        
-        # Check if the individual has died based on the calculated probability
-        if random.random() < death_probability:
-            return True
-        
-        return False
-"""
-"""
 Define the rules of the simulation
 Zombie infection - if a zombie and survivor are in neighbouring cell, the survivor will become infected
 Survivor attack - if a zombie and survivor are in neighbouring cell, if a zombie dies, it is removed from the simulation
@@ -457,34 +537,11 @@ Survivor movement - each survivor moves one unit away from the nearest zombie
 
 a: individual: zombie and survivor, cell: position, grid: zombie_positions and survivor_positions, simulation: update_simulation()
 
-Individual.interactions
 
-# Define the rules or events that trigger transitions between states in the population model
-def determine_event():
-    # Determine the probability of each event occurring
-    infection_probability = 0.1
-    turning_probability = 0.05
-    death_probability = 0.01
-    
-    # Generate a random number between 0 and 1
-    r = random.random()
-    
-    # Compare the random number to the probabilities of each event to determine which event should be triggered
-    if r < infection_probability:
-        return "infection"
-    elif r < infection_probability + turning_probability:
-        return "turning"
-    elif r < infection_probability + turning_probability + death_probability:
-        return "death"
-    else:
-        return None
-"""
 
-"""
 birth_probability, death_probability, infection_probability, turning_probability, death_probability, connection_probability, movement_probability, attack_probability may be changed to adjust the simulation
-"""
 
-"""
+
 Here are a few additional considerations that you may want to take into account when implementing the simulation:
 
 Data collection and storage: You may want to consider how you will store and track data about the attributes of each individual, such as their age, gender, location, and state. This could involve creating a database or data structure to store this information.
