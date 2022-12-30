@@ -1,5 +1,13 @@
 """
-Implementing a simulation to model a zombie apocalypse at a school in Python would involve creating a program that uses the population model, state machine model, and cellular automaton to represent the size, behavior, and evolution of the school's population over time. Here is one possible way to implement this simulation in Python:
+To implement a simulation of a person's activity during a zombie apocalypse at school, we would need to define several classes and functions to represent the different elements of the simulation.
+
+First, we would need a Person class to represent each person in the simulation. This class would have attributes to track the person's location, state (alive, undead, or escaped), health, and any weapons or supplies they may have. It would also have methods to move the person on the grid and interact with other people and zombies.
+
+Next, we would need a Zombie class to represent each zombie in the simulation. This class would have similar attributes and methods as the Person class, but would also include additional attributes and methods to simulate the behavior of a zombie (such as attacking living people and spreading the infection).
+
+We would also need a School class to represent the layout of the school and track the locations of people and zombies on the grid. This class would have a two-dimensional array to represent the grid, with each cell containing a Person or Zombie object, or None if the cell is empty. The School class would also have methods to move people and zombies on the grid and update their states based on the rules of the simulation.
+
+Finally, we would need a main simulate function that would set up the initial conditions of the simulation (such as the layout of the school, the number and distribution of people and zombies, and any weapons or supplies), and then run the simulation for a specified number of steps. This function would use the School class to move people and zombies on the grid and update their states, and could also include additional code to track and display the progress of the simulation.
 """
 
 
@@ -29,6 +37,7 @@ class Individual:
         self.connections = []
         self.infection_severity = 0.0
         self.interact_range = 2
+        self.sight_range = 5
 
     def add_connection(self, other):
         self.connections.append(other)
@@ -53,21 +62,30 @@ class Individual:
                 self.state = State.DEAD
 
     def is_infected(self, severity):
-        infection_probability = 1 - (1 / (1 + math.exp(-severity)))
+        infection_probability = severity
         for individual in self.connections:
             if individual.state == State.ZOMBIE:
                 if random.random() < infection_probability:
                     return True
         return False
+    
+    """
+    def is_infected(self, severity):
+        infection_probability = 1 - (1 / (1 + math.exp(-severity)))
+        num_zombie = sum(1 for individual in self.connections if individual.state == State.ZOMBIE)
+        if random.random() < (1-(1-infection_probability)**num_zombie):
+            return True
+        return False
+    """
 
     def is_turned(self):
-        turning_probability = self.infection_severity
+        turning_probability = 1 - (1 / (1 + math.exp(-self.infection_severity)))
         if random.random() < turning_probability:
             return True
         return False
 
     def is_died(self, severity):
-        death_probability = 1 - (1 / (1 + math.exp(severity)))
+        death_probability = severity
         for individual in self.connections:
             if individual.state == State.ALIVE or individual.state == State.INFECTED:
                 if random.random() < death_probability:
@@ -102,6 +120,7 @@ class School:
                      for _ in range(school_size)]
 
         # may turn to width and height
+        # may put Cell class in the grid where Cell class has individual attributes and rates
 
     def add_individual(self, individual):
         self.grid[individual.location[0]][individual.location[1]] = individual
@@ -129,14 +148,15 @@ class School:
         for individuals in population:
             i, j = individuals.location
             cell = self.get_individual((i, j))
+            adjacent_neighbors = self.get_neighbors(i, j)
             if cell == None:
                 raise Exception(
                     f"Individual {individuals.id} is not in the grid")
             # no legal moves in the grid, so skip the cell
-            if not self.legal_location([[x, y] for x in range(i - 1, i + 2) for y in range(j - 1, j + 2)]):
+            if len(adjacent_neighbors) == 8:
                 continue
             if random.random() < migration_probability:
-                neighbors = self.get_neighbors(i, j, cell.interact_range)
+                neighbors = self.get_neighbors(i, j, cell.sight_range)
                 if len(neighbors) == 0:
                     while True:
                         direction = [random.randint(-1, 1),
@@ -229,6 +249,8 @@ class School:
     # divide movement function into three parts, one for random, one for zombie, one for survivor
     # cases of more than one zombie and human, remove unwanted individuals
     # cases when both zombie and human are in neighbors, move towards human away from zombie
+    # If the closest person is closer than the closest zombie, move towards the person, otherwise move away from the zombie
+    # or move away from zombie is the priority and move towards person is the secondary priority
     """
     def choose_action(self, agent):
         neighbors = self.get_neighbors(agent)
@@ -297,6 +319,15 @@ class School:
                 if self.within_distance(self.grid[x][y], self.grid[i][j], interact_range):
                     neighbors.append(self.grid[i][j])
         return neighbors
+    
+    """
+    def get_adjacent_people(self, entity):
+        adjacent_people = []
+        for person in self.people:
+            if abs(person.x - entity.x) <= 1 and abs(person.y - entity.y) <= 1:
+                adjacent_people.append(person)
+        return adjacent_people
+    """
 
     """
     def get_neighbors(self, agent):
@@ -311,8 +342,7 @@ class School:
                     continue
                 if self.grid[agent.location[0] + i][agent.location[1] + j] == None:
                     continue
-                neighbors.append(
-                    self.grid[agent.location[0] + i][agent.location[1] + j])
+                neighbors.append(self.grid[agent.location[0] + i][agent.location[1] + j])
         return neighbors
     """
 
@@ -360,6 +390,8 @@ class Population:
                 else:
                     continue
             self.add_individual(Individual(i, state, location))
+
+    # a method to init using a grid of "A", "I", "Z", "D"
 
     def run_population(self, num_time_steps):
         for time in range(num_time_steps):
@@ -418,10 +450,8 @@ class Population:
         num_dead = self.num_dead
 
         # Calculate the percentage of cells in each state
-        healthy_percent = num_healthy / \
-            (num_healthy + num_infected + num_zombie)
-        infected_percent = num_infected / \
-            (num_healthy + num_infected + num_zombie)
+        healthy_percent = num_healthy / (num_healthy + num_infected + num_zombie)
+        infected_percent = num_infected / (num_healthy + num_infected + num_zombie)
         zombie_percent = num_zombie / (num_healthy + num_infected + num_zombie)
 
         # Calculate the rate of infection, turning, and death
