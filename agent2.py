@@ -44,7 +44,10 @@ class Human:
         # move the human by dx and dy
 
             
-    def flee
+    def fleet(self, humans, zombies):
+        # check if the human is next to a zombie
+            # move away from the zombie
+        # check if the human is next to another human
         
     def __str__(self):
         return str(self.status) + 'human with ' + str(self.health) + ' health, ' + str(self.strength) + ' strength, and ' + str(self.speed) + ' speed'
