@@ -47,7 +47,7 @@ THRESHOLD = 0.5
 
 class Cell:
 
-    __slots__ = ['location', 'state', 'people']
+    __slots__ = ['state', 'people']
 
     def __init__(self):
         self.state = CellState.HEALTHY
