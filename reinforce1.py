@@ -104,7 +104,7 @@ def state_transition(state, event):
             return SEARCHING
         else:
             return HIDING
-        
+
 def execute_action(state, action):
     if state == HIDING:
         if action == HIDE:
@@ -171,6 +171,67 @@ def execute_action(state, action):
     else:
         raise ValueError("Invalid state")
     return event, reward
+
+"""
+# execute action function with match case statement
+def execute_action(state, action):
+    match state, action:
+        case HIDING, HIDE:
+            event = np.random.choice(events)
+            reward = SURVIVE
+        case HIDING, SEARCH:
+            if np.random.random() < 0.5:
+                event = NOISE
+                reward = SURVIVE
+            else:
+                event = ZOMBIE
+                reward = SURVIVE
+        case HIDING, FIGHT:
+            event = ZOMBIE
+            reward = SURVIVE
+        case SEARCHING, HIDE:
+            event = np.random.choice(events)
+            reward = SURVIVE
+        case SEARCHING, SEARCH:
+            if np.random.random() < 0.5:
+                event = WEAPON
+                reward = FIND_RESOURCES
+            else:
+                event = NOISE
+                reward = SURVIVE
+        case SEARCHING, FIGHT:
+            event = np.random.choice(events)
+            reward = SURVIVE
+        case FIGHTING, HIDE:
+            if np.random.random() < 0.5:
+                event = NOISE
+                reward = SURVIVE
+            else:
+                event = ZOMBIE
+                reward = DIE_BY_ZOMBIE
+        case FIGHTING, SEARCH:
+            if np.random.random() < 0.3:
+                event = WEAPON
+                reward = SURVIVE
+            elif np.random.random() < 0.5:
+                event = ZOMBIE
+                reward = SURVIVE
+            else:
+                event = ZOMBIE
+                reward = DIE_BY_ZOMBIE
+        case FIGHTING, FIGHT:
+            if np.random.random() < 0.9:
+                if np.random.random() < 0.5:
+                    event = WEAPON
+                else:
+                    event = ZOMBIE
+                reward = KILL_ZOMBIE
+            else:
+                event = ZOMBIE
+                reward = DIE_BY_ZOMBIE
+        case _, _:
+            raise ValueError("Invalid state or action")
+"""
 
 # select an action using the learned epsilon-greedy policy
 def choose_action(Q, state, epsilon):

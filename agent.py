@@ -43,6 +43,11 @@ class Human:
         self.id = id
         self.health = 100
         self.location = (0, 0) # x, y coordinates on the map
+        
+        # health, strength, speed
+        # inherit from individual class
+        # speed controls who attacks first, if dead can't attack back
+        # or not in turn-based game, attack in interval of speed time
 
     def distance(self, other):
         # Calculate the distance between two humans using the Pythagorean theorem
@@ -67,7 +72,7 @@ class Human:
 
         # Return a list of enemies within range
         enemies_in_range = []
-        attack_range = math.sqrt(2) if (isinstance(self, Zombie) or self.weapon is None) else math.sqrt(2 + self.weapon.range)
+        attack_range = math.sqrt(2+ self.weapon.range) if (isinstance(self, Survivor) and self.weapon is not None) else math.sqrt(2)
         for distance, enemy in distances:
             if distance <= attack_range:
                 enemies_in_range.append(enemy)
@@ -111,6 +116,23 @@ class Human:
 
     # strength and defense attributes
     # defend method to reduce damage taken
+    
+    """
+    def attack(self, target):
+        # if the target is a zombie, fight
+            # if the human is faster than the zombie, they hit first
+                # the zombie's health is reduced by the human's strength
+                # if the zombie is still alive, attack back
+                    # the human's health is reduced by the zombie's strength
+                    # if the human is dead, turn to zombie
+                # if the zombie is dead, die
+            # if the zombie is faster than the human, they hit first
+                # the human's health is reduced by the zombie's strength
+                # if the human is still alive, attack back
+                    # the zombie's health is reduced by the human's strength
+                    # if the zombie is dead, die
+                # if the human is dead, turn to zombie
+    """
 
 class Survivor(Human):
     def __init__(self, id):

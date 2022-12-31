@@ -104,9 +104,9 @@ class Individual:
                 if isinstance(neighbor, Human):
                     self.attack_agent(agent, neighbor)
     """
-
+    
     def get_info(self):
-        return f"Individual {self.id} is {self.state} and is located at {self.location}, having connections with {self.connections} and infection severity {self.infection_severity}"
+        return f"Individual {self.id} is {self.state} and is located at {self.location}, having connections with {self.connections}, infection severity {self.infection_severity}, interact range {self.interact_range}, and sight range {self.sight_range}."
 
 # seperate inheritance for human and zombie class
 # zombie health == human health before infection
@@ -150,8 +150,7 @@ class School:
             cell = self.get_individual((i, j))
             adjacent_neighbors = self.get_neighbors(i, j)
             if cell == None:
-                raise Exception(
-                    f"Individual {individuals.id} is not in the grid")
+                raise Exception(f"Individual {individuals.id} is not in the grid")
             # no legal moves in the grid, so skip the cell
             if len(adjacent_neighbors) == 8:
                 continue
@@ -345,6 +344,10 @@ class School:
                 neighbors.append(self.grid[agent.location[0] + i][agent.location[1] + j])
         return neighbors
     """
+    
+    # may add a method to get all possible legal moves instead of trying if the desired move is legal
+    # then check if the legal moves can move away from the zombie, move towards human
+    # then move by dx and dy
 
     def legal_location(self, location):
         return 0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size and self.grid[location[0]][location[1]] == None
@@ -403,6 +406,12 @@ class Population:
             self.update_population_metrics()
             self.get_all_individual_info()
             self.school.get_info()
+            if self.num_healthy == 0:
+                print("All individuals are infected")
+                break
+            elif self.num_infected == 0 and self.num_zombie == 0:
+                print("All individuals are healthy")
+                break
             
     """
     def update(self):
@@ -424,7 +433,7 @@ class Population:
         for individual in self.population:
             individual.update_state(self.severity)
             if individual.state == State.DEAD:
-                self.remove_individual(individual)
+                self.school.remove_individual(individual)
 
     def update_population_metrics(self):
         self.num_healthy = sum(1 for individual in self.population if individual.state == State.ALIVE)
@@ -475,14 +484,14 @@ class Population:
         # Print a visual representation of the school, with each cell represented by a character
         for row in self.school.grid:
             for cell in row:
-                if cell == State:
+                if cell == State.ALIVE:
                     print("H", end="")
                 elif cell == State.INFECTED:
                     print("I", end="")
                 elif cell == State.ZOMBIE:
                     print("Z", end="")
-                elif cell == "empty":
-                    print("E", end="")
+                elif cell == State.DEAD:
+                    print("D", end="")
             print()
             
     def plot_school(self):
@@ -495,6 +504,7 @@ class Population:
         plt.figure()
         plt.show()
 
+    def plot_population(self):
         # Analyze the results by observing the changes in the population over time
         cell_states = [individual.state for individual in self.population]
         counts = {state: cell_states.count(state) for state in list(State)}
@@ -504,6 +514,9 @@ class Population:
 
         # Show the plot
         plt.show()
+        
+    def __str__(self):
+        return f'Population with {self.num_healthy} healthy, {self.num_infected} infected, {self.num_zombie} zombie, and {self.num_dead} dead individuals'
 
 
 # Create a SchoolZombieApocalypse object
@@ -516,6 +529,7 @@ school_sim.run_population(10)
 school_sim.observe_population()
 school_sim.observe_school()
 school_sim.plot_school()
+school_sim.plot_population()
 
 """
 # Define the rules or events that trigger transitions between states
