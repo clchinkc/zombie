@@ -13,9 +13,11 @@ Finally, we would need a main simulate function that would set up the initial co
 
 import math
 import random
-import numpy as np
-import matplotlib.pyplot as plt
 from enum import Enum, auto
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import animation
 
 
 # Define the states and transitions for the state machine model
@@ -38,6 +40,9 @@ class Individual:
         self.infection_severity = 0.0
         self.interact_range = 2
         self.sight_range = 5
+        
+        # different range for different states
+        # may use random distribution
 
     def add_connection(self, other):
         self.connections.append(other)
@@ -61,6 +66,7 @@ class Individual:
             if self.is_died(severity):
                 self.state = State.DEAD
 
+    # cellular automaton
     def is_infected(self, severity):
         infection_probability = severity
         for individual in self.connections:
@@ -78,12 +84,14 @@ class Individual:
         return False
     """
 
+    # cellular automaton
     def is_turned(self):
         turning_probability = 1 - (1 / (1 + math.exp(-self.infection_severity)))
         if random.random() < turning_probability:
             return True
         return False
 
+    # cellular automaton
     def is_died(self, severity):
         death_probability = severity
         for individual in self.connections:
@@ -235,15 +243,12 @@ class School:
                                     break
                                 else:
                                     continue
+                elif cell.state == State.DEAD:
+                    continue
                 else:
-                    while True:
-                        direction = [random.randint(-1, 1),
-                                     random.randint(-1, 1)]
-                        new_location = [cell.location[0] + direction[0],
-                                        cell.location[1] + direction[1]]
-                        if self.legal_location(new_location):
-                            self.move_individual(cell, new_location)
-                            break
+                    raise Exception(f"Individual {individuals.id} has an invalid state")
+            else:
+                continue
 
     # divide movement function into three parts, one for random, one for zombie, one for survivor
     # cases of more than one zombie and human, remove unwanted individuals
@@ -327,21 +332,11 @@ class School:
                 adjacent_people.append(person)
         return adjacent_people
     """
-
     """
     def get_neighbors(self, agent):
-        neighbors = []
-        for i in range(-1, 2):
-            for j in range(-1, 2):
-                if i == 0 and j == 0:
-                    continue
-                if agent.location[0] + i < 0 or agent.location[0] + i > self.width - 1:
-                    continue
-                if agent.location[1] + j < 0 or agent.location[1] + j > self.height - 1:
-                    continue
-                if self.grid[agent.location[0] + i][agent.location[1] + j] == None:
-                    continue
-                neighbors.append(self.grid[agent.location[0] + i][agent.location[1] + j])
+        i, j = agent.location
+        neighbors = self.grid[max(0, i-1):min(self.school_size, i+2)][max(0, j-1):min(self.school_size, j+2)]
+        neighbors = [neighbor for neighbor in neighbors if neighbor is not None and neighbor != agent]
         return neighbors
     """
     
@@ -357,6 +352,10 @@ class School:
         individual.move(direction)
         self.remove_individual(old_location)
         self.add_individual(individual)
+        
+    # may consider update the grid according to the individual's location
+    # after assigning all new locations to the individuals
+    # may add a extra attribute to store new location
 
     def get_info(self):
         for column in self.grid:
@@ -446,6 +445,8 @@ class Population:
         self.death_probability = self.severity
         self.migration_probability = self.population_size / (self.population_size + 1)
 
+        # may use other metrics or functionsto calculate the probability of infection, turning, death, migration
+
     def get_all_individual_info(self):
         return f'Population of size {self.population_size}' + '\n' + \
             '\n'.join([individual.get_info()
@@ -515,6 +516,34 @@ class Population:
         # Show the plot
         plt.show()
         
+    def animation(self):
+        # create an animation of the grid throughout the simulation
+        # create a figure and axis
+        fig, ax = plt.subplots()
+
+        # create a scatter plot of the population
+        cell_states_value = [individual.state.value for individual in self.population]
+        x = [individual.location[0] for individual in self.population]
+        y = [individual.location[1] for individual in self.population]
+        sc = ax.scatter(x, y, c=cell_states_value)
+
+        # create a function to update the scatter plot
+        def update(i):
+            # update the scatter plot
+            cell_states_value = [individual.state.value for individual in self.population]
+            x = [individual.location[0] for individual in self.population]
+            y = [individual.location[1] for individual in self.population]
+            sc.set_offsets(np.c_[x, y])
+            sc.set_array(np.array(cell_states_value))
+            return sc,
+
+        # create an animation
+        anim = animation.FuncAnimation(fig, update, frames=100, interval=100, blit=True)
+
+        # show the animation
+        plt.show()
+        
+        
     def __str__(self):
         return f'Population with {self.num_healthy} healthy, {self.num_infected} infected, {self.num_zombie} zombie, and {self.num_dead} dead individuals'
 
@@ -568,6 +597,15 @@ def is_infected(self, school, severity, tau, sigma, effectiveness):
             # Return True if the probability is greater than a random number, False otherwise
             return random.random() < probability
     return False
+    
+To use the variance of the binomial distribution to model the spread of a disease in a population, you would need to follow these steps:
+Collect data on the number of individuals who have been infected with the disease and the number who have become zombies (the number of successes in each experiment). This data can be used to estimate the probability of success (i.e., the probability of an individual becoming a zombie after being infected with the disease).
+Calculate the variance of the binomial distribution using the formula: variance = p * (1 - p), where p is the probability of success in each experiment.
+Track the variance of the binomial distribution over time to see how it changes as the disease spreads through the population.
+Use the variance of the binomial distribution to make predictions about the likely outcome of the zombie apocalypse. For example, if the variance is high, it might indicate that the disease is spreading quickly and unpredictably, which could lead to a worse outcome. On the other hand, if the variance is low, it might indicate that the disease is spreading more slowly and predictably, which could lead to a better outcome.
+This formula for the variance of a binomial distribution assumes that the number of experiments is fixed. If the number of experiments is not fixed, the variance of the binomial distribution is given by the formula:
+variance = n * p * (1 - p)
+Where n is the number of experiments.
 
 # defense that will decrease the probability of infection and death
 
@@ -597,4 +635,22 @@ Validation: It's important to validate the accuracy of the simulation by compari
 Sensitivity analysis: It may be useful to perform sensitivity analysis to understand how the simulation results change as different parameters or assumptions are altered. For example, you could vary the rate of infection or the effectiveness of containment measures and see how these changes affect the outcome of the simulation.
 
 Extension: You may want to consider extending the simulation to include additional factors or scenarios. For example, you could incorporate the behavior of external actors, such as emergency responders or military individualnel, or model the spread of the zombie virus to other locations outside the school.
+
+
+
+# use multiple numpy matrix to represent each state
+self.grid = np.zeros((self.grid_size,self.grid_size), dtype=int)
+
+
+
+One potential improvement to the cellular automaton model could be to add more complex rules for transitioning between states. 
+For example, the model could incorporate additional factors 
+such as the age or health of the students and zombies, 
+as well as the availability of weapons or other resources. 
+This could allow for more realistic and nuanced simulations of the zombie apocalypse at school.
+
+Additionally, the model could be expanded to include more detailed information about the layout of the school, 
+such as the locations of classrooms, doors, and other features. 
+This could allow for more accurate simulations of the movement 
+and interactions of students, teachers, and zombies within the school environment.
 """
