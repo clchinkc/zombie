@@ -272,7 +272,7 @@ class Weapon:
         return f"{self.name} ({self.damage} damage, {self.range} range)"
 
 # Create an instance of the Zombie Apocalypse simulation
-#apocalypse = ZombieApocalypse(5, 5)
+apocalypse = ZombieApocalypse(5, 5)
 
 # Run the simulation
-#apocalypse.simulate()
+apocalypse.simulate()

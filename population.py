@@ -15,12 +15,11 @@ from __future__ import annotations
 import math
 import random
 from enum import Enum, auto
-from typing import List, Optional, Union
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import animation
-
 
 
 # Define the states and transitions for the state machine model
@@ -31,19 +30,22 @@ class State(Enum):
     DEAD = auto()
     
     @classmethod
-    def name_list(cls) -> List[str]:
+    def name_list(cls) -> list[str]:
         return [enm.name for enm in State]
     
     @classmethod
-    def value_list(cls) -> List[int]:
+    def value_list(cls) -> list[int]:
         return [enm.value for enm in State]
 
 class Individual:
-    def __init__(self, id: int, state: State, location: tuple) -> None:
+    
+    __slots__ = ['id', 'state', 'location', 'connections', 'infection_severity', 'interact_range', 'sight_range']
+    
+    def __init__(self, id: int, state: State, location: tuple[int, int]) -> None:
         self.id: int = id
         self.state: State = state
-        self.location: tuple = location
-        self.connections: List[Individual] = []
+        self.location: tuple[int, int] = location
+        self.connections: list[Individual] = []
         self.infection_severity: float = 0.0
         self.interact_range: int = 2
         self.sight_range: int = 5
@@ -54,7 +56,7 @@ class Individual:
     def add_connection(self, other: Individual) -> None:
         self.connections.append(other)
 
-    def move(self, direction: tuple) -> None:
+    def move(self, direction: tuple[int, int]) -> None:
         self.location = tuple(np.add(self.location, direction))
         # self.location[0] += direction[0]
         # self.location[1] += direction[1]
@@ -132,7 +134,7 @@ class School:
     def __init__(self, school_size: int) -> None:
         self.school_size = school_size
         # Create a 2D grid representing the school with each cell can contain a Individual object
-        self.grid: List[List[Union[None, Individual]]] \
+        self.grid: list[list[Optional[Individual]]] \
                     = [[None for _ in range(school_size)]
                     for _ in range(school_size)]
 
@@ -142,10 +144,10 @@ class School:
     def add_individual(self, individual: Individual) -> None:
         self.grid[int(individual.location[0])][int(individual.location[1])] = individual
 
-    def get_individual(self, location: tuple) -> Optional[Individual]:
+    def get_individual(self, location: tuple[int, int]) -> Optional[Individual]:
         return self.grid[location[0]][location[1]]
 
-    def remove_individual(self, location: tuple) -> None:
+    def remove_individual(self, location: tuple[int, int]) -> None:
         self.grid[location[0]][location[1]] = None
 
     # may change the add/remove function to accept individual class as well as location
@@ -161,7 +163,7 @@ class School:
                     cell.add_connection(neighbor)
 
     # update the states of each individual in the population based on their interactions with other people
-    def update_grid(self, population: List[Individual], migration_probability: float) -> None:
+    def update_grid(self, population: list[Individual], migration_probability: float) -> None:
         for individuals in population:
             i, j = individuals.location
             cell = self.get_individual((i, j))
@@ -179,7 +181,7 @@ class School:
                                      random.randint(-1, 1))
                         new_location = tuple(np.add(cell.location, direction))
                         if self.legal_location(new_location):
-                            self.move_individual(cell, new_location)
+                            self.move_individual(cell, direction)
                             break
 
                 # Update the positions of the zombies
@@ -198,20 +200,20 @@ class School:
                                     np.sign(closest_alive[1] - cell.location[1]))
                         new_location = tuple(np.add(cell.location, direction))
                         if self.legal_location(new_location):
-                            self.move_individual(cell, new_location)
+                            self.move_individual(cell, direction)
                             break
                         else:
                             while True:
-                                direction = (random.randint(-1, 1))
-                                new_location_x = (cell.location[0], 
-                                                  tuple(np.add(cell.location[1], direction)))
-                                new_location_y = (tuple(np.add(cell.location[0], direction)),
-                                                  new_location[1])
+                                random_number = random.randint(-1, 1)
+                                direction_x = (direction[0], random_number)
+                                new_location_x = tuple(np.add(cell.location, direction_x))
+                                direction_y = (random_number, direction[1])
+                                new_location_y = tuple(np.add(cell.location, direction_y))
                                 if self.legal_location(new_location_x):
-                                    self.move_individual(cell, new_location_x)
+                                    self.move_individual(cell, direction_x)
                                     break
                                 elif self.legal_location(new_location_y):
-                                    self.move_individual(cell, new_location_y)
+                                    self.move_individual(cell, direction_y)
                                     break
                                 else:
                                     continue
@@ -235,21 +237,20 @@ class School:
                         direction = (np.sign(closest_zombie[0] - cell.location[0]), \
                                     np.sign(closest_zombie[1] - cell.location[1]))
                         new_location = tuple(np.add(cell.location, direction))
-                    
                         if self.legal_location(new_location):
-                            self.move_individual(cell, new_location)
+                            self.move_individual(cell, direction)
                         else:
                             while True:
-                                direction = (random.randint(-1, 1))
-                                new_location_x = (new_location[0],
-                                                  int(np.add(cell.location[1], direction)))
-                                new_location_y = (int(np.add(cell.location[0], direction)),
-                                                  new_location[1])
+                                random_number = np.random.randint(-1, 1)
+                                direction_x = (direction[0], random_number)
+                                new_location_x = tuple(np.add(cell.location, direction_x))
+                                direction_y = (random_number, direction[1])
+                                new_location_y = tuple(np.add(cell.location, direction_y))
                                 if self.legal_location(new_location_x):
-                                    self.move_individual(cell, new_location_x)
+                                    self.move_individual(cell, direction_x)
                                     break
                                 elif self.legal_location(new_location_y):
-                                    self.move_individual(cell, new_location_y)
+                                    self.move_individual(cell, direction_y)
                                     break
                                 else:
                                     continue
@@ -318,7 +319,7 @@ class School:
         pass
     """
 
-    def within_distance(self, individual1: Union[Individual, None], individual2: Union[Individual, None], interact_range: int):
+    def within_distance(self, individual1: Optional[Individual], individual2: Optional[Individual], interact_range: int):
         if individual1 is None or individual2 is None:
             return False
         # check if the two individuals are within a certain distance of each other
@@ -326,7 +327,7 @@ class School:
             individual1.location[1] - individual2.location[1])**2)
         return distance < interact_range
 
-    def get_neighbors(self, location: tuple, interact_range: int=2):
+    def get_neighbors(self, location: tuple[int, int], interact_range: int=2):
         x, y = location
         neighbors = []
         for i in range(len(self.grid)):
@@ -357,10 +358,10 @@ class School:
     # then check if the legal moves can move away from the zombie, move towards human
     # then move by dx and dy
 
-    def legal_location(self, location: tuple):
+    def legal_location(self, location: tuple[int, int]):
         return 0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size and self.grid[location[0]][location[1]] == None
 
-    def move_individual(self, individual: Individual, direction: tuple):
+    def move_individual(self, individual: Individual, direction: tuple[int, int]):
         old_location = individual.location
         individual.move(direction)
         self.remove_individual(old_location)
@@ -382,7 +383,7 @@ class School:
 class Population:
     def __init__(self, school_size: int, population_size: int) -> None:
         self.school: School = School(school_size)
-        self.population: List[Individual] = []
+        self.population: list[Individual] = []
         self.init_population(school_size, population_size)
         self.update_population_metrics()
 
