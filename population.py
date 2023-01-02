@@ -10,14 +10,17 @@ We would also need a School class to represent the layout of the school and trac
 Finally, we would need a main simulate function that would set up the initial conditions of the simulation (such as the layout of the school, the number and distribution of people and zombies, and any weapons or supplies), and then run the simulation for a specified number of steps. This function would use the School class to move people and zombies on the grid and update their states, and could also include additional code to track and display the progress of the simulation.
 """
 
+from __future__ import annotations
 
 import math
 import random
 from enum import Enum, auto
+from typing import List, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import animation
+
 
 
 # Define the states and transitions for the state machine model
@@ -26,32 +29,37 @@ class State(Enum):
     INFECTED = auto()
     ZOMBIE = auto()
     DEAD = auto()
-
-    def __str__(self):
-        return self.name
-
+    
+    @classmethod
+    def name_list(cls) -> List[str]:
+        return [enm.name for enm in State]
+    
+    @classmethod
+    def value_list(cls) -> List[int]:
+        return [enm.value for enm in State]
 
 class Individual:
-    def __init__(self, id, state, location):
-        self.id = id
-        self.state = state
-        self.location = location
-        self.connections = []
-        self.infection_severity = 0.0
-        self.interact_range = 2
-        self.sight_range = 5
+    def __init__(self, id: int, state: State, location: tuple) -> None:
+        self.id: int = id
+        self.state: State = state
+        self.location: tuple = location
+        self.connections: List[Individual] = []
+        self.infection_severity: float = 0.0
+        self.interact_range: int = 2
+        self.sight_range: int = 5
         
         # different range for different states
         # may use random distribution
 
-    def add_connection(self, other):
+    def add_connection(self, other: Individual) -> None:
         self.connections.append(other)
 
-    def move(self, direction):
-        self.location[0] += direction[0]
-        self.location[1] += direction[1]
+    def move(self, direction: tuple) -> None:
+        self.location = tuple(np.add(self.location, direction))
+        # self.location[0] += direction[0]
+        # self.location[1] += direction[1]
 
-    def update_state(self, severity):
+    def update_state(self, severity: float) -> None:
         # Update the state of the individual based on the current state and the interactions with other people
         if self.state == State.ALIVE:
             if self.is_infected(severity):
@@ -67,7 +75,7 @@ class Individual:
                 self.state = State.DEAD
 
     # cellular automaton
-    def is_infected(self, severity):
+    def is_infected(self, severity: float) -> bool:
         infection_probability = severity
         for individual in self.connections:
             if individual.state == State.ZOMBIE:
@@ -85,14 +93,14 @@ class Individual:
     """
 
     # cellular automaton
-    def is_turned(self):
+    def is_turned(self) -> bool:
         turning_probability = 1 - (1 / (1 + math.exp(-self.infection_severity)))
         if random.random() < turning_probability:
             return True
         return False
 
     # cellular automaton
-    def is_died(self, severity):
+    def is_died(self, severity: float) -> bool:
         death_probability = severity
         for individual in self.connections:
             if individual.state == State.ALIVE or individual.state == State.INFECTED:
@@ -113,7 +121,7 @@ class Individual:
                     self.attack_agent(agent, neighbor)
     """
     
-    def get_info(self):
+    def get_info(self) -> str:
         return f"Individual {self.id} is {self.state} and is located at {self.location}, having connections with {self.connections}, infection severity {self.infection_severity}, interact range {self.interact_range}, and sight range {self.sight_range}."
 
 # seperate inheritance for human and zombie class
@@ -121,55 +129,55 @@ class Individual:
 
 
 class School:
-    def __init__(self, school_size):
+    def __init__(self, school_size: int) -> None:
         self.school_size = school_size
         # Create a 2D grid representing the school with each cell can contain a Individual object
-        self.grid = [[None for _ in range(school_size)]
-                     for _ in range(school_size)]
+        self.grid: List[List[Union[None, Individual]]] \
+                    = [[None for _ in range(school_size)]
+                    for _ in range(school_size)]
 
         # may turn to width and height
         # may put Cell class in the grid where Cell class has individual attributes and rates
 
-    def add_individual(self, individual):
-        self.grid[individual.location[0]][individual.location[1]] = individual
+    def add_individual(self, individual: Individual) -> None:
+        self.grid[int(individual.location[0])][int(individual.location[1])] = individual
 
-    def get_individual(self, location):
+    def get_individual(self, location: tuple) -> Optional[Individual]:
         return self.grid[location[0]][location[1]]
 
-    def remove_individual(self, location):
+    def remove_individual(self, location: tuple) -> None:
         self.grid[location[0]][location[1]] = None
 
     # may change the add/remove function to accept individual class as well as location
 
-    def update_connections(self):
+    def update_connections(self) -> None:
         for i in range(len(self.grid)):
             for j in range(len(self.grid[i])):
                 cell = self.get_individual((i, j))
                 if cell == None:
                     continue
-                neighbors = self.get_neighbors(i, j, cell.interact_range)
+                neighbors = self.get_neighbors((i, j), cell.interact_range)
                 for neighbor in neighbors:
-                    cell.add_connections(neighbor)
+                    cell.add_connection(neighbor)
 
     # update the states of each individual in the population based on their interactions with other people
-    def update_grid(self, population, migration_probability):
+    def update_grid(self, population: List[Individual], migration_probability: float) -> None:
         for individuals in population:
             i, j = individuals.location
             cell = self.get_individual((i, j))
-            adjacent_neighbors = self.get_neighbors(i, j)
+            adjacent_neighbors = self.get_neighbors((i, j))
             if cell == None:
                 raise Exception(f"Individual {individuals.id} is not in the grid")
             # no legal moves in the grid, so skip the cell
             if len(adjacent_neighbors) == 8:
                 continue
             if random.random() < migration_probability:
-                neighbors = self.get_neighbors(i, j, cell.sight_range)
+                neighbors = self.get_neighbors((i, j), cell.sight_range)
                 if len(neighbors) == 0:
                     while True:
-                        direction = [random.randint(-1, 1),
-                                     random.randint(-1, 1)]
-                        new_location = [cell.location[0] + direction[0],
-                                        cell.location[1] + direction[1]]
+                        direction = (random.randint(-1, 1),
+                                     random.randint(-1, 1))
+                        new_location = tuple(np.add(cell.location, direction))
                         if self.legal_location(new_location):
                             self.move_individual(cell, new_location)
                             break
@@ -186,18 +194,19 @@ class School:
                         alive_distances = [np.linalg.norm(cell.location - alive_location)
                                            for alive_location in alive_locations]
                         closest_alive = alive_locations[np.argmin(alive_distances)]
-                        new_location = [cell.location[0] + np.sign(closest_alive[0] - cell.location[0]),
-                                        cell.location[1] + np.sign(closest_alive[1] - cell.location[1])]
+                        direction = (np.sign(closest_alive[0] - cell.location[0]), \
+                                    np.sign(closest_alive[1] - cell.location[1]))
+                        new_location = tuple(np.add(cell.location, direction))
                         if self.legal_location(new_location):
                             self.move_individual(cell, new_location)
                             break
                         else:
                             while True:
-                                direction = [random.randint(-1, 1)]
-                                new_location_x = [new_location[0],
-                                                  cell.location[1] + direction]
-                                new_location_y = [cell.location[0] + direction,
-                                                  new_location[1]]
+                                direction = (random.randint(-1, 1))
+                                new_location_x = (cell.location[0], 
+                                                  tuple(np.add(cell.location[1], direction)))
+                                new_location_y = (tuple(np.add(cell.location[0], direction)),
+                                                  new_location[1])
                                 if self.legal_location(new_location_x):
                                     self.move_individual(cell, new_location_x)
                                     break
@@ -223,18 +232,19 @@ class School:
                         zombie_distances = [np.linalg.norm(cell.location - zombie_location)
                                             for zombie_location in zombie_locations]
                         closest_zombie = zombie_locations[np.argmin(zombie_distances)]
-                        new_location = [cell.location[0] + np.sign(closest_zombie[0] - cell.location[0]),
-                                        cell.location[1] + np.sign(closest_zombie[1] - cell.location[1])]
+                        direction = (np.sign(closest_zombie[0] - cell.location[0]), \
+                                    np.sign(closest_zombie[1] - cell.location[1]))
+                        new_location = tuple(np.add(cell.location, direction))
                     
                         if self.legal_location(new_location):
                             self.move_individual(cell, new_location)
                         else:
                             while True:
-                                direction = [random.randint(-1, 1)]
-                                new_location_x = [new_location[0],
-                                                  cell.location[1] + direction]
-                                new_location_y = [cell.location[0] + direction,
-                                                  new_location[1]]
+                                direction = (random.randint(-1, 1))
+                                new_location_x = (new_location[0],
+                                                  int(np.add(cell.location[1], direction)))
+                                new_location_y = (int(np.add(cell.location[0], direction)),
+                                                  new_location[1])
                                 if self.legal_location(new_location_x):
                                     self.move_individual(cell, new_location_x)
                                     break
@@ -308,13 +318,16 @@ class School:
         pass
     """
 
-    def within_distance(self, individual1, individual2, interact_range):
+    def within_distance(self, individual1: Union[Individual, None], individual2: Union[Individual, None], interact_range: int):
+        if individual1 is None or individual2 is None:
+            return False
         # check if the two individuals are within a certain distance of each other
         distance = math.sqrt((individual1.location[0] - individual2.location[0])**2 + (
             individual1.location[1] - individual2.location[1])**2)
         return distance < interact_range
 
-    def get_neighbors(self, x, y, interact_range=2):
+    def get_neighbors(self, location: tuple, interact_range: int=2):
+        x, y = location
         neighbors = []
         for i in range(len(self.grid)):
             for j in range(len(self.grid[i])):
@@ -344,10 +357,10 @@ class School:
     # then check if the legal moves can move away from the zombie, move towards human
     # then move by dx and dy
 
-    def legal_location(self, location):
+    def legal_location(self, location: tuple):
         return 0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size and self.grid[location[0]][location[1]] == None
 
-    def move_individual(self, individual, direction):
+    def move_individual(self, individual: Individual, direction: tuple):
         old_location = individual.location
         individual.move(direction)
         self.remove_individual(old_location)
@@ -357,7 +370,7 @@ class School:
     # after assigning all new locations to the individuals
     # may add a extra attribute to store new location
 
-    def get_info(self):
+    def get_info(self) -> None:
         for column in self.grid:
             for individual in column:
                 if individual is not None:
@@ -367,23 +380,24 @@ class School:
 
 
 class Population:
-    def __init__(self, school_size, population_size):
-        self.school = School(school_size)
-        self.population = []
+    def __init__(self, school_size: int, population_size: int) -> None:
+        self.school: School = School(school_size)
+        self.population: List[Individual] = []
         self.init_population(school_size, population_size)
         self.update_population_metrics()
 
-    def add_individual(self, individual):
+    def add_individual(self, individual: Individual) -> None:
         self.population.append(individual)
         self.school.add_individual(individual)
 
-    def remove_individual(self, individual):
+    def remove_individual(self, individual: Individual) -> None:
         self.population.remove(individual)
         self.school.remove_individual(individual.location)
 
-    def init_population(self, school_size, population_size):
+    def init_population(self, school_size: int, population_size: int) -> None:
         for i in range(population_size):
-            state = random.choices(list(State), weights=[0.9, 0.05, 0.05, 0.0])
+            state_index = random.choices(State.value_list(), weights=[0.9, 0.05, 0.05, 0.0])
+            state = State(state_index[0])
             while True:
                 location = (random.randint(0, school_size-1),
                             random.randint(0, school_size-1))
@@ -395,7 +409,7 @@ class Population:
 
     # a method to init using a grid of "A", "I", "Z", "D"
 
-    def run_population(self, num_time_steps):
+    def run_population(self, num_time_steps: int) -> None:
         for time in range(num_time_steps):
             print("Time step: ", time)
             self.severity = time / num_time_steps
@@ -425,16 +439,16 @@ class Population:
                 continue
     """
 
-    def update_grid(self):
+    def update_grid(self) -> None:
         self.school.update_grid(self.population, self.migration_probability)
 
-    def update_state(self):
+    def update_state(self) -> None:
         for individual in self.population:
             individual.update_state(self.severity)
             if individual.state == State.DEAD:
-                self.school.remove_individual(individual)
+                self.school.remove_individual(individual.location)
 
-    def update_population_metrics(self):
+    def update_population_metrics(self) -> None:
         self.num_healthy = sum(1 for individual in self.population if individual.state == State.ALIVE)
         self.num_infected = sum(1 for individual in self.population if individual.state == State.INFECTED)
         self.num_zombie = sum(1 for individual in self.population if individual.state == State.ZOMBIE)
@@ -447,12 +461,12 @@ class Population:
 
         # may use other metrics or functionsto calculate the probability of infection, turning, death, migration
 
-    def get_all_individual_info(self):
+    def get_all_individual_info(self) -> str:
         return f'Population of size {self.population_size}' + '\n' + \
             '\n'.join([individual.get_info()
                        for individual in self.population])
 
-    def observe_population(self):
+    def observe_population(self) -> None:
         # Count the number of individuals in each state
         num_healthy = self.num_healthy
         num_infected = self.num_infected
@@ -481,7 +495,7 @@ class Population:
         print("Turning rate:", turning_rate)
         print("Death rate:", death_rate)
 
-    def observe_school(self):
+    def observe_school(self) -> None:
         # Print a visual representation of the school, with each cell represented by a character
         for row in self.school.grid:
             for cell in row:
@@ -495,7 +509,7 @@ class Population:
                     print("D", end="")
             print()
             
-    def plot_school(self):
+    def plot_school(self) -> None:
         
         # create a scatter plot of the population
         cell_states_value = [individual.state.value for individual in self.population]
@@ -505,7 +519,7 @@ class Population:
         plt.figure()
         plt.show()
 
-    def plot_population(self):
+    def plot_population(self) -> None:
         # Analyze the results by observing the changes in the population over time
         cell_states = [individual.state for individual in self.population]
         counts = {state: cell_states.count(state) for state in list(State)}
@@ -516,7 +530,7 @@ class Population:
         # Show the plot
         plt.show()
         
-    def animation(self):
+    def animation(self) -> None:
         # create an animation of the grid throughout the simulation
         # create a figure and axis
         fig, ax = plt.subplots()
@@ -544,10 +558,10 @@ class Population:
         plt.show()
         
         
-    def __str__(self):
+    def __str__(self) -> str:
         return f'Population with {self.num_healthy} healthy, {self.num_infected} infected, {self.num_zombie} zombie, and {self.num_dead} dead individuals'
 
-
+"""
 # Create a SchoolZombieApocalypse object
 school_sim = Population(school_size=100, population_size=100)
 
@@ -559,6 +573,7 @@ school_sim.observe_population()
 school_sim.observe_school()
 school_sim.plot_school()
 school_sim.plot_population()
+"""
 
 """
 # Define the rules or events that trigger transitions between states

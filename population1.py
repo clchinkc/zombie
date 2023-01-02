@@ -110,9 +110,9 @@ def perform_sensitivity_analysis(t0, t_final, P0, growth_rate, carrying_capacity
     Perform a sensitivity analysis of the differential equation to identify the sensitivity of the system to changes in the assumptions or parameters.
     """
     sensitivity_results = []
-    for growth_rate in parameter_values:
+    for growth_rate_list in parameter_values:
         sensitivity_solution = solve_ivp(dP_dt, [t0, t_final], [P0], args=(
-            growth_rate, carrying_capacity, death_rate, emigration_rate))
+            growth_rate_list, carrying_capacity, death_rate, emigration_rate))
         sensitivity_results.append(sensitivity_solution.y[0])
     return sensitivity_results
 
@@ -124,6 +124,10 @@ def generate_numerical_solution(t0, t_final, P0, growth_rate, carrying_capacity,
     solution = solve_ivp(dP_dt, [t0, t_final], [P0], args=(
         growth_rate, carrying_capacity, death_rate, emigration_rate))
     return solution.t, solution.y[0]
+
+# event in solve_ivp happen when number of either is 0
+# a = solve_ivp(dP_dt, [t0, t_final], [P0], args=(growth_rate, carrying_capacity, death_rate, emigration_rate), events=(lambda t, y: y[0] - 0, lambda t, y: y[1] - 0))
+
 
 
 def run_monte_carlo_simulation(t0, t_final, growth_rate, carrying_capacity, death_rate, emigration_rate, num_simulations, growth_rate_bounds, carrying_capacity_bounds, death_rate_bounds, emigration_rate_bounds, P0_bounds):
