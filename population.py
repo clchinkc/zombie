@@ -37,9 +37,12 @@ class State(Enum):
     def value_list(cls) -> list[int]:
         return [enm.value for enm in State]
 
+
 class Individual:
-    
-    __slots__ = ['id', 'state', 'location', 'connections', 'infection_severity', 'interact_range', 'sight_range']
+
+
+    __slots__ = "id", "state", "location", "connections", \
+    "infection_severity", "interact_range", "sight_range", "__dict__"
     
     def __init__(self, id: int, state: State, location: tuple[int, int]) -> None:
         self.id: int = id
@@ -131,6 +134,9 @@ class Individual:
 
 
 class School:
+    
+    __slots__ = "school_size", "grid", "__dict__"
+    
     def __init__(self, school_size: int) -> None:
         self.school_size = school_size
         # Create a 2D grid representing the school with each cell can contain a Individual object
@@ -381,6 +387,9 @@ class School:
 
 
 class Population:
+    
+    __slots__ = "school", "population", "severity", "num_healthy", "num_infected", "num_zombie", "num_dead", "population_size", "infection_probability", "turning_probability", "death_probability", "migration_probability", "__dict__"
+    
     def __init__(self, school_size: int, population_size: int) -> None:
         self.school: School = School(school_size)
         self.population: list[Individual] = []
