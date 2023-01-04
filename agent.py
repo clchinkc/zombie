@@ -151,7 +151,6 @@ class Survivor(Human):
             # Survivor has found some supplies
             supplies = random.randint(10, 20)
             self.health += supplies
-            print(f"Survivor {self.id} found {supplies} supplies!")
 
         # Roll a dice to determine if the survivor finds a new weapon
         if random.random() < 0.2:
@@ -159,7 +158,6 @@ class Survivor(Human):
             new_weapon = self.get_random_weapon(possible_weapons)
             if self.weapon is None or (new_weapon.damage * new_weapon.range > self.weapon.damage * self.weapon.range):
                 self.weapon = new_weapon
-                print(f"Survivor {self.id} found a new {new_weapon.name}!")
 
     def get_random_weapon(self, possible_weapons):
         # Choose a random weapon from a list of possible weapons
@@ -174,15 +172,12 @@ class Survivor(Human):
     def attack(self, zombie):
         # Calculate the damage dealt to the zombie
         damage = 10 if self.weapon == None else 10+self.weapon.damage
-
         # Deal the damage to the zombie
         zombie.take_damage(damage)
-        print(f"Survivor {self.id} attacked zombie {zombie.id} for {damage} damage!")
-            
+
     def take_damage(self, damage):
         # Reduce the survivor's health by the specified amount of damage
         super().take_damage(damage)
-        print(f"Survivor {self.id} taking {damage} damage, new health is {self.health}")
 
         # Check if the survivor is dead
         if self.health <= 0:
@@ -192,8 +187,8 @@ class Survivor(Human):
             apocalypse.num_survivors -= 1
             # Create a new zombie at the survivor's location
             zombie = Zombie(apocalypse.num_zombies)
-            apocalypse.zombies.append(zombie)
             zombie.location = self.location
+            apocalypse.zombies.append(zombie)
             apocalypse.num_zombies += 1
 
 class Zombie(Human):
@@ -205,21 +200,19 @@ class Zombie(Human):
         survivors_in_range = self.get_enemies_in_range()
         if len(survivors_in_range) > 0:
             # Attack the closest survivor
-            survivor_to_attack = self.get_closest_enemies(survivors_in_range)
+            survivor_to_attack = self.get_closest_enemy()
             self.attack(survivor_to_attack)
         else:
             # No survivors  in range
-            survivor_to_attack = self.get_closest_enemies(apocalypse.survivors)
+            survivor_to_attack = self.get_closest_enemy()
             self.move_towards_survivor(survivor_to_attack)
 
     def attack(self, survivor):
         # Deal 10 damage to the survivor
         survivor.take_damage(20)
-        print(f"Zombie {self.id} attacking survivor {survivor.id}")
 
     def take_damage(self, damage):
         super().take_damage(damage)
-        print(f"Zombie {self.id} taking {damage} damage, new health is {self.health}")
         # Check if the zombie has been killed
         if self.health <= 0:
             # Remove the zombie from the list of zombies
@@ -228,18 +221,14 @@ class Zombie(Human):
     
     def move_towards_survivor(self, survivor):
         # Calculate the direction in which the survivor is located
+        x_diff, y_diff = self.calculate_direction(survivor)
+        # Move the zombie towards the survivor
+        self.move(x_diff, y_diff)
+
+    def calculate_direction(self, survivor):
         x_diff = survivor.location[0] - self.location[0]
         y_diff = survivor.location[1] - self.location[1]
-
-        # Move the zombie towards the survivor
-        if x_diff > 0:
-            self.move(1, 0)
-        elif x_diff < 0:
-            self.move(-1, 0)
-        if y_diff > 0:
-            self.move(0, 1)
-        elif y_diff < 0:
-            self.move(0, -1)
+        return x_diff, y_diff
 
 class Weapon:
     def __init__(self, name, damage, range):

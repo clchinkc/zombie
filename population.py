@@ -24,6 +24,7 @@ from matplotlib import animation
 
 # Define the states and transitions for the state machine model
 class State(Enum):
+    
     ALIVE = auto()
     INFECTED = auto()
     ZOMBIE = auto()
@@ -39,7 +40,6 @@ class State(Enum):
 
 
 class Individual:
-
 
     __slots__ = "id", "state", "location", "connections", \
     "infection_severity", "interact_range", "sight_range", "__dict__"

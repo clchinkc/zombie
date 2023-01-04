@@ -30,21 +30,21 @@ import random
 
 # define the possible states as a list
 states = ["hiding", "searching", "fighting"]
-HIDING = "hiding"
-SEARCHING = "searching"
-FIGHTING = "fighting"
+HIDING = states[0]
+SEARCHING = states[1]
+FIGHTING = states[2]
 
 # define the possible actions as a list
 actions = ["hide", "search", "fight"]
-HIDE = "hide"
-SEARCH = "search"
-FIGHT = "fight"
+HIDE = actions[0]
+SEARCH = actions[1]
+FIGHT = actions[2]
 
 # define the possible events as a list
 events = ["noise", "zombie", "weapon"]
-NOISE = "noise"
-ZOMBIE = "zombie"
-WEAPON = "weapon"
+NOISE = events[0]
+ZOMBIE = events[1]
+WEAPON = events[2]
 
 # define the rewards
 KILL_ZOMBIE = 10
@@ -82,7 +82,7 @@ def end_condition(reward):
         return False
 
 # define the state transition function
-def state_transition(state, event):
+def update_state(state, event):
     if state == HIDING:
         if event == NOISE:
             return SEARCHING
@@ -105,7 +105,8 @@ def state_transition(state, event):
         else:
             return HIDING
 
-def execute_action(state, action):
+# define the action execution function
+def produce_event(state, action):
     if state == HIDING:
         if action == HIDE:
             event = np.random.choice(events)
@@ -233,8 +234,8 @@ def execute_action(state, action):
             raise ValueError("Invalid state or action")
 """
 
-# select an action using the learned epsilon-greedy policy
-def choose_action(Q, state, epsilon):
+# choose an action using the learned epsilon-greedy policy
+def select_action(Q, state, epsilon):
     if np.random.random() < epsilon:
         # choose a random action
         action = np.random.choice(actions)
@@ -265,12 +266,12 @@ def train(num_episodes):
         while True:
             # Select an action using the epsilon-greedy policy
             epsilon = 0.25
-            action = choose_action(Q, current_state, epsilon)
+            action = select_action(Q, current_state, epsilon)
 
             # Execute the action and observe the resulting state and reward
-            event, reward = execute_action(current_state, action)
+            event, reward = produce_event(current_state, action)
             
-            next_state = state_transition(current_state, event)
+            next_state = update_state(current_state, event)
 
             print(f"episode: {i}, current state: {current_state}, action: {action}, event: {event}, reward: {reward}, next_state: {next_state}")
 
@@ -294,12 +295,12 @@ def simulate(Q):
     while True:
         # Select an action using the epsilon-greedy policy
         epsilon = 0.0
-        action = choose_action(Q, current_state, epsilon)
+        action = select_action(Q, current_state, epsilon)
 
         # Execute the action and observe the resulting state and reward
-        event, reward = execute_action(current_state, action)
+        event, reward = produce_event(current_state, action)
             
-        next_state = state_transition(current_state, event)
+        next_state = update_state(current_state, event)
 
         print(f"current state: {current_state}, action: {action}, event: {event}, reward: {reward}, next_state: {next_state}")
 

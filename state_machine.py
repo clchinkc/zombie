@@ -21,24 +21,37 @@ import numpy as np
 
 # define the possible states
 # determined by actions and events
-states = ["hiding", "searching", "fighting"]
 HIDING = "hiding"
 SEARCHING = "searching"
 FIGHTING = "fighting"
+states = [HIDING, SEARCHING, FIGHTING]
 
 # define the possible actions
 # determined by states and tactics
-actions = ["hide", "search", "fight"]
 HIDE = "hide"
 SEARCH = "search"
 FIGHT = "fight"
+actions = [HIDE, SEARCH, FIGHT]
 
 # define the possible events
 # determined by states, actions, and possibilities
-events = ["noise", "zombie", "weapon"]
 NOISE = "noise"
 ZOMBIE = "zombie"
 WEAPON = "weapon"
+events = [NOISE, ZOMBIE, WEAPON]
+
+# define the rewards
+KILL_ZOMBIE = 10
+DIE_BY_ZOMBIE = -100
+SURVIVE = 1
+FIND_RESOURCES = 5
+LEARNING_RATE = 0.001
+DISCOUNT_RATE = 0.999
+
+# define the number of states and actions
+num_states = len(states)
+num_actions = len(actions)
+num_events = len(events)
 
 # define the school class to store states and produce events
 class School(object):
