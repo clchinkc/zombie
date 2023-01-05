@@ -316,7 +316,7 @@ def simulate(Q):
         simulate_learned_policy(100, Q)
         """
 # Train the Q-learning algorithm
-train(num_episodes=1000)
+# train(num_episodes=1000)
 
 # Simulate the person's behavior
 # simulate(Q)
@@ -412,3 +412,6 @@ def try_effect_of_learning_rate_discount_rate():
     plt.show()
     
 # try_effect_of_learning_rate_discount_rate()
+
+rewards = list(range(100))
+print(rewards)
