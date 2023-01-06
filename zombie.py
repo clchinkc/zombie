@@ -39,6 +39,7 @@ __call__ not only allows an instance to be used as a function, it defines the fu
 a = A()     init
 a()        call
 better way to store objects in python
+https://www.guru99.com/python-yield-return-generator.html
 https://realpython.com/inner-functions-what-are-they-good-for/
 functional programming 教學
 https://medium.com/onedegree-tech-blog/%E7%82%BA%E4%BB%80%E9%BA%BC%E6%88%91%E8%A6%81%E5%AD%B8-functional-programming-%E5%8F%AF%E8%AE%80-%E5%8F%AF%E9%9D%A0-%E6%9C%89%E4%BF%A1%E5%BF%83-160e39f1632b

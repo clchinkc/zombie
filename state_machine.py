@@ -67,10 +67,10 @@ WEAPON = "weapon"
 events = [NOISE, ZOMBIE, WEAPON]
 
 # define the rewards
-KILL_ZOMBIE = 10
-DIE_BY_ZOMBIE = -100
 SURVIVE = 1
 FIND_RESOURCES = 5
+KILL_ZOMBIE = 10
+DIE_BY_ZOMBIE = -100
 LEARNING_RATE = 0.001
 DISCOUNT_RATE = 0.999
 
@@ -268,8 +268,6 @@ class Person(object):
         self.action = self.select_action(self.state_machine.state, 0)
         # select the next event
         self.state_machine.event, reward = self.state_machine.produce_event(self.state_machine.state, self.action)
-        if self.end_condition(reward):
-            return reward
         # select the next state
         self.state_machine.state = self.state_machine.update_state(self.state_machine.state, self.state_machine.event)
         return reward
@@ -352,7 +350,7 @@ class Person(object):
 def simulation():
     # define the number of people and the number of time steps
     num_people = 1
-    num_steps = 100
+    num_steps = 1000
     
     # create the people
     people = [Person() for i in range(num_people)]

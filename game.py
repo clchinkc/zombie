@@ -8,7 +8,7 @@ class Entity:
         position (tuple): The position of the entity on the map.
         health (int): The health of the entity.
     """
-    def __init__(self, position=(-1, -1), health=100):
+    def __init__(self, position, health=100):
         self.position = position
         self.health = health
         
@@ -145,7 +145,7 @@ class NPC(Entity):
         self.interacting_with = None
         
 
-class PlayerManager:
+class PlayerManager(EntityManager):
     """Manages players in the game world.
     
     Attributes:
@@ -155,34 +155,23 @@ class PlayerManager:
         self.players = []
         
     def add_player(self, player):
-        """Add a player to the game world.
-        
-        Args:
-            player (Player): The player to add.
-        """
-        self.players.append(player)
+        super().add_entity(player)
         
     def remove_player(self, player):
-        """Remove a player from the game world.
+        super().remove_entity(player)
         
-        Args:
-            player (Player): The player to remove.
-        """
-        self.players.remove(player)
+    def get_npcs_in_range(self, entity, range):
+        npcs = super().get_entities_in_range(entity, range)
+        return [npc for npc in npcs if isinstance(npc, NPC)]
         
     def print_player_info(self, player):
-        """Print information about a player.
-        
-        Args:
-            player (Player): The player to print information for.
-        """
         print("Player position: ", player.position)
         print("Player health: ", player.health)
         print("Player inventory: ", player.inventory)
         print()
         
 
-class NPCManager:
+class NPCManager(EntityManager):
     """Manages NPCs in the game world.
     
     Attributes:
@@ -192,27 +181,12 @@ class NPCManager:
         self.npcs = []
         
     def add_npc(self, npc):
-        """Add an NPC to the game world.
-        
-        Args:
-            npc (NPC): The NPC to add.
-        """
-        self.npcs.append(npc)
+        super().add_entity(npc)
         
     def remove_npc(self, npc):
-        """Remove an NPC from the game world.
-        
-        Args:
-            npc (NPC): The NPC to remove.
-        """
-        self.npcs.remove(npc)
+        super().remove_entity(npc)
         
     def print_npc_info(self, npc):
-        """Print information about an NPC.
-        
-        Args:
-            npc (NPC): The NPC to print information for.
-        """
         print("NPC position: ", npc.position)
         print("NPC health: ", npc.health)
         print("NPC inventory: ", npc.inventory)

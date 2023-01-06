@@ -57,4 +57,13 @@ y = timed_counter_count(1000)
 # print(y)
 
 
+"""
+https://myapollo.com.tw/zh-tw/cprofile-and-py-spy-tutorial/
+https://myapollo.com.tw/zh-tw/fil-memory-usage-profiler/
 
+https://myapollo.com.tw/zh-tw/python-concurrent-futures/
+https://myapollo.com.tw/zh-tw/python-multiprocessing/
+https://myapollo.com.tw/zh-tw/more-about-python-multiprocessing/
+https://myapollo.com.tw/zh-tw/begin-to-asyncio/
+
+"""
