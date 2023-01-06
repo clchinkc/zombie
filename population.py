@@ -81,25 +81,25 @@ class Individual:
 
     # cellular automaton
     def is_infected(self, severity: float) -> bool:
-        infection_probability = severity
+        infection_probability = 1 / (1 + math.exp(-severity))
+        num_zombie = sum(1 for individual in self.connections if individual.state == State.ZOMBIE)
+        if random.random() < (1-(1-infection_probability)**num_zombie):
+            return True
+        return False
+    
+    """
+    def is_infected(self, severity: float) -> bool:
+        infection_probability = 1 / (1 + math.exp(-severity))
         for individual in self.connections:
             if individual.state == State.ZOMBIE:
                 if random.random() < infection_probability:
                     return True
         return False
-    
-    """
-    def is_infected(self, severity):
-        infection_probability = 1 - (1 / (1 + math.exp(-severity)))
-        num_zombie = sum(1 for individual in self.connections if individual.state == State.ZOMBIE)
-        if random.random() < (1-(1-infection_probability)**num_zombie):
-            return True
-        return False
     """
 
     # cellular automaton
     def is_turned(self) -> bool:
-        turning_probability = 1 - (1 / (1 + math.exp(-self.infection_severity)))
+        turning_probability = self.infection_severity
         if random.random() < turning_probability:
             return True
         return False
@@ -107,10 +107,9 @@ class Individual:
     # cellular automaton
     def is_died(self, severity: float) -> bool:
         death_probability = severity
-        for individual in self.connections:
-            if individual.state == State.ALIVE or individual.state == State.INFECTED:
-                if random.random() < death_probability:
-                    return True
+        num_alive = sum(1 for individual in self.connections if individual.state == State.ALIVE or individual.state == State.INFECTED)
+        if random.random() < (1-(1-death_probability)**num_alive):
+            return True
         return False
     
     """
@@ -633,8 +632,6 @@ variance = n * p * (1 - p)
 Where n is the number of experiments.
 
 # defense that will decrease the probability of infection and death
-
-# use probability to define the rules or events that trigger transitions between states
 
 Define the rules of the simulation
 Zombie infection - if a zombie and survivor are in neighbouring cell, the survivor will become infected
