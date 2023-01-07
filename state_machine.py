@@ -103,6 +103,8 @@ class School(object):
         }
         self.event = NOISE
         
+        # may use probability to define the rules or events that trigger transitions between states
+        
     def update_state(self, state, event):
         # select the next state based on the current state and event
         return self.state_transitions[state][event]

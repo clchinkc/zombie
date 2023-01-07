@@ -1,73 +1,73 @@
 import math
 import random
     
-class Entity:
-    """Represents a game world entity with a position and health.
+class Agent:
+    """Represents a game world agent with a position and health.
     
     Attributes:
-        position (tuple): The position of the entity on the map.
-        health (int): The health of the entity.
+        position (tuple): The position of the agent on the map.
+        health (int): The health of the agent.
     """
     def __init__(self, position, health=100):
         self.position = position
         self.health = health
         
-    def distance_to_entity(self, other_entity):
-        """Calculate the distance between this entity and another entity.
+    def distance_to_agent(self, other_agent):
+        """Calculate the distance between this agent and another agent.
     
         Args:
-            other_entity (Entity): The other entity to calculate the distance to.
+            other_agent (Agent): The other agent to calculate the distance to.
     
         Returns:
-            float: The distance between the two entities.
+            float: The distance between the two agents.
         """
         x1, y1 = self.position
-        x2, y2 = other_entity.position
+        x2, y2 = other_agent.position
         return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
-class EntityManager:
-    """Manages entities in the game world.
+class AgentManager:
+    """Manages agents.
 
     Attributes:
-        entities (list): A list of entities in the game world.
+        agents (list): A list of agents.
     """
     def __init__(self):
-        self.entities = []
+        self.agents = []
     
-    def add_entity(self, entity):
-        """Add an entity to the game world.
+    def add_agent(self, agent):
+        """Add an agent to the game world.
     
         Args:
-            entity (Entity): The entity to add.
+            agent (Agent): The agent to add.
         """
-        self.entities.append(entity)
+        self.agents.append(agent)
     
-    def remove_entity(self, entity):
-        """Remove an entity from the game world.
+    def remove_agent(self, agent):
+        """Remove an agent from the game world.
     
         Args:
-            entity (Entity): The entity to remove.
+            agent (Agent): The agent to remove.
         """
-        self.entities.remove(entity)
+        self.agents.remove(agent)
     
-    def get_entities_in_range(self, entity, range):
-        """Get a list of entities within a certain range of a given entity.
+    def get_agents_in_range(self, agent, range):
+        """Get a list of agents within a certain range of a given agent.
     
         Args:
-            entity (Entity): The entity to check the range from.
-            range (float): The range to check for entities within.
+            agent (Agent): The agent to check the range from.
+            range (float): The range to check for agents within.
         
         Returns:
-            list: A list of entities within the specified range.
+            list: A list of agents within the specified range.
         """
         in_range = []
-        for other_entity in self.entities:
-            if entity.distance_to_entity(other_entity) <= range:
-                in_range.append(other_entity)
+        for other_agent in self.agents:
+            if agent.distance_to_agent(other_agent) <= range:
+                in_range.append(other_agent)
         return in_range
 
-class Player(Entity):
-    """Represents a player in the game world. Inherits from Entity.
+class Player(Agent):
+    """Represents a player in the game world. Inherits from Agent.
     
     Attributes:
         inventory (list): A list of items in the player's inventory.
@@ -132,8 +132,8 @@ class Player(Entity):
             print("You won the fight!")
 
 
-class NPC(Entity):
-    """Represents an NPC in the game world. Inherits from Entity.
+class NPC(Agent):
+    """Represents an NPC in the game world. Inherits from Agent.
     
     Attributes:
         inventory (list): A list of items in the NPC's inventory.
@@ -145,7 +145,7 @@ class NPC(Entity):
         self.interacting_with = None
         
 
-class PlayerManager(EntityManager):
+class PlayerManager(AgentManager):
     """Manages players in the game world.
     
     Attributes:
@@ -155,13 +155,13 @@ class PlayerManager(EntityManager):
         self.players = []
         
     def add_player(self, player):
-        super().add_entity(player)
+        super().add_agent(player)
         
     def remove_player(self, player):
-        super().remove_entity(player)
+        super().remove_agent(player)
         
-    def get_npcs_in_range(self, entity, range):
-        npcs = super().get_entities_in_range(entity, range)
+    def get_npcs_in_range(self, agent, range):
+        npcs = super().get_agents_in_range(agent, range)
         return [npc for npc in npcs if isinstance(npc, NPC)]
         
     def print_player_info(self, player):
@@ -171,7 +171,7 @@ class PlayerManager(EntityManager):
         print()
         
 
-class NPCManager(EntityManager):
+class NPCManager(AgentManager):
     """Manages NPCs in the game world.
     
     Attributes:
@@ -181,10 +181,10 @@ class NPCManager(EntityManager):
         self.npcs = []
         
     def add_npc(self, npc):
-        super().add_entity(npc)
+        super().add_agent(npc)
         
     def remove_npc(self, npc):
-        super().remove_entity(npc)
+        super().remove_agent(npc)
         
     def print_npc_info(self, npc):
         print("NPC position: ", npc.position)
@@ -193,7 +193,7 @@ class NPCManager(EntityManager):
 
 
 class Gameworld:
-    """Represents the game world and manages the game map and entities.
+    """Represents the game world and manages the game map and agents.
     
     Attributes:
         map (list): A 2D list representing the game map, with 0 representing an empty cell and a player or NPC object representing a cell occupied by that player or NPC.
@@ -205,24 +205,23 @@ class Gameworld:
         self.player_manager = PlayerManager()
         self.npc_manager = NPCManager()
         
-    def move_entity(self, entity, dx, dy):
-        """Move an entity on the map by changing its position attribute and updating the map list.
+    def move_agent(self, agent, dx, dy):
+        """Move an agent on the map by changing its position attribute and updating the map list.
         
         Args:
-            entity (Entity): The entity to move.
+            agent (Agent): The agent to move.
             dx (int): The change in x position.
             dy (int): The change in y position.
             
         Returns:
-            bool: True if the entity was successfully moved, False otherwise.
+            bool: True if the agent was successfully moved, False otherwise.
         """
-        if 0 <= entity.x + dx < len(self.map) and 0 <= entity.y + dy < len(self.map[0]):
-            if self.map[entity.x + dx][entity.y + dy] == 0:
-                entity.position = (entity.x + dx, entity.y + dy)
-                self.map[entity.x][entity.y] = entity
-                self.map[entity.x - dx][entity.y - dy] = 0
+        if 0 <= agent.x + dx < len(self.map) and 0 <= agent.y + dy < len(self.map[0]):
+            if self.map[agent.x + dx][agent.y + dy] is not None:
+                agent.position = (agent.x + dx, agent.y + dy)
+                self.map[agent.x][agent.y] = agent
+                self.map[agent.x - dx][agent.y - dy] = 0
                 return True
-            
         return False
     
     def print_map(self):
@@ -267,16 +266,16 @@ def simulate_gameworld(steps, num_players, num_npcs):
         for player in gameworld.player_manager.players:
             dx = random.randint(-1, 1)
             dy = random.randint(-1, 1)
-            gameworld.move_entity(player, dx, dy)
+            gameworld.move_agent(player, dx, dy)
             
         for npc in gameworld.npc_manager.npcs:
             dx = random.randint(-1, 1)
             dy = random.randint(-1, 1)
-            gameworld.move_entity(npc, dx, dy)
+            gameworld.move_agent(npc, dx, dy)
             
         # Have players interact with NPCs if they are within range
         for player in gameworld.player_manager.players:
-            player.interaction_with_npc(gameworld.player_manager.get_entities_in_range(player, 1))
+            player.interaction_with_npc(gameworld.player_manager.get_agents_in_range(player, 1))
             
         # Print information about the players and NPCs
         for player in gameworld.player_manager.players:
@@ -291,7 +290,7 @@ def simulate_gameworld(steps, num_players, num_npcs):
 simulate_gameworld(steps=10, num_players=5, num_npcs=5)
 
 """
-This revised code separates the game world and its entities into separate classes and introduces a player manager and NPC manager to handle the players and NPCs in the game world. The Gameworld class has methods to move entities, get entities within a certain range of an entity, and print a representation of the game map. The Player and NPC classes both inherit from the Entity class and have additional attributes and methods specific to their roles in the game. The PlayerManager and NPCManager classes have methods to add and remove players and NPCs from the game world, respectively.
+This revised code separates the game world and its agents into separate classes and introduces a player manager and NPC manager to handle the players and NPCs in the game world. The Gameworld class has methods to move agents, get agents within a certain range of an agent, and print a representation of the game map. The Player and NPC classes both inherit from the Agent class and have additional attributes and methods specific to their roles in the game. The PlayerManager and NPCManager classes have methods to add and remove players and NPCs from the game world, respectively.
 
-You can use this code to create and manipulate a game world with players and NPCs. You can add or remove players and NPCs from the game world using the add_player and add_npc methods of the PlayerManager and NPCManager classes, respectively. You can move entities on the map using the move_entity method of the Gameworld class. You can also interact with NPCs and perform actions such as trading or fighting using the methods of the Player class. Finally, you can print a representation of the game map using the print_map method of the Gameworld class.
+You can use this code to create and manipulate a game world with players and NPCs. You can add or remove players and NPCs from the game world using the add_player and add_npc methods of the PlayerManager and NPCManager classes, respectively. You can move agents on the map using the move_agent method of the Gameworld class. You can also interact with NPCs and perform actions such as trading or fighting using the methods of the Player class. Finally, you can print a representation of the game map using the print_map method of the Gameworld class.
 """
