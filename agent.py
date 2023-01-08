@@ -21,10 +21,21 @@ class Agent:
         # or not in turn-based game, attack in interval of speed time        
     
     def move(self, dx, dy):
+        """Move the agent by a certain amount in the x and y directions.
+        
+        Args:
+            dx (int): The amount to move in the x direction.
+            dy (int): The amount to move in the y direction.
+        """
         self.position = (self.position[0]+dx, self.position[1]+dy)
 
 
     def take_damage(self, damage):
+        """Reduce the health of the agent by a certain amount.
+        
+        Args:
+            damage (int): The amount of damage to take.
+        """
         self.health -= damage
         
         # strength and defense attributes
@@ -201,13 +212,11 @@ class Human(Agent):
         if self.health <= 0:
             print(f"Human {self.id} has died!")
             # Remove the human from the list of humans            
-            apocalypse.humans.remove(self)
-            apocalypse.num_humans -= 1
+            apocalypse.human_manager.remove_human(self)
             # Create a new zombie at the human's position
-            zombie = Zombie(apocalypse.num_zombies, 100, self.position)
+            zombie = Zombie(len(apocalypse.zombie_manager.zombies), 100, self.position)
             zombie.position = self.position
-            apocalypse.zombies.append(zombie)
-            apocalypse.num_zombies += 1
+            apocalypse.zombie_manager.add_zombie(zombie)
 
 class HumanManager(AgentManager):
     """Manages the humans in the apocalypse.
@@ -286,8 +295,7 @@ class Zombie(Agent):
         # Check if the zombie has been killed
         if self.health <= 0:
             # Remove the zombie from the list of zombies
-            apocalypse.zombies.remove(self)
-            apocalypse.num_zombies -= 1        
+            apocalypse.zombie_manager.remove_zombie(self)  
     
     def move_towards_human(self, human):
         # Calculate the direction in which the human is located
@@ -350,6 +358,13 @@ class Weapon:
         return f"{self.name} ({self.damage} damage, {self.range} range)"
 
 class ZombieApocalypse:
+    """Represents a zombie apocalypse and manages the humans and zombies.
+    
+    Attributes:
+        map (list): A 2D list representing the map, with None representing a empty cell and a human or zombie representing a cell occupied by human or zombie.
+        human_manager (HumanManager): The human manager instance to manage the humans.
+        zombie_manager (ZombieManager): The zombie manager instance to manage the zombies.
+    """
     def __init__(self, num_zombies, num_humans):
         self.map = [[None for _ in range(10)] for _ in range(10)]
         self.human_manager = HumanManager()
@@ -363,6 +378,12 @@ class ZombieApocalypse:
         ]
         
     def initialize(self, num_zombies, num_humans):
+        """Initializes the humans and zombies in the map.
+        
+        Args:
+            num_zombies (int): The number of zombies to initialize.
+            num_humans (int): The number of humans to initialize.
+        """
         # Initialize humans and zombies
         for i in range(num_humans):
             self.human_manager.add_human(Human(i, 100, (random.randint(0, 9), random.randint(0, 9))))
@@ -370,6 +391,11 @@ class ZombieApocalypse:
             self.zombie_manager.add_zombie(Zombie(i, 100, (random.randint(0, 9), random.randint(0, 9))))
             
     def simulate(self, num_turns):
+        """Simulates the zombie apocalypse for the given number of turns.
+        
+        Args:
+            num_turns (int): The number of turns to simulate.
+        """
         # while number of humans > 0 and number of zombies > 0
         while len(self.human_manager.humans) > 0 and len(self.zombie_manager.zombies) > 0:
             for i in range(num_turns):
@@ -382,6 +408,8 @@ class ZombieApocalypse:
     # an escape oosition or method for humans to win
             
     def take_turn(self):
+        """Simulates a turn in the zombie apocalypse. Each human and zombie takes a turn in the order they were initialized.
+        """
         # Zombies take their turn
         for zombie in self.zombie_manager.zombies:
             closest_human = self.zombie_manager.get_closest_enemy(zombie)
@@ -411,7 +439,8 @@ class ZombieApocalypse:
         return False
     
     def print_map(self):
-        """Print the map in a readable format."""
+        """Print the map in a readable format.
+        """
         for row in self.map:
             for cell in row:
                 if cell is None:
@@ -426,3 +455,9 @@ class ZombieApocalypse:
 
 apocalypse = ZombieApocalypse(5, 5)
 apocalypse.simulate(10)
+
+
+"""
+This revised code separates the simulation and its agents into separate classes. The ZombieApocalypse class stores instances of the HumanManager and ZombieManager classes, and has methods to advance the simulation by a single time step, add or remove humans and zombies from the simulation, and print a representation of the simulation map. The Human and Zombie classes both inherit from the Agent class and have additional attributes and methods specific to their roles in the simulation. The HumanManager and ZombieManager classes have methods to add and remove humans and zombies, respectively.
+You can use this code to create and manipulate a simulation of a zombie apocalypse with humans and zombies. You can initialize the simulation with a certain number of humans and zombies using the ZombieApocalypse class, and advance the simulation by a single time step using its step method. You can add or remove humans and zombies from the simulation during runtime using the add_human and remove_human methods of the HumanManager class, and the add_zombie and remove_zombie methods of the ZombieManager class. You can also visualize the state of the simulation or retrieve information about the positions and attributes of the humans and zombies using the print_map method of the ZombieApocalypse class or the get_agents_within_range method of the Human or Zombie class.
+"""
