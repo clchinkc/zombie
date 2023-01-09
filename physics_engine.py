@@ -88,7 +88,7 @@ def display(particles, t):
         print("")
     print("")
 
-def main():
+def dynamic():
     
     # Set up the simulation
     dt = 0.01  # Time step
@@ -107,9 +107,8 @@ def main():
         # Update the current time
         t += dt
 
-if __name__ == "__main__":
-    main()
 
+# dynamic()
 
 
 
@@ -324,20 +323,88 @@ def calculate_new_velocity(mass1, elasticity1, v1x, v1y, mass2, elasticity2, v2x
 
     return v1x_new, v1y_new, v2x_new, v2y_new
 
+def collision():
+    # Define the shapes
+    shape1 = Circle(0, 0, 10, 0, 0, 1, 1)
+    shape2 = Circle(30, 0, 10, 0, 0, 1, 1)
 
-# Define the shapes
-shape1 = Circle(0, 0, 10, 0, 0, 1, 1)
-shape2 = Circle(30, 0, 10, 0, 0, 1, 1)
+    # Check for a collision and handle it if one is detected
+    if detect_collision(shape1, shape2):
+        handle_collision(shape1, shape2)
 
-# Check for a collision and handle it if one is detected
-if detect_collision(shape1, shape2):
-    handle_collision(shape1, shape2)
+    # Define the shapes
+    shape1 = Rectangle(0, 0, 20, 20, 0, 0, 1, 1)
+    shape2 = Rectangle(30, 0, 20, 20, 0, 0, 1, 1)
 
-# Define the shapes
-shape1 = Rectangle(0, 0, 20, 20, 0, 0, 1, 1)
-shape2 = Rectangle(30, 0, 20, 20, 0, 0, 1, 1)
+    # Check for a collision and handle it if one is detected
+    if detect_collision(shape1, shape2):
+        handle_collision(shape1, shape2)
 
-# Check for a collision and handle it if one is detected
-if detect_collision(shape1, shape2):
-    handle_collision(shape1, shape2)
+
+
+
+
+
+
+
+# from cpp
+
+class Vector3:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+class Quaternion:
+    def __init__(self, x, y, z, w):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.w = w
+
+class Object:    
+    def __init__(self, position, velocity, force, mass):
+        self.Position = position
+        self.Velocity = velocity
+        self.Force = force
+        self.Mass = mass
+        
+
+class PhysicsWorld:
+    def __init__(self):
+        self.m_objects = []
+        self.m_gravity = Vector3(0., -9.81, 0.)
+    
+    def AddObject(self, object):
+        self.m_objects.append(object)
+    
+    def RemoveObject(self, object):
+        self.m_objects.remove(object)
+    
+    def Step(self, dt):
+        for obj in self.m_objects:
+            obj.Force += obj.Mass * self.m_gravity # apply a force
+            
+            obj.Velocity += obj.Force / obj.Mass * dt
+            obj.Position += obj.Velocity * dt
+            
+            obj.Force = Vector3(0., 0., 0.) # reset net force at the end
+
+
+# Collision detection
+
+class CollisionPoints:
+    def __init__(self, A, B, Normal, Depth, HasCollision):
+        self.A = A # furthest point of A into B # Vector3
+        self.B = B # furthest point of B into A # Vector3
+        self.Normal = Normal # B – A normalized # Vector3
+        self.Depth = Depth # length of B – A # float
+        self.HasCollision = HasCollision # true if collision is detected # bool
+
+class Transform: # describes an objects location and orientation in 3D space
+    def __init__(self, Position, Scale, Rotation):
+        self.Position = Position # Vector3
+        self.Scale = Scale # Vector3
+        self.Rotation = Rotation # Quaternion
+        
 
