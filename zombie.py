@@ -18,6 +18,7 @@ map, filter function
 Dictionary for storage
 Refactoring, extract function, early exit
 no multiple inheritance
+getattr, setattr, hasattr can be used for handling attribute that is determined during runtime
 a escape mode that human can escape from zombie two block by paying health or double food
 custom error class inherit from Exception, it can raise error to pass through useful attributes
 setattr can put a attribute dictionary into a class using for loop (dynamically)
