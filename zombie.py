@@ -35,6 +35,7 @@ dataclass to store struct-like data, like dictionary, vs behaviour data
 teacher one class, student one class
 change to float for faster performance
 group of zombies and groups of humans
+if the state don't need to be stored, use functional programming instead of object oriented programming
 call method vs init method (__call__ can return an arbitrary value whereas __init__ must return None, init is called when instantiating the class: myfoo = Foo(1,4,7.8) call is a template to call the already instantiated class to do something, 
 __call__ not only allows an instance to be used as a function, it defines the function body that is executed when an instance is used as a function.)
 a = A()     init

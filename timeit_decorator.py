@@ -1,67 +1,113 @@
 from __future__ import annotations
 
-import functools
+from functools import wraps, update_wrapper
 import cProfile
 import pstats
+from io import StringIO
 import timeit
 import line_profiler
 import memory_profiler
 
-def performance_decorator(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        # Run the function using timeit.repeat and return the average execution time
-        t = timeit.Timer(lambda: func(*args, **kwargs))
-        res = t.repeat(repeat=10, number=100)
-        time = min(res)
-        print(f'Execution time of {func.__name__} is {time:.5f} seconds (minimum of 10 times with 100 runs each)')
-        print()
-        
-        # Run the function using cProfile.runctx and return the profiling information
-        profile_filename = func.__name__ + '.profile'
-        cProfile.runctx('func(*args, **kwargs)', globals(), locals(), profile_filename)
-        p = pstats.Stats(profile_filename)
-        p.strip_dirs()
-        p.sort_stats('time')
-        p.print_stats()
+def performance_decorator(mode='all'):
+    def _performance_decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if mode == 'time_it' or mode == 'all':
+                # Run the function using timeit.repeat and return the average execution time
+                t = timeit.Timer(lambda: func(*args, **kwargs))
+                res = t.repeat(repeat=10, number=100)
+                time = min(res) / 100
+                print(f'Execution time of {func.__name__} is {time:.5f} seconds (minimum of 10 times with 100 runs each)')
+                print()
+            else:
+                pass
+            
+            if mode == 'call_count' or mode == 'all':
+                # Run the function using cProfile.runctx and return the profiling information
+                # Create a Profile object
+                profiler = cProfile.Profile()
+                # Run the function and collect the profiler output
+                profiler.enable()
+                func(*args, **kwargs)
+                profiler.disable()
+                # Use pstats to process the profiler output
+                profile_output = StringIO()
+                p = pstats.Stats(profiler, stream=profile_output)
+                p.strip_dirs()
+                p.sort_stats('time')
+                p.print_stats()
+                output_str = profile_output.getvalue()
+                print(output_str)
+                
+            else:
+                pass
+                """
+                profile_filename = func.__name__ + '.profile'
+                cProfile.runctx('func(*args, **kwargs)', globals(), locals(), profile_filename)
+                p = pstats.Stats(profile_filename)
+                p.strip_dirs()
+                p.sort_stats('time')
+                p.print_stats()
+                """
 
-        # Run the function using line_profiler and return the line-by-line execution time
-        lp = line_profiler.LineProfiler()
-        lp.add_function(func)
-        lp.enable_by_count()
-        result = func(*args, **kwargs)
-        lp.disable_by_count()
-        lp.print_stats()
-
-        # Run the function using memory_profiler and return the memory usage information
-        memory_profiler.profile(func)(*args, **kwargs)
-
-        return result
-    return wrapper
+            if mode == 'line_profile' or mode == 'all':
+                # Run the function using line_profiler and return the line-by-line execution time
+                lp = line_profiler.LineProfiler()
+                lp.add_function(func)
+                lp.enable_by_count()
+                result = func(*args, **kwargs)
+                lp.disable_by_count()
+                lp.print_stats()
+            else:
+                pass
+            
+            if mode == 'memory_profile' or mode == 'all':
+                # Run the function using memory_profiler and return the memory usage information
+                memory_profiler.profile(func)(*args, **kwargs)
+            else:
+                pass
+            
+            return func(*args, **kwargs)
+        return wrapper
+    return _performance_decorator
 
 
 
 class PerformanceDecorator:
     def __init__(self, func):
         self.func = func
-        functools.update_wrapper(self, func)
+        update_wrapper(self, func)
 
     def time_it(self, *args, **kwargs):
         # Run the function using timeit.repeat and return the average execution time
         t = timeit.Timer(lambda: self.func(*args, **kwargs))
         res = t.repeat(repeat=10, number=100)
-        time = min(res)
+        time = min(res) / 100
         print(f'Execution time of {self.func.__name__} is {time:.5f} seconds (minimum of 10 times with 100 runs each)')
         print()
 
     def call_count(self, *args, **kwargs):
+        # Create a Profile object
+        profiler = cProfile.Profile()
+        # Run the function and collect the profiler output
+        profiler.enable()
+        self.func(*args, **kwargs)
+        profiler.disable()
         # Run the function using cProfile.runctx and return the profiling information
-        profile_filename = self.func.__name__ + '.profile'
-        cProfile.runctx('self.func(*args, **kwargs)', globals(), locals(), profile_filename)
-        p = pstats.Stats(profile_filename)
+        profile_output = StringIO()
+        p = pstats.Stats(profiler, stream=profile_output)
         p.strip_dirs()
         p.sort_stats('time')
         p.print_stats()
+        output_str = profile_output.getvalue()
+        print(output_str)
+        """
+        profile_result = cProfile.runctx('self.func(*args, **kwargs)', globals(), locals())
+        p = pstats.Stats(profile_result)
+        p.strip_dirs()
+        p.sort_stats('time')
+        p.print_stats()
+        """
 
     def line_profile(self, *args, **kwargs):
         # Run the function using line_profiler and return the line-by-line execution time
@@ -79,11 +125,11 @@ class PerformanceDecorator:
     def call(self, *args, **kwargs):
         return self.func(*args, **kwargs)
 
-
+# performance decorator has 4 modes: time_it, call_count, line_profile, memory_profile
 
 from collections import Counter
 
-#@performance_decorator
+@performance_decorator(mode='time_it')
 def use_counter_to_count(times):
     A2Z1000 = ''.join(chr(i) for i in range(97, 123)) * times
     d = Counter()
@@ -91,28 +137,29 @@ def use_counter_to_count(times):
         d[c] += 1
     return d
 
-#@performance_decorator
+#@performance_decorator(mode='all')
 def counter_update_count(times):
     A2Z1000 = ''.join(chr(i) for i in range(97, 123)) * times
     d = Counter()
     d.update(A2Z1000)
     return d
 
-#@performance_decorator
+#@performance_decorator(mode='all')
 def counter_count(times):
     A2Z1000 = ''.join(chr(i) for i in range(97, 123)) * times
     d = Counter(A2Z1000)
     return d
 
-"""
+
 # example 1
 y = use_counter_to_count(1000)
 print(y)
-y = counter_update_count(1000)
-print(y)
-y = counter_count(1000)
-print(y)
-"""
+#y = counter_update_count(1000)
+#print(y)
+#y = counter_count(1000)
+#print(y)
+
+
 
 """
 # example 2

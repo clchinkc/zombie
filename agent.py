@@ -3,7 +3,7 @@ import random
 import numpy as np
 
 class Agent:
-    """Represents an agent with aan id, a position and health.
+    """Represents an agent with an id, a position and health.
     
     Attributes:
         id (int): The id of the agent.
@@ -18,7 +18,7 @@ class Agent:
         # health, strength, speed
         # inherit from individual class
         # speed controls who attacks first, if dead can't attack back
-        # or not in turn-based game, attack in interval of speed time        
+        # or not in turn-based game, attack in interval of speed time   
     
     def move(self, dx, dy):
         """Move the agent by a certain amount in the x and y directions.
@@ -148,8 +148,28 @@ class Human(Agent):
     """
     def __init__(self, id, health, position, weapon=None):
         super().__init__(id, health, position)
+        self._health = health
         self.weapon = weapon
         self.connections = []
+        
+    @property
+    def health(self):
+        return self._health
+    
+    @health.setter
+    def health(self, value):
+        self._health = value
+        if self._health <= 0:
+            print(f"Human {self.id} has died!")
+            apocalypse.human_manager.remove_human(self)
+            zombie = Zombie(len(apocalypse.zombie_manager.zombies), 100, self.position)
+            apocalypse.zombie_manager.add_zombie(zombie)
+            
+    """
+    @cached_property
+    def closest_enemy(self):
+        return min(apocalypse.zombie_manager.zombies, key=lambda x: distance(self.position, x.position))
+    """
         
     def take_turn(self, possible_weapons, closest_enemy):
         if len(closest_enemy) > 0:
@@ -203,20 +223,24 @@ class Human(Agent):
                     # if the zombie is dead, die
                 # if the human is dead, turn to zombie
     """
+    """
+    def attack_neighbors(self, agent):
+        neighbors = self.get_neighbors(agent)
+        if isinstance(agent, Human):
+            for neighbor in neighbors:
+                if isinstance(neighbor, Zombie):
+                    self.attack_agent(agent, neighbor)
+        elif isinstance(agent, Zombie):
+            for neighbor in neighbors:
+                if isinstance(neighbor, Human):
+                    self.attack_agent(agent, neighbor)
+    """
     
     # further processing in manager
     def take_damage(self, damage):
         # Reduce the human's health by the specified amount of damage
         super().take_damage(damage)
-        # Check if the human is dead
-        if self.health <= 0:
-            print(f"Human {self.id} has died!")
-            # Remove the human from the list of humans            
-            apocalypse.human_manager.remove_human(self)
-            # Create a new zombie at the human's position
-            zombie = Zombie(len(apocalypse.zombie_manager.zombies), 100, self.position)
-            zombie.position = self.position
-            apocalypse.zombie_manager.add_zombie(zombie)
+
 
 class HumanManager(AgentManager):
     """Manages the humans in the apocalypse.
@@ -245,7 +269,7 @@ class HumanManager(AgentManager):
         # Get the closest enemy
         closest_enemy = enemies[0]
         return closest_enemy
-    
+        
     def trade_with(self, agent1, agent2):
         if agent1.weapon is not None and agent2.weapon is not None:
             # agent with worse weapon give some health to agent with better weapon to trade
@@ -274,7 +298,26 @@ class Zombie(Agent):
     """
     def __init__(self, id, health, position):
         super().__init__(id, health, position)
+        self._health = health
         self.connections = []
+
+    @property
+    def health(self):
+        return self._health
+    
+    @health.setter
+    def health(self, value):
+        self._health = value
+        # Check if the zombie has been killed
+        if self.health <= 0:
+            # Remove the zombie from the list of zombies
+            apocalypse.zombie_manager.remove_zombie(self)
+            
+    """
+    @cached_property
+    def closest_enemy(self):
+        return min(apocalypse.zombie_manager.zombies, key=lambda x: distance(self.position, x.position))
+    """
 
     def take_turn(self, closest_human):
         # If there are any humans in range, attack the closest one
@@ -292,10 +335,6 @@ class Zombie(Agent):
     # further processing in manager
     def take_damage(self, damage):
         super().take_damage(damage)
-        # Check if the zombie has been killed
-        if self.health <= 0:
-            # Remove the zombie from the list of zombies
-            apocalypse.zombie_manager.remove_zombie(self)  
     
     def move_towards_human(self, human):
         # Calculate the direction in which the human is located

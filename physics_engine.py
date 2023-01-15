@@ -473,55 +473,54 @@ def collision():
 
 # from cpp
 
-
+from dataclasses import dataclass
 
 # dynamics
+@dataclass
 class Vector3:
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
+    x: float
+    y: float
+    z: float
 
 # dynamics
+@dataclass
 class Quaternion:
-    def __init__(self, x, y, z, w):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.w = w
+    x: float
+    y: float
+    z: float
+    w: float
 
 # Collision detection
+@dataclass
 class Transform: # describes an objects location and orientation in 3D space
-    def __init__(self, Position, Scale, Rotation):
-        self.Position = Position # Vector3
-        self.Scale = Scale # Vector3
-        self.Rotation = Rotation # Quaternion
+    Position: Vector3
+    Scale: Vector3
+    Rotation: Quaternion
 
-class Object:    
-    def __init__(self, position, velocity, force, mass, Collider, Transform):
-        self.Position = position
-        self.Velocity = velocity
-        self.Force = force
-        self.Mass = mass
-        self.Collider = Collider # Collider
-        self.Transform = Transform # Transform
+@dataclass
+class Object:
+    Position: Vector3
+    Velocity: Vector3
+    Force: Vector3
+    Mass: float
+    Collider: Collider
+    Transform: Transform
 
 # collision detection
+@dataclass
 class CollisionPoints:
-    def __init__(self, A, B, Normal, Depth, HasCollision):
-        self.A = A # furthest point of A into B # Vector3
-        self.B = B # furthest point of B into A # Vector3
-        self.Normal = Normal # B – A normalized # Vector3
-        self.Depth = Depth # length of B – A # float
-        self.HasCollision = HasCollision # true if collision is detected # bool
+    A: Vector3 # furthest point of A into B
+    B: Vector3 # furthest point of B into A
+    Normal: Vector3 # B – A normalized
+    Depth: float # length of B – A
+    HasCollision: bool # true if collision is detected
 
 # stores the details of a collision between two objects
+@dataclass
 class Collision:
-    def __init__(self, ObjA, ObjB, Points):
-        self.ObjA = ObjA # Object
-        self.ObjB = ObjB # Object
-        self.Points = Points # CollisionPoints
-
+    ObjA: Object
+    ObjB: Object
+    Points: CollisionPoints
 
 # collision response
 # solve collisions
@@ -531,8 +530,45 @@ class Solver:
         
 
     def Solve(self, collisions, dt):
-        pass
+        for collision in collisions:
+            # calculate the impulse
+            impulse = self.calculate_impulse(collision, dt)
+            
+            # apply the impulse, friction, restitution, penetration, damping, angular friction, angular restitution, angular penetration, angular damping
 
+    def calculate_impulse(self, collision, dt):
+        # calculate the velocity of the center of mass
+        v_cm_x = (collision.ObjA.Mass * collision.ObjA.Velocity.x + collision.ObjB.Mass * collision.ObjB.Velocity.x) / (collision.ObjA.Mass + collision.ObjB.Mass)
+        v_cm_y = (collision.ObjA.Mass * collision.ObjA.Velocity.y + collision.ObjB.Mass * collision.ObjB.Velocity.y) / (collision.ObjA.Mass + collision.ObjB.Mass)
+        v_cm_z = (collision.ObjA.Mass * collision.ObjA.Velocity.z + collision.ObjB.Mass * collision.ObjB.Velocity.z) / (collision.ObjA.Mass + collision.ObjB.Mass)
+        
+        # calculate the relative velocity of the objects
+        v_rel_x = collision.ObjA.Velocity.x - collision.ObjB.Velocity.x
+        v_rel_y = collision.ObjA.Velocity.y - collision.ObjB.Velocity.y
+        v_rel_z = collision.ObjA.Velocity.z - collision.ObjB.Velocity.z
+        
+        # calculate the component of the relative velocity along the collision normal
+        v_rel_normal = v_rel_x * collision.Points.Normal.x + v_rel_y * collision.Points.Normal.y + v_rel_z * collision.Points.Normal.z
+        
+        # calculate the new relative velocity
+        e = collision.ObjA.Elasticity * collision.ObjB.Elasticity
+        v_rel_x_new = v_rel_x - v_rel_normal * collision.Points.Normal.x * (1 + e)
+        v_rel_y_new = v_rel_y - v_rel_normal * collision.Points.Normal.y * (1 + e)
+        v_rel_z_new = v_rel_z - v_rel_normal * collision.Points.Normal.z * (1 + e)
+        
+        # calculate the new velocity of each object
+        v1x_new = v_cm_x + v_rel_x_new
+        v1y_new = v_cm_y + v_rel_y_new
+        v1z_new = v_cm_z + v_rel_z_new
+        
+        v2x_new = v_cm_x - v_rel_x_new
+        v2y_new = v_cm_y - v_rel_y_new
+        v2z_new = v_cm_z - v_rel_z_new
+        
+        return v1x_new, v1y_new, v1z_new, v2x_new, v2y_new, v2z_new
+        
+            
+            
 
 class PhysicsWorld:
     def __init__(self):
@@ -657,9 +693,10 @@ class PlaneCollider:
             return collideobject.TestCollision(collideobjectTransform, self, transform)
 
 
-# abstract base class that define pure virtual functions for ts+esting collisions with other colliders
-# takes in transform object of the collider that is being tested abd returb a collisionpoints object to return the details of the collision
+# abstract base class that define pure virtual functions for testing collisions with other colliders
+# takes in transform object of the collider that is being tested and return a collisionpoints object to return the details of the collision
 # can define derived class for specific types of colliders and override the testcollision function for that type of collider
+# 
 class Collider:
     def __init__(self, *args, **kwargs):
         self.sphere_collider = SphereCollider(*args, **kwargs)

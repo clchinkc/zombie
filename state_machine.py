@@ -43,7 +43,7 @@ At the end of the simulation, we print the final q_values table to see how the a
 
 import random
 import numpy as np
-
+from functools import partial
 
 # define the possible states
 # determined by actions and events
@@ -65,19 +65,6 @@ NOISE = "noise"
 ZOMBIE = "zombie"
 WEAPON = "weapon"
 events = [NOISE, ZOMBIE, WEAPON]
-
-# define the rewards
-SURVIVE = 1
-FIND_RESOURCES = 5
-KILL_ZOMBIE = 10
-DIE_BY_ZOMBIE = -100
-LEARNING_RATE = 0.001
-DISCOUNT_RATE = 0.999
-
-# define the number of states and actions
-num_states = len(states)
-num_actions = len(actions)
-num_events = len(events)
 
 # define the school class to store states and produce events
 class School(object):
@@ -102,6 +89,7 @@ class School(object):
             },
         }
         self.event = NOISE
+        self.produce_event_globals = partial(self.produce_event, SURVIVE=1, FIND_RESOURCES=5, KILL_ZOMBIE=10, DIE_BY_ZOMBIE=-100)
         
         # may use probability to define the rules or events that trigger transitions between states
         
@@ -109,7 +97,7 @@ class School(object):
         # select the next state based on the current state and event
         return self.state_transitions[state][event]
         
-    def produce_event(self, state, action):
+    def produce_event(self, state, action, SURVIVE, FIND_RESOURCES, KILL_ZOMBIE, DIE_BY_ZOMBIE):
         if state == HIDING:
             if action == HIDE:
                 event = np.random.choice(events)
@@ -263,20 +251,21 @@ class Person(object):
         self.action = np.random.choice(actions)
         self.reward = 0
         # define the matrix of actions for each state
-        self.Q = np.zeros((num_states, num_actions))
+        self.Q = np.zeros((len(states), len(actions)))
+        self.update_q_values_globals = partial(self.update_q_values, LEARNING_RATE=0.001, DISCOUNT_RATE=0.999)
 
     def update(self):
         # select the next action
         self.action = self.select_action(self.state_machine.state, 0)
         # select the next event
-        self.state_machine.event, reward = self.state_machine.produce_event(self.state_machine.state, self.action)
+        self.state_machine.event, reward = self.state_machine.produce_event_globals(self.state_machine.state, self.action)
         # select the next state
         self.state_machine.state = self.state_machine.update_state(self.state_machine.state, self.state_machine.event)
         return reward
     
-    def end_condition(self, reward):
+    def end_condition(self, reward, die_by_zombie_value):
         # determine if the person has died based on reward
-        return reward == DIE_BY_ZOMBIE
+        return reward == die_by_zombie_value
     
     def select_action(self, state, epsilon=0):
         # choose an action using the learned epsilon-greedy policy
@@ -295,7 +284,7 @@ class Person(object):
         e_x = np.exp(x - np.max(x, axis=0))
         return e_x / e_x.sum(axis=0)
         
-    def update_q_values(self, state, action, reward, next_state):
+    def update_q_values(self, state, action, reward, next_state, LEARNING_RATE, DISCOUNT_RATE):
         # calculate the maximum expected reward for the next state
         state_index = states.index(state)
         action_index = actions.index(action)
@@ -308,14 +297,14 @@ class Person(object):
     def print_q_table(self):
         # print the Q-table
         print("Q-table:")
-        for i in range(num_states):
+        for i in range(len(states)):
             print(f"State: {states[i]}")
-            for j in range(num_actions):
+            for j in range(len(actions)):
                 print(f"Action: {actions[j]} - Q-value: {self.Q[i][j]}")
             print()
 
     # define the training function to train the person
-    def train(self, num_episodes, epsilon):
+    def train(self, num_episodes, epsilon, survive, find_resources, kill_zombie, die_by_zombie, learning_rate, discount_rate):
         # Loop through the episodes
         for episode in range(num_episodes):
             # print the current episode
@@ -329,21 +318,23 @@ class Person(object):
             while True:
                 # select the next action
                 self.action = self.select_action(self.state_machine.state, epsilon)
-                # determine the reward
-                self.event, self.reward = self.state_machine.produce_event(self.state_machine.state, self.action)
+                # determine the event and reward
+                self.state_machine.produce_event_globals = partial(self.state_machine.produce_event, SURVIVE=survive, FIND_RESOURCES=find_resources, KILL_ZOMBIE=kill_zombie, DIE_BY_ZOMBIE=die_by_zombie)
+                self.event, self.reward = self.state_machine.produce_event_globals(self.state_machine.state, self.action)
                 # determine the next state
                 next_state = self.state_machine.update_state(self.state_machine.state, self.event)
                 
                 print(f"episode: {episode+1}, current state: {self.state_machine.state}, action: {self.action}, event: {self.state_machine.event}, reward: {self.reward}, next_state: {next_state}")
                 
                 # update the Q-values
-                self.update_q_values(self.state_machine.state, self.action, self.reward, next_state)
+                self.update_q_values_globals = partial(self.update_q_values, LEARNING_RATE=learning_rate, DISCOUNT_RATE=discount_rate)
+                self.update_q_values_globals(self.state_machine.state, self.action, self.reward, next_state)
                 
                 # set the current state to the next state
                 self.state_machine.state = next_state
                 
                 # determine if the episode is done
-                if self.end_condition(self.reward):
+                if self.end_condition(self.reward, die_by_zombie):
                     break
                 
         self.print_q_table()
@@ -355,11 +346,11 @@ def simulation():
     num_steps = 1000
     
     # create the people
-    people = [Person() for i in range(num_people)]
+    people = [Person() for _ in range(num_people)]
     
     for person in people:
         # train the person
-        person.train(100, 0.25)
+        person.train(num_episodes=100, epsilon=0.25, survive=1, find_resources=5, kill_zombie=10, die_by_zombie=-100, learning_rate=0.001, discount_rate=0.999)
     
     for step in range(num_steps):
         # run the simulation
@@ -367,7 +358,7 @@ def simulation():
             # simulate the person
             person.update()
             # check end conditions
-            if person.end_condition(person.reward):
+            if person.end_condition(person.reward, -100):
                 break
         
         # print the current state of the people

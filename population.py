@@ -15,18 +15,19 @@ from __future__ import annotations
 import math
 import random
 from enum import Enum, auto
+from functools import lru_cache, cached_property
 from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 from matplotlib import animation
 
-import pytest
 
 # Define the states and transitions for the state machine model
 class State(Enum):
     
-    ALIVE = auto()
+    HEALTHY = auto()
     INFECTED = auto()
     ZOMBIE = auto()
     DEAD = auto()
@@ -41,7 +42,7 @@ class State(Enum):
 
 # pytest for State
 def test_state():
-    assert State.name_list() == ["ALIVE", "INFECTED", "ZOMBIE", "DEAD"]
+    assert State.name_list() == ["HEALTHY", "INFECTED", "ZOMBIE", "DEAD"]
     assert State.value_list() == [0, 1, 2, 3]
 
 class Individual:
@@ -56,11 +57,14 @@ class Individual:
         self.connections: list[Individual] = []
         self.infection_severity: float = 0.0
         self.interact_range: int = 2
-        self.sight_range: int = 5
         
         # different range for different states
         # may use random distribution
 
+    @cached_property
+    def sight_range(self) -> int:
+        return self.interact_range + 3
+        
     def add_connection(self, other: Individual) -> None:
         self.connections.append(other)
 
@@ -71,7 +75,7 @@ class Individual:
 
     def update_state(self, severity: float) -> None:
         # Update the state of the individual based on the current state and the interactions with other people
-        if self.state == State.ALIVE:
+        if self.state == State.HEALTHY:
             if self.is_infected(severity):
                 self.state = State.INFECTED
         elif self.state == State.INFECTED:
@@ -87,20 +91,11 @@ class Individual:
     # cellular automaton
     def is_infected(self, severity: float) -> bool:
         infection_probability = 1 / (1 + math.exp(-severity))
-        num_zombie = sum(1 for individual in self.connections if individual.state == State.ZOMBIE)
-        if random.random() < (1-(1-infection_probability)**num_zombie):
-            return True
-        return False
-    
-    """
-    def is_infected(self, severity: float) -> bool:
-        infection_probability = 1 / (1 + math.exp(-severity))
         for individual in self.connections:
             if individual.state == State.ZOMBIE:
                 if random.random() < infection_probability:
                     return True
         return False
-    """
 
     # cellular automaton
     def is_turned(self) -> bool:
@@ -112,23 +107,11 @@ class Individual:
     # cellular automaton
     def is_died(self, severity: float) -> bool:
         death_probability = severity
-        num_alive = sum(1 for individual in self.connections if individual.state == State.ALIVE or individual.state == State.INFECTED)
-        if random.random() < (1-(1-death_probability)**num_alive):
-            return True
+        for individual in self.connections:
+            if individual.state == State.HEALTHY or individual.state == State.INFECTED:
+                if random.random() < death_probability:
+                    return True
         return False
-    
-    """
-    def attack_neighbors(self, agent):
-        neighbors = self.get_neighbors(agent)
-        if isinstance(agent, Human):
-            for neighbor in neighbors:
-                if isinstance(neighbor, Zombie):
-                    self.attack_agent(agent, neighbor)
-        elif isinstance(agent, Zombie):
-            for neighbor in neighbors:
-                if isinstance(neighbor, Human):
-                    self.attack_agent(agent, neighbor)
-    """
     
     def get_info(self) -> str:
         return f"Individual {self.id} is {self.state.name} and is located at {self.location}, having connections with {self.connections}, infection severity {self.infection_severity}, interact range {self.interact_range}, and sight range {self.sight_range}."
@@ -144,25 +127,25 @@ class Individual:
 
 # pytest for Individual
 def test_individual():
-    individual = Individual(1, State.ALIVE, (0, 0))
+    individual = Individual(1, State.HEALTHY, (0, 0))
     assert individual.id == 1
-    assert individual.state == State.ALIVE
+    assert individual.state == State.HEALTHY
     assert individual.location == (0, 0)
     assert individual.connections == []
     assert individual.infection_severity == 0.0
     assert individual.interact_range == 2
     assert individual.sight_range == 5
-    assert individual.get_info() == "Individual 1 is ALIVE and is located at (0, 0), having connections with [], infection severity 0.0, interact range 2, and sight range 5."
+    assert individual.get_info() == "Individual 1 is HEALTHY and is located at (0, 0), having connections with [], infection severity 0.0, interact range 2, and sight range 5."
     assert str(individual) == "Individual 1"
     # test behaviour
-    individual2 = Individual(2, State.ALIVE, (0, 1))
+    individual2 = Individual(2, State.HEALTHY, (0, 1))
     individual.add_connection(individual2)
     assert individual.connections == [individual2]
     individual.move((1, 1))
     assert individual.location == (1, 1)
     """
     # test update_state
-    individual.state = State.ALIVE
+    individual.state = State.HEALTHY
     individual.update_state(100)
     assert individual.state == State.INFECTED
     for _ in range(10):
@@ -171,8 +154,8 @@ def test_individual():
     individual.update_state(10)
     assert individual.state == State.DEAD
     # test is_infected
-    individual.state = State.ALIVE
-    individual3 = Individual(3, State.ALIVE, (0, 2))
+    individual.state = State.HEALTHY
+    individual3 = Individual(3, State.HEALTHY, (0, 2))
     individual.add_connection(individual3)
     assert individual.is_infected(10) == False
     """
@@ -228,110 +211,58 @@ class School:
                 continue
             if random.random() < migration_probability:
                 neighbors = self.get_neighbors((i, j), cell.sight_range)
+                # randomly move the individual if there are no neighbors
                 if len(neighbors) == 0:
-                    for _ in range(100):
-                        print("entered random while loop")
-                        direction = (random.randint(-1, 1),
-                                     random.randint(-1, 1))
-                        new_location = tuple(np.add(cell.location, direction))
-                        if self.legal_location(new_location):
-                            self.move_individual(cell, direction)
-                            print("moved individual")
-                            break
+                    self.random_move(cell)
+                    continue
                 
                 # Update the positions of the zombies
                 elif cell.state == State.ZOMBIE:
-                    alive_locations = []
-                    for alive in neighbors:
-                        if alive.state == State.ALIVE:
-                            alive_locations.append(alive.location)
-                    for _ in range(1):
-                        print("entered zombie while loop")
-                        if len(alive_locations) == 0:
-                            break
-                        alive_distances = [np.linalg.norm(np.subtract(cell.location, alive_location))
-                                           for alive_location in alive_locations]
-                        closest_alive = alive_locations[np.argmin(alive_distances)]
-                        direction = (np.sign(closest_alive[0] - cell.location[0]), \
-                                    np.sign(closest_alive[1] - cell.location[1]))
-                        new_location = tuple(np.add(cell.location, direction))
-                        if self.legal_location(new_location):
-                            self.move_individual(cell, direction)
-                            print("moved individual")
-                            break
+                    alive_locations = [alive.location for alive in neighbors if alive.state == State.HEALTHY]
+                    print("entered zombie while loop")
+                    if len(alive_locations) == 0:
+                        break
+                    alive_distances = [np.linalg.norm(np.subtract(cell.location, alive_location))
+                                        for alive_location in alive_locations]
+                    closest_alive = alive_locations[np.argmin(alive_distances)]
+                    direction = (np.sign(closest_alive[0] - cell.location[0]), \
+                                np.sign(closest_alive[1] - cell.location[1]))
+                    new_location = tuple(np.add(cell.location, direction))
+                    if self.legal_location(new_location):
+                        self.move_individual(cell, direction)
+                        print("moved individual")
+                        continue
+                    else:
+                        if self.compromised_move(cell, direction):
+                            continue
                         else:
-                            for random_number in range(-1, 2):
-                                direction_x = tuple(np.sign((direction[0], random_number)))
-                                new_location_x = tuple(np.add(cell.location, direction_x))
-                                direction_y = tuple(np.sign((random_number, direction[1])))
-                                new_location_y = tuple(np.add(cell.location, direction_y))
-                                if self.legal_location(new_location_x):
-                                    self.move_individual(cell, direction_x)
-                                    print("moved individual")
-                                    break
-                                elif self.legal_location(new_location_y):
-                                    self.move_individual(cell, direction_y)
-                                    print("moved individual")
-                                    break
-                                else:
-                                    continue
-                            for _ in range(100):
-                                print("entered random while loop")
-                                direction = (random.randint(-1, 1),
-                                            random.randint(-1, 1))
-                                new_location = tuple(np.add(cell.location, direction))
-                                if self.legal_location(new_location) or new_location == cell.location:
-                                    self.move_individual(cell, direction)
-                                    print("moved individual")
-                                    break
+                            self.random_move(cell)
+                            continue
                 
                 # if right next to then don't move
                 # get neighbors with larger and larger range until there is a human
                 # sight range is different from interact range
 
                 # Update the positions of the survivors
-                elif cell.state == State.ALIVE or cell.state == State.INFECTED:
-                    zombie_locations = []
-                    for zombie in neighbors:
-                        if zombie.state == State.ZOMBIE:
-                            zombie_locations.append(zombie.location)
-                    for _ in range(1):
-                        print("entered alive while loop")
-                        if len(zombie_locations) == 0:
-                            break
-                        zombie_distances = [np.linalg.norm(np.subtract(cell.location, zombie_location))
-                                            for zombie_location in zombie_locations]
-                        closest_zombie = zombie_locations[np.argmin(zombie_distances)]
-                        direction = (np.sign(closest_zombie[0] - cell.location[0]), \
-                                    np.sign(closest_zombie[1] - cell.location[1]))
-                        new_location = tuple(np.add(cell.location, direction))
-                        if self.legal_location(new_location):
-                            self.move_individual(cell, direction)
+                elif cell.state == State.HEALTHY or cell.state == State.INFECTED:
+                    zombie_locations = [zombie.location for zombie in neighbors if zombie.state == State.ZOMBIE]
+                    print("entered alive while loop")
+                    if len(zombie_locations) == 0:
+                        break
+                    zombie_distances = [np.linalg.norm(np.subtract(cell.location, zombie_location))
+                                        for zombie_location in zombie_locations]
+                    closest_zombie = zombie_locations[np.argmin(zombie_distances)]
+                    direction = (np.sign(closest_zombie[0] - cell.location[0]), \
+                                np.sign(closest_zombie[1] - cell.location[1]))
+                    new_location = tuple(np.add(cell.location, direction))
+                    if self.legal_location(new_location):
+                        self.move_individual(cell, direction)
+                        continue
+                    else:
+                        if self.compromised_move(cell, direction):
+                            continue
                         else:
-                            for random_number in range(-1, 2):
-                                direction_x = tuple(np.sign((direction[0], random_number)))
-                                new_location_x = tuple(np.add(cell.location, direction_x))
-                                direction_y = tuple(np.sign((random_number, direction[1])))
-                                new_location_y = tuple(np.add(cell.location, direction_y))
-                                if self.legal_location(new_location_x):
-                                    self.move_individual(cell, direction_x)
-                                    print("moved individual")
-                                    break
-                                elif self.legal_location(new_location_y):
-                                    self.move_individual(cell, direction_y)
-                                    print("moved individual")
-                                    break
-                                else:
-                                    continue
-                            for _ in range(100):
-                                print("entered random while loop")
-                                direction = (random.randint(-1, 1),
-                                            random.randint(-1, 1))
-                                new_location = tuple(np.add(cell.location, direction))
-                                if self.legal_location(new_location) or new_location == cell.location:
-                                    self.move_individual(cell, direction)
-                                    print("moved individual")
-                                    break
+                            self.random_move(cell)
                                 
                 elif cell.state == State.DEAD:
                     continue
@@ -339,6 +270,36 @@ class School:
                     raise Exception(f"Individual {individuals.id} has an invalid state")
             else:
                 continue
+
+    def compromised_move(self, cell, direction):
+        for random_number in range(-1, 2):
+            direction_x = tuple(np.sign((direction[0], random_number)))
+            new_location_x = tuple(np.add(cell.location, direction_x))
+            direction_y = tuple(np.sign((random_number, direction[1])))
+            new_location_y = tuple(np.add(cell.location, direction_y))
+            if self.legal_location(new_location_x):
+                self.move_individual(cell, direction_x)
+                print("moved individual")
+                return True
+            elif self.legal_location(new_location_y):
+                self.move_individual(cell, direction_y)
+                print("moved individual")
+                return True
+            else:
+                continue
+        return False
+
+    def random_move(self, cell):
+        for _ in range(100):
+            print("entered random while loop")
+            direction = (random.randint(-1, 1),
+                        random.randint(-1, 1))
+            new_location = tuple(np.add(cell.location, direction))
+            if self.legal_location(new_location) or new_location == cell.location:
+                self.move_individual(cell, direction)
+                print("moved individual")
+                return True
+        return False
 
     # divide movement function into three parts, one for random, one for zombie, one for survivor
     # cases of more than one zombie and human, remove unwanted individuals
@@ -437,8 +398,22 @@ class School:
     # then check if the legal moves can move away from the zombie, move towards human
     # then move by dx and dy
 
+    def get_legal_moves(self, individual: Individual):
+        # get all possible legal moves for the individual
+        # return a list of legal moves
+        pass
+    
+    @lru_cache(maxsize=school_size**2)
+    def in_bounds(self, location: tuple[int, int]):
+        # check if the location is in the grid
+        return 0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size
+    
+    def empty_location(self, location: tuple[int, int]):
+        # check if the location is empty
+        return self.grid[location[0]][location[1]] == None
+
     def legal_location(self, location: tuple[int, int]):
-        return 0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size and self.grid[location[0]][location[1]] == None
+        return self.in_bounds(location) and self.empty_location(location)
 
     def move_individual(self, individual: Individual, direction: tuple[int, int]):
         old_location = individual.location
@@ -548,7 +523,7 @@ class Population:
                 self.school.remove_individual(individual.location)
 
     def update_population_metrics(self) -> None:
-        self.num_healthy = sum(1 for individual in self.population if individual.state == State.ALIVE)
+        self.num_healthy = sum(1 for individual in self.population if individual.state == State.HEALTHY)
         self.num_infected = sum(1 for individual in self.population if individual.state == State.INFECTED)
         self.num_zombie = sum(1 for individual in self.population if individual.state == State.ZOMBIE)
         self.num_dead = sum(1 for individual in self.population if individual.state == State.DEAD)
@@ -598,7 +573,7 @@ class Population:
         # Print a visual representation of the school, with each cell represented by a character
         for row in self.school.grid:
             for cell in row:
-                if cell == State.ALIVE:
+                if cell == State.HEALTHY:
                     print("H", end="")
                 elif cell == State.INFECTED:
                     print("I", end="")
