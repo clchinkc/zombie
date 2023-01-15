@@ -43,7 +43,7 @@ At the end of the simulation, we print the final q_values table to see how the a
 
 import random
 import numpy as np
-from functools import partial
+from functools import partial, update_wrapper
 
 # define the possible states
 # determined by actions and events
@@ -90,6 +90,7 @@ class School(object):
         }
         self.event = NOISE
         self.produce_event_globals = partial(self.produce_event, SURVIVE=1, FIND_RESOURCES=5, KILL_ZOMBIE=10, DIE_BY_ZOMBIE=-100)
+        update_wrapper(self.produce_event_globals, self.produce_event)
         
         # may use probability to define the rules or events that trigger transitions between states
         
@@ -253,6 +254,7 @@ class Person(object):
         # define the matrix of actions for each state
         self.Q = np.zeros((len(states), len(actions)))
         self.update_q_values_globals = partial(self.update_q_values, LEARNING_RATE=0.001, DISCOUNT_RATE=0.999)
+        update_wrapper(self.update_q_values_globals, self.update_q_values)
 
     def update(self):
         # select the next action

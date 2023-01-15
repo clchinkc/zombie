@@ -15,7 +15,12 @@
 	"python.formatting.blackPath": "black",
 	"python.linting.pylintPath": "pylint",
 	"python.linting.flake8Path": "flake8",
+	"python.testing.pytestEnabled": true,
 	"[cpp]": {
 		"editor.defaultFormatter": "ms-vscode.cpptools"
-	}
+	},
+	"python.testing.pytestArgs": [
+		"."
+	],
+	"python.testing.unittestEnabled": false
 }

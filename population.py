@@ -40,15 +40,10 @@ class State(Enum):
     def value_list(cls) -> list[int]:
         return [enm.value for enm in State]
 
-# pytest for State
-def test_state():
-    assert State.name_list() == ["HEALTHY", "INFECTED", "ZOMBIE", "DEAD"]
-    assert State.value_list() == [0, 1, 2, 3]
-
 class Individual:
 
     __slots__ = "id", "state", "location", "connections", \
-    "infection_severity", "interact_range", "sight_range", "__dict__"
+    "infection_severity", "interact_range", "__dict__"
     
     def __init__(self, id: int, state: State, location: tuple[int, int]) -> None:
         self.id: int = id
@@ -120,47 +115,10 @@ class Individual:
         return f"Individual {self.id}"
     
     def __repr__(self) -> str:
-        return "%s(%d,%d, %d)" % (self.__class__.__name__, self.id, self.state.value, self.location)
+        return "%s(%d, %d, %s)" % (self.__class__.__name__, self.id, self.state.value, self.location)
 
 # seperate inheritance for human and zombie class
 # zombie health == human health before infection
-
-# pytest for Individual
-def test_individual():
-    individual = Individual(1, State.HEALTHY, (0, 0))
-    assert individual.id == 1
-    assert individual.state == State.HEALTHY
-    assert individual.location == (0, 0)
-    assert individual.connections == []
-    assert individual.infection_severity == 0.0
-    assert individual.interact_range == 2
-    assert individual.sight_range == 5
-    assert individual.get_info() == "Individual 1 is HEALTHY and is located at (0, 0), having connections with [], infection severity 0.0, interact range 2, and sight range 5."
-    assert str(individual) == "Individual 1"
-    # test behaviour
-    individual2 = Individual(2, State.HEALTHY, (0, 1))
-    individual.add_connection(individual2)
-    assert individual.connections == [individual2]
-    individual.move((1, 1))
-    assert individual.location == (1, 1)
-    """
-    # test update_state
-    individual.state = State.HEALTHY
-    individual.update_state(100)
-    assert individual.state == State.INFECTED
-    for _ in range(10):
-        individual.update_state(0)
-    assert individual.state == State.ZOMBIE
-    individual.update_state(10)
-    assert individual.state == State.DEAD
-    # test is_infected
-    individual.state = State.HEALTHY
-    individual3 = Individual(3, State.HEALTHY, (0, 2))
-    individual.add_connection(individual3)
-    assert individual.is_infected(10) == False
-    """
-    
-test_individual()
 
 class School:
     
@@ -403,7 +361,7 @@ class School:
         # return a list of legal moves
         pass
     
-    @lru_cache(maxsize=school_size**2)
+    @lru_cache
     def in_bounds(self, location: tuple[int, int]):
         # check if the location is in the grid
         return 0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size
@@ -444,7 +402,8 @@ class School:
 
 class Population:
     
-    __slots__ = "school", "population", "severity", "num_healthy", "num_infected", "num_zombie", "num_dead", "population_size", "infection_probability", "turning_probability", "death_probability", "migration_probability", "__dict__"
+    __slots__ = "school", "population", "severity", "num_healthy", "num_infected", "num_zombie", "num_dead", \
+                "population_size", "infection_probability", "turning_probability", "death_probability", "migration_probability", "__dict__"
     
     def __init__(self, school_size: int, population_size: int) -> None:
         self.school: School = School(school_size)
