@@ -413,12 +413,14 @@ class Weapon:
     def __str__(self):
         return f"{self.name} ({self.damage} damage, {self.range} range)"
 
+from typing import Type
+
 class AgentFactory:
     
     def __init__(self):
-        self.character_creation_funcs: dict[str, Callable[..., Union[Human, Zombie]]] = {}
+        self.character_creation_funcs: dict[str, Callable[..., Agent]] = {}
 
-    def register(self, character_type: str, creator_fn: Callable[..., Union[Human, Zombie]]) -> None:
+    def register(self, character_type: str, creator_fn: Callable[..., Agent]) -> None:
         """Register a new game character type."""
         self.character_creation_funcs[character_type] = creator_fn
 
@@ -426,7 +428,7 @@ class AgentFactory:
         """Unregister a game character type."""
         self.character_creation_funcs.pop(character_type, None)
 
-    def create(self, arguments: dict[str, Any]) -> Union[Human, Zombie]:
+    def create(self, arguments: dict[str, Any]) -> Agent:
         """Create a game character of a specific type."""
         args_copy = arguments.copy()
         character_type = args_copy.pop("type")
@@ -474,7 +476,7 @@ class ZombieApocalypse:
             
     # break down the initialize method using factory pattern to separate the creation and the use for humans and zombies
     # factory pattern for humans and zombies
-    def create_agent(self, school_size, id, type) -> Union[Human, Zombie]:
+    def create_agent(self, school_size, id, type) -> Agent:
         arguments = {
             "type": type,
             "id": id,

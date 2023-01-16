@@ -477,3 +477,7 @@ class Map:
         return "There are " + str(self.supplies) + " supplies, " + str(self.weapons) + " weapons, " + str(self.survivors) + " survivors, and " + str(self.zombies) + " zombies."
 
 """
+"""
+https://colab.research.google.com/drive/1ZPdHpFxwdxMp-BGK8rb45BtzpF_jqfGY
+https://colab.research.google.com/drive/1S9_V3p-dMwMFupG9qjUZQ0zhqwWcnSpG#scrollTo=v5q59hTFhanA
+"""
