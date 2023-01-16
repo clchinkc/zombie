@@ -23,7 +23,6 @@ a escape mode that human can escape from zombie two block by paying health or do
 custom error class inherit from Exception, it can raise error to pass through useful attributes
 setattr can put a attribute dictionary into a class using for loop (dynamically)
 getattr can get a attribute dictionary from a class using for loop (dynamically)
-https://www.programiz.com/python-programming/decorator
 can use @classmethod to return counter which depends on class instead of instance,
 so either class.return or instance.return will give counter of class
 can use @staticmethod to convert human to zombie
@@ -36,6 +35,8 @@ teacher one class, student one class
 change to float for faster performance
 group of zombies and groups of humans
 if the state don't need to be stored, use functional programming instead of object oriented programming
+use function to control the spawn rate of food and weapon in different terrain, interaction between classes, preprocess and postprocess
+make classes either data-oriented or behaviour-oriented, not both
 currying function can be used when a sequence of separate function is used on the same object
 closure a function that is defined inside another function and has access to the variables of the outer function
 closure is used to avoid using global variable while still having access to the variable of the outer function
