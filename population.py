@@ -246,6 +246,28 @@ class School:
             else:
                 continue
         return False
+    
+    """
+    def update_connections(self) -> None:
+        grid_size = self.school_size
+        individuals = [self.get_individual((i, j)) for i in range(grid_size) for j in range(grid_size)]
+        individuals = [i for i in individuals if i is not None]
+        # Create a 2D grid of interact_range of each individual
+        interact_range_grid = np.array([[i.interact_range for i in row] for row in self.grid])
+        # Create a 2D grid of locations of each individual
+        location_grid = np.array([[i.location for i in row] for row in self.grid])
+        for individual in individuals:
+            x, y = individual.location
+            # get the neighborhood of the individual based on interact_range
+            neighborhood = location_grid[max(x - individual.interact_range, 0):x + individual.interact_range + 1,
+                                   max(y - individual.interact_range, 0):y + individual.interact_range + 1]
+            # Flatten the neighborhood
+            neighborhood = neighborhood.flatten()
+            # Filter out the None values
+            neighborhood = [i for i in neighborhood if i is not None]
+            for neighbor in neighborhood:
+                individual.add_connection(self.get_individual(neighbor))
+    """
 
     def random_move(self, cell):
         for _ in range(100):
@@ -258,6 +280,18 @@ class School:
                 print("moved individual")
                 return True
         return False
+    
+    """
+    def random_move(self, cell):
+        directions = np.random.randint(-1, 2, size=(100, 2))
+        new_locations = np.add(cell.location, directions)
+        legal_locations = np.where((self.legal_location(new_locations)) | (new_locations == cell.location))[0]
+        if legal_locations.size > 0:
+            chosen_direction = directions[legal_locations[0]]
+            self.move_individual(cell, chosen_direction)
+            return True
+        return False
+    """
 
     # divide movement function into three parts, one for random, one for zombie, one for survivor
     # cases of more than one zombie and human, remove unwanted individuals
@@ -419,19 +453,21 @@ class Population:
     def remove_individual(self, individual: Individual) -> None:
         self.population.remove(individual)
         self.school.remove_individual(individual.location)
+        
+    def create_individual(self, id: int, school_size) -> Individual:
+        state_index = random.choices(State.value_list(), weights=[0.9, 0.05, 0.05, 0.0])
+        state = State(state_index[0])
+        while True:
+            location = (random.randint(0, school_size-1),
+                        random.randint(0, school_size-1))
+            if self.school.legal_location(location):
+                break
+        return Individual(id, state, location)
 
     def init_population(self, school_size: int, population_size: int) -> None:
         for i in range(population_size):
-            state_index = random.choices(State.value_list(), weights=[0.9, 0.05, 0.05, 0.0])
-            state = State(state_index[0])
-            while True:
-                location = (random.randint(0, school_size-1),
-                            random.randint(0, school_size-1))
-                if self.school.legal_location(location):
-                    break
-                else:
-                    continue
-            self.add_individual(Individual(i, state, location))
+            individual = self.create_individual(i, school_size)
+            self.add_individual(individual)
 
     # a method to init using a grid of "A", "I", "Z", "D"
 
@@ -702,4 +738,12 @@ Additionally, the model could be expanded to include more detailed information a
 such as the locations of classrooms, doors, and other features. 
 This could allow for more accurate simulations of the movement 
 and interactions of students, teachers, and zombies within the school environment.
+"""
+"""
+Plugin Pattern & Factory Pattern
+https://github.com/ArjanCodes/2021-plugin-architecture
+"""
+"""
+Factory Pattern
+https://github.com/ArjanCodes/2021-factory-pattern
 """

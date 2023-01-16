@@ -1,9 +1,21 @@
+// Physics engine
 // https://blog.winter.dev/2020/designing-a-physics-engine/
 // https://blog.winter.dev/2020/epa-algorithm/
 // https://blog.winter.dev/2020/gjk-algorithm/
 // https://github.com/IainWinter/IwEngine
 // https://github.com/IainWinter/WinterFramework
 // https://github.com/KrishnenduMarathe/physicsSimulator
+// https://www.youtube.com/watch?v=cmqum40pnyY
+// https://github.com/codingthunder/CSE310-FALL-2022/tree/master/CPlusPlusProject
+
+// Falling sand
+// https://blog.winter.dev/2020/falling-sand-games/
+// https://blog.winter.dev/2021/falling-sand-worlds/
+// https://www.youtube.com/watch?v=5Ka3tbbT-9E
+// https://github.com/DavidMcLaughlin208/FallingSandSimulation
+
+// Shooting game
+// https://iainwinter.itch.io/regolith
 
 // dynamic
 

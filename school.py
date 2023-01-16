@@ -24,6 +24,8 @@ Here are a few suggestions:
 The current code only prints the output of each function, but it does not save the results in any variable. As a result, the output of one function cannot be used as input for another function. This can be improved by returning the results from each function and storing them in variables for further use.
 
 Make functions to generate the input parameters of the School class.
+
+The hierarchy dictionary could be inverted to create a dictionary where the keys are the student names and the values are the social groups they belong to. This would make it easier to quickly look up a student's friends, social groups, or peer pressure level.
 """
 
 """

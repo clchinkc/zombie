@@ -167,17 +167,17 @@ print(y)
 """
 
 
-
+"""
 # example 2
 decorator = PerformanceDecorator(use_counter_to_count)
-#decorator.time_it(1000)
+decorator.time_it(1000)
 decorator.call_count(1000)
-#decorator.line_profile(1000)
-#decorator.memory_profile(1000)
+decorator.line_profile(1000)
+decorator.memory_profile(1000)
 
 result = decorator.call(1000)
 print(result)
-
+"""
 
 """
 https://myapollo.com.tw/zh-tw/cprofile-and-py-spy-tutorial/
