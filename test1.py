@@ -125,8 +125,6 @@ def test_performance_1():
 
 # test_performance_1()
 
-from population import *
-
 def test_performance_2():
     population = Population(100, 1)
     # add 1 individuals to the school

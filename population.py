@@ -180,41 +180,43 @@ class School:
                     if len(alive_locations) == 0:
                         self.random_move(cell)
                         continue
+                    # Move towards the closest human
                     direction, new_location = self.move_towards_closest(cell, alive_locations)
+                    # If the new location is legal, move there
                     if self.legal_location(new_location):
                         self.move_individual(cell, direction)
                         continue
-                    else:
-                        direction, new_location = self.compromised_move(cell, direction)
-                        if self.legal_location(new_location):
-                            self.move_individual(cell, direction)
-                            continue
-                        else:
-                            self.random_move(cell)
-                            continue
+                    # If the new location is not legal, try to move in a different direction
+                    direction, new_location = self.compromised_move(cell, direction)
+                    if self.legal_location(new_location):
+                        self.move_individual(cell, direction)
+                        continue
+                    # If still not legal, move randomly
+                    self.random_move(cell)
                 
                 # if right next to then don't move
                 # get neighbors with larger and larger range until there is a human
                 # sight range is different from interact range
 
                 # Update the positions of the survivors
-                elif cell.state == State.HEALTHY or cell.state == State.INFECTED:
+                elif cell.state in (State.HEALTHY, State.INFECTED):
                     zombie_locations = [zombie.location for zombie in neighbors if zombie.state == State.ZOMBIE]
-                    if len(zombie_locations) == 0:
+                    if not zombie_locations:
                         self.random_move(cell)
                         continue
+                    # Move away from the closest zombie
                     direction, new_location = self.move_against_closest(cell, zombie_locations)
+                    # If the new location is legal, move there
                     if self.legal_location(new_location):
                         self.move_individual(cell, direction)
                         continue
-                    else:
-                        direction, new_location = self.compromised_move(cell, direction)
-                        if self.legal_location(new_location):
-                            self.move_individual(cell, direction)
-                            continue
-                        else:
-                            self.random_move(cell)
-                            continue
+                    # If the new location is not legal, try to move in a different direction
+                    direction, new_location = self.compromised_move(cell, direction)
+                    if self.legal_location(new_location):
+                        self.move_individual(cell, direction)
+                        continue
+                    # If still not legal, move randomly
+                    self.random_move(cell)
                                 
                 elif cell.state == State.DEAD:
                     continue
