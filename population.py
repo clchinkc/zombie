@@ -160,25 +160,30 @@ class School:
         for individuals in population:
             i, j = individuals.location
             cell = self.get_individual((i, j))
-            print("got cell")
+
             adjacent_neighbors = self.get_neighbors((i, j))
+            
             if cell == None:
                 raise Exception(f"Individual {individuals.id} is not in the grid")
+            
             # no legal moves in the grid, so skip the cell
             if len(adjacent_neighbors) == 8:
                 continue
+            
             if random.random() < migration_probability:
                 neighbors = self.get_neighbors((i, j), cell.sight_range)
                 # randomly move the individual if there are no neighbors
                 if len(neighbors) == 0:
-                    self.random_move(cell)
+                    direction, new_location = self.random_move(cell)
+                    self.move_individual(cell, direction)
                     continue
                 
                 # Update the positions of the zombies
                 elif cell.state == State.ZOMBIE:
                     alive_locations = [alive.location for alive in neighbors if alive.state == State.HEALTHY]
                     if len(alive_locations) == 0:
-                        self.random_move(cell)
+                        direction, new_location = self.random_move(cell)
+                        self.move_individual(cell, direction)
                         continue
                     # Move towards the closest human
                     direction, new_location = self.move_towards_closest(cell, alive_locations)
@@ -192,7 +197,9 @@ class School:
                         self.move_individual(cell, direction)
                         continue
                     # If still not legal, move randomly
-                    self.random_move(cell)
+                    direction, new_location = self.random_move(cell)
+                    self.move_individual(cell, direction)
+                    continue
                 
                 # if right next to then don't move
                 # get neighbors with larger and larger range until there is a human
@@ -202,7 +209,8 @@ class School:
                 elif cell.state in (State.HEALTHY, State.INFECTED):
                     zombie_locations = [zombie.location for zombie in neighbors if zombie.state == State.ZOMBIE]
                     if not zombie_locations:
-                        self.random_move(cell)
+                        direction, new_location = self.random_move(cell)
+                        self.move_individual(cell, direction)
                         continue
                     # Move away from the closest zombie
                     direction, new_location = self.move_against_closest(cell, zombie_locations)
@@ -216,7 +224,9 @@ class School:
                         self.move_individual(cell, direction)
                         continue
                     # If still not legal, move randomly
-                    self.random_move(cell)
+                    direction, new_location = self.random_move(cell)
+                    self.move_individual(cell, direction)
+                    continue
                                 
                 elif cell.state == State.DEAD:
                     continue
@@ -280,14 +290,14 @@ class School:
                 individual.add_connection(self.get_individual(neighbor))
     """
 
-    def random_move(self, cell) -> tuple[int, int]:
+    def random_move(self, cell) -> tuple[tuple[int, int], tuple[int, int]]:
         for _ in range(100):
             direction = (random.randint(-1, 1),
                         random.randint(-1, 1))
             new_location = tuple(np.add(cell.location, direction))
             if self.legal_location(new_location) or new_location == cell.location:
-                return new_location
-        return (0, 0)
+                return direction, new_location
+        return (0, 0), cell.location
     
     # cases of more than one zombie and human, remove unwanted individuals
     # cases when both zombie and human are in neighbors, move towards human away from zombie
