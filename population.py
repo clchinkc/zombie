@@ -177,21 +177,17 @@ class School:
                 # Update the positions of the zombies
                 elif cell.state == State.ZOMBIE:
                     alive_locations = [alive.location for alive in neighbors if alive.state == State.HEALTHY]
-                    print("entered zombie while loop")
                     if len(alive_locations) == 0:
-                        break
-                    alive_distances = [np.linalg.norm(np.subtract(cell.location, alive_location))
-                                        for alive_location in alive_locations]
-                    closest_alive = alive_locations[np.argmin(alive_distances)]
-                    direction = (np.sign(closest_alive[0] - cell.location[0]), \
-                                np.sign(closest_alive[1] - cell.location[1]))
-                    new_location = tuple(np.add(cell.location, direction))
+                        self.random_move(cell)
+                        continue
+                    direction, new_location = self.move_towards_closest(cell, alive_locations)
                     if self.legal_location(new_location):
                         self.move_individual(cell, direction)
-                        print("moved individual")
                         continue
                     else:
-                        if self.compromised_move(cell, direction):
+                        direction, new_location = self.compromised_move(cell, direction)
+                        if self.legal_location(new_location):
+                            self.move_individual(cell, direction)
                             continue
                         else:
                             self.random_move(cell)
@@ -204,23 +200,21 @@ class School:
                 # Update the positions of the survivors
                 elif cell.state == State.HEALTHY or cell.state == State.INFECTED:
                     zombie_locations = [zombie.location for zombie in neighbors if zombie.state == State.ZOMBIE]
-                    print("entered alive while loop")
                     if len(zombie_locations) == 0:
-                        break
-                    zombie_distances = [np.linalg.norm(np.subtract(cell.location, zombie_location))
-                                        for zombie_location in zombie_locations]
-                    closest_zombie = zombie_locations[np.argmin(zombie_distances)]
-                    direction = (np.sign(closest_zombie[0] - cell.location[0]), \
-                                np.sign(closest_zombie[1] - cell.location[1]))
-                    new_location = tuple(np.add(cell.location, direction))
+                        self.random_move(cell)
+                        continue
+                    direction, new_location = self.move_against_closest(cell, zombie_locations)
                     if self.legal_location(new_location):
                         self.move_individual(cell, direction)
                         continue
                     else:
-                        if self.compromised_move(cell, direction):
+                        direction, new_location = self.compromised_move(cell, direction)
+                        if self.legal_location(new_location):
+                            self.move_individual(cell, direction)
                             continue
                         else:
                             self.random_move(cell)
+                            continue
                                 
                 elif cell.state == State.DEAD:
                     continue
@@ -228,25 +222,40 @@ class School:
                     raise Exception(f"Individual {individuals.id} has an invalid state")
             else:
                 continue
+            
+    def move_towards_closest(self, cell: Individual, target_locations: list[tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
+        target_distances = [np.linalg.norm(np.subtract(cell.location, target_location))
+                            for target_location in target_locations]
+        closest_target = target_locations[np.argmin(target_distances)]
+        direction = (np.sign(closest_target[0] - cell.location[0]), 
+                    np.sign(closest_target[1] - cell.location[1]))
+        new_location = tuple(np.add(cell.location, direction))
+        return direction, new_location
+    
+    def move_against_closest(self, cell, target_locations: list[tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
+        target_distances = [np.linalg.norm(np.subtract(cell.location, target_location))
+                            for target_location in target_locations]
+        closest_target = target_locations[np.argmin(target_distances)]
+        direction = (np.sign(cell.location[0] - closest_target[0]), 
+                    np.sign(cell.location[1] - closest_target[1]))
+        new_location = tuple(np.add(cell.location, direction))
+        return direction, new_location
 
-    def compromised_move(self, cell, direction):
+    def compromised_move(self, cell: Individual, direction: tuple[int, int]) -> tuple[tuple[int, int], tuple[int, int]]:
         for random_number in range(-1, 2):
             direction_x = tuple(np.sign((direction[0], random_number)))
             new_location_x = tuple(np.add(cell.location, direction_x))
             direction_y = tuple(np.sign((random_number, direction[1])))
             new_location_y = tuple(np.add(cell.location, direction_y))
             if self.legal_location(new_location_x):
-                self.move_individual(cell, direction_x)
-                print("moved individual")
-                return True
+                return direction_x, new_location_x
             elif self.legal_location(new_location_y):
-                self.move_individual(cell, direction_y)
-                print("moved individual")
-                return True
+                return direction_y, new_location_y
             else:
                 continue
-        return False
+        return direction, cell.location
     
+
     """
     def update_connections(self) -> None:
         grid_size = self.school_size
@@ -269,31 +278,15 @@ class School:
                 individual.add_connection(self.get_individual(neighbor))
     """
 
-    def random_move(self, cell):
+    def random_move(self, cell) -> tuple[int, int]:
         for _ in range(100):
-            print("entered random while loop")
             direction = (random.randint(-1, 1),
                         random.randint(-1, 1))
             new_location = tuple(np.add(cell.location, direction))
             if self.legal_location(new_location) or new_location == cell.location:
-                self.move_individual(cell, direction)
-                print("moved individual")
-                return True
-        return False
+                return new_location
+        return (0, 0)
     
-    """
-    def random_move(self, cell):
-        directions = np.random.randint(-1, 2, size=(100, 2))
-        new_locations = np.add(cell.location, directions)
-        legal_locations = np.where((self.legal_location(new_locations)) | (new_locations == cell.location))[0]
-        if legal_locations.size > 0:
-            chosen_direction = directions[legal_locations[0]]
-            self.move_individual(cell, chosen_direction)
-            return True
-        return False
-    """
-
-    # divide movement function into three parts, one for random, one for zombie, one for survivor
     # cases of more than one zombie and human, remove unwanted individuals
     # cases when both zombie and human are in neighbors, move towards human away from zombie
     # If the closest person is closer than the closest zombie, move towards the person, otherwise move away from the zombie
@@ -395,7 +388,6 @@ class School:
         # return a list of legal moves
         pass
     
-    @lru_cache
     def in_bounds(self, location: tuple[int, int]):
         # check if the location is in the grid
         return 0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size
@@ -454,7 +446,7 @@ class Population:
         self.population.remove(individual)
         self.school.remove_individual(individual.location)
         
-    def create_individual(self, id: int, school_size) -> Individual:
+    def create_individual(self, id: int, school_size: int) -> Individual:
         state_index = random.choices(State.value_list(), weights=[0.9, 0.05, 0.05, 0.0])
         state = State(state_index[0])
         while True:
@@ -532,8 +524,7 @@ class Population:
 
     def get_all_individual_info(self) -> None:
         print(f'Population of size {self.population_size}' + '\n' + \
-            '\n'.join([individual.get_info()
-                       for individual in self.population]))
+            '\n'.join([individual.get_info() for individual in self.population]))
 
     def observe_population(self) -> None:
         # Count the number of individuals in each state
@@ -630,22 +621,22 @@ class Population:
     def __str__(self) -> str:
         return f'Population with {self.num_healthy} healthy, {self.num_infected} infected, {self.num_zombie} zombie, and {self.num_dead} dead individuals'
 
-"""
+
 if __name__ == '__main__':
 
     # create a SchoolZombieApocalypse object
-    school_sim = Population(school_size=10, population_size=5)
+    school_sim = Population(school_size=10, population_size=1)
 
     # run the population for a given time period
-    school_sim.run_population(2)
+    school_sim.run_population(5)
 
     # observe the changes in the population and school over time
-    school_sim.observe_population()
-    school_sim.observe_school()
-    school_sim.plot_school()
-    school_sim.plot_population()
-    school_sim.animation()
-"""
+    # school_sim.observe_population()
+    # school_sim.observe_school()
+    # school_sim.plot_school()
+    # school_sim.plot_population()
+    #school_sim.animation()
+
 
 """
 # Define the rules or events that trigger transitions between states

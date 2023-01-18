@@ -104,7 +104,7 @@ class Agent:
 
 
 
-def test_performance():
+def test_performance_1():
     connections = [Agent(i, State.ZOMBIE, (random.randint(0, 100), random.randint(0, 100))) for i in range(10000)]
 
     # Test the first version of the code
@@ -123,5 +123,27 @@ def test_performance():
     end_time = time.time()
     print(f"Second version took {end_time - start_time} seconds")
 
-# test_performance()
+# test_performance_1()
 
+from population import *
+
+def test_performance_2():
+    population = Population(100, 1)
+    # add 1 individuals to the school
+    individual = population.create_individual(2, 100)
+    population.add_individual(individual)
+    # Test the first version of the code
+    start_time = time.time()
+    for i in range(1000000):
+        population.school.random_move(individual)
+    end_time = time.time()
+    print(f"First version took {end_time - start_time} seconds")
+
+    # Test the second version of the code
+    start_time = time.time()
+    for i in range(1000000):
+        population.school.random_move(individual)
+    end_time = time.time()
+    print(f"Second version took {end_time - start_time} seconds")
+    
+# test_performance_2()
