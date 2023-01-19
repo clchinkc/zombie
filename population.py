@@ -154,86 +154,72 @@ class School:
                 for neighbor in neighbors:
                     cell.add_connection(neighbor)
 
-    # update the states of each individual in the population based on their interactions with other people
+    # update the gridl in the population based on their interactions with other people
     def update_grid(self, population: list[Individual], migration_probability: float) -> None:
         for individuals in population:
             i, j = individuals.location
             cell = self.get_individual((i, j))
-
-            adjacent_neighbors = self.get_neighbors((i, j))
             
             if cell == None:
                 raise Exception(f"Individual {individuals.id} is not in the grid")
             
-            # no legal moves in the grid, so skip the cell
-            if len(adjacent_neighbors) == 8:
-                continue
-            
             if random.random() < migration_probability:
-                neighbors = self.get_neighbors((i, j), cell.sight_range)
-                # randomly move the individual if there are no neighbors
-                if not neighbors:
-                    direction, new_location = self.random_move(cell)
-                    self.move_individual(cell, direction)
-                    continue
-                
-                # Update the positions of the zombies
-                elif cell.state == State.ZOMBIE:
-                    alive_locations = [alive.location for alive in neighbors if alive.state == State.HEALTHY]
-                    if not alive_locations:
-                        direction, new_location = self.random_move(cell)
-                        self.move_individual(cell, direction)
-                        continue
-                    # Move towards the closest human
-                    direction, new_location = self.move_towards_closest(cell, alive_locations)
-                    # If the new location is legal, move there
-                    if self.legal_location(new_location):
-                        self.move_individual(cell, direction)
-                        continue
-                    # If the new location is not legal, try to move in a different direction
-                    direction, new_location = self.compromised_move(cell, direction)
-                    if self.legal_location(new_location):
-                        self.move_individual(cell, direction)
-                        continue
-                    # If still not legal, move randomly
-                    direction, new_location = self.random_move(cell)
-                    self.move_individual(cell, direction)
-                    continue
+                direction = self.choose_direction(cell)
+                self.move_individual(cell, direction)
+            else:
+                continue
                 
                 # if right next to then don't move
                 # get neighbors with larger and larger range until there is a human
                 # sight range is different from interact range
-
-                # Update the positions of the survivors
-                elif cell.state in (State.HEALTHY, State.INFECTED):
-                    zombie_locations = [zombie.location for zombie in neighbors if zombie.state == State.ZOMBIE]
-                    if not zombie_locations:
-                        direction, new_location = self.random_move(cell)
-                        self.move_individual(cell, direction)
-                        continue
-                    # Move away from the closest zombie
-                    direction, new_location = self.move_against_closest(cell, zombie_locations)
-                    # If the new location is legal, move there
-                    if self.legal_location(new_location):
-                        self.move_individual(cell, direction)
-                        continue
-                    # If the new location is not legal, try to move in a different direction
-                    direction, new_location = self.compromised_move(cell, direction)
-                    if self.legal_location(new_location):
-                        self.move_individual(cell, direction)
-                        continue
-                    # If still not legal, move randomly
-                    direction, new_location = self.random_move(cell)
-                    self.move_individual(cell, direction)
-                    continue
-                                
-                elif cell.state == State.DEAD:
-                    continue
-                else:
-                    raise Exception(f"Individual {individuals.id} has an invalid state")
-            else:
-                continue
             
+    def choose_direction(self, individual: Individual) -> tuple[int, int]:
+        # get all legal direction
+        legal_directions = self.get_legal_directions(individual)
+        # if only one legal direction, return that direction
+        if len(legal_directions) == 1:
+            return legal_directions[0]
+        # get all neighbors
+        neighbors = self.get_neighbors(individual.location, individual.sight_range)
+        # if no neighbors, move randomly
+        if not neighbors:
+            return random.choice(legal_directions)
+        # get all human neighbors
+        alive_locations = [alive.location for alive in neighbors if alive.state == State.HEALTHY]
+        # get all zombie neighbors
+        zombie_locations = [zombie.location for zombie in neighbors if zombie.state == State.ZOMBIE]
+        # if no human neighbors, move randomly
+        if not alive_locations:
+            return self.move_against_closest(individual, legal_directions, zombie_locations)
+        # if no zombie neighbors, move towards the closest human
+        elif not zombie_locations:
+            return self.move_towards_closest(individual, legal_directions, alive_locations)
+        # if both human and zombie neighbors, zombie move towards the closest human and human move away from the closest zombie
+        else:
+            if individual.state == State.ZOMBIE:
+                return self.move_towards_closest(individual, legal_directions, alive_locations)
+            elif individual.state in (State.HEALTHY, State.INFECTED):
+                return self.move_against_closest(individual, legal_directions, zombie_locations)
+            elif individual.state == State.DEAD:
+                return (0, 0)
+            else:
+                raise Exception(f"Individual {individual.id} has invalid state {individual.state.name}")
+    # may consider update the grid according to the individual's location
+    # after assigning all new locations to the individuals
+    # may add a extra attribute to store new location
+    
+    # move_towards_closest but choose direction from legal direction with shortest distance from the closest target location
+    def move_towards_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
+        new_locations = [tuple(np.add(individual.location, direction)) for direction in legal_directions]
+        distance_matrix = np.zeros((len(new_locations), len(target_locations)))
+        for i, direction in enumerate(new_locations):
+            for j, target_location in enumerate(target_locations):
+                distance_matrix[i, j] = np.linalg.norm(np.subtract(direction, target_location))
+        min_distance = np.min(distance_matrix[distance_matrix != 0]) # consider case where all distances are 0
+        min_distance_index = np.where(distance_matrix == min_distance)
+        direction = new_locations[min_distance_index[0][0]]
+        return direction
+    """    
     def move_towards_closest(self, cell: Individual, target_locations: list[tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
         target_distances = [np.linalg.norm(np.subtract(cell.location, target_location))
                             for target_location in target_locations]
@@ -242,7 +228,21 @@ class School:
                     np.sign(closest_target[1] - cell.location[1]))
         new_location = tuple(np.add(cell.location, direction))
         return direction, new_location
+    """
     
+    # move_against_closest but choose direction from legal direction with longest distance from the closest target location
+    def move_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
+        new_locations = [tuple(np.add(individual.location, direction)) for direction in legal_directions]
+        target_distances = [np.linalg.norm(np.subtract(individual.location, target_location)) \
+                            for target_location in target_locations]
+        closest_target = target_locations[np.argmin(target_distances)]
+        distance_from_new_locations = [np.linalg.norm(np.subtract(closest_target, location)) \
+                                                for location in new_locations]
+        max_distance = np.max(distance_from_new_locations)
+        max_distance_index = np.where(distance_from_new_locations == max_distance)
+        direction = new_locations[max_distance_index[0]]
+        return direction
+    """
     def move_against_closest(self, cell, target_locations: list[tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
         target_distances = [np.linalg.norm(np.subtract(cell.location, target_location))
                             for target_location in target_locations]
@@ -251,29 +251,7 @@ class School:
                     np.sign(cell.location[1] - closest_target[1]))
         new_location = tuple(np.add(cell.location, direction))
         return direction, new_location
-
-    def compromised_move(self, cell: Individual, direction: tuple[int, int]) -> tuple[tuple[int, int], tuple[int, int]]:
-        for random_number in range(-1, 2):
-            direction_x = tuple(np.sign((direction[0], random_number)))
-            new_location_x = tuple(np.add(cell.location, direction_x))
-            direction_y = tuple(np.sign((random_number, direction[1])))
-            new_location_y = tuple(np.add(cell.location, direction_y))
-            if self.legal_location(new_location_x):
-                return direction_x, new_location_x
-            elif self.legal_location(new_location_y):
-                return direction_y, new_location_y
-            else:
-                continue
-        return direction, cell.location
-
-    def random_move(self, cell) -> tuple[tuple[int, int], tuple[int, int]]:
-        for _ in range(100):
-            direction = (random.randint(-1, 1),
-                        random.randint(-1, 1))
-            new_location = tuple(np.add(cell.location, direction))
-            if self.legal_location(new_location) or new_location == cell.location:
-                return direction, new_location
-        return (0, 0), cell.location
+    """
     
     # cases of more than one zombie and human, remove unwanted individuals
     # cases when both zombie and human are in neighbors, move towards human away from zombie
@@ -299,15 +277,14 @@ class School:
                     neighbors.append(self.grid[i][j])
         return neighbors
     
-    # get all legal direction
-    # if no neighbors, move randomly
-    # else use the direction closest to the human and furthest from the zombie
-    
-    def get_legal_directions(self, individual: Individual):
+    def get_legal_directions(self, individual: Individual) -> list[tuple[int, int]]:
         # get all possible legal moves for the individual
         legal_directions = [(i, j) for i in range(-1, 2) for j in range(-1, 2) \
-                        if self.legal_location((individual.location[0] + i, individual.location[1] + j))]
+                        if (i==0 and j==0) or self.legal_location((individual.location[0] + i, individual.location[1] + j))]
         return legal_directions
+
+    def legal_location(self, location: tuple[int, int]):
+        return self.in_bounds(location) and self.is_occupied(location)
     
     def in_bounds(self, location: tuple[int, int]):
         # check if the location is in the grid
@@ -321,18 +298,11 @@ class School:
         return any(agent.position == (x, y) for agent in self.agents)
     """
 
-    def legal_location(self, location: tuple[int, int]):
-        return self.in_bounds(location) and self.is_occupied(location)
-
     def move_individual(self, individual: Individual, direction: tuple[int, int]):
         old_location = individual.location
         individual.move(direction)
         self.remove_individual(old_location)
         self.add_individual(individual)
-        
-    # may consider update the grid according to the individual's location
-    # after assigning all new locations to the individuals
-    # may add a extra attribute to store new location
 
     def get_info(self) -> None:
         for column in self.grid:
