@@ -1,7 +1,7 @@
 import math
 import random
 import numpy as np
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, astuple
 from typing import Any, Callable, Union
 
 class Agent:
@@ -17,8 +17,7 @@ class Agent:
         self.health = health
         self.position = position # x, y coordinates on the map
         
-        # health, strength, speed
-        # inherit from individual class
+        # health, strength, defense, speed attributes
         # speed controls who attacks first, if dead can't attack back
         # or not in turn-based game, attack in interval of speed time   
     
@@ -40,7 +39,6 @@ class Agent:
         """
         self.health -= damage
         
-        # strength and defense attributes
         # defend method to reduce damage taken
         
     def distance_to_agent(self, other_agent):
@@ -119,9 +117,7 @@ class AgentManager:
                     
         # zombie may continue following a human even if other humans are closer
 
-    # move to manager
-    def is_occupied(self, x, y):
-        return any(agent.position == (x, y) for agent in self.agents)
+
 
 
 class Human(Agent):
@@ -263,14 +259,14 @@ class HumanManager(AgentManager):
     def trade_with(self, agent1, agent2):
         if agent1.weapon is not None and agent2.weapon is not None:
             # agent with worse weapon give some health to agent with better weapon to trade
-            if agent1.weapon.trading_value < agent2.weapon.trading_value and agent1.health > agent2.weapon.trading_value:
+            if agent1.weapon < agent2.weapon and agent1.health > agent2.weapon.damage:
                 agent1.weapon, agent2.weapon = agent2.weapon, agent1.weapon
-                agent1.health -= agent1.weapon.trading_value
-                agent2.health += agent1.weapon.trading_value
-            elif agent1.weapon.trading_value > agent2.weapon.trading_value and agent1.health < agent2.weapon.trading_value:
+                agent1.health -= agent1.weapon.damage
+                agent2.health += agent1.weapon.damage
+            elif agent1.weapon > agent2.weapon and agent1.health < agent2.weapon.damage:
                 agent1.weapon, agent2.weapon = agent2.weapon, agent1.weapon
-                agent2.health -= agent2.weapon.trading_value
-                agent1.health += agent2.weapon.trading_value
+                agent2.health -= agent2.weapon.damage
+                agent1.health += agent2.weapon.damage
             else:
                 # if the weapons are the same, trade health
                 if agent1.health > agent2.health:
@@ -339,20 +335,20 @@ class Zombie(Agent):
     
     def move_towards_human(self, human):
         # Calculate the direction in which the human is located
-        x_diff, y_diff = self.calculate_direction(human)
+        dx, dy = self.calculate_direction(human)
         # Move the zombie towards the human
-        self.move(x_diff, y_diff)
+        self.move(dx, dy)
 
     def calculate_direction(self, human):
-        x_diff = human.position[0] - self.position[0]
-        y_diff = human.position[1] - self.position[1]
-        return x_diff, y_diff
+        dx = human.position[0] - self.position[0]
+        dy = human.position[1] - self.position[1]
+        return dx, dy
     
     def random_move(self):
         # Move the zombie to a random position
-        x_diff = random.randint(-1, 1)
-        y_diff = random.randint(-1, 1)
-        self.move(x_diff, y_diff)
+        dx = random.randint(-1, 1)
+        dy = random.randint(-1, 1)
+        self.move(dx, dy)
         
     # check legal move
     
@@ -392,7 +388,7 @@ class ZombieManager(AgentManager):
             print(f"Zombie {zombie.id}: health={zombie.health}, position={zombie.position}")
     
 # dataclass for weapon
-@dataclass(order=True, frozen=True)
+@dataclass(order=True, frozen=True) # slots=True
 class Weapon:
     """Represents a weapon that can be used by a human.
     
@@ -402,18 +398,19 @@ class Weapon:
         range (int): The range of the weapon.
         trading_value (int): The trading value of the weapon, calculated as damage * range.
     """
+    trading_value: int = field(init=False, repr=False)
     name: str
     damage: int = 0
     range: int = 0
-    trading_value: int = field(init=False, repr=False)
     
     def __post_init__(self):
         object.__setattr__(self, "trading_value", self.damage * self.range)
+        
+    def __iter__(self):
+        yield from astuple(self)
     
     def __str__(self):
         return f"{self.name} ({self.damage} damage, {self.range} range)"
-
-from typing import Type
 
 class AgentFactory:
     
@@ -505,7 +502,7 @@ class ZombieApocalypse:
             self.take_turn()
             if len(self.human_manager.agents) == 0 or len(self.zombie_manager.agents) == 0:
                 break
-    # an escape oosition or method for humans to win
+    # an escape position or method for humans to win
             
     def take_turn(self):
         """Simulates a turn in the zombie apocalypse. Each human and zombie takes a turn in the order they were initialized.

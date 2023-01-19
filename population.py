@@ -43,7 +43,7 @@ class State(Enum):
 class Individual:
 
     __slots__ = "id", "state", "location", "connections", \
-    "infection_severity", "interact_range", "__dict__"
+    "infection_severity", "interact_range", "sight_range"
     
     def __init__(self, id: int, state: State, location: tuple[int, int]) -> None:
         self.id: int = id
@@ -118,7 +118,6 @@ class Individual:
         return "%s(%d, %d, %s)" % (self.__class__.__name__, self.id, self.state.value, self.location)
 
 # seperate inheritance for human and zombie class
-# zombie health == human health before infection
 
 class School:
     
@@ -173,7 +172,7 @@ class School:
             if random.random() < migration_probability:
                 neighbors = self.get_neighbors((i, j), cell.sight_range)
                 # randomly move the individual if there are no neighbors
-                if len(neighbors) == 0:
+                if not neighbors:
                     direction, new_location = self.random_move(cell)
                     self.move_individual(cell, direction)
                     continue
@@ -181,7 +180,7 @@ class School:
                 # Update the positions of the zombies
                 elif cell.state == State.ZOMBIE:
                     alive_locations = [alive.location for alive in neighbors if alive.state == State.HEALTHY]
-                    if len(alive_locations) == 0:
+                    if not alive_locations:
                         direction, new_location = self.random_move(cell)
                         self.move_individual(cell, direction)
                         continue
@@ -266,29 +265,6 @@ class School:
             else:
                 continue
         return direction, cell.location
-    
-
-    """
-    def update_connections(self) -> None:
-        grid_size = self.school_size
-        individuals = [self.get_individual((i, j)) for i in range(grid_size) for j in range(grid_size)]
-        individuals = [i for i in individuals if i is not None]
-        # Create a 2D grid of interact_range of each individual
-        interact_range_grid = np.array([[i.interact_range for i in row] for row in self.grid])
-        # Create a 2D grid of locations of each individual
-        location_grid = np.array([[i.location for i in row] for row in self.grid])
-        for individual in individuals:
-            x, y = individual.location
-            # get the neighborhood of the individual based on interact_range
-            neighborhood = location_grid[max(x - individual.interact_range, 0):x + individual.interact_range + 1,
-                                   max(y - individual.interact_range, 0):y + individual.interact_range + 1]
-            # Flatten the neighborhood
-            neighborhood = neighborhood.flatten()
-            # Filter out the None values
-            neighborhood = [i for i in neighborhood if i is not None]
-            for neighbor in neighborhood:
-                individual.add_connection(self.get_individual(neighbor))
-    """
 
     def random_move(self, cell) -> tuple[tuple[int, int], tuple[int, int]]:
         for _ in range(100):
@@ -303,58 +279,6 @@ class School:
     # cases when both zombie and human are in neighbors, move towards human away from zombie
     # If the closest person is closer than the closest zombie, move towards the person, otherwise move away from the zombie
     # or move away from zombie is the priority and move towards person is the secondary priority
-    """
-    def choose_action(self, agent):
-        neighbors = self.get_neighbors(agent)
-        if isinstance(agent, Human):
-            for neighbor in neighbors:
-                if isinstance(neighbor, Zombie):
-                    return "attack"
-            return "move"
-        elif isinstance(agent, Zombie):
-            for neighbor in neighbors:
-                if isinstance(neighbor, Human):
-                    return "attack"
-            return "move"
-    """
-    """
-    use random walk algorithm to simulate movement based on probability adjusted by cell's infection status and location
-    """
-    """
-    def simulate_movement(self):
-        for i in range(self.width):
-            for j in range(self.height):
-                individual = self.grid[i][j]
-                if individual is not None:
-                    # use the A* algorithm to find the shortest path to the nearest exit
-                    start = (i, j)
-                    # the four corners of the grid
-                    exits = [(0, 0), (0, self.width-1),
-                            (self.height-1, 0), (self.height-1, self.width-1)]
-                    distances, previous = self.a_star(start, exits)
-                    # use the first exit as the destination
-                    path = self.reconstruct_path(previous, start, exits[0])
-
-                    # move to the next cell in the shortest path to the nearest exit
-                    if len(path) > 1:  # check if there is a valid path to the nearest exit
-                        next_x, next_y = path[1]
-                        # update the individual's location
-                        individual.location = (next_x, next_y)
-                        # remove the individual from their current location
-                        self.grid[i][j] = None
-                        # add the individual to their new location
-                        self.grid[next_x][next_y] = individual
-
-    def a_star(self, start, goals):
-        # implement the A* algorithm to find the shortest path from the start to one of the goals
-        # returns the distances and previous nodes for each node in the grid
-        pass
-
-    def reconstruct_path(self, previous, start, goal):
-        # implement the algorithm to reconstruct the path from the previous nodes
-        # returns the shortest path from the start to the goal
-        pass
-    """
 
     def within_distance(self, individual1: Optional[Individual], individual2: Optional[Individual], interact_range: int):
         if individual1 is None or individual2 is None:
@@ -367,49 +291,38 @@ class School:
     def get_neighbors(self, location: tuple[int, int], interact_range: int=2):
         x, y = location
         neighbors = []
-        for i in range(len(self.grid)):
-            for j in range(len(self.grid[i])):
+        for i in range(max(0, x-interact_range), min(self.school_size, x+interact_range+1)):
+            for j in range(max(0, y-interact_range), min(self.school_size, y+interact_range+1)):
                 if i == x and j == y:
                     continue
                 if self.within_distance(self.grid[x][y], self.grid[i][j], interact_range):
                     neighbors.append(self.grid[i][j])
         return neighbors
     
-    """
-    def get_adjacent_people(self, entity):
-        adjacent_people = []
-        for person in self.people:
-            if abs(person.x - entity.x) <= 1 and abs(person.y - entity.y) <= 1:
-                adjacent_people.append(person)
-        return adjacent_people
-    """
-    """
-    def get_neighbors(self, agent):
-        i, j = agent.location
-        neighbors = self.grid[max(0, i-1):min(self.school_size, i+2)][max(0, j-1):min(self.school_size, j+2)]
-        neighbors = [neighbor for neighbor in neighbors if neighbor is not None and neighbor != agent]
-        return neighbors
-    """
+    # get all legal direction
+    # if no neighbors, move randomly
+    # else use the direction closest to the human and furthest from the zombie
     
-    # may add a method to get all possible legal moves instead of trying if the desired move is legal
-    # then check if the legal moves can move away from the zombie, move towards human
-    # then move by dx and dy
-
-    def get_legal_moves(self, individual: Individual):
+    def get_legal_directions(self, individual: Individual):
         # get all possible legal moves for the individual
-        # return a list of legal moves
-        pass
+        legal_directions = [(i, j) for i in range(-1, 2) for j in range(-1, 2) \
+                        if self.legal_location((individual.location[0] + i, individual.location[1] + j))]
+        return legal_directions
     
     def in_bounds(self, location: tuple[int, int]):
         # check if the location is in the grid
         return 0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size
     
-    def empty_location(self, location: tuple[int, int]):
+    def is_occupied(self, location: tuple[int, int]):
         # check if the location is empty
         return self.grid[location[0]][location[1]] == None
+    
+    """
+        return any(agent.position == (x, y) for agent in self.agents)
+    """
 
     def legal_location(self, location: tuple[int, int]):
-        return self.in_bounds(location) and self.empty_location(location)
+        return self.in_bounds(location) and self.is_occupied(location)
 
     def move_individual(self, individual: Individual, direction: tuple[int, int]):
         old_location = individual.location
@@ -436,7 +349,6 @@ class School:
     
     def __repr__(self) -> str:
         return "%s(%d,%d)" % (self.__class__.__name__, self.school_size)
-
 
 class Population:
     
@@ -532,7 +444,7 @@ class Population:
         self.death_probability = self.severity
         self.migration_probability = self.population_size / (self.population_size + 1)
 
-        # may use other metrics or functionsto calculate the probability of infection, turning, death, migration
+        # may use other metrics or functions to calculate the probability of infection, turning, death, migration
 
     def get_all_individual_info(self) -> None:
         print(f'Population of size {self.population_size}' + '\n' + \
@@ -582,7 +494,6 @@ class Population:
             print()
             
     def plot_school(self) -> None:
-        
         # create a scatter plot of the population
         cell_states_value = [individual.state.value for individual in self.population]
         x = [individual.location[0] for individual in self.population]
@@ -741,6 +652,105 @@ Additionally, the model could be expanded to include more detailed information a
 such as the locations of classrooms, doors, and other features. 
 This could allow for more accurate simulations of the movement 
 and interactions of students, teachers, and zombies within the school environment.
+"""
+"""
+def choose_action(self, agent):
+    neighbors = self.get_neighbors(agent)
+    if isinstance(agent, Human):
+        for neighbor in neighbors:
+            if isinstance(neighbor, Zombie):
+                return "attack"
+        return "move"
+    elif isinstance(agent, Zombie):
+        for neighbor in neighbors:
+            if isinstance(neighbor, Human):
+                return "attack"
+        return "move"
+"""
+"""
+use random walk algorithm to simulate movement based on probability adjusted by cell's infection status and location
+"""
+"""
+def simulate_movement(self):
+    for i in range(self.width):
+        for j in range(self.height):
+            individual = self.grid[i][j]
+            if individual is not None:
+                # use the A* algorithm to find the shortest path to the nearest exit
+                start = (i, j)
+                # the four corners of the grid
+                exits = [(0, 0), (0, self.width-1),
+                        (self.height-1, 0), (self.height-1, self.width-1)]
+                distances, previous = self.a_star(start, exits)
+                # use the first exit as the destination
+                path = self.reconstruct_path(previous, start, exits[0])
+
+                # move to the next cell in the shortest path to the nearest exit
+                if len(path) > 1:  # check if there is a valid path to the nearest exit
+                    next_x, next_y = path[1]
+                    # update the individual's location
+                    individual.location = (next_x, next_y)
+                    # remove the individual from their current location
+                    self.grid[i][j] = None
+                    # add the individual to their new location
+                    self.grid[next_x][next_y] = individual
+
+def a_star(self, start, goals):
+    # implement the A* algorithm to find the shortest path from the start to one of the goals
+    # returns the distances and previous nodes for each node in the grid
+    pass
+
+def reconstruct_path(self, previous, start, goal):
+    # implement the algorithm to reconstruct the path from the previous nodes
+    # returns the shortest path from the start to the goal
+    pass
+"""
+"""
+Closure
+https://github.com/ArjanCodes/2022-functions/blob/main/strategy_fn_closure.py
+
+1. No closure
+def track_score(scores: dict, player: str, score: int):
+    if player in scores:
+        scores[player] += score
+    else:
+        scores[player] = score
+        
+def get_scores(scores: dict):
+    return scores
+    
+scores = {}
+track_score(scores, "player1", 10)
+track_score(scores, "player2", 5)
+print(get_scores(scores)) # {'player1': 10, 'player2': 5}
+track_score(scores, "player1", 3)
+print(get_scores(scores)) # {'player1': 13, 'player2': 5}
+
+This version of the function is passing the scores dictionary as an argument to each function that needs to update or access it. This can make the code more verbose and harder to understand in the case that the data needs to be passed around multiple functions and methods.
+
+2. With closure
+def create_player_score_tracker():
+    scores = {}
+
+    def track_score(player: str, score: int):
+        if player in scores:
+            scores[player] += score
+        else:
+            scores[player] = score
+
+    def get_scores():
+        return scores
+
+    return track_score, get_scores
+
+track_score, get_scores = create_player_score_tracker()
+track_score("player1", 10)
+track_score("player2", 5)
+print(get_scores()) # {'player1': 10, 'player2': 5}
+track_score("player1", 3)
+print(get_scores()) # {'player1': 13, 'player2': 5}
+
+In this version, the scores dictionary is defined within the scope of the create_player_score_tracker function, but it can still be accessed and modified by the track_score and get_scores functions because they are closures. This allows you to keep track of the scores without having to pass the scores dictionary around as an argument to each function that needs to update or access it.
 """
 """
 Plugin Pattern & Factory Pattern

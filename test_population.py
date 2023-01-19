@@ -1,4 +1,4 @@
-from population import *
+#from population import *
 import pytest
 
 # pytest for State
