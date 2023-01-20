@@ -118,8 +118,6 @@ class AgentManager:
         # zombie may continue following a human even if other humans are closer
 
 
-
-
 class Human(Agent):
     """Represents a human agent.
     
@@ -471,8 +469,7 @@ class ZombieApocalypse:
         for i in range(num_zombies):
             self.zombie_manager.add_zombie(self.create_agent(school_size, i, "zombie"))
             
-    # break down the initialize method using factory pattern to separate the creation and the use for humans and zombies
-    # factory pattern for humans and zombies
+    # factory pattern for humans and zombies to separate the creation and the use for humans and zombies
     def create_agent(self, school_size, id, type) -> Agent:
         arguments = {
             "type": type,

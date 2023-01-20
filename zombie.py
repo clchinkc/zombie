@@ -36,17 +36,11 @@ teacher one class, student one class
 change to float for faster performance
 group of zombies and groups of humans
 if the state don't need to be stored, use functional programming instead of object oriented programming
-use function to control the spawn rate of food and weapon in different terrain, interaction between classes, preprocess and postprocess
+use function to control the spawn rate of food, water, shelter and weapon in different terrain, weather, and seasons, 
+also use function to control the interaction between classes, preprocess and postprocess
 may use dataclass and default factory for controlling the rate
-guide to write function:
-1. do one thing and do it well
-2. separate command (perform action) from query (retrieve information)
-3. only require information that is needed (one level of abstraction lower)
-4. keep number of parameter minimal
-5. don't create and use an object in the same place
-6. don't use flag parameter (a parameter that can change the behaviour of a function, usually a boolean),  use multiple function instead
-7. avoid side effect (a function that change the state of the program, like print, change a global variable, change a parameter)
-8. remember function is first class object, can be passed as parameter, can be returned by function, can be stored in data structure
+physical activity will affect the attribute of the human, like food and health, using hunger and fatigue condition
+
 make classes either data-oriented or behaviour-oriented, not both
 currying function can be used when a sequence of separate function is used on the same object
 closure a function that is defined inside another function and has access to the variables of the outer function

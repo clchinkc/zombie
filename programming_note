@@ -1,0 +1,11 @@
+
+
+guide to write function:
+1. do one thing and do it well
+2. separate command (perform action) from query (retrieve information) (command should not return anything, query should not change the state of the program)
+3. only require information that is needed (get one level of abstraction lower)
+4. keep number of parameter minimal
+5. don't create and use an object in the same place (therefore the factory pattern)
+6. don't use flag parameter (a parameter that can change the behaviour of a function completely, usually a boolean),  use multiple function instead
+7. avoid side effect (a function that change the state of the program, like print, change a global variable, change a parameter)
+8. remember function is first class object, can be passed as parameter, can be returned by function, can be stored in data structure

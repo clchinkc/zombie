@@ -15,12 +15,11 @@ from __future__ import annotations
 import math
 import random
 from enum import Enum, auto
-from functools import lru_cache, cached_property
+from functools import cached_property
 from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pytest
 from matplotlib import animation
 
 
@@ -121,7 +120,7 @@ class Individual:
 
 class School:
     
-    __slots__ = "school_size", "grid", "__dict__"
+    __slots__ = "school_size", "grid"
     
     def __init__(self, school_size: int) -> None:
         self.school_size = school_size
@@ -154,7 +153,7 @@ class School:
                 for neighbor in neighbors:
                     cell.add_connection(neighbor)
 
-    # update the gridl in the population based on their interactions with other people
+    # update the grid in the population based on their interactions with other people
     def update_grid(self, population: list[Individual], migration_probability: float) -> None:
         for individuals in population:
             i, j = individuals.location
@@ -190,16 +189,16 @@ class School:
         zombie_locations = [zombie.location for zombie in neighbors if zombie.state == State.ZOMBIE]
         # if no human neighbors, move randomly
         if not alive_locations:
-            return self.move_against_closest(individual, legal_directions, zombie_locations)
+            return self.direction_against_closest(individual, legal_directions, zombie_locations)
         # if no zombie neighbors, move towards the closest human
         elif not zombie_locations:
-            return self.move_towards_closest(individual, legal_directions, alive_locations)
+            return self.direction_towards_closest(individual, legal_directions, alive_locations)
         # if both human and zombie neighbors, zombie move towards the closest human and human move away from the closest zombie
         else:
             if individual.state == State.ZOMBIE:
-                return self.move_towards_closest(individual, legal_directions, alive_locations)
+                return self.direction_towards_closest(individual, legal_directions, alive_locations)
             elif individual.state in (State.HEALTHY, State.INFECTED):
-                return self.move_against_closest(individual, legal_directions, zombie_locations)
+                return self.direction_against_closest(individual, legal_directions, zombie_locations)
             elif individual.state == State.DEAD:
                 return (0, 0)
             else:
@@ -208,13 +207,13 @@ class School:
     # after assigning all new locations to the individuals
     # may add a extra attribute to store new location
     
-    # move_towards_closest but choose direction from legal direction with shortest distance from the closest target location
-    def move_towards_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
+    # find the closest human and move towards it
+    def direction_towards_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
         new_locations = [tuple(np.add(individual.location, direction)) for direction in legal_directions]
         distance_matrix = np.zeros((len(new_locations), len(target_locations)))
         for i, direction in enumerate(new_locations):
             for j, target_location in enumerate(target_locations):
-                distance_matrix[i, j] = np.linalg.norm(np.subtract(direction, target_location))
+                distance_matrix[i, j] = self.distance(direction, target_location)
         min_distance = np.min(distance_matrix[distance_matrix != 0]) # consider case where all distances are 0
         min_distance_index = np.where(distance_matrix == min_distance)
         direction = new_locations[min_distance_index[0][0]]
@@ -230,13 +229,13 @@ class School:
         return direction, new_location
     """
     
-    # move_against_closest but choose direction from legal direction with longest distance from the closest target location
-    def move_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
+    # find the closest zombie and move away from it
+    def direction_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
         new_locations = [tuple(np.add(individual.location, direction)) for direction in legal_directions]
-        target_distances = [np.linalg.norm(np.subtract(individual.location, target_location)) \
+        target_distances = [self.distance(individual.location, target_location) \
                             for target_location in target_locations]
         closest_target = target_locations[np.argmin(target_distances)]
-        distance_from_new_locations = [np.linalg.norm(np.subtract(closest_target, location)) \
+        distance_from_new_locations = [self.distance(closest_target, location) \
                                                 for location in new_locations]
         max_distance = np.max(distance_from_new_locations)
         max_distance_index = np.where(distance_from_new_locations == max_distance)
@@ -258,14 +257,6 @@ class School:
     # If the closest person is closer than the closest zombie, move towards the person, otherwise move away from the zombie
     # or move away from zombie is the priority and move towards person is the secondary priority
 
-    def within_distance(self, individual1: Optional[Individual], individual2: Optional[Individual], interact_range: int):
-        if individual1 is None or individual2 is None:
-            return False
-        # check if the two individuals are within a certain distance of each other
-        distance = math.sqrt((individual1.location[0] - individual2.location[0])**2 + (
-            individual1.location[1] - individual2.location[1])**2)
-        return distance < interact_range
-
     def get_neighbors(self, location: tuple[int, int], interact_range: int=2):
         x, y = location
         neighbors = []
@@ -276,6 +267,18 @@ class School:
                 if self.within_distance(self.grid[x][y], self.grid[i][j], interact_range):
                     neighbors.append(self.grid[i][j])
         return neighbors
+
+    def within_distance(self, individual1: Optional[Individual], individual2: Optional[Individual], interact_range: int):
+        if individual1 is None or individual2 is None:
+            return False
+        # check if the two individuals are within a certain distance of each other
+        distance = self.distance(individual1.location, individual2.location)
+        return distance < interact_range
+    
+    def distance(self, location1: tuple[int, int], location2: tuple[int, int]) -> float:
+        # get the distance between two individuals
+        distance = float(np.linalg.norm(np.subtract(location1, location2)))
+        return distance
     
     def get_legal_directions(self, individual: Individual) -> list[tuple[int, int]]:
         # get all possible legal moves for the individual
@@ -323,7 +326,7 @@ class School:
 class Population:
     
     __slots__ = "school", "population", "severity", "num_healthy", "num_infected", "num_zombie", "num_dead", \
-                "population_size", "infection_probability", "turning_probability", "death_probability", "migration_probability", "__dict__"
+                "population_size", "infection_probability", "turning_probability", "death_probability", "migration_probability"
     
     def __init__(self, school_size: int, population_size: int) -> None:
         self.school: School = School(school_size)
