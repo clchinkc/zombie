@@ -11,45 +11,24 @@ food and weapon and armour turn into resources that human can store
 weapon replacement
 function to control the spawn rate of food and weapon in different terrain to allow different playing experience
 use normal distribution or the Poisson distribution for human and zombie attribute
-win condition
 what happens when the cloest human is right next to the agent
-list comprehension
 map, filter function
-Dictionary for storage
-Refactoring, extract function, early exit
-no multiple inheritance
 zombie health == human health before infection
 getattr, setattr, hasattr can be used for handling attribute that is determined during runtime
 a escape mode that human can escape from zombie two block by paying health or double food
 custom error class inherit from Exception, it can raise error to pass through useful attributes
 setattr can put a attribute dictionary into a class using for loop (dynamically)
 getattr can get a attribute dictionary from a class using for loop (dynamically)
-can use @classmethod to return counter which depends on class instead of instance,
-so either class.return or instance.return will give counter of class
+can use @classmethod to return counter of human and zombie
 can use @staticmethod to convert human to zombie
-so as to control the activity of the class using a outside variable, without depending on class and instance, 
-so function related to class but does not interact with class and instance can be grouped under the class
 use @abstractmethod for method that must be reimplemented in subclass and do not interact with instance and class
 pathfinding to a specific spot in the determination of direction
-dataclass to store struct-like data, like dictionary, vs behaviour data
 teacher one class, student one class
-change to float for faster performance
-group of zombies and groups of humans
-if the state don't need to be stored, use functional programming instead of object oriented programming
-use function to control the spawn rate of food, water, shelter and weapon in different terrain, weather, and seasons, 
+group of zombies and groups of humans, use algorithm to determine the direction of the group
+use function to control the spawn rate of food, water, shelter and weapon in different terrain, weather, seasons, and even human state, 
 also use function to control the interaction between classes, preprocess and postprocess
-may use dataclass and default factory for controlling the rate
+may use dataclass and default factory for controlling the rate in the Cell class
 physical activity will affect the attribute of the human, like food and health, using hunger and fatigue condition
-
-make classes either data-oriented or behaviour-oriented, not both
-currying function can be used when a sequence of separate function is used on the same object
-closure a function that is defined inside another function and has access to the variables of the outer function
-closure is used to avoid using global variable while still having access to the variable of the outer function
-nested function is used when the function should be hide from the outside or the inner function is only used in the outer function
-call method vs init method (__call__ can return an arbitrary value whereas __init__ must return None, init is called when instantiating the class: myfoo = Foo(1,4,7.8) call is a template to call the already instantiated class to do something, 
-__call__ not only allows an instance to be used as a function, it defines the function body that is executed when an instance is used as a function.)
-a = A()     init
-a()        call
 better way to store objects in python
 https://www.guru99.com/python-yield-return-generator.html
 https://realpython.com/inner-functions-what-are-they-good-for/

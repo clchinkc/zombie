@@ -16,10 +16,6 @@ class Agent:
         self.id = id
         self.health = health
         self.position = position # x, y coordinates on the map
-        
-        # health, strength, defense, speed attributes
-        # speed controls who attacks first, if dead can't attack back
-        # or not in turn-based game, attack in interval of speed time   
     
     def move(self, dx, dy):
         """Move the agent by a certain amount in the x and y directions.
@@ -245,7 +241,7 @@ class HumanManager(AgentManager):
         enemies_in_range = [(distance, enemy) for distance, enemy in agents_in_range if isinstance(enemy, Zombie)]
         return enemies_in_range
     
-    def get_closest_enemy(self, agent):
+    def get_closest_zombie(self, agent):
         # Get the distance to each enemy
         enemies = self.get_enemies_in_attack_range(agent)
         if len(enemies) == 0:
@@ -371,7 +367,7 @@ class ZombieManager(AgentManager):
         enemies_in_range = [(distance, enemy) for distance, enemy in agents_in_range if isinstance(enemy, Human)]
         return enemies_in_range
     
-    def get_closest_enemy(self, agent):
+    def get_closest_human(self, agent):
         # Get the distance to each enemy
         enemies = self.get_enemies_in_attack_range(agent)
         if len(enemies) == 0:
@@ -415,15 +411,15 @@ class AgentFactory:
     def __init__(self):
         self.character_creation_funcs: dict[str, Callable[..., Agent]] = {}
 
-    def register(self, character_type: str, creator_fn: Callable[..., Agent]) -> None:
+    def register_character(self, character_type: str, creator_fn: Callable[..., Agent]) -> None:
         """Register a new game character type."""
         self.character_creation_funcs[character_type] = creator_fn
 
-    def unregister(self, character_type: str) -> None:
+    def unregister_character(self, character_type: str) -> None:
         """Unregister a game character type."""
         self.character_creation_funcs.pop(character_type, None)
 
-    def create(self, arguments: dict[str, Any]) -> Agent:
+    def produce(self, arguments: dict[str, Any]) -> Agent:
         """Create a game character of a specific type."""
         args_copy = arguments.copy()
         character_type = args_copy.pop("type")
@@ -462,8 +458,8 @@ class ZombieApocalypse:
             num_humans (int): The number of humans to initialize.
         """
         # Initialize humans and zombies
-        self.factory.register("human", Human)
-        self.factory.register("zombie", Zombie)
+        self.factory.register_character("human", Human)
+        self.factory.register_character("zombie", Zombie)
         for i in range(num_humans):
             self.human_manager.add_human(self.create_agent(school_size, i, "human"))
         for i in range(num_zombies):
@@ -477,7 +473,7 @@ class ZombieApocalypse:
             "health": 100,
             "location": (random.randint(0, school_size-1),random.randint(0, school_size-1))
         }
-        return self.factory.create(arguments)
+        return self.factory.produce(arguments)
         
     # ensure legal location
     # factory pattern for weapons
@@ -506,11 +502,11 @@ class ZombieApocalypse:
         """
         # Zombies take their turn
         for zombie in self.zombie_manager.agents:
-            closest_human = self.zombie_manager.get_closest_enemy(zombie)
+            closest_human = self.zombie_manager.get_closest_human(zombie)
             zombie.take_turn(closest_human)
         # Humans take their turn
         for human in self.human_manager.agents:
-            closest_zombie = self.human_manager.get_closest_enemy(human)
+            closest_zombie = self.human_manager.get_closest_zombie(human)
             human.take_turn(self.possible_weapons, closest_zombie)
     
     def move_agent(self, agent, dx, dy):
@@ -550,6 +546,9 @@ class ZombieApocalypse:
 apocalypse = ZombieApocalypse(5, 5)
 apocalypse.simulate(10)
 
+"""
+Change the inheritance to abstract class or protocol
+"""
 
 """
 take damage not working

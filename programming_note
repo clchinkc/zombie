@@ -1,4 +1,26 @@
 
+Use of object oriented design
+1. abstraction: simplify the reality and focus on the relevant feature, like the data and behaviour, of the object
+2. encapsulation: the implementation detail are bound together and hidden, only expose the interface of the object to the user
+3. inheritance: the child class can inherit or override the data and behaviour of the parent class, and add its own data and behaviour
+4. polymorphism: different object can have the same interface, and the user can use the same interface to interact with different object
+
+SOILD principle of object oriented design:
+1. single responsibility principle: a class should have only one reason to change
+2. open closed principle: a class should be open for extension, but closed for modification
+3. liskov substitution principle: subclass should be substitutable for their base class
+4. interface segregation principle: many client-specific interfaces are better than one general-purpose interface
+5. dependency inversion principle: depend on abstraction, not on concretion
+
+1. You can combine functional programming and object oriented programming
+2. Make classes either data-oriented or behaviour-oriented, not both
+3. Use composition over inheritance (one more level of abstraction and hard to understand the interaction)
+
+
+Functional programming vs object oriented programming:
+1. functional programming is more declarative, object oriented programming is more imperative (functional programming is more about what to do, object oriented programming is more about how to do it)
+2. functional programming is more about using pure function to transform data, object oriented programming is more about using object and its state to perform behaviour
+3. use functional programming if the state needs to be stored, use object oriented programming if the behaviour is complex
 
 guide to write function:
 1. do one thing and do it well
@@ -9,3 +31,65 @@ guide to write function:
 6. don't use flag parameter (a parameter that can change the behaviour of a function completely, usually a boolean),  use multiple function instead
 7. avoid side effect (a function that change the state of the program, like print, change a global variable, change a parameter)
 8. remember function is first class object, can be passed as parameter, can be returned by function, can be stored in data structure
+
+
+guide to write class:
+1. encapsulate what varies (encapsulate the behaviour that is different, not the data)
+2. favour composition over inheritance (use composition to build a class, use inheritance to build a hierarchy)
+3. program to interface, not implementation (use interface to define the behaviour of the class, not the implementation detail)
+4. use delegation to reuse code (use delegation to reuse the behaviour of the class, not the data)
+5. separate the implemntation detail from the interface (use interface to define the behaviour of the class, not the implementation detail)
+
+design pattern:
+1. factory pattern: create an object without exposing the creation logic to the client, and refer to newly created object using a common interface
+2. singleton pattern: ensure a class only have one instance, and provide a global point of access to it
+3. decorator pattern: attach additional responsibilities to an object dynamically, provide a flexible alternative to subclassing for extending functionality
+4. observer pattern: define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically
+5. strategy pattern: define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it
+6. command pattern: encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations
+7. adapter pattern: convert the interface of a class into another interface the clients expect. Adapter lets classes work together that couldn't otherwise because of incompatible interfaces
+8. template method pattern: define the skeleton of an algorithm in an operation, deferring some steps to subclasses. Template method lets subclasses redefine certain steps of an algorithm without changing the algorithm's structure
+9. iterator pattern: provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation
+10. composite pattern: compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly
+11. state pattern: allow an object to alter its behaviour when its internal state changes. The object will appear to change its class
+12. proxy pattern: provide a surrogate or placeholder for another object to control access to it
+13. flyweight pattern: use sharing to support large numbers of fine-grained objects efficiently
+14. facade pattern: provide a unified interface to a set of interfaces in a subsystem. Facade defines a higher-level interface that makes the subsystem easier to use
+15. bridge pattern: decouple an abstraction from its implementation so that the two can vary independently
+16. memento pattern: without violating encapsulation, capture and externalize an object's internal state so that the object can be restored to this state later
+17. visitor pattern: represent an operation to be performed on the elements of an object structure. Visitor lets you define a new operation without changing the classes of the elements on which it operates
+18. chain of responsibility pattern: avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. Chain the receiving objects and pass the request along the chain until an object handles it
+19. interpreter pattern: given a language, define a representation for its grammar along with an interpreter that uses the representation to interpret sentences in the language
+20. mediator pattern: define an object that encapsulates how a set of objects interact. Mediator promotes loose coupling by keeping objects from referring to each other explicitly, and it lets you vary their interaction independently
+21. prototype pattern: specify the kinds of objects to create using a prototypical instance, and create new objects by copying this prototype
+22. abstract factory pattern: provide an interface for creating families of related or dependent objects without specifying their concrete classes
+23. delegate pattern: pass a request of a function to a helper object instead of handling it in the main object (composition over inheritance)
+
+
+optimization:
+1. refactor and extract method
+2. use cache
+3. early exit
+1. don't repeat yourself (DRY)
+2. list comprehension
+3. no multiple inheritance
+4. change to immutable object when possible
+5. use generator when possible
+6. change to float
+7. use built-in function
+
+Implementation:
+1. classmethod: depend on the class, not the instance, so can be called using class or instance
+2. staticmethod: don't depend on the class or instance, so can be called anywhere without depending on the class or instance, so function related to class but does not interact with class and instance can be grouped under the class
+3. dataclass: struct-like data container, can be used to store data, but not behaviour
+4. property: getter, setter, deleter
+5. decorator: used to add functionality to an existing function without modifying it, can be used to add logging, timing, authentication, etc
+6. __slots__: reduce memory usage, but can't add new attribute
+7. currying function: can be used when a sequence of separate function is used on the same object
+8. closure function: defined inside another function and has access to the variables of the outer function, used to avoid using global variable while still having access to the variable of the outer function
+9. nested function: used when the function should be hide from the outside or the inner function is only used in the outer function
+10. __call__: used to make an instance callable as a function, a() == call
+11. __init__: used to initialize the object and return nothing, a = A() == init
+12. __new__: used to create the object and return the object
+
+

@@ -25,25 +25,26 @@ from matplotlib import animation
 
 # Define the states and transitions for the state machine model
 class State(Enum):
-    
+
     HEALTHY = auto()
     INFECTED = auto()
     ZOMBIE = auto()
     DEAD = auto()
-    
+
     @classmethod
     def name_list(cls) -> list[str]:
         return [enm.name for enm in State]
-    
+
     @classmethod
     def value_list(cls) -> list[int]:
         return [enm.value for enm in State]
 
+
 class Individual:
 
     __slots__ = "id", "state", "location", "connections", \
-    "infection_severity", "interact_range", "sight_range"
-    
+        "infection_severity", "interact_range", "sight_range"
+
     def __init__(self, id: int, state: State, location: tuple[int, int]) -> None:
         self.id: int = id
         self.state: State = state
@@ -51,14 +52,14 @@ class Individual:
         self.connections: list[Individual] = []
         self.infection_severity: float = 0.0
         self.interact_range: int = 2
-        
+
         # different range for different states
         # may use random distribution
 
     @cached_property
     def sight_range(self) -> int:
         return self.interact_range + 3
-        
+
     def add_connection(self, other: Individual) -> None:
         self.connections.append(other)
 
@@ -106,34 +107,36 @@ class Individual:
                 if random.random() < death_probability:
                     return True
         return False
-    
+
     def get_info(self) -> str:
         return f"Individual {self.id} is {self.state.name} and is located at {self.location}, having connections with {self.connections}, infection severity {self.infection_severity}, interact range {self.interact_range}, and sight range {self.sight_range}."
 
     def __str__(self) -> str:
         return f"Individual {self.id}"
-    
+
     def __repr__(self) -> str:
         return "%s(%d, %d, %s)" % (self.__class__.__name__, self.id, self.state.value, self.location)
 
 # seperate inheritance for human and zombie class
 
+
 class School:
-    
+
     __slots__ = "school_size", "grid"
-    
+
     def __init__(self, school_size: int) -> None:
         self.school_size = school_size
         # Create a 2D grid representing the school with each cell can contain a Individual object
         self.grid: list[list[Optional[Individual]]] \
-                    = [[None for _ in range(school_size)]
-                    for _ in range(school_size)]
+            = [[None for _ in range(school_size)]
+               for _ in range(school_size)]
 
         # may turn to width and height
         # may put Cell class in the grid where Cell class has individual attributes and rates
 
     def add_individual(self, individual: Individual) -> None:
-        self.grid[int(individual.location[0])][int(individual.location[1])] = individual
+        self.grid[int(individual.location[0])][int(
+            individual.location[1])] = individual
 
     def get_individual(self, location: tuple[int, int]) -> Optional[Individual]:
         return self.grid[location[0]][location[1]]
@@ -158,20 +161,21 @@ class School:
         for individuals in population:
             i, j = individuals.location
             cell = self.get_individual((i, j))
-            
+
             if cell == None:
-                raise Exception(f"Individual {individuals.id} is not in the grid")
-            
+                raise Exception(
+                    f"Individual {individuals.id} is not in the grid")
+
             if random.random() < migration_probability:
                 direction = self.choose_direction(cell)
                 self.move_individual(cell, direction)
             else:
                 continue
-                
+
                 # if right next to then don't move
                 # get neighbors with larger and larger range until there is a human
                 # sight range is different from interact range
-            
+
     def choose_direction(self, individual: Individual) -> tuple[int, int]:
         # get all legal direction
         legal_directions = self.get_legal_directions(individual)
@@ -179,14 +183,17 @@ class School:
         if len(legal_directions) == 1:
             return legal_directions[0]
         # get all neighbors
-        neighbors = self.get_neighbors(individual.location, individual.sight_range)
+        neighbors = self.get_neighbors(
+            individual.location, individual.sight_range)
         # if no neighbors, move randomly
         if not neighbors:
             return random.choice(legal_directions)
         # get all human neighbors
-        alive_locations = [alive.location for alive in neighbors if alive.state == State.HEALTHY]
+        alive_locations = [
+            alive.location for alive in neighbors if alive.state == State.HEALTHY]
         # get all zombie neighbors
-        zombie_locations = [zombie.location for zombie in neighbors if zombie.state == State.ZOMBIE]
+        zombie_locations = [
+            zombie.location for zombie in neighbors if zombie.state == State.ZOMBIE]
         # if no human neighbors, move randomly
         if not alive_locations:
             return self.direction_against_closest(individual, legal_directions, zombie_locations)
@@ -202,62 +209,68 @@ class School:
             elif individual.state == State.DEAD:
                 return (0, 0)
             else:
-                raise Exception(f"Individual {individual.id} has invalid state {individual.state.name}")
+                raise Exception(
+                    f"Individual {individual.id} has invalid state {individual.state.name}")
     # may consider update the grid according to the individual's location
     # after assigning all new locations to the individuals
     # may add a extra attribute to store new location
-    
+
     # find the closest human and move towards it
     def direction_towards_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
-        new_locations = [tuple(np.add(individual.location, direction)) for direction in legal_directions]
+        new_locations = [tuple(np.add(individual.location, direction))
+                         for direction in legal_directions]
         distance_matrix = np.zeros((len(new_locations), len(target_locations)))
         for i, direction in enumerate(new_locations):
             for j, target_location in enumerate(target_locations):
-                distance_matrix[i, j] = self.distance(direction, target_location)
-        min_distance = np.min(distance_matrix[distance_matrix != 0]) # consider case where all distances are 0
+                distance_matrix[i, j] = self.distance(
+                    direction, target_location)
+        # consider case where all distances are 0
+        min_distance = np.min(distance_matrix[distance_matrix != 0])
         min_distance_index = np.where(distance_matrix == min_distance)
         direction = new_locations[min_distance_index[0][0]]
         return direction
     """    
-    def move_towards_closest(self, cell: Individual, target_locations: list[tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
-        target_distances = [np.linalg.norm(np.subtract(cell.location, target_location))
-                            for target_location in target_locations]
-        closest_target = target_locations[np.argmin(target_distances)]
-        direction = (np.sign(closest_target[0] - cell.location[0]), 
-                    np.sign(closest_target[1] - cell.location[1]))
-        new_location = tuple(np.add(cell.location, direction))
-        return direction, new_location
-    """
-    
+	def move_towards_closest(self, cell: Individual, target_locations: list[tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
+		target_distances = [np.linalg.norm(np.subtract(cell.location, target_location))
+							for target_location in target_locations]
+		closest_target = target_locations[np.argmin(target_distances)]
+		direction = (np.sign(closest_target[0] - cell.location[0]), 
+					np.sign(closest_target[1] - cell.location[1]))
+		new_location = tuple(np.add(cell.location, direction))
+		return direction, new_location
+	"""
+
     # find the closest zombie and move away from it
     def direction_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
-        new_locations = [tuple(np.add(individual.location, direction)) for direction in legal_directions]
-        target_distances = [self.distance(individual.location, target_location) \
+        new_locations = [tuple(np.add(individual.location, direction))
+                         for direction in legal_directions]
+        target_distances = [self.distance(individual.location, target_location)
                             for target_location in target_locations]
         closest_target = target_locations[np.argmin(target_distances)]
-        distance_from_new_locations = [self.distance(closest_target, location) \
-                                                for location in new_locations]
+        distance_from_new_locations = [self.distance(closest_target, location)
+                                       for location in new_locations]
         max_distance = np.max(distance_from_new_locations)
-        max_distance_index = np.where(distance_from_new_locations == max_distance)
+        max_distance_index = np.where(
+            distance_from_new_locations == max_distance)
         direction = new_locations[max_distance_index[0]]
         return direction
     """
-    def move_against_closest(self, cell, target_locations: list[tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
-        target_distances = [np.linalg.norm(np.subtract(cell.location, target_location))
-                            for target_location in target_locations]
-        closest_target = target_locations[np.argmin(target_distances)]
-        direction = (np.sign(cell.location[0] - closest_target[0]), 
-                    np.sign(cell.location[1] - closest_target[1]))
-        new_location = tuple(np.add(cell.location, direction))
-        return direction, new_location
-    """
-    
+	def move_against_closest(self, cell, target_locations: list[tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
+		target_distances = [np.linalg.norm(np.subtract(cell.location, target_location))
+							for target_location in target_locations]
+		closest_target = target_locations[np.argmin(target_distances)]
+		direction = (np.sign(cell.location[0] - closest_target[0]), 
+					np.sign(cell.location[1] - closest_target[1]))
+		new_location = tuple(np.add(cell.location, direction))
+		return direction, new_location
+	"""
+
     # cases of more than one zombie and human, remove unwanted individuals
     # cases when both zombie and human are in neighbors, move towards human away from zombie
     # If the closest person is closer than the closest zombie, move towards the person, otherwise move away from the zombie
     # or move away from zombie is the priority and move towards person is the secondary priority
 
-    def get_neighbors(self, location: tuple[int, int], interact_range: int=2):
+    def get_neighbors(self, location: tuple[int, int], interact_range: int = 2):
         x, y = location
         neighbors = []
         for i in range(max(0, x-interact_range), min(self.school_size, x+interact_range+1)):
@@ -274,32 +287,32 @@ class School:
         # check if the two individuals are within a certain distance of each other
         distance = self.distance(individual1.location, individual2.location)
         return distance < interact_range
-    
+
     def distance(self, location1: tuple[int, int], location2: tuple[int, int]) -> float:
         # get the distance between two individuals
         distance = float(np.linalg.norm(np.subtract(location1, location2)))
         return distance
-    
+
     def get_legal_directions(self, individual: Individual) -> list[tuple[int, int]]:
         # get all possible legal moves for the individual
-        legal_directions = [(i, j) for i in range(-1, 2) for j in range(-1, 2) \
-                        if (i==0 and j==0) or self.legal_location((individual.location[0] + i, individual.location[1] + j))]
+        legal_directions = [(i, j) for i in range(-1, 2) for j in range(-1, 2)
+                            if (i == 0 and j == 0) or self.legal_location((individual.location[0] + i, individual.location[1] + j))]
         return legal_directions
 
     def legal_location(self, location: tuple[int, int]):
         return self.in_bounds(location) and self.is_occupied(location)
-    
+
     def in_bounds(self, location: tuple[int, int]):
         # check if the location is in the grid
         return 0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size
-    
+
     def is_occupied(self, location: tuple[int, int]):
         # check if the location is empty
         return self.grid[location[0]][location[1]] == None
-    
+
     """
-        return any(agent.position == (x, y) for agent in self.agents)
-    """
+		return any(agent.position == (x, y) for agent in self.agents)
+	"""
 
     def move_individual(self, individual: Individual, direction: tuple[int, int]):
         old_location = individual.location
@@ -315,19 +328,20 @@ class School:
                 else:
                     print(" ", end=" ")
             print()
-            
+
     # return the count inside the grid
     def __str__(self) -> str:
         return f"School({self.school_size})"
-    
+
     def __repr__(self) -> str:
         return "%s(%d,%d)" % (self.__class__.__name__, self.school_size)
 
+
 class Population:
-    
+
     __slots__ = "school", "population", "severity", "num_healthy", "num_infected", "num_zombie", "num_dead", \
-                "population_size", "infection_probability", "turning_probability", "death_probability", "migration_probability"
-    
+        "population_size", "infection_probability", "turning_probability", "death_probability", "migration_probability"
+
     def __init__(self, school_size: int, population_size: int) -> None:
         self.school: School = School(school_size)
         self.population: list[Individual] = []
@@ -342,9 +356,10 @@ class Population:
     def remove_individual(self, individual: Individual) -> None:
         self.population.remove(individual)
         self.school.remove_individual(individual.location)
-        
+
     def create_individual(self, id: int, school_size: int) -> Individual:
-        state_index = random.choices(State.value_list(), weights=[0.9, 0.05, 0.05, 0.0])
+        state_index = random.choices(
+            State.value_list(), weights=[0.9, 0.05, 0.05, 0.0])
         state = State(state_index[0])
         while True:
             location = (random.randint(0, school_size-1),
@@ -383,19 +398,19 @@ class Population:
             elif self.num_infected == 0 and self.num_zombie == 0:
                 print("All individuals are healthy")
                 break
-            
+
     """
-    def update(self):
-        for agent in self.population:    
-            action = self.choose_action(agent)
-            if action == "move":
-                direction = self.choose_direction(agent)
-                self.move_agent(agent, direction)
-            elif action == "attack":
-                self.attack_neighbors(agent)
-            else:
-                continue
-    """
+	def update(self):
+		for agent in self.population:    
+			action = self.choose_action(agent)
+			if action == "move":
+				direction = self.choose_direction(agent)
+				self.move_agent(agent, direction)
+			elif action == "attack":
+				self.attack_neighbors(agent)
+			else:
+				continue
+	"""
 
     def update_grid(self) -> None:
         self.school.update_grid(self.population, self.migration_probability)
@@ -407,21 +422,27 @@ class Population:
                 self.school.remove_individual(individual.location)
 
     def update_population_metrics(self) -> None:
-        self.num_healthy = sum(1 for individual in self.population if individual.state == State.HEALTHY)
-        self.num_infected = sum(1 for individual in self.population if individual.state == State.INFECTED)
-        self.num_zombie = sum(1 for individual in self.population if individual.state == State.ZOMBIE)
-        self.num_dead = sum(1 for individual in self.population if individual.state == State.DEAD)
-        self.population_size = self.num_healthy + self.num_infected + self.num_zombie + self.num_dead
+        self.num_healthy = sum(
+            1 for individual in self.population if individual.state == State.HEALTHY)
+        self.num_infected = sum(
+            1 for individual in self.population if individual.state == State.INFECTED)
+        self.num_zombie = sum(
+            1 for individual in self.population if individual.state == State.ZOMBIE)
+        self.num_dead = sum(
+            1 for individual in self.population if individual.state == State.DEAD)
+        self.population_size = self.num_healthy + \
+            self.num_infected + self.num_zombie + self.num_dead
         self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity)))
         self.turning_probability = 1 - (1 / (1 + math.exp(-self.severity)))
         self.death_probability = self.severity
-        self.migration_probability = self.population_size / (self.population_size + 1)
+        self.migration_probability = self.population_size / \
+            (self.population_size + 1)
 
         # may use other metrics or functions to calculate the probability of infection, turning, death, migration
 
     def get_all_individual_info(self) -> None:
-        print(f'Population of size {self.population_size}' + '\n' + \
-            '\n'.join([individual.get_info() for individual in self.population]))
+        print(f'Population of size {self.population_size}' + '\n' +
+              '\n'.join([individual.get_info() for individual in self.population]))
 
     def observe_population(self) -> None:
         # Count the number of individuals in each state
@@ -431,9 +452,12 @@ class Population:
         num_dead = self.num_dead
 
         # Calculate the percentage of cells in each state
-        healthy_percent = num_healthy / (num_healthy + num_infected + num_zombie + 1e-10)
-        infected_percent = num_infected / (num_healthy + num_infected + num_zombie + 1e-10)
-        zombie_percent = num_zombie / (num_healthy + num_infected + num_zombie + 1e-10)
+        healthy_percent = num_healthy / \
+            (num_healthy + num_infected + num_zombie + 1e-10)
+        infected_percent = num_infected / \
+            (num_healthy + num_infected + num_zombie + 1e-10)
+        zombie_percent = num_zombie / \
+            (num_healthy + num_infected + num_zombie + 1e-10)
 
         # Calculate the rate of infection, turning, and death
         infection_rate = num_infected / (num_healthy + num_infected + 1e-10)
@@ -465,10 +489,11 @@ class Population:
                 elif cell == State.DEAD:
                     print("D", end="")
             print()
-            
+
     def plot_school(self) -> None:
         # create a scatter plot of the population
-        cell_states_value = [individual.state.value for individual in self.population]
+        cell_states_value = [
+            individual.state.value for individual in self.population]
         x = [individual.location[0] for individual in self.population]
         y = [individual.location[1] for individual in self.population]
         plt.scatter(x, y, c=cell_states_value)
@@ -480,18 +505,20 @@ class Population:
         counts = {state: cell_states.count(state) for state in list(State)}
 
         # Add a bar chart to show the counts of each state in the population
-        plt.bar(np.asarray(State.value_list()), list(counts.values()), tick_label=State.name_list())
+        plt.bar(np.asarray(State.value_list()), list(
+                counts.values()), tick_label=State.name_list())
 
         # Show the plot
         plt.show()
-        
+
     def animation(self) -> None:
         # create an animation of the grid throughout the simulation
         # create a figure and axis
         fig, ax = plt.subplots()
 
         # create a scatter plot of the population
-        cell_states_value = [individual.state.value for individual in self.population]
+        cell_states_value = [
+            individual.state.value for individual in self.population]
         x = [individual.location[0] for individual in self.population]
         y = [individual.location[1] for individual in self.population]
         sc = ax.scatter(x, y, c=cell_states_value)
@@ -499,7 +526,8 @@ class Population:
         # create a function to update the scatter plot
         def update(i):
             # update the scatter plot
-            cell_states_value = [individual.state.value for individual in self.population]
+            cell_states_value = [
+                individual.state.value for individual in self.population]
             x = [individual.location[0] for individual in self.population]
             y = [individual.location[1] for individual in self.population]
             sc.set_offsets(np.c_[x, y])
@@ -507,13 +535,14 @@ class Population:
             return sc
 
         # create an animation
-        anim = animation.FuncAnimation(fig, update, frames=100, interval=100, blit=True)
+        anim = animation.FuncAnimation(
+            fig, update, frames=100, interval=100, blit=True)
 
         # show the animation
         plt.show()
-        
+
     # animation not working
-        
+
     def __str__(self) -> str:
         return f'Population with {self.num_healthy} healthy, {self.num_infected} infected, {self.num_zombie} zombie, and {self.num_dead} dead individuals'
 
@@ -531,47 +560,47 @@ if __name__ == '__main__':
     # school_sim.observe_school()
     # school_sim.plot_school()
     # school_sim.plot_population()
-    #school_sim.animation()
+    # school_sim.animation()
 
 
 """
 # Define the rules or events that trigger transitions between states
 # Determine whether the individual has been infected based on their interactions with zombies or infected individuals
 def is_infected(self, school, severity, tau, sigma, effectiveness):
-    # Check if the individual has come into contact with a zombie or infected individual
-    for individual in self.interactions:
-        if individual.state == State.ZOMBIE or individual.state == State.INFECTED:
-            # Calculate the probability of infection based on the duration of the interaction
-            
-            # The probability of infection is being calculated based on the duration of the interaction between the individual and another individual. The longer the interaction, the higher the probability of infection. The probability is being calculated using the formula 1 - e^(-duration/tau), where tau is a parameter representing the average time it takes for the infection to be transmitted. The exponent in the formula is negative because a longer duration means a higher probability of infection, and the negative exponent means that the probability decreases as the duration increases. The final probability is calculated by subtracting this value from 1, meaning that the probability increases as the duration increases.
-            
-            probability = 1 - math.exp(-self.interaction_duration / tau)
+	# Check if the individual has come into contact with a zombie or infected individual
+	for individual in self.interactions:
+		if individual.state == State.ZOMBIE or individual.state == State.INFECTED:
+			# Calculate the probability of infection based on the duration of the interaction
+			
+			# The probability of infection is being calculated based on the duration of the interaction between the individual and another individual. The longer the interaction, the higher the probability of infection. The probability is being calculated using the formula 1 - e^(-duration/tau), where tau is a parameter representing the average time it takes for the infection to be transmitted. The exponent in the formula is negative because a longer duration means a higher probability of infection, and the negative exponent means that the probability decreases as the duration increases. The final probability is calculated by subtracting this value from 1, meaning that the probability increases as the duration increases.
+			
+			probability = 1 - math.exp(-self.interaction_duration / tau)
 
-            # Calculate the probability of infection based on the distance between the two individuals
-            row1, col1 = self.location
-            row2, col2 = individual.location
-            distance = math.sqrt((row1 - row2)**2 + (col1 - col2)**2)
-            
-            # This line of code is updating the probability of infection based on the distance between the two individuals. The probability is being calculated using the formula 1 - e^(-distance/sigma), where sigma is a parameter representing the average distance at which the infection can be transmitted. The exponent in the formula is negative because a shorter distance means a higher probability of infection, and the negative exponent means that the probability decreases as the distance increases. The probability is then being updated by multiplying it by this value, meaning that the overall probability will decrease as the distance increases.
-            
-            probability *= 1 - math.exp(-distance / sigma)
+			# Calculate the probability of infection based on the distance between the two individuals
+			row1, col1 = self.location
+			row2, col2 = individual.location
+			distance = math.sqrt((row1 - row2)**2 + (col1 - col2)**2)
+			
+			# This line of code is updating the probability of infection based on the distance between the two individuals. The probability is being calculated using the formula 1 - e^(-distance/sigma), where sigma is a parameter representing the average distance at which the infection can be transmitted. The exponent in the formula is negative because a shorter distance means a higher probability of infection, and the negative exponent means that the probability decreases as the distance increases. The probability is then being updated by multiplying it by this value, meaning that the overall probability will decrease as the distance increases.
+			
+			probability *= 1 - math.exp(-distance / sigma)
 
-            # Multiply the probability by the effectiveness of any protective measures
-            
-            # This line of code is updating the probability of infection based on the effectiveness of any protective measures that the individual may be using. For example, if the individual is wearing a mask or gloves, the probability of infection may be lower. The probability is being updated by multiplying it by the effectiveness value, which represents the degree to which the protective measures are effective at preventing infection. If the effectiveness value is 1, it means that the measures are completely effective and the probability will not change. If the effectiveness value is less than 1, it means that the measures are less effective and the probability will increase.
-            
-            probability *= effectiveness
+			# Multiply the probability by the effectiveness of any protective measures
+			
+			# This line of code is updating the probability of infection based on the effectiveness of any protective measures that the individual may be using. For example, if the individual is wearing a mask or gloves, the probability of infection may be lower. The probability is being updated by multiplying it by the effectiveness value, which represents the degree to which the protective measures are effective at preventing infection. If the effectiveness value is 1, it means that the measures are completely effective and the probability will not change. If the effectiveness value is less than 1, it means that the measures are less effective and the probability will increase.
+			
+			probability *= effectiveness
 
-            # Multiply the probability by the overall severity of the outbreak
-            
-            # This line of code is updating the probability of infection based on the overall severity of the zombie outbreak. The probability is being updated by multiplying it by the severity value, which represents the overall severity of the outbreak on a scale from 0 to max_severity. If the severity value is 0, it means that the outbreak is not severe and the probability will not change. If the severity value is greater than 0, it means that the outbreak is more severe and the probability will increase. The probability is also being divided by the max_severity value, which represents the maximum possible severity of the outbreak. This is being done to normalize the probability so that it is always between 0 and 1.
-            
-            probability *= severity / school.max_severity
+			# Multiply the probability by the overall severity of the outbreak
+			
+			# This line of code is updating the probability of infection based on the overall severity of the zombie outbreak. The probability is being updated by multiplying it by the severity value, which represents the overall severity of the outbreak on a scale from 0 to max_severity. If the severity value is 0, it means that the outbreak is not severe and the probability will not change. If the severity value is greater than 0, it means that the outbreak is more severe and the probability will increase. The probability is also being divided by the max_severity value, which represents the maximum possible severity of the outbreak. This is being done to normalize the probability so that it is always between 0 and 1.
+			
+			probability *= severity / school.max_severity
 
-            # Return True if the probability is greater than a random number, False otherwise
-            return random.random() < probability
-    return False
-    
+			# Return True if the probability is greater than a random number, False otherwise
+			return random.random() < probability
+	return False
+	
 To use the variance of the binomial distribution to model the spread of a disease in a population, you would need to follow these steps:
 Collect data on the number of individuals who have been infected with the disease and the number who have become zombies (the number of successes in each experiment). This data can be used to estimate the probability of success (i.e., the probability of an individual becoming a zombie after being infected with the disease).
 Calculate the variance of the binomial distribution using the formula: variance = p * (1 - p), where p is the probability of success in each experiment.
@@ -628,55 +657,55 @@ and interactions of students, teachers, and zombies within the school environmen
 """
 """
 def choose_action(self, agent):
-    neighbors = self.get_neighbors(agent)
-    if isinstance(agent, Human):
-        for neighbor in neighbors:
-            if isinstance(neighbor, Zombie):
-                return "attack"
-        return "move"
-    elif isinstance(agent, Zombie):
-        for neighbor in neighbors:
-            if isinstance(neighbor, Human):
-                return "attack"
-        return "move"
+	neighbors = self.get_neighbors(agent)
+	if isinstance(agent, Human):
+		for neighbor in neighbors:
+			if isinstance(neighbor, Zombie):
+				return "attack"
+		return "move"
+	elif isinstance(agent, Zombie):
+		for neighbor in neighbors:
+			if isinstance(neighbor, Human):
+				return "attack"
+		return "move"
 """
 """
 use random walk algorithm to simulate movement based on probability adjusted by cell's infection status and location
 """
 """
 def simulate_movement(self):
-    for i in range(self.width):
-        for j in range(self.height):
-            individual = self.grid[i][j]
-            if individual is not None:
-                # use the A* algorithm to find the shortest path to the nearest exit
-                start = (i, j)
-                # the four corners of the grid
-                exits = [(0, 0), (0, self.width-1),
-                        (self.height-1, 0), (self.height-1, self.width-1)]
-                distances, previous = self.a_star(start, exits)
-                # use the first exit as the destination
-                path = self.reconstruct_path(previous, start, exits[0])
+	for i in range(self.width):
+		for j in range(self.height):
+			individual = self.grid[i][j]
+			if individual is not None:
+				# use the A* algorithm to find the shortest path to the nearest exit
+				start = (i, j)
+				# the four corners of the grid
+				exits = [(0, 0), (0, self.width-1),
+						(self.height-1, 0), (self.height-1, self.width-1)]
+				distances, previous = self.a_star(start, exits)
+				# use the first exit as the destination
+				path = self.reconstruct_path(previous, start, exits[0])
 
-                # move to the next cell in the shortest path to the nearest exit
-                if len(path) > 1:  # check if there is a valid path to the nearest exit
-                    next_x, next_y = path[1]
-                    # update the individual's location
-                    individual.location = (next_x, next_y)
-                    # remove the individual from their current location
-                    self.grid[i][j] = None
-                    # add the individual to their new location
-                    self.grid[next_x][next_y] = individual
+				# move to the next cell in the shortest path to the nearest exit
+				if len(path) > 1:  # check if there is a valid path to the nearest exit
+					next_x, next_y = path[1]
+					# update the individual's location
+					individual.location = (next_x, next_y)
+					# remove the individual from their current location
+					self.grid[i][j] = None
+					# add the individual to their new location
+					self.grid[next_x][next_y] = individual
 
 def a_star(self, start, goals):
-    # implement the A* algorithm to find the shortest path from the start to one of the goals
-    # returns the distances and previous nodes for each node in the grid
-    pass
+	# implement the A* algorithm to find the shortest path from the start to one of the goals
+	# returns the distances and previous nodes for each node in the grid
+	pass
 
 def reconstruct_path(self, previous, start, goal):
-    # implement the algorithm to reconstruct the path from the previous nodes
-    # returns the shortest path from the start to the goal
-    pass
+	# implement the algorithm to reconstruct the path from the previous nodes
+	# returns the shortest path from the start to the goal
+	pass
 """
 """
 Closure
@@ -684,14 +713,14 @@ https://github.com/ArjanCodes/2022-functions/blob/main/strategy_fn_closure.py
 
 1. No closure
 def track_score(scores: dict, player: str, score: int):
-    if player in scores:
-        scores[player] += score
-    else:
-        scores[player] = score
-        
+	if player in scores:
+		scores[player] += score
+	else:
+		scores[player] = score
+		
 def get_scores(scores: dict):
-    return scores
-    
+	return scores
+	
 scores = {}
 track_score(scores, "player1", 10)
 track_score(scores, "player2", 5)
@@ -703,18 +732,18 @@ This version of the function is passing the scores dictionary as an argument to 
 
 2. With closure
 def create_player_score_tracker():
-    scores = {}
+	scores = {}
 
-    def track_score(player: str, score: int):
-        if player in scores:
-            scores[player] += score
-        else:
-            scores[player] = score
+	def track_score(player: str, score: int):
+		if player in scores:
+			scores[player] += score
+		else:
+			scores[player] = score
 
-    def get_scores():
-        return scores
+	def get_scores():
+		return scores
 
-    return track_score, get_scores
+	return track_score, get_scores
 
 track_score, get_scores = create_player_score_tracker()
 track_score("player1", 10)
@@ -733,4 +762,60 @@ https://github.com/ArjanCodes/2021-plugin-architecture
 Factory Pattern
 https://github.com/ArjanCodes/2021-factory-pattern
 https://www.youtube.com/watch?v=zGbPd4ZP39Y
+"""
+"""
+Strategy Pattern
+Strategy Pattern is a behavioral design pattern that lets you define a family of algorithms, put each of them into a separate class, and make their objects interchangeable.
+An abstract class defines a set of methods that can be used by the client code.
+A list of concrete classes that use dataclasses to store the parameters for each strategy.
+The client code can then call the methods of the abstract class without knowing which concrete class it is using.
+https://github.com/ArjanCodes/2021-strategy-parameters/blob/main/with_init_args.py
+"""
+"""
+Delegation Pattern
+https://erikscode.space/index.php/2020/08/01/delegate-and-decorate-in-python-part-1-the-delegation-pattern/
+"""
+"""
+Decorator Pattern
+https://erikscode.space/index.php/2020/08/02/delegate-and-decorate-in-python-part-2-the-decorator-pattern/
+"""
+"""
+Reusable decorator
+Decorator with other attributes and methods can inherit from base decorator class
+
+class Decorator:
+  def __init__(self, model):
+	self.model = model
+	self.model_methods = [f for f in dir(type(self.model)) if not f.startswith('_')]
+	self.model_attributes = [a for a in self.model.__dict__.keys()]
+  
+  def __getattr__(self, func):
+	if func in self.model_methods:
+	  def method(*args):
+		return getattr(self.model, func)(*args)
+	  return method
+	elif func in self.model_attributes:
+	  return getattr(self.model, func)
+	else:
+	  raise AttributeError
+	  
+class LeashedDogDecorator(Decorator):
+  def __init__(self, dog):
+	super().__init__(dog)
+  
+  def tug_on_leash(self):
+	print("Let's GOOOOO!!!")
+	
+>>> dog = Dog('Fido', 4)
+>>> dog = LeashedDogDecorator(dog)
+>>> dog.tug_on_leash()
+Let's GOOOOO!!!
+>>> dog.bark()
+Woof woof
+
+https://erikscode.space/index.php/2020/08/03/delegate-and-decorate-in-python-part-3-reusable-decorators/
+"""
+"""
+Software Design
+https://erikscode.space/index.php/category/software-design/
 """
