@@ -30,6 +30,21 @@ class Human:
         # elif there is enough condition, craft item
         # else move
         pass
+    
+    """
+    def choose_action(self, agent):
+	neighbors = self.get_neighbors(agent)
+	if isinstance(agent, Human):
+		for neighbor in neighbors:
+			if isinstance(neighbor, Zombie):
+				return "attack"
+		return "move"
+	elif isinstance(agent, Zombie):
+		for neighbor in neighbors:
+			if isinstance(neighbor, Human):
+				return "attack"
+		return "move"
+    """
 
     def move(self, dx, dy):
         self.position[0] += dx
@@ -138,6 +153,21 @@ class Zombie:
         # if there is enemy nearby, attack
         # else move
         pass
+    
+    """
+    def choose_action(self, agent):
+	neighbors = self.get_neighbors(agent)
+	if isinstance(agent, Human):
+		for neighbor in neighbors:
+			if isinstance(neighbor, Zombie):
+				return "attack"
+		return "move"
+	elif isinstance(agent, Zombie):
+		for neighbor in neighbors:
+			if isinstance(neighbor, Human):
+				return "attack"
+		return "move"
+    """
 
     def move(self, dx, dy):
         self.position[0] += dx

@@ -15,7 +15,9 @@ SOILD principle of object oriented design:
 1. You can combine functional programming and object oriented programming
 2. Make classes either data-oriented or behaviour-oriented, not both
 3. Use composition over inheritance (one more level of abstraction and hard to understand the interaction)
-
+4. Use dependency injection to decouple the class, and use interface to define the behaviour of the class
+5. Use protocol for the dependency inversion principle, which means the class should depend on the interface, not the implementation detail
+6. Don't abuse magic methods
 
 Functional programming vs object oriented programming:
 1. functional programming is more declarative, object oriented programming is more imperative (functional programming is more about what to do, object oriented programming is more about how to do it)

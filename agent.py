@@ -406,6 +406,7 @@ class Weapon:
     def __str__(self):
         return f"{self.name} ({self.damage} damage, {self.range} range)"
 
+# Factory Pattern
 class AgentFactory:
     
     def __init__(self):

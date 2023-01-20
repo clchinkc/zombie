@@ -8,7 +8,6 @@ human when health < 0, either eat human or turn human into zombies (in grid)
 turn checking of if a move is legal or not to separate function in grid
 spawn food = 100 is the max, spawn health is the max, make use of other spawn info
 food and weapon and armour turn into resources that human can store
-weapon replacement
 function to control the spawn rate of food and weapon in different terrain to allow different playing experience
 use normal distribution or the Poisson distribution for human and zombie attribute
 what happens when the cloest human is right next to the agent

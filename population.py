@@ -91,6 +91,11 @@ class Individual:
                 if random.random() < infection_probability:
                     return True
         return False
+    
+    # probability = severity / school.max_severity
+    # probability *= 1 - math.exp(-self.interaction_duration/average_interaction_duration_for_infection)
+	# probability *= 1 - math.exp(-distance / average_distance_for_infection)
+
 
     # cellular automaton
     def is_turned(self) -> bool:
@@ -564,43 +569,7 @@ if __name__ == '__main__':
 
 
 """
-# Define the rules or events that trigger transitions between states
-# Determine whether the individual has been infected based on their interactions with zombies or infected individuals
-def is_infected(self, school, severity, tau, sigma, effectiveness):
-	# Check if the individual has come into contact with a zombie or infected individual
-	for individual in self.interactions:
-		if individual.state == State.ZOMBIE or individual.state == State.INFECTED:
-			# Calculate the probability of infection based on the duration of the interaction
-			
-			# The probability of infection is being calculated based on the duration of the interaction between the individual and another individual. The longer the interaction, the higher the probability of infection. The probability is being calculated using the formula 1 - e^(-duration/tau), where tau is a parameter representing the average time it takes for the infection to be transmitted. The exponent in the formula is negative because a longer duration means a higher probability of infection, and the negative exponent means that the probability decreases as the duration increases. The final probability is calculated by subtracting this value from 1, meaning that the probability increases as the duration increases.
-			
-			probability = 1 - math.exp(-self.interaction_duration / tau)
 
-			# Calculate the probability of infection based on the distance between the two individuals
-			row1, col1 = self.location
-			row2, col2 = individual.location
-			distance = math.sqrt((row1 - row2)**2 + (col1 - col2)**2)
-			
-			# This line of code is updating the probability of infection based on the distance between the two individuals. The probability is being calculated using the formula 1 - e^(-distance/sigma), where sigma is a parameter representing the average distance at which the infection can be transmitted. The exponent in the formula is negative because a shorter distance means a higher probability of infection, and the negative exponent means that the probability decreases as the distance increases. The probability is then being updated by multiplying it by this value, meaning that the overall probability will decrease as the distance increases.
-			
-			probability *= 1 - math.exp(-distance / sigma)
-
-			# Multiply the probability by the effectiveness of any protective measures
-			
-			# This line of code is updating the probability of infection based on the effectiveness of any protective measures that the individual may be using. For example, if the individual is wearing a mask or gloves, the probability of infection may be lower. The probability is being updated by multiplying it by the effectiveness value, which represents the degree to which the protective measures are effective at preventing infection. If the effectiveness value is 1, it means that the measures are completely effective and the probability will not change. If the effectiveness value is less than 1, it means that the measures are less effective and the probability will increase.
-			
-			probability *= effectiveness
-
-			# Multiply the probability by the overall severity of the outbreak
-			
-			# This line of code is updating the probability of infection based on the overall severity of the zombie outbreak. The probability is being updated by multiplying it by the severity value, which represents the overall severity of the outbreak on a scale from 0 to max_severity. If the severity value is 0, it means that the outbreak is not severe and the probability will not change. If the severity value is greater than 0, it means that the outbreak is more severe and the probability will increase. The probability is also being divided by the max_severity value, which represents the maximum possible severity of the outbreak. This is being done to normalize the probability so that it is always between 0 and 1.
-			
-			probability *= severity / school.max_severity
-
-			# Return True if the probability is greater than a random number, False otherwise
-			return random.random() < probability
-	return False
-	
 To use the variance of the binomial distribution to model the spread of a disease in a population, you would need to follow these steps:
 Collect data on the number of individuals who have been infected with the disease and the number who have become zombies (the number of successes in each experiment). This data can be used to estimate the probability of success (i.e., the probability of an individual becoming a zombie after being infected with the disease).
 Calculate the variance of the binomial distribution using the formula: variance = p * (1 - p), where p is the probability of success in each experiment.
@@ -638,37 +607,12 @@ Sensitivity analysis: It may be useful to perform sensitivity analysis to unders
 Extension: You may want to consider extending the simulation to include additional factors or scenarios. For example, you could incorporate the behavior of external actors, such as emergency responders or military individualnel, or model the spread of the zombie virus to other locations outside the school.
 
 
-
-# use multiple numpy matrix to represent each state
-self.grid = np.zeros((self.grid_size,self.grid_size), dtype=int)
-
-
-
-One potential improvement to the cellular automaton model could be to add more complex rules for transitioning between states. 
-For example, the model could incorporate additional factors 
-such as the age or health of the students and zombies, 
-as well as the availability of weapons or other resources. 
-This could allow for more realistic and nuanced simulations of the zombie apocalypse at school.
-
 Additionally, the model could be expanded to include more detailed information about the layout of the school, 
 such as the locations of classrooms, doors, and other features. 
 This could allow for more accurate simulations of the movement 
 and interactions of students, teachers, and zombies within the school environment.
 """
-"""
-def choose_action(self, agent):
-	neighbors = self.get_neighbors(agent)
-	if isinstance(agent, Human):
-		for neighbor in neighbors:
-			if isinstance(neighbor, Zombie):
-				return "attack"
-		return "move"
-	elif isinstance(agent, Zombie):
-		for neighbor in neighbors:
-			if isinstance(neighbor, Human):
-				return "attack"
-		return "move"
-"""
+
 """
 use random walk algorithm to simulate movement based on probability adjusted by cell's infection status and location
 """
@@ -755,13 +699,14 @@ print(get_scores()) # {'player1': 13, 'player2': 5}
 In this version, the scores dictionary is defined within the scope of the create_player_score_tracker function, but it can still be accessed and modified by the track_score and get_scores functions because they are closures. This allows you to keep track of the scores without having to pass the scores dictionary around as an argument to each function that needs to update or access it.
 """
 """
-Plugin Pattern & Factory Pattern
-https://github.com/ArjanCodes/2021-plugin-architecture
-"""
-"""
 Factory Pattern
 https://github.com/ArjanCodes/2021-factory-pattern
 https://www.youtube.com/watch?v=zGbPd4ZP39Y
+"""
+"""
+Plugin Pattern
+Plugin Pattern is a structural design pattern that lets you add new behaviors to objects without having to modify existing code, by separating the code into plugins.
+https://github.com/ArjanCodes/2021-plugin-architecture
 """
 """
 Strategy Pattern
@@ -773,10 +718,12 @@ https://github.com/ArjanCodes/2021-strategy-parameters/blob/main/with_init_args.
 """
 """
 Delegation Pattern
+Delegation Pattern is a structural design pattern that lets you pass requests from a client object to a service object without making the service object a part of the client object's class.
 https://erikscode.space/index.php/2020/08/01/delegate-and-decorate-in-python-part-1-the-delegation-pattern/
 """
 """
 Decorator Pattern
+Decorator Pattern is a structural design pattern that lets you attach new behaviors to objects by placing these objects inside special wrapper objects that contain the behaviors.
 https://erikscode.space/index.php/2020/08/02/delegate-and-decorate-in-python-part-2-the-decorator-pattern/
 """
 """
