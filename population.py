@@ -651,6 +651,11 @@ def reconstruct_path(self, previous, start, goal):
 	# returns the shortest path from the start to the goal
 	pass
 """
+
+"""
+High order function
+
+"""
 """
 Closure
 https://github.com/ArjanCodes/2022-functions/blob/main/strategy_fn_closure.py
@@ -699,14 +704,7 @@ print(get_scores()) # {'player1': 13, 'player2': 5}
 In this version, the scores dictionary is defined within the scope of the create_player_score_tracker function, but it can still be accessed and modified by the track_score and get_scores functions because they are closures. This allows you to keep track of the scores without having to pass the scores dictionary around as an argument to each function that needs to update or access it.
 """
 """
-Factory Pattern
-https://github.com/ArjanCodes/2021-factory-pattern
-https://www.youtube.com/watch?v=zGbPd4ZP39Y
-"""
-"""
 Plugin Pattern
-Plugin Pattern is a structural design pattern that lets you add new behaviors to objects without having to modify existing code, by separating the code into plugins.
-https://github.com/ArjanCodes/2021-plugin-architecture
 """
 """
 Strategy Pattern
@@ -715,6 +713,7 @@ An abstract class defines a set of methods that can be used by the client code.
 A list of concrete classes that use dataclasses to store the parameters for each strategy.
 The client code can then call the methods of the abstract class without knowing which concrete class it is using.
 https://github.com/ArjanCodes/2021-strategy-parameters/blob/main/with_init_args.py
+https://github.com/ArjanCodes/2021-pythonic-strategy
 """
 """
 Delegation Pattern
@@ -761,8 +760,4 @@ Let's GOOOOO!!!
 Woof woof
 
 https://erikscode.space/index.php/2020/08/03/delegate-and-decorate-in-python-part-3-reusable-decorators/
-"""
-"""
-Software Design
-https://erikscode.space/index.php/category/software-design/
 """

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import math
 import random
 import numpy as np
@@ -5,47 +7,19 @@ from dataclasses import dataclass, field, astuple
 from typing import Any, Callable, Union
 
 class Agent:
-    """Represents an agent with an id, a position and health.
-    
-    Attributes:
-        id (int): The id of the agent.
-        position (tuple): The position of the agent on the map.
-        health (int): The health of the agent.
-    """
-    def __init__(self, id, health, position):
+    def __init__(self, id: int, health: int, position: tuple[int, int]):
         self.id = id
         self.health = health
         self.position = position # x, y coordinates on the map
     
     def move(self, dx, dy):
-        """Move the agent by a certain amount in the x and y directions.
-        
-        Args:
-            dx (int): The amount to move in the x direction.
-            dy (int): The amount to move in the y direction.
-        """
         self.position = (self.position[0]+dx, self.position[1]+dy)
 
 
-    def take_damage(self, damage):
-        """Reduce the health of the agent by a certain amount.
-        
-        Args:
-            damage (int): The amount of damage to take.
-        """
+    def take_damage(self, damage: int) -> None:
         self.health -= damage
         
-        # defend method to reduce damage taken
-        
-    def distance_to_agent(self, other_agent):
-        """Calculate the distance between this agent and another agent.
-    
-        Args:
-            other_agent (Agent): The other agent to calculate the distance to.
-    
-        Returns:
-            float: The distance between the two agents.
-        """
+    def distance_to_agent(self, other_agent: Agent) -> int:
         x1, y1 = self.position
         x2, y2 = other_agent.position
         distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
@@ -55,22 +29,15 @@ class AgentManager:
     def __init__(self):
         self.agents = []
     
-    def add_agent(self, agent):
+    def add_agent(self, agent: Agent) -> None:
         self.agents.append(agent)
     
-    def remove_agent(self, agent):
+    def remove_agent(self, agent: Agent) -> None:
         self.agents.remove(agent)
     
-    def get_agents_in_range(self, agent, range):
-        """Get a list of distances and agents within a certain range of a given agent.
-    
-        Args:
-            agent (Agent): The agent to check the range from.
-            range (float): The range to check for agents within.
-        
-        Returns:
-            list: A list of distances and agents within the specified range.
-        """
+    def get_agents_in_range(self, agent: Agent, range: float):
+        # Get a list of distances and agents within a certain range of a given agent.
+
         agents_in_range = []
         for other_agent in self.agents:
             distance = agent.distance_to_agent(other_agent)
@@ -79,22 +46,12 @@ class AgentManager:
         agents_in_range.sort(key=lambda x: x[0])
         return agents_in_range
 
-    def connect_agents(self, agent, all_agents):
-        """Connect an agent to all other agents.
-    
-        Args:
-            agent (Agent): The agent to connect.
-            all_agents (list): A list of all agents.
-        """
-        agent.connections.append(all_agents)
+    def connect_agents(self, agent: Any[Agent], all_agents: list[Agent]):
+        # Connect an agent to the list of agents.
+        agent.connections.extend(all_agents)
         
-    def add_connections_in_range(self, agent, range):
-        """Add connections to all agents within a certain range of a given agent.
-    
-        Args:
-            agent (Agent): The agent to add connections to.
-            range (float): The range to check for agents within.
-        """
+    def add_connections_in_range(self, agent: Any[Agent], range: float) -> None:
+        # Add connections to all agents within a certain range of a given agent.
         if len(agent.connections) == 0:
             agents_in_range = agent.get_agents_in_range(agent, range)
             for other_agent in agents_in_range:
@@ -115,14 +72,6 @@ class AgentManager:
 
 
 class Human(Agent):
-    """Represents a human agent.
-    
-    Attributes:
-        id (int): The id of the human.
-        position (tuple): The position of the human on the map.
-        health (int): The health of the human.
-        weapon (Weapon): The weapon the human is currently holding.
-    """
     def __init__(self, id, health, position, weapon=None):
         super().__init__(id, health, position)
         self._health = health
@@ -219,14 +168,11 @@ class Human(Agent):
         super().take_damage(damage)
         
 
-
+# Manage all humans in the apocalypse
 class HumanManager(AgentManager):
-    """Manages the humans in the apocalypse.
-
-    Attributes:
-        humans (list): A list of all the humans in the apocalypse.
-    """
+    
     def __init__(self):
+        # List of all humans in the apocalypse
         self.agents = []
         
     def add_human(self, human):
@@ -279,13 +225,7 @@ class HumanManager(AgentManager):
 
 
 class Zombie(Agent):
-    """Represents a zombie agent.
-    
-    Attributes:
-        id (int): The id of the zombie.
-        position (tuple): The position of the zombie on the map.
-        health (int): The health of the zombie.
-    """
+
     def __init__(self, id, health, position):
         super().__init__(id, health, position)
         self._health = health
@@ -345,14 +285,12 @@ class Zombie(Agent):
         self.move(dx, dy)
         
     # check legal move
-    
-class ZombieManager(AgentManager):
-    """Manages the zombies in the apocalypse.
 
-    Attributes:
-        zombies (list): A list of all the zombies in the apocalypse.
-    """
+# Manage all zombies in the apocalypse
+class ZombieManager(AgentManager):
+
     def __init__(self):
+        # List of all zombies in the apocalypse
         self.agents = []
         
     def add_zombie(self, zombie):
@@ -381,18 +319,11 @@ class ZombieManager(AgentManager):
         for zombie in self.agents:
             print(f"Zombie {zombie.id}: health={zombie.health}, position={zombie.position}")
     
-# dataclass for weapon
+# dataclass for weapon that can be used by a human
 @dataclass(order=True, frozen=True) # slots=True
 class Weapon:
-    """Represents a weapon that can be used by a human.
-    
-    Attributes:
-        name (str): The name of the weapon.
-        damage (int): The damage dealt by the weapon.
-        range (int): The range of the weapon.
-        trading_value (int): The trading value of the weapon, calculated as damage * range.
-    """
-    trading_value: int = field(init=False, repr=False)
+
+    trading_value: int = field(init=False, repr=False) # the value of the weapon in trading function
     name: str
     damage: int = 0
     range: int = 0
@@ -430,18 +361,13 @@ class AgentFactory:
             raise ValueError(f"unknown character type {character_type!r}") from None
         return creator_func(**args_copy)
 
+# a zombie apocalypse and manages the humans and zombies
 class ZombieApocalypse:
-    """Represents a zombie apocalypse and manages the humans and zombies.
-    
-    Attributes:
-        map (list): A 2D list representing the map, with None representing a empty cell and a human or zombie representing a cell occupied by human or zombie.
-        human_manager (HumanManager): The human manager instance to manage the humans.
-        zombie_manager (ZombieManager): The zombie manager instance to manage the zombies.
-    """
+
     def __init__(self, num_zombies, num_humans, school_size=5):
-        self.map = [[None for _ in range(school_size)] for _ in range(school_size)]
-        self.human_manager = HumanManager()
-        self.zombie_manager = ZombieManager()
+        self.map = [[None for _ in range(school_size)] for _ in range(school_size)] # a 2D list representing the map, with None representing a empty cell and a human or zombie representing a cell occupied by human or zombie
+        self.human_manager = HumanManager() # the human manager instance to manage the humans
+        self.zombie_manager = ZombieManager() # the zombie manager instance to manage the zombies
         self.factory = AgentFactory()
         self.initialize(num_zombies, num_humans, school_size)
         self.possible_weapons = [
@@ -452,12 +378,8 @@ class ZombieApocalypse:
         ]
         
     def initialize(self, num_zombies, num_humans, school_size):
-        """Initializes the humans and zombies in the map.
+        # Initializes the humans and zombies in the map.
         
-        Args:
-            num_zombies (int): The number of zombies to initialize.
-            num_humans (int): The number of humans to initialize.
-        """
         # Initialize humans and zombies
         self.factory.register_character("human", Human)
         self.factory.register_character("zombie", Zombie)
@@ -482,11 +404,6 @@ class ZombieApocalypse:
     
             
     def simulate(self, num_turns):
-        """Simulates the zombie apocalypse for the given number of turns.
-        
-        Args:
-            num_turns (int): The number of turns to simulate.
-        """
         # while number of humans > 0 and number of zombies > 0
         for i in range(num_turns):
             print(f"Turn {i+1}")
@@ -499,8 +416,7 @@ class ZombieApocalypse:
     # an escape position or method for humans to win
             
     def take_turn(self):
-        """Simulates a turn in the zombie apocalypse. Each human and zombie takes a turn in the order they were initialized.
-        """
+        # Simulates a turn in the zombie apocalypse
         # Zombies take their turn
         for zombie in self.zombie_manager.agents:
             closest_human = self.zombie_manager.get_closest_human(zombie)
@@ -511,16 +427,8 @@ class ZombieApocalypse:
             human.take_turn(self.possible_weapons, closest_zombie)
     
     def move_agent(self, agent, dx, dy):
-        """Move an agent on the map by changing its position attribute and updating the map list.
-        
-        Args:
-            agent (Agent): The agent to move.
-            dx (int): The change in x position.
-            dy (int): The change in y position.
-            
-        Returns:
-            bool: True if the agent was successfully moved, False otherwise.
-        """
+        # Move an agent on the map by changing its position attribute and updating the map list.
+        # return True if the agent was successfully moved, False otherwise.
         if 0 <= agent.position[0] + dx < len(self.map) and 0 <= agent.position[1] + dy < len(self.map[0]):
             if self.map[agent.position[0] + dx][agent.position[1] + dy] == 0:
                 agent.position = (agent.position[0] + dx, agent.position[1] + dy)
@@ -530,8 +438,7 @@ class ZombieApocalypse:
         return False
     
     def print_map(self):
-        """Print the map in a readable format.
-        """
+        # Print the map in a readable format.
         for row in self.map:
             for cell in row:
                 if cell is None:

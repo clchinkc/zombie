@@ -12,12 +12,19 @@ SOILD principle of object oriented design:
 4. interface segregation principle: many client-specific interfaces are better than one general-purpose interface
 5. dependency inversion principle: depend on abstraction, not on concretion
 
+Guide of object oriented programming:
 1. You can combine functional programming and object oriented programming
 2. Make classes either data-oriented or behaviour-oriented, not both
 3. Use composition over inheritance (one more level of abstraction and hard to understand the interaction)
 4. Use dependency injection to decouple the class, and use interface to define the behaviour of the class
 5. Use protocol for the dependency inversion principle, which means the class should depend on the interface, not the implementation detail
 6. Don't abuse magic methods
+
+Guide of functional programming:
+1. Group all side effect (like print, reading and writing file, interacting with database, change a global variable, change a parameter) into one place, usually return instead of printing in the lower level function
+2. Use pure function to transform data (pure function is a function that always return the same result if the same parameter is passed in, no random number, does not cause any side effect, and does not depend on any state or data that is not passed in as a parameter and outside dependency, and does not modify any data or objects passed to it as parameters, instead return the new data)
+3. Functions are first class object, can be passed as parameter, can be returned by function, can be stored in data structure
+4. Make use of immutability and keep the original data unchanged, and return the new data
 
 Functional programming vs object oriented programming:
 1. functional programming is more declarative, object oriented programming is more imperative (functional programming is more about what to do, object oriented programming is more about how to do it)
@@ -43,7 +50,12 @@ guide to write class:
 5. separate the implemntation detail from the interface (use interface to define the behaviour of the class, not the implementation detail)
 
 design pattern:
-1. factory pattern: create an object without exposing the creation logic to the client, and refer to newly created object using a common interface
+1. factory pattern: creational design pattern, separate the creation and use of the object, lets you define an interface for creating objects, but decide the creation logic using different subclasses at run-time.
+https://www.youtube.com/watch?v=zGbPd4ZP39Y
+2. strategy pattern: behavioural design pattern, define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it
+3. plugin pattern: let the user to add new behaviour to the object without modifying the existing code at runtime, by adding new plugin
+https://github.com/ArjanCodes/2021-plugin-architecture
+
 2. singleton pattern: ensure a class only have one instance, and provide a global point of access to it
 3. decorator pattern: attach additional responsibilities to an object dynamically, provide a flexible alternative to subclassing for extending functionality
 4. observer pattern: define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically
