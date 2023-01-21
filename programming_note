@@ -52,14 +52,16 @@ guide to write class:
 design pattern:
 1. factory pattern: creational design pattern, separate the creation and use of the object, lets you define an interface for creating objects, but decide the creation logic using different subclasses at run-time.
 https://www.youtube.com/watch?v=zGbPd4ZP39Y
-2. strategy pattern: behavioural design pattern, define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it
+2. strategy pattern
+The Strategy Pattern is a behavioural design pattern that allows for the selection from a family of algorithms. It defines a family of algorithms, encapsulates each algorithm into a separate class, and makes them interchangeable within the family.
+This is achieved by creating an abstract class and providing a common interface that utilizes various concrete data classes, without the need to know the implementation details.
+The pattern should be used when the desired behaviour needs to be selected at runtime based on input or other factors. By separating the logic of an algorithm from its usage, the same algorithm can be used in multiple classes, and new algorithms can be added to the program without modifying existing code.
+
 3. plugin pattern: let the user to add new behaviour to the object without modifying the existing code at runtime, by adding new plugin
 https://github.com/ArjanCodes/2021-plugin-architecture
-
-2. singleton pattern: ensure a class only have one instance, and provide a global point of access to it
-3. decorator pattern: attach additional responsibilities to an object dynamically, provide a flexible alternative to subclassing for extending functionality
-4. observer pattern: define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically
-5. strategy pattern: define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it
+4. singleton pattern: ensure a class only have one instance, and provide a global point of access to it
+5. observer pattern: define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically
+https://www.youtube.com/watch?v=oNalXg67XEE
 6. command pattern: encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations
 7. adapter pattern: convert the interface of a class into another interface the clients expect. Adapter lets classes work together that couldn't otherwise because of incompatible interfaces
 8. template method pattern: define the skeleton of an algorithm in an operation, deferring some steps to subclasses. Template method lets subclasses redefine certain steps of an algorithm without changing the algorithm's structure
@@ -77,7 +79,50 @@ https://github.com/ArjanCodes/2021-plugin-architecture
 20. mediator pattern: define an object that encapsulates how a set of objects interact. Mediator promotes loose coupling by keeping objects from referring to each other explicitly, and it lets you vary their interaction independently
 21. prototype pattern: specify the kinds of objects to create using a prototypical instance, and create new objects by copying this prototype
 22. abstract factory pattern: provide an interface for creating families of related or dependent objects without specifying their concrete classes
-23. delegate pattern: pass a request of a function to a helper object instead of handling it in the main object (composition over inheritance)
+
+Not suggested design pattern:
+23. delegate pattern
+Delegation Pattern is a structural design pattern that lets you pass necessary requests from a client object (main object) to a service object (helper object) without making the service object a part of the client object's class, by using meta-programming.
+https://erikscode.space/index.php/2020/08/01/delegate-and-decorate-in-python-part-1-the-delegation-pattern/
+
+24. decorator pattern
+Decorator Pattern is a structural design pattern that lets you attach new behaviors to objects by placing these objects inside special wrapper objects that contain the behaviors, provide a flexible alternative to subclassing for extending functionality
+https://erikscode.space/index.php/2020/08/02/delegate-and-decorate-in-python-part-2-the-decorator-pattern/
+Reusable decorator
+Decorator with other attributes and methods can inherit from base decorator class
+
+class Decorator:
+  def __init__(self, model):
+    self.model = model
+    self.model_methods = [f for f in dir(type(self.model)) if not f.startswith('_')]
+    self.model_attributes = [a for a in self.model.__dict__.keys()]
+  
+  def __getattr__(self, func):
+    if func in self.model_methods:
+      def method(*args):
+        return getattr(self.model, func)(*args)
+      return method
+    elif func in self.model_attributes:
+      return getattr(self.model, func)
+    else:
+      raise AttributeError
+      
+class LeashedDogDecorator(Decorator):
+  def __init__(self, dog):
+    super().__init__(dog)
+  
+  def tug_on_leash(self):
+    print("Let's GOOOOO!!!")
+    
+>>> dog = Dog('Fido', 4)
+>>> dog = LeashedDogDecorator(dog)
+>>> dog.tug_on_leash()
+Let's GOOOOO!!!
+>>> dog.bark()
+Woof woof
+
+https://erikscode.space/index.php/2020/08/03/delegate-and-decorate-in-python-part-3-reusable-decorators/
+
 
 
 optimization:
@@ -100,10 +145,17 @@ Implementation:
 5. decorator: used to add functionality to an existing function without modifying it, can be used to add logging, timing, authentication, etc
 6. __slots__: reduce memory usage, but can't add new attribute
 7. currying function: can be used when a sequence of separate function is used on the same object
-8. closure function: defined inside another function and has access to the variables of the outer function, used to avoid using global variable while still having access to the variable of the outer function
 9. nested function: used when the function should be hide from the outside or the inner function is only used in the outer function
 10. __call__: used to make an instance callable as a function, a() == call
 11. __init__: used to initialize the object and return nothing, a = A() == init
 12. __new__: used to create the object and return the object
-
-
+13. iterable: data structure that can be looped over, can be used in for loop, e.g. list, tuple, string, dict, set, range, etc
+14. iterator: have __iter__ and __next__ method, can be used to return a sequence of data
+13. Closure:
+A closure is a function defined inside another function, which has access to the intermediate variables of the outer function. The main advantage of using closures is that it allows a function to maintain some sort of internal state, or have access to variables in the functional scope, even outside the original scope, without having to pass them around as arguments. This allows for avoiding the use of global variables while still having access to the variables of the outer function.
+You should use closures when you need a function to maintain some sort of internal state, or when you need a function to have access to certain variables in the function scope . Some examples include:
+Counting the number of times a function is called
+Creating a function that generates unique IDs
+Creating a function that has access to a specific configuration or settings, like a database connection or a logging configuration
+Creating a function that maintains the state of a program, such as a game or a user session
+It is not recommended to use closures in situations where the state that needs to be maintained is global or shared among different functions, it is better to use a global variable or a class-based solution. Additionally, if the closure function is going to be used by many different parts of the program, it can become difficult to keep track of its state and can lead to unexpected behavior.

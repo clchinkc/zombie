@@ -43,7 +43,7 @@ class State(Enum):
 class Individual:
 
     __slots__ = "id", "state", "location", "connections", \
-        "infection_severity", "interact_range", "sight_range"
+        "infection_severity", "interact_range"
 
     def __init__(self, id: int, state: State, location: tuple[int, int]) -> None:
         self.id: int = id
@@ -94,7 +94,7 @@ class Individual:
     
     # probability = severity / school.max_severity
     # probability *= 1 - math.exp(-self.interaction_duration/average_interaction_duration_for_infection)
-	# probability *= 1 - math.exp(-distance / average_distance_for_infection)
+    # probability *= 1 - math.exp(-distance / average_distance_for_infection)
 
 
     # cellular automaton
@@ -220,6 +220,7 @@ class School:
     # after assigning all new locations to the individuals
     # may add a extra attribute to store new location
 
+    # Strategy Pattern
     # find the closest human and move towards it
     def direction_towards_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
         new_locations = [tuple(np.add(individual.location, direction))
@@ -234,16 +235,8 @@ class School:
         min_distance_index = np.where(distance_matrix == min_distance)
         direction = new_locations[min_distance_index[0][0]]
         return direction
-    """    
-	def move_towards_closest(self, cell: Individual, target_locations: list[tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
-		target_distances = [np.linalg.norm(np.subtract(cell.location, target_location))
-							for target_location in target_locations]
-		closest_target = target_locations[np.argmin(target_distances)]
-		direction = (np.sign(closest_target[0] - cell.location[0]), 
-					np.sign(closest_target[1] - cell.location[1]))
-		new_location = tuple(np.add(cell.location, direction))
-		return direction, new_location
-	"""
+    
+    # may use np.sign
 
     # find the closest zombie and move away from it
     def direction_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
@@ -259,19 +252,7 @@ class School:
             distance_from_new_locations == max_distance)
         direction = new_locations[max_distance_index[0]]
         return direction
-    """
-	def move_against_closest(self, cell, target_locations: list[tuple[int, int]]) -> tuple[tuple[int, int], tuple[int, int]]:
-		target_distances = [np.linalg.norm(np.subtract(cell.location, target_location))
-							for target_location in target_locations]
-		closest_target = target_locations[np.argmin(target_distances)]
-		direction = (np.sign(cell.location[0] - closest_target[0]), 
-					np.sign(cell.location[1] - closest_target[1]))
-		new_location = tuple(np.add(cell.location, direction))
-		return direction, new_location
-	"""
 
-    # cases of more than one zombie and human, remove unwanted individuals
-    # cases when both zombie and human are in neighbors, move towards human away from zombie
     # If the closest person is closer than the closest zombie, move towards the person, otherwise move away from the zombie
     # or move away from zombie is the priority and move towards person is the secondary priority
 
@@ -316,8 +297,8 @@ class School:
         return self.grid[location[0]][location[1]] == None
 
     """
-		return any(agent.position == (x, y) for agent in self.agents)
-	"""
+        return any(agent.position == (x, y) for agent in self.agents)
+    """
 
     def move_individual(self, individual: Individual, direction: tuple[int, int]):
         old_location = individual.location
@@ -343,9 +324,6 @@ class School:
 
 
 class Population:
-
-    __slots__ = "school", "population", "severity", "num_healthy", "num_infected", "num_zombie", "num_dead", \
-        "population_size", "infection_probability", "turning_probability", "death_probability", "migration_probability"
 
     def __init__(self, school_size: int, population_size: int) -> None:
         self.school: School = School(school_size)
@@ -403,19 +381,6 @@ class Population:
             elif self.num_infected == 0 and self.num_zombie == 0:
                 print("All individuals are healthy")
                 break
-
-    """
-	def update(self):
-		for agent in self.population:    
-			action = self.choose_action(agent)
-			if action == "move":
-				direction = self.choose_direction(agent)
-				self.move_agent(agent, direction)
-			elif action == "attack":
-				self.attack_neighbors(agent)
-			else:
-				continue
-	"""
 
     def update_grid(self) -> None:
         self.school.update_grid(self.population, self.migration_probability)
@@ -552,7 +517,7 @@ class Population:
         return f'Population with {self.num_healthy} healthy, {self.num_infected} infected, {self.num_zombie} zombie, and {self.num_dead} dead individuals'
 
 
-if __name__ == '__main__':
+def main():
 
     # create a SchoolZombieApocalypse object
     school_sim = Population(school_size=10, population_size=1)
@@ -618,146 +583,50 @@ use random walk algorithm to simulate movement based on probability adjusted by 
 """
 """
 def simulate_movement(self):
-	for i in range(self.width):
-		for j in range(self.height):
-			individual = self.grid[i][j]
-			if individual is not None:
-				# use the A* algorithm to find the shortest path to the nearest exit
-				start = (i, j)
-				# the four corners of the grid
-				exits = [(0, 0), (0, self.width-1),
-						(self.height-1, 0), (self.height-1, self.width-1)]
-				distances, previous = self.a_star(start, exits)
-				# use the first exit as the destination
-				path = self.reconstruct_path(previous, start, exits[0])
+    for i in range(self.width):
+        for j in range(self.height):
+            individual = self.grid[i][j]
+            if individual is not None:
+                # use the A* algorithm to find the shortest path to the nearest exit
+                start = (i, j)
+                # the four corners of the grid
+                exits = [(0, 0), (0, self.width-1),
+                        (self.height-1, 0), (self.height-1, self.width-1)]
+                distances, previous = self.a_star(start, exits)
+                # use the first exit as the destination
+                path = self.reconstruct_path(previous, start, exits[0])
 
-				# move to the next cell in the shortest path to the nearest exit
-				if len(path) > 1:  # check if there is a valid path to the nearest exit
-					next_x, next_y = path[1]
-					# update the individual's location
-					individual.location = (next_x, next_y)
-					# remove the individual from their current location
-					self.grid[i][j] = None
-					# add the individual to their new location
-					self.grid[next_x][next_y] = individual
+                # move to the next cell in the shortest path to the nearest exit
+                if len(path) > 1:  # check if there is a valid path to the nearest exit
+                    next_x, next_y = path[1]
+                    # update the individual's location
+                    individual.location = (next_x, next_y)
+                    # remove the individual from their current location
+                    self.grid[i][j] = None
+                    # add the individual to their new location
+                    self.grid[next_x][next_y] = individual
 
 def a_star(self, start, goals):
-	# implement the A* algorithm to find the shortest path from the start to one of the goals
-	# returns the distances and previous nodes for each node in the grid
-	pass
+    # implement the A* algorithm to find the shortest path from the start to one of the goals
+    # returns the distances and previous nodes for each node in the grid
+    pass
 
 def reconstruct_path(self, previous, start, goal):
-	# implement the algorithm to reconstruct the path from the previous nodes
-	# returns the shortest path from the start to the goal
-	pass
+    # implement the algorithm to reconstruct the path from the previous nodes
+    # returns the shortest path from the start to the goal
+    pass
 """
 
 """
 High order function
-
-"""
-"""
-Closure
-https://github.com/ArjanCodes/2022-functions/blob/main/strategy_fn_closure.py
-
-1. No closure
-def track_score(scores: dict, player: str, score: int):
-	if player in scores:
-		scores[player] += score
-	else:
-		scores[player] = score
-		
-def get_scores(scores: dict):
-	return scores
-	
-scores = {}
-track_score(scores, "player1", 10)
-track_score(scores, "player2", 5)
-print(get_scores(scores)) # {'player1': 10, 'player2': 5}
-track_score(scores, "player1", 3)
-print(get_scores(scores)) # {'player1': 13, 'player2': 5}
-
-This version of the function is passing the scores dictionary as an argument to each function that needs to update or access it. This can make the code more verbose and harder to understand in the case that the data needs to be passed around multiple functions and methods.
-
-2. With closure
-def create_player_score_tracker():
-	scores = {}
-
-	def track_score(player: str, score: int):
-		if player in scores:
-			scores[player] += score
-		else:
-			scores[player] = score
-
-	def get_scores():
-		return scores
-
-	return track_score, get_scores
-
-track_score, get_scores = create_player_score_tracker()
-track_score("player1", 10)
-track_score("player2", 5)
-print(get_scores()) # {'player1': 10, 'player2': 5}
-track_score("player1", 3)
-print(get_scores()) # {'player1': 13, 'player2': 5}
-
-In this version, the scores dictionary is defined within the scope of the create_player_score_tracker function, but it can still be accessed and modified by the track_score and get_scores functions because they are closures. This allows you to keep track of the scores without having to pass the scores dictionary around as an argument to each function that needs to update or access it.
+https://www.youtube.com/watch?v=4B24vYj_vaI
 """
 """
 Plugin Pattern
 """
 """
 Strategy Pattern
-Strategy Pattern is a behavioral design pattern that lets you define a family of algorithms, put each of them into a separate class, and make their objects interchangeable.
-An abstract class defines a set of methods that can be used by the client code.
-A list of concrete classes that use dataclasses to store the parameters for each strategy.
-The client code can then call the methods of the abstract class without knowing which concrete class it is using.
 https://github.com/ArjanCodes/2021-strategy-parameters/blob/main/with_init_args.py
 https://github.com/ArjanCodes/2021-pythonic-strategy
 """
-"""
-Delegation Pattern
-Delegation Pattern is a structural design pattern that lets you pass requests from a client object to a service object without making the service object a part of the client object's class.
-https://erikscode.space/index.php/2020/08/01/delegate-and-decorate-in-python-part-1-the-delegation-pattern/
-"""
-"""
-Decorator Pattern
-Decorator Pattern is a structural design pattern that lets you attach new behaviors to objects by placing these objects inside special wrapper objects that contain the behaviors.
-https://erikscode.space/index.php/2020/08/02/delegate-and-decorate-in-python-part-2-the-decorator-pattern/
-"""
-"""
-Reusable decorator
-Decorator with other attributes and methods can inherit from base decorator class
 
-class Decorator:
-  def __init__(self, model):
-	self.model = model
-	self.model_methods = [f for f in dir(type(self.model)) if not f.startswith('_')]
-	self.model_attributes = [a for a in self.model.__dict__.keys()]
-  
-  def __getattr__(self, func):
-	if func in self.model_methods:
-	  def method(*args):
-		return getattr(self.model, func)(*args)
-	  return method
-	elif func in self.model_attributes:
-	  return getattr(self.model, func)
-	else:
-	  raise AttributeError
-	  
-class LeashedDogDecorator(Decorator):
-  def __init__(self, dog):
-	super().__init__(dog)
-  
-  def tug_on_leash(self):
-	print("Let's GOOOOO!!!")
-	
->>> dog = Dog('Fido', 4)
->>> dog = LeashedDogDecorator(dog)
->>> dog.tug_on_leash()
-Let's GOOOOO!!!
->>> dog.bark()
-Woof woof
-
-https://erikscode.space/index.php/2020/08/03/delegate-and-decorate-in-python-part-3-reusable-decorators/
-"""

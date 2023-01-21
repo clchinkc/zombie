@@ -364,7 +364,7 @@ class AgentFactory:
 # a zombie apocalypse and manages the humans and zombies
 class ZombieApocalypse:
 
-    def __init__(self, num_zombies, num_humans, school_size=5):
+    def __init__(self, num_zombies, num_humans, school_size):
         self.map = [[None for _ in range(school_size)] for _ in range(school_size)] # a 2D list representing the map, with None representing a empty cell and a human or zombie representing a cell occupied by human or zombie
         self.human_manager = HumanManager() # the human manager instance to manage the humans
         self.zombie_manager = ZombieManager() # the zombie manager instance to manage the zombies
@@ -451,7 +451,7 @@ class ZombieApocalypse:
 
 
 
-apocalypse = ZombieApocalypse(5, 5)
+apocalypse = ZombieApocalypse(5, 5, 5)
 apocalypse.simulate(10)
 
 """

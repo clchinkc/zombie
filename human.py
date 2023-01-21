@@ -311,6 +311,19 @@ class Environment:
                 zombie.move(dx, dy)
                 self.add_zombie(zombie.position, zombie)
 
+    """
+	def update(self):
+		for agent in self.population:    
+			action = self.choose_action(agent)
+			if action == "move":
+				direction = self.choose_direction(agent)
+				self.move_agent(agent, direction)
+			elif action == "attack":
+				self.attack_neighbors(agent)
+			else:
+				continue
+	"""
+
     def end_condition(self):
         pass
 
