@@ -2,28 +2,42 @@ from __future__ import annotations
 
 import math
 import random
-import numpy as np
-from dataclasses import dataclass, field, astuple
-from typing import Any, Callable, Union
+from abc import ABC, abstractmethod
+from dataclasses import astuple, dataclass, field
+from typing import Any, Callable
 
-class Agent:
+
+class Agent(ABC):
+    
+    @abstractmethod
     def __init__(self, id: int, health: int, position: tuple[int, int]):
         self.id = id
         self.health = health
-        self.position = position # x, y coordinates on the map
-    
+        self.position = position
+
+    @abstractmethod
     def move(self, dx, dy):
-        self.position = (self.position[0]+dx, self.position[1]+dy)
+        pass
 
-
+    @abstractmethod
     def take_damage(self, damage: int) -> None:
-        self.health -= damage
-        
+        pass
+    
+    @abstractmethod
     def distance_to_agent(self, other_agent: Agent) -> int:
-        x1, y1 = self.position
-        x2, y2 = other_agent.position
-        distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
-        return int(distance)
+        pass
+    
+    @abstractmethod
+    def take_turn(self, possible_weapons, closest_enemy):
+        pass
+    
+    @abstractmethod
+    def random_move(self):
+        pass
+    
+    @abstractmethod
+    def attack(self, enemy):
+        pass
 
 class AgentManager:
     def __init__(self):
@@ -74,7 +88,6 @@ class AgentManager:
 class Human(Agent):
     def __init__(self, id, health, position, weapon=None):
         super().__init__(id, health, position)
-        self._health = health
         self.weapon = weapon
         self.connections = []
         
@@ -96,6 +109,18 @@ class Human(Agent):
     def closest_enemy(self):
         return min(apocalypse.zombie_manager.zombies, key=lambda x: distance(self.position, x.position))
     """
+    
+    def move(self, dx, dy):
+        self.position = (self.position[0]+dx, self.position[1]+dy)
+        
+    def take_damage(self, damage: int) -> None:
+        self.health -= damage
+        
+    def distance_to_agent(self, other_agent: Agent) -> int:
+        x1, y1 = self.position
+        x2, y2 = other_agent.position
+        distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+        return int(distance)
         
     def take_turn(self, possible_weapons, closest_enemy):
         if closest_enemy is not None:
@@ -108,19 +133,6 @@ class Human(Agent):
             self.random_move()
             
     # move, then interact, then next turn
-
-    def scavenge(self, possible_weapons):
-        # Roll a dice to determine if the human finds any supplies
-        if random.random() < 0.5:
-            # Human has found some supplies
-            supplies = random.randint(5, 10)
-            self.health += supplies
-        # Roll a dice to determine if the human finds a new weapon
-        if random.random() < 0.2:
-            # Human has found a new weapon
-            new_weapon = random.choice(possible_weapons)
-            if self.weapon is None or (new_weapon.damage * new_weapon.range > self.weapon.damage * self.weapon.range):
-                self.weapon = new_weapon 
     
     def random_move(self):
         dx = random.randint(-1, 1)
@@ -161,12 +173,20 @@ class Human(Agent):
                 if isinstance(neighbor, Human):
                     self.attack_agent(agent, neighbor)
     """
-    
-    # further processing in manager
-    def take_damage(self, damage):
-        # Reduce the human's health by the specified amount of damage
-        super().take_damage(damage)
-        
+
+    def scavenge(self, possible_weapons):
+        # Roll a dice to determine if the human finds any supplies
+        if random.random() < 0.5:
+            # Human has found some supplies
+            supplies = random.randint(5, 10)
+            self.health += supplies
+        # Roll a dice to determine if the human finds a new weapon
+        if random.random() < 0.2:
+            # Human has found a new weapon
+            new_weapon = random.choice(possible_weapons)
+            if self.weapon is None or (new_weapon.damage * new_weapon.range > self.weapon.damage * self.weapon.range):
+                self.weapon = new_weapon
+
 
 # Manage all humans in the apocalypse
 class HumanManager(AgentManager):
@@ -228,7 +248,6 @@ class Zombie(Agent):
 
     def __init__(self, id, health, position):
         super().__init__(id, health, position)
-        self._health = health
         self.connections = []
 
     @property
@@ -248,6 +267,18 @@ class Zombie(Agent):
     def closest_enemy(self):
         return min(apocalypse.zombie_manager.zombies, key=lambda x: distance(self.position, x.position))
     """
+    
+    def move(self, dx, dy):
+        self.position = (self.position[0]+dx, self.position[1]+dy)
+        
+    def take_damage(self, damage: int) -> None:
+        self.health -= damage
+        
+    def distance_to_agent(self, other_agent: Agent) -> int:
+        x1, y1 = self.position
+        x2, y2 = other_agent.position
+        distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+        return int(distance)
 
     def take_turn(self, closest_human):
         # If there are any humans in range, attack the closest one
@@ -255,28 +286,7 @@ class Zombie(Agent):
             if random.random() < 0.5:
                 self.attack(closest_human)
             else:
-                self.move_towards_human(closest_human)
-        else:
-            self.random_move()
-
-    def attack(self, human):
-        # Deal 10 damage to the human
-        human.take_damage(20)
-
-    # further processing in manager
-    def take_damage(self, damage):
-        super().take_damage(damage)
-    
-    def move_towards_human(self, human):
-        # Calculate the direction in which the human is located
-        dx, dy = self.calculate_direction(human)
-        # Move the zombie towards the human
-        self.move(dx, dy)
-
-    def calculate_direction(self, human):
-        dx = human.position[0] - self.position[0]
-        dy = human.position[1] - self.position[1]
-        return dx, dy
+                self.random_move()
     
     def random_move(self):
         # Move the zombie to a random position
@@ -285,6 +295,10 @@ class Zombie(Agent):
         self.move(dx, dy)
         
     # check legal move
+
+    def attack(self, human):
+        # Deal 10 damage to the human
+        human.take_damage(20)
 
 # Manage all zombies in the apocalypse
 class ZombieManager(AgentManager):
@@ -337,13 +351,27 @@ class Weapon:
     def __str__(self):
         return f"{self.name} ({self.damage} damage, {self.range} range)"
 
-# Factory Pattern
+# Abstract Factory Pattern
+class AbstractAgentFactory(ABC):
+    @abstractmethod
+    def create_agent(self, **kwargs) -> Agent:
+        raise NotImplementedError()
+
+class HumanFactory(AbstractAgentFactory):
+    def create_agent(self, **kwargs) -> Agent:
+        return Human(**kwargs)
+
+class ZombieFactory(AbstractAgentFactory):
+    def create_agent(self, **kwargs) -> Agent:
+        return Zombie(**kwargs)
+
+# Factory method Pattern
 class AgentFactory:
     
     def __init__(self):
-        self.character_creation_funcs: dict[str, Callable[..., Agent]] = {}
+        self.character_creation_funcs: dict[str, Callable[..., AbstractAgentFactory]] = {}
 
-    def register_character(self, character_type: str, creator_fn: Callable[..., Agent]) -> None:
+    def register_character(self, character_type: str, creator_fn: Callable[..., AbstractAgentFactory]) -> None:
         """Register a new game character type."""
         self.character_creation_funcs[character_type] = creator_fn
 
@@ -359,7 +387,9 @@ class AgentFactory:
             creator_func = self.character_creation_funcs[character_type]
         except KeyError:
             raise ValueError(f"unknown character type {character_type!r}") from None
-        return creator_func(**args_copy)
+        return creator_func.create_agent(**args_copy)
+
+# may use builder pattern if the product is composite or if there are more parameters
 
 # a zombie apocalypse and manages the humans and zombies
 class ZombieApocalypse:
@@ -379,22 +409,21 @@ class ZombieApocalypse:
         
     def initialize(self, num_zombies, num_humans, school_size):
         # Initializes the humans and zombies in the map.
-        
-        # Initialize humans and zombies
-        self.factory.register_character("human", Human)
-        self.factory.register_character("zombie", Zombie)
+        self.factory.register_character("human", HumanFactory)
+        self.factory.register_character("zombie", ZombieFactory)
         for i in range(num_humans):
             self.human_manager.add_human(self.create_agent(school_size, i, "human"))
         for i in range(num_zombies):
             self.zombie_manager.add_zombie(self.create_agent(school_size, i, "zombie"))
             
-    # factory pattern for humans and zombies to separate the creation and the use for humans and zombies
+    # separate the creation and the use for humans and zombies
     def create_agent(self, school_size, id, type) -> Agent:
         arguments = {
             "type": type,
             "id": id,
             "health": 100,
-            "location": (random.randint(0, school_size-1),random.randint(0, school_size-1))
+            "location": (random.randint(0, school_size-1),
+                        random.randint(0, school_size-1))
         }
         return self.factory.produce(arguments)
         

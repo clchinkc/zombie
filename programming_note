@@ -51,27 +51,59 @@ guide to write class:
 
 design pattern:
 1. factory pattern: creational design pattern, separate the creation and use of the object, lets you define an interface for creating objects, but decide the creation logic using different subclasses at run-time.
+The Factory Method pattern is a creational design pattern that provides an interface for creating objects in a superclass but allows subclasses to alter the type of objects that will be created. The Factory Method pattern is often used to create objects that belong to a particular family or class, but don't necessarily have the same type.
+The Abstract Factory pattern is a creational design pattern that provides an interface to group related to or dependent to object factories. The Abstract Factory pattern is often used to create objects that belong to a particular family or group and have a certain relationship or dependency between them.
+The factory may have different methods to receive different parameters during runtime (abstract factory pattern), return object from the object pool (object pool pattern), do different configuration (strategy pattern), and to create different objects (factory method pattern)
 https://www.youtube.com/watch?v=zGbPd4ZP39Y
 2. strategy pattern
 The Strategy Pattern is a behavioural design pattern that allows for the selection from a family of algorithms. It defines a family of algorithms, encapsulates each algorithm into a separate class, and makes them interchangeable within the family.
 This is achieved by creating an abstract class and providing a common interface that utilizes various concrete data classes, without the need to know the implementation details.
 The pattern should be used when the desired behaviour needs to be selected at runtime based on input or other factors. By separating the logic of an algorithm from its usage, the same algorithm can be used in multiple classes, and new algorithms can be added to the program without modifying existing code.
 
-3. plugin pattern: let the user to add new behaviour to the object without modifying the existing code at runtime, by adding new plugin
+Not suitable to implement:
+3. builder pattern
+The Builder pattern is a design pattern that separates the construction of a complex object from its representation. The idea behind this pattern is to break down the construction of a complex object into smaller, manageable steps that can be executed in a specific order, often building a composite object. This allows for greater flexibility and control over the final product, as well as the ability to change the type or representation of the object at any step.
+The pattern is typically implemented using classes and methods to create and configure an object, with the final "build" step returning the fully constructed object. The builder object encapsulates the configuration (state) of the complex object, and the Director object is responsible for coordinating the construction process and using the Builder object (its inner class to avoid telescoping constructors) to create the final product. By exchanging the Builder in the Director, the same algorithm can be used to create the product, but with different representations of single parts.
+The Builder pattern is particularly useful when creating standard objects with lots of possible customizations, but usually customizing just a few, or when the dependencies of the object to be instantiated are partly known in advance and partly provided by the client of the builder.
+In addition, the Builder pattern focuses on constructing a complex object step by step and decouples the representation from the construction process. This means that the same construction process can be used for different representations.
+A builder pattern allows you to use setter methods to slowly build up your parameter list and passes the builder object into the desired constructor to return the result.
+4. bridge pattern
+decouple an abstraction from its implementation so that the two can vary independently
+Chapter 1: Introduction to the Bridge Design Pattern
+1.1 Overview
+The Bridge pattern is a structural design pattern used to decouple an abstraction from its implementation. This pattern involves creating an interface or abstract class that defines the methods that the implementation must provide, and then creating a separate implementation class that implements those methods. This allows for a standardized interface while still allowing for different implementations for the same interface.
+1.2 Abstraction and Decoupling
+One key aspect of the Bridge pattern is that it creates a refined abstraction between the abstraction (interface) and implementation (class). This abstraction is not tied to the implementation and serves to completely decouple the two. This allows the abstraction and implementation to be changed independently even in run time, without affecting the client code that uses it.
+The Bridge pattern is particularly useful when you want run-time binding of the implementation, when you have a proliferation of classes resulting from a coupled interface and numerous implementations, when you want to share an implementation among multiple objects, or when you need to map orthogonal class hierarchies. When the context, or the class that the implementation is being decoupled from, has subclasses, this pattern allows for the implementation to be customized for each of these variations. This fits the principle to use composition over inheritance.
+1.3 Structural Hierarchy and Flexibility
+The Bridge pattern is a design pattern that aims to deals with the structural hierarchy and separate the two orthogonal concept of the bigger object, by using composition rather than inheritance to link them. This reduce the number of classes needed and linking the two orthogonal class hierarchies.
+The key feature of this pattern is that the implementation never refers to the abstraction, and the abstraction contains the implementation interface as a member through composition. This composition reduces one more level of inheritance hierarchy.
+1.4 Relationship to Other Patterns
+It's worth noting that the Bridge pattern is related to other design patterns such as the Strategy, Template Method, and Composite patterns. The Bridge pattern is similar to the Strategy pattern in that it allows for changing the behaviour of a software component depending on a given implementer. However, the Bridge pattern also adds an additional layer of abstraction, making the design even more flexible. Bridge and Strategy patterns are structural patterns that are used to separate an abstraction from its implementation. The Bridge pattern links one abstraction to another, where the client depends on an abstract API that is implemented in terms of a separate, differing API. The implementor is hidden from the client and does not match the client API. The client API forwards all calls to the implementor. On the other hand, the Strategy pattern links an implementation to an abstraction. The client chooses a concrete strategy, and its API is known and matches the client's requirement, as one piece of a client implementation. The client implementation forwards one specific operation to the strategy. In summary, Bridge is useful when the client depends on an abstract API that is implemented in terms of a separate, differing API, while the Strategy pattern is useful when the client is a concrete implementation whose behavior can be modified by using multiple algorithms. Additionally, the Bridge pattern is similar to the Template Method pattern in that it calls methods in the same order as the template method, but allows for the behaviour to be changed depending on the implementer as in the Strategy pattern. The Bridge pattern is a structural pattern, which means it focuses on how the composition of the components. It is different from the Strategy pattern, which is a dynamic pattern that focuses on how to run behaviour in software. This pattern is often used in conjunction with the Composite pattern to create a tree structure of objects, where each node in the tree can be an abstraction or implementation. Adapter is used when you're trying to unify the interfaces of some incompatible classes that already exist. The Adapter functions as a kind of translator to implementations that could be considered legacy. At first sight, the Bridge pattern looks a lot like the Adapter pattern in that a class is used to convert one kind of interface to another. However, the intent of the Adapter pattern is to make one or more classes' interfaces look the same as that of a particular class. The Bridge pattern is designed to separate a class's interface from its implementation so you can vary or replace the implementation without changing the client code.
+1.5 Example
+There are four components in this pattern.
+Abstraction: It defines an interface
+RefinedAbstraction: It implements abstraction:
+Implementor: It defines an interface for implementation
+ConcreteImplementor: It implements Implementor interface.
+For example, we can have a 'Car' interface and two classes that implement this interface: 'SportsCar' and 'Truck'. The 'Car' interface will have the methods and properties that both 'SportsCar' and 'Truck' classes should have. Then, we define the 'SportsCar' and 'Truck' classes that will have their own unique implementations of the 'drive' method. The 'SportsCar' class can have a drive method that prints "Driving a sports car at high speed!" and the 'Truck' class can have a drive method that prints "Driving a truck at low speed." Now we can create instances of these classes and use them interchangeably without changing the implementation of the car class. This allows us to add new subclasses with new implementations without modifying the Car class and this make the code more maintainable and flexible.
+
+
+3. mixin pattern
+https://andrewbrookins.com/technology/mixins-in-python-and-ruby-compared/
+4. plugin pattern: let the user to add new behaviour to the object without modifying the existing code at runtime, by adding new plugin
 https://github.com/ArjanCodes/2021-plugin-architecture
-4. singleton pattern: ensure a class only have one instance, and provide a global point of access to it
-5. observer pattern: define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically
-https://www.youtube.com/watch?v=oNalXg67XEE
-6. command pattern: encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations
-7. adapter pattern: convert the interface of a class into another interface the clients expect. Adapter lets classes work together that couldn't otherwise because of incompatible interfaces
-8. template method pattern: define the skeleton of an algorithm in an operation, deferring some steps to subclasses. Template method lets subclasses redefine certain steps of an algorithm without changing the algorithm's structure
+5. adapter pattern: convert the interface of a class into another interface the clients expect. Adapter lets classes work together that couldn't otherwise because of incompatible interfaces
+6. template method pattern: define the skeleton of an algorithm in an operation, deferring some steps to subclasses. Template method lets subclasses redefine certain steps of an algorithm without changing the algorithm's structure
+7. composite pattern: compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly
+8. state pattern: allow an object to alter its behaviour when its internal state changes. The object will appear to change its class
 9. iterator pattern: provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation
-10. composite pattern: compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly
-11. state pattern: allow an object to alter its behaviour when its internal state changes. The object will appear to change its class
+10. observer pattern: define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically
+https://www.youtube.com/watch?v=oNalXg67XEE
+11. command pattern: encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations
 12. proxy pattern: provide a surrogate or placeholder for another object to control access to it
 13. flyweight pattern: use sharing to support large numbers of fine-grained objects efficiently
 14. facade pattern: provide a unified interface to a set of interfaces in a subsystem. Facade defines a higher-level interface that makes the subsystem easier to use
-15. bridge pattern: decouple an abstraction from its implementation so that the two can vary independently
 16. memento pattern: without violating encapsulation, capture and externalize an object's internal state so that the object can be restored to this state later
 17. visitor pattern: represent an operation to be performed on the elements of an object structure. Visitor lets you define a new operation without changing the classes of the elements on which it operates
 18. chain of responsibility pattern: avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. Chain the receiving objects and pass the request along the chain until an object handles it
@@ -81,6 +113,9 @@ https://www.youtube.com/watch?v=oNalXg67XEE
 22. abstract factory pattern: provide an interface for creating families of related or dependent objects without specifying their concrete classes
 
 Not suggested design pattern:
+22. singleton pattern
+ensure only one instance of the class exist and provide a global point of access to create the instance if it doesn't exist
+
 23. delegate pattern
 Delegation Pattern is a structural design pattern that lets you pass necessary requests from a client object (main object) to a service object (helper object) without making the service object a part of the client object's class, by using meta-programming.
 https://erikscode.space/index.php/2020/08/01/delegate-and-decorate-in-python-part-1-the-delegation-pattern/
@@ -90,37 +125,6 @@ Decorator Pattern is a structural design pattern that lets you attach new behavi
 https://erikscode.space/index.php/2020/08/02/delegate-and-decorate-in-python-part-2-the-decorator-pattern/
 Reusable decorator
 Decorator with other attributes and methods can inherit from base decorator class
-
-class Decorator:
-  def __init__(self, model):
-    self.model = model
-    self.model_methods = [f for f in dir(type(self.model)) if not f.startswith('_')]
-    self.model_attributes = [a for a in self.model.__dict__.keys()]
-  
-  def __getattr__(self, func):
-    if func in self.model_methods:
-      def method(*args):
-        return getattr(self.model, func)(*args)
-      return method
-    elif func in self.model_attributes:
-      return getattr(self.model, func)
-    else:
-      raise AttributeError
-      
-class LeashedDogDecorator(Decorator):
-  def __init__(self, dog):
-    super().__init__(dog)
-  
-  def tug_on_leash(self):
-    print("Let's GOOOOO!!!")
-    
->>> dog = Dog('Fido', 4)
->>> dog = LeashedDogDecorator(dog)
->>> dog.tug_on_leash()
-Let's GOOOOO!!!
->>> dog.bark()
-Woof woof
-
 https://erikscode.space/index.php/2020/08/03/delegate-and-decorate-in-python-part-3-reusable-decorators/
 
 

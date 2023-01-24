@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from functools import wraps, update_wrapper
 import cProfile
 import pstats
-from io import StringIO
 import timeit
+from functools import update_wrapper, wraps
+from io import StringIO
+
 import line_profiler
 import memory_profiler
+
 
 def performance_decorator(mode='all'):
     def _performance_decorator(func):
@@ -17,7 +19,10 @@ def performance_decorator(mode='all'):
                 t = timeit.Timer(lambda: func(*args, **kwargs))
                 res = t.repeat(repeat=10, number=100)
                 time = min(res) / 100
-                print(f'Execution time of {func.__name__} is {time:.5f} seconds')
+                try:
+                    print(f'Execution time of method {func.__name__} from class {func.__qualname__.split(".")[0]} is {time:.5f} seconds')
+                except:
+                    print(f'Execution time of function {func.__name__} is {time:.5f} seconds')
                 print()
             
             if mode == 'call_count' or mode == 'all':
@@ -134,6 +139,7 @@ class PerformanceDecorator:
 # performance decorator has 4 modes: time_it, call_count, line_profile, memory_profile
 
 from collections import Counter
+
 
 #@performance_decorator(mode='call_count')
 def use_counter_to_count(times):

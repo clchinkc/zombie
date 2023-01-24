@@ -14,9 +14,11 @@ from __future__ import annotations
 
 import math
 import random
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cached_property
-from typing import Optional
+from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -39,13 +41,140 @@ class State(Enum):
     def value_list(cls) -> list[int]:
         return [enm.value for enm in State]
 
+# Strategy pattern
+class MovementStrategy(ABC):
+    
+    individual: Any[Individual]
+    legal_directions: list[tuple[int, int]]
+    neighbors: list[Individual]
+    
+    @abstractmethod
+    def choose_direction(self, individual, school):
+        raise NotImplementedError
+    
+@dataclass
+# if no neighbors, choose random direction
+class RandomMovementStrategy(MovementStrategy):
+    
+    individual: Any[Individual]
+    legal_directions: list[tuple[int, int]]
+    neighbors: list[Individual]
+    
+    def choose_direction(self):
+        return random.choice(self.legal_directions)
 
+@dataclass
+# if healthy or other having no alive neighbors
+class FleeZombiesStrategy(MovementStrategy):
+    
+    individual: Any[Individual]
+    legal_directions: list[tuple[int, int]]
+    neighbors: list[Individual]
+
+    def choose_direction(self):
+        zombies_locations = [zombies.location for zombies in self.neighbors if zombies.state == State.ZOMBIE]
+        return self.direction_against_closest(self.individual, self.legal_directions, zombies_locations)
+
+    # find the closest zombie and move away from it
+    def direction_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
+        new_locations = [tuple(np.add(individual.location, direction))
+                        for direction in legal_directions]
+        target_distances = [float(np.linalg.norm(np.subtract(individual.location, target_location)))
+                            for target_location in target_locations]
+        closest_target = target_locations[np.argmin(target_distances)]
+        distance_from_new_locations = [float(np.linalg.norm(np.subtract(closest_target, location)))
+                                        for location in new_locations]
+        max_distance = np.max(distance_from_new_locations)
+        max_distance_index = np.where(
+            distance_from_new_locations == max_distance)
+        direction = new_locations[max_distance_index[0]]
+        return direction
+        
+@dataclass
+# if zombie or other having no zombie neighbors
+class ChaseHumansStrategy(MovementStrategy):
+    
+    individual: Any[Individual]
+    legal_directions: list[tuple[int, int]]
+    neighbors: list[Individual]
+
+    def choose_direction(self):
+        alive_locations = [alive.location for alive in self.neighbors if alive.state == State.HEALTHY]
+        return self.direction_towards_closest(self.individual, self.legal_directions, alive_locations)
+
+    # find the closest human and move towards it
+    def direction_towards_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
+        new_locations = [tuple(np.add(individual.location, direction))
+                        for direction in legal_directions]
+        distance_matrix = np.zeros((len(new_locations), len(target_locations)))
+        for i, direction in enumerate(new_locations):
+            for j, target_location in enumerate(target_locations):
+                distance_matrix[i, j] = float(np.linalg.norm(np.subtract(direction, target_location)))
+        # consider case where all distances are 0
+        min_distance = np.min(distance_matrix[distance_matrix != 0])
+        min_distance_index = np.where(distance_matrix == min_distance)
+        direction = new_locations[min_distance_index[0][0]]
+        return direction
+    
+    # may use np.sign
+
+    # If the closest person is closer than the closest zombie, move towards the person, otherwise move away from the zombie
+    # or move away from zombie is the priority and move towards person is the secondary priority
+
+
+@dataclass
+class NoMovementStrategy(MovementStrategy):
+    
+    individual: Any[Individual]
+    legal_directions: list[tuple[int, int]]
+    neighbors: list[Individual]
+    
+    def choose_direction(self):
+        return (0, 0)
+    
+# may use init to store individual and school
+# may use function, use closure to store individual and school
+    
+class MovementStrategyFactory:
+    def create_strategy(self, individual, school):
+        # get legal directions
+        legal_directions = school.get_legal_directions(individual)
+        # get neighbors
+        neighbors = school.get_neighbors(individual.location, individual.sight_range)
+        # if no neighbors, random movement
+        if not neighbors:
+            return RandomMovementStrategy(individual, legal_directions, neighbors)
+        # get number of human and zombies neighbors
+        alive_number = sum(1 for neighbor in neighbors if neighbor.state == State.HEALTHY)
+        zombies_number = sum(1 for neighbor in neighbors if neighbor.state == State.ZOMBIE)
+        # if no human neighbors, move away from the closest zombies
+        if alive_number == 0:
+            return FleeZombiesStrategy(individual, legal_directions, neighbors)
+        # if no zombies neighbors, move towards the closest human
+        elif zombies_number == 0:
+            return ChaseHumansStrategy(individual, legal_directions, neighbors)
+        # if both human and zombies neighbors, zombies move towards the closest human and human move away from the closest zombies
+        else:
+            if individual.state == State.ZOMBIE:
+                return ChaseHumansStrategy(individual, legal_directions, neighbors)
+            elif individual.state in (State.HEALTHY, State.INFECTED):
+                return FleeZombiesStrategy(individual, legal_directions, neighbors)
+            elif individual.state == State.DEAD:
+                return NoMovementStrategy(individual, legal_directions, neighbors)
+            else:
+                raise Exception(
+                    f"Individual {individual.id} has invalid state {individual.state.name}")
+
+    # may consider update the grid according to the individual's location
+    # after assigning all new locations to the individuals
+    # may add a extra attribute to store new location
+    
 class Individual:
 
     __slots__ = "id", "state", "location", "connections", \
-        "infection_severity", "interact_range"
+        "infection_severity", "interact_range", "__dict__"
 
-    def __init__(self, id: int, state: State, location: tuple[int, int]) -> None:
+    def __init__(self, id: int, state: State, location: tuple[int, int], movement_strategy: Any[MovementStrategy] = RandomMovementStrategy) -> None:
         self.id: int = id
         self.state: State = state
         self.location: tuple[int, int] = location
@@ -67,6 +196,9 @@ class Individual:
         self.location = tuple(np.add(self.location, direction))
         # self.location[0] += direction[0]
         # self.location[1] += direction[1]
+        
+    def choose_direction(self, movement_strategy):
+        return movement_strategy.choose_direction()
 
     def update_state(self, severity: float) -> None:
         # Update the state of the individual based on the current state and the interactions with other people
@@ -127,7 +259,7 @@ class Individual:
 
 class School:
 
-    __slots__ = "school_size", "grid"
+    __slots__ = "school_size", "grid", "strategy_factory"
 
     def __init__(self, school_size: int) -> None:
         self.school_size = school_size
@@ -135,6 +267,7 @@ class School:
         self.grid: list[list[Optional[Individual]]] \
             = [[None for _ in range(school_size)]
                for _ in range(school_size)]
+        self.strategy_factory = MovementStrategyFactory()
 
         # may turn to width and height
         # may put Cell class in the grid where Cell class has individual attributes and rates
@@ -172,7 +305,8 @@ class School:
                     f"Individual {individuals.id} is not in the grid")
 
             if random.random() < migration_probability:
-                direction = self.choose_direction(cell)
+                movement_strategy = self.strategy_factory.create_strategy(cell, self)
+                direction = cell.choose_direction(movement_strategy)
                 self.move_individual(cell, direction)
             else:
                 continue
@@ -180,81 +314,6 @@ class School:
                 # if right next to then don't move
                 # get neighbors with larger and larger range until there is a human
                 # sight range is different from interact range
-
-    def choose_direction(self, individual: Individual) -> tuple[int, int]:
-        # get all legal direction
-        legal_directions = self.get_legal_directions(individual)
-        # if only one legal direction, return that direction
-        if len(legal_directions) == 1:
-            return legal_directions[0]
-        # get all neighbors
-        neighbors = self.get_neighbors(
-            individual.location, individual.sight_range)
-        # if no neighbors, move randomly
-        if not neighbors:
-            return random.choice(legal_directions)
-        # get all human neighbors
-        alive_locations = [
-            alive.location for alive in neighbors if alive.state == State.HEALTHY]
-        # get all zombie neighbors
-        zombie_locations = [
-            zombie.location for zombie in neighbors if zombie.state == State.ZOMBIE]
-        # if no human neighbors, move randomly
-        if not alive_locations:
-            return self.direction_against_closest(individual, legal_directions, zombie_locations)
-        # if no zombie neighbors, move towards the closest human
-        elif not zombie_locations:
-            return self.direction_towards_closest(individual, legal_directions, alive_locations)
-        # if both human and zombie neighbors, zombie move towards the closest human and human move away from the closest zombie
-        else:
-            if individual.state == State.ZOMBIE:
-                return self.direction_towards_closest(individual, legal_directions, alive_locations)
-            elif individual.state in (State.HEALTHY, State.INFECTED):
-                return self.direction_against_closest(individual, legal_directions, zombie_locations)
-            elif individual.state == State.DEAD:
-                return (0, 0)
-            else:
-                raise Exception(
-                    f"Individual {individual.id} has invalid state {individual.state.name}")
-    # may consider update the grid according to the individual's location
-    # after assigning all new locations to the individuals
-    # may add a extra attribute to store new location
-
-    # Strategy Pattern
-    # find the closest human and move towards it
-    def direction_towards_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
-        new_locations = [tuple(np.add(individual.location, direction))
-                         for direction in legal_directions]
-        distance_matrix = np.zeros((len(new_locations), len(target_locations)))
-        for i, direction in enumerate(new_locations):
-            for j, target_location in enumerate(target_locations):
-                distance_matrix[i, j] = self.distance(
-                    direction, target_location)
-        # consider case where all distances are 0
-        min_distance = np.min(distance_matrix[distance_matrix != 0])
-        min_distance_index = np.where(distance_matrix == min_distance)
-        direction = new_locations[min_distance_index[0][0]]
-        return direction
-    
-    # may use np.sign
-
-    # find the closest zombie and move away from it
-    def direction_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
-        new_locations = [tuple(np.add(individual.location, direction))
-                         for direction in legal_directions]
-        target_distances = [self.distance(individual.location, target_location)
-                            for target_location in target_locations]
-        closest_target = target_locations[np.argmin(target_distances)]
-        distance_from_new_locations = [self.distance(closest_target, location)
-                                       for location in new_locations]
-        max_distance = np.max(distance_from_new_locations)
-        max_distance_index = np.where(
-            distance_from_new_locations == max_distance)
-        direction = new_locations[max_distance_index[0]]
-        return direction
-
-    # If the closest person is closer than the closest zombie, move towards the person, otherwise move away from the zombie
-    # or move away from zombie is the priority and move towards person is the secondary priority
 
     def get_neighbors(self, location: tuple[int, int], interact_range: int = 2):
         x, y = location
@@ -532,6 +591,8 @@ def main():
     # school_sim.plot_population()
     # school_sim.animation()
 
+if __name__ == "__main__":
+    main()
 
 """
 
@@ -625,8 +686,266 @@ https://www.youtube.com/watch?v=4B24vYj_vaI
 Plugin Pattern
 """
 """
-Strategy Pattern
-https://github.com/ArjanCodes/2021-strategy-parameters/blob/main/with_init_args.py
-https://github.com/ArjanCodes/2021-pythonic-strategy
-"""
+Builder Pattern
+# Product class that we want to build
+class Pizza:
+    def __init__(self):
+        self.dough = ""
+        self.sauce = ""
+        self.topping = []
 
+    def set_dough(self, dough):
+        self.dough = dough
+
+    def set_sauce(self, sauce):
+        self.sauce = sauce
+
+    def add_topping(self, topping):
+        self.topping.append(topping)
+
+    def __str__(self):
+        return f"Dough: {self.dough}, Sauce: {self.sauce}, Topping: {self.topping}"
+
+# Abstract Builder class
+class PizzaBuilder(ABC):
+    def __init__(self):
+        self.pizza = Pizza()
+
+    def create_new_pizza_product(self):
+        self.pizza = Pizza()
+
+    def get_pizza(self):
+        return self.pizza
+
+    @abstractmethod
+    def build_dough(self):
+        pass
+
+    @abstractmethod
+    def build_sauce(self):
+        pass
+
+    @abstractmethod
+    def build_topping(self):
+        pass
+
+
+# Concrete Builder
+class HawaiianPizzaBuilder(PizzaBuilder):
+    def build_dough(self):
+        self.pizza.set_dough("cross")
+
+    def build_sauce(self):
+        self.pizza.set_sauce("mild")
+
+    def build_topping(self):
+        self.pizza.add_topping("ham")
+        self.pizza.add_topping("pineapple")
+
+
+# Concrete Builder
+class SpicyPizzaBuilder(PizzaBuilder):
+    def build_dough(self):
+        self.pizza.set_dough("pan baked")
+
+    def build_sauce(self):
+        self.pizza.set_sauce("hot")
+
+    def build_topping(self):
+        self.pizza.set_topping("pepperoni")
+        self.pizza.set_topping("salami")
+
+# Director
+class Waiter:
+    def __init__(self):
+        self.pizza_builder = None
+
+    def set_pizza_builder(self, pb):
+        self.pizza_builder = pb
+
+    def get_pizza(self):
+        return self.pizza_builder.get_pizza()
+
+    def construct_pizza(self):
+        self.pizza_builder.create_new_pizza_product()
+        self.pizza_builder.build_dough()
+        self.pizza_builder.build_sauce()
+        self.pizza_builder.build_topping()
+
+# A customer ordering a pizza
+if __name__ == "__main__":
+    waiter = Waiter()
+    hawaiian_pizza_builder = HawaiianPizzaBuilder()
+    spicy_pizza_builder = SpicyPizzaBuilder()
+
+    waiter.set_pizza_builder(hawaiian_pizza_builder)
+    waiter.construct_pizza()
+
+    pizza = waiter.get_pizza()
+    print(pizza)
+
+"""
+"""
+Bridge Pattern
+1. Without Bridge
+class Car:
+    def drive(self):
+        print("Driving a car.")
+
+class SportsCar(Car):
+    def drive(self):
+        print("Driving a sports car at high speed!")
+
+car = SportsCar()
+car.drive() # "Driving a sports car at high speed!"
+
+The problem with this approach is that any changes made to the 'drive' method in the 'Car' class will also affect the 'SportsCar' class, as they share the same implementation. Additionally, if we want to add another type of car, we will have to create another subclass and repeat the same process, making the code more complex and less maintainable.
+
+Wthout using the Bridge pattern, we would likely have a single class that contains both the interface and the implementation, making the code tightly coupled and less maintainable. This would mean that any changes made to the implementation would directly affect any references or dependencies on the code.
+"""
+"""
+/* Implementor interface*/
+interface Gear{
+    void handleGear();
+}
+
+/* Concrete Implementor - 1 */
+class ManualGear implements Gear{
+    public void handleGear(){
+        System.out.println("Manual gear");
+    }
+}
+/* Concrete Implementor - 2 */
+class AutoGear implements Gear{
+    public void handleGear(){
+        System.out.println("Auto gear");
+    }
+}
+/* Abstraction (abstract class) */
+abstract class Vehicle {
+    Gear gear;
+    public Vehicle(Gear gear){
+        this.gear = gear;
+    }
+    abstract void addGear();
+}
+/* RefinedAbstraction - 1*/
+class Car extends Vehicle{
+    public Car(Gear gear){
+        super(gear);
+        // initialize various other Car components to make the car
+    }
+    public void addGear(){
+        System.out.print("Car handles ");
+        gear.handleGear();
+    }
+}
+/* RefinedAbstraction - 2 */
+class Truck extends Vehicle{
+    public Truck(Gear gear){
+        super(gear);
+        // initialize various other Truck components to make the car
+    }
+    public void addGear(){
+        System.out.print("Truck handles " );
+        gear.handleGear();
+    }
+}
+/* Client program */
+public class BridgeDemo {    
+    public static void main(String args[]){
+        Gear gear = new ManualGear();
+        Vehicle vehicle = new Car(gear);
+        vehicle.addGear();
+
+        gear = new AutoGear();
+        vehicle = new Car(gear);
+        vehicle.addGear();
+
+        gear = new ManualGear();
+        vehicle = new Truck(gear);
+        vehicle.addGear();
+
+        gear = new AutoGear();
+        vehicle = new Truck(gear);
+        vehicle.addGear();
+    }
+}
+"""
+"""
+2. With Bridge
+from abc import ABC, abstractmethod
+
+# Implementor
+class CarInterface(ABC):
+    @abstractmethod
+    def drive(self):
+        pass
+
+# Abstraction
+class Car(CarInterface):
+    def __init__(self, implementation):
+        self._implementation = implementation
+    
+    def drive(self):
+        self._implementation.drive()
+
+# extra self-defined layer of abstraction
+class SportsCarInterface:
+    @abstractmethod
+    def drive(self):
+        pass
+
+# Refined Abstraction
+class SportsCar(Car):
+    pass
+
+# extra self-defined layer of abstraction
+class TruckInterface:
+    @abstractmethod
+    def drive(self):
+        pass
+
+# Refined Abstraction
+class Truck(Car):
+    pass
+
+# Concrete Implementor
+class XSportsCarInterface(SportsCarInterface):
+    def drive(self):
+        print("Driving a sports car from manufacturer X at high speed!")
+
+# Concrete Implementor
+class YSportsCarInterface(SportsCarInterface):
+    def drive(self):
+        print("Driving a sports car from manufacturer Y at high speed!")
+
+# Concrete Implementor
+class XTruckInterface(TruckInterface):
+    def drive(self):
+        print("Driving a truck from manufacturer X at low speed.")
+
+# Concrete Implementor
+class YTruckInterface(TruckInterface):
+    def drive(self):
+        print("Driving a truck from manufacturer Y at low speed.")
+
+car1 = SportsCar(XSportsCarInterface())
+car2 = SportsCar(YSportsCarInterface())
+car3 = Truck(XTruckInterface())
+car4 = Truck(YTruckInterface())
+car1.drive() # "Driving a sports car from manufacturer X at high speed!"
+car2.drive() # "Driving a sports car from manufacturer Y at high speed!"
+car3.drive() # "Driving a truck from manufacturer X at low speed."
+car4.drive() # "Driving a truck from manufacturer Y at low speed."
+
+The Bridge pattern is a way to separate an abstraction from its implementation, allowing for the two to vary independently. Using the example of a car, we can see how the Bridge pattern can be applied.
+We can start by creating a Car abstract class to represent the commonality between all cars. This abstract class would have methods and properties that all types of cars should have, such as a drive method. Then, we can create various subclasses for different types of cars, such as a SportsCar and a Truck class. This is a robust design, as it allows for many more types of cars to be added in the future.
+Now suppose that cars are provided by different manufacturers. We would have to create a hierarchy of car classes for manufacturer X and another for manufacturer Y. The problem now is that clients would need to know the difference between the manufacturers. And if we decide to support a third manufacturer, the codebase would become more complex.
+The solution is to provide the main abstraction hierarchy, i.e. the Car abstract class and subclasses such as SportsCar and Truck, and then provide the interface (Bridge) that will exist between the abstraction and the implementation. So there will be a CarInterface, SportsCarInterface, and TruckInterface, which dictate the interface that each concrete car class must provide. The abstraction (Car class) does not know about the implementation, rather it knows about the interface. Finally, we can create a concrete implementation for each manufacturer. That is, XCar, XSportsCar, and XTruck, YCar, YSportsCar and YTruck.
+Clients depend only on the abstraction but any implementation could be plugged in. So in this setup, the abstraction (Car class) could be changed without changing any of the concrete classes, and the implementation could be changed without worrying about the abstraction. This allows for a more flexible and maintainable codebase.
+
+It uses the Bridge pattern to separate the abstraction (the interface) from the implementation (the concrete classes). The CarInterface and Car classes define the interface for the car and the SportsCar and Truck classes are the abstraction classes that inherit the Car class. The SportsCarInterface, XTruck, YTruck, XSportsCar, and YSportsCar classes are the concrete classes that implement the drive method.
+By using this pattern, the implementation of the drive method is decoupled from the Car class and its subclasses. This means that the implementation can be easily swapped out without affecting any references or dependencies on the code. This makes the code more maintainable because changes to the implementation do not require changes to the abstraction or existing references to it.
+Additionally, the use of different classes for different manufacturers allows for easy swapping of implementations based on the manufacturer. For example, you could swap out the XTruck class for the YTruck class and the Car class would still work correctly because it is only dependent on the TruckInterface and not the concrete class. This makes the code more flexible and allows for easier updates and changes in the future.
+"""
