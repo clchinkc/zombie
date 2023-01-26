@@ -43,19 +43,20 @@ class Agent(ABC):
     def scavenge(self, possible_weapons):
         pass
 
-class AgentManager:
+class AgentManager(ABC):
     def __init__(self):
         self.agents = []
     
+    @abstractmethod
     def add_agent(self, agent: Agent) -> None:
-        self.agents.append(agent)
+        pass
     
+    @abstractmethod
     def remove_agent(self, agent: Agent) -> None:
-        self.agents.remove(agent)
-    
+        pass
+
     def get_agents_in_range(self, agent: Agent, range: float):
         # Get a list of distances and agents within a certain range of a given agent.
-
         agents_in_range = []
         for other_agent in self.agents:
             distance = agent.distance_to_agent(other_agent)
@@ -67,25 +68,12 @@ class AgentManager:
     def connect_agents(self, agent: Any[Agent], all_agents: list[Agent]):
         # Connect an agent to the list of agents.
         agent.connections.extend(all_agents)
-        
+
     def add_connections_in_range(self, agent: Any[Agent], range: float) -> None:
         # Add connections to all agents within a certain range of a given agent.
-        if len(agent.connections) == 0:
-            agents_in_range = agent.get_agents_in_range(agent, range)
-            for other_agent in agents_in_range:
-                agent.connections.append(other_agent)
-                other_agent.connections.append(agent)
-        elif len(agent.connections) > 0:
-            for other_agent in agent.connections:
-                if agent.distance_to_agent(other_agent) > range:
-                    agent.connections.remove(other_agent)
-                    other_agent.connections.remove(agent)
-            agents_in_range = agent.get_agents_in_range(agent, range)
-            for other_agent in agents_in_range:
-                if other_agent not in agent.connections:
-                    agent.connections.append(other_agent)
-                    other_agent.connections.append(agent)
-                    
+        _, agents_in_range = self.get_agents_in_range(agent, range)
+        self.connect_agents(agent, agents_in_range)
+
         # zombie may continue following a human even if other humans are closer
 
 
@@ -104,9 +92,9 @@ class Human(Agent):
         self._health = value
         if self._health <= 0:
             print(f"Human {self.id} has died!")
-            apocalypse.human_manager.remove_human(self)
+            apocalypse.human_manager.remove_agent(self)
             zombie = Zombie(len(apocalypse.zombie_manager.agents), 100, self.position)
-            apocalypse.zombie_manager.add_zombie(zombie)
+            apocalypse.zombie_manager.add_agent(zombie)
             
     """
     @cached_property
@@ -194,13 +182,16 @@ class HumanManager(AgentManager):
     
     def __init__(self):
         # List of all humans in the apocalypse
-        self.agents = []
+        self.humans = []
         
-    def add_human(self, human):
-        super().add_agent(human)
+    def add_agent(self, human):
+        self.humans.append(human)
         
-    def remove_human(self, human):
-        super().remove_agent(human)
+    def remove_agent(self, human):
+        self.humans.remove(human)
+        
+    def get_agents_in_range(self, agent: Agent, range: float):
+        return super().get_agents_in_range(agent, range)
 
     def get_enemies_in_attack_range(self, agent):
         attack_range = math.sqrt(2+ agent.weapon.range) if (isinstance(agent, Human) and agent.weapon is not None) else math.sqrt(2)
@@ -236,12 +227,10 @@ class HumanManager(AgentManager):
                 else:
                     agent2.health -= agent1.health
                     agent1.health += agent1.health
-        
-                
 
     def print_human_info(self):
         print("Humans:")
-        for human in self.agents:
+        for human in self.humans:
             print(f"Human {human.id}: health={human.health}, position={human.position}, weapon={human.weapon}")
 
 
@@ -261,7 +250,7 @@ class Zombie(Agent):
         # Check if the zombie has been killed
         if self.health <= 0:
             # Remove the zombie from the list of zombies
-            apocalypse.zombie_manager.remove_zombie(self)
+            apocalypse.zombie_manager.remove_agent(self)
             
     """
     @cached_property
@@ -306,13 +295,13 @@ class ZombieManager(AgentManager):
 
     def __init__(self):
         # List of all zombies in the apocalypse
-        self.agents = []
-        
-    def add_zombie(self, zombie):
-        super().add_agent(zombie)
-        
-    def remove_zombie(self, zombie):
-        super().remove_agent(zombie)
+        self.zombies = []
+
+    def add_agent(self, zombie):
+        self.zombies.append(zombie)
+
+    def remove_agent(self, zombie):
+        self.zombies.remove(zombie)
 
     def get_enemies_in_attack_range(self, agent):
         attack_range = math.sqrt(2+ agent.weapon.range) if (isinstance(agent, Human) and agent.weapon is not None) else math.sqrt(2)
@@ -413,9 +402,9 @@ class ZombieApocalypse:
         self.factory.register_character("human", HumanFactory)
         self.factory.register_character("zombie", ZombieFactory)
         for i in range(num_humans):
-            self.human_manager.add_human(self.create_agent(school_size, i, "human"))
+            self.human_manager.add_agent(self.create_agent(school_size, i, "human"))
         for i in range(num_zombies):
-            self.zombie_manager.add_zombie(self.create_agent(school_size, i, "zombie"))
+            self.zombie_manager.add_agent(self.create_agent(school_size, i, "zombie"))
             
     # separate the creation and the use for humans and zombies
     def create_agent(self, school_size, id, type) -> Agent:
@@ -441,7 +430,7 @@ class ZombieApocalypse:
             self.zombie_manager.print_zombie_info()
             print()
             self.take_turn()
-            if len(self.human_manager.agents) == 0 or len(self.zombie_manager.agents) == 0:
+            if len(self.human_manager.humans) == 0 or len(self.zombie_manager.agents) == 0:
                 break
     # an escape position or method for humans to win
             
@@ -452,7 +441,7 @@ class ZombieApocalypse:
             closest_human = self.zombie_manager.get_closest_human(zombie)
             zombie.take_turn(closest_human)
         # Humans take their turn
-        for human in self.human_manager.agents:
+        for human in self.human_manager.humans:
             closest_zombie = self.human_manager.get_closest_zombie(human)
             human.take_turn(self.possible_weapons, closest_zombie)
     
