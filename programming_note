@@ -1,9 +1,43 @@
 
+OOP Principles in textbook format
+
+Object-oriented programming (OOP) is a programming paradigm that uses objects and their interactions to design applications and computer programs. It is based on several principles:
+
+Encapsulation: This principle states that an object should hide its internal state and behavior from the outside world, and only provide a public interface for other objects to interact with it. This allows the object to control access to its data and behavior, and protects it from unintended changes.
+
+Inheritance: This principle allows an object to inherit the properties and behavior of another object. It enables code reuse and the creation of a hierarchy of objects that share common characteristics.
+
+Polymorphism: This principle allows objects of different types to be treated as objects of a common supertype. It allows objects to be treated in a generic way, without the need to know their specific type.
+
+Abstraction: This principle allows the creation of objects and classes that represent abstract concepts, such as a "vehicle" or "employee". These abstract classes and objects provide a general structure for more specific objects to inherit from, and can be used to create a flexible and easily extensible system.
+
+Class and object: Class is a template or blueprint from which objects are created. Object is an instance of a class.
+
+Association, aggregation, and composition: These principles define the relationships between objects, such as one object being a part of another object (composition: is-a) or one object being associated with another object without being a part of it (association: connect with), or one object contains one or more objects as part of its internal state (aggregation: has-a).
+
+These principles work together to make it possible to design and build robust, flexible, and maintainable software systems using OOP.
+
+FP Principles in textbook format
+I. Introduction
+Functional programming (FP) is a programming paradigm that emphasizes the use of functions as the primary building blocks of software. This approach emphasizes immutability, recursion, and composition over mutation, iteration, and inheritance. FP has been gaining popularity in recent years, particularly in the realm of web development and data science.
+
+II. Immutability
+In functional programming, data is treated as immutable, meaning that it cannot be changed after it is created. This concept is central to functional programming, as it allows for predictable and consistent behavior in software. In contrast, traditional object-oriented programming often relies on mutable data, which can lead to unexpected side effects and bugs.
+
+III. Recursion
+Recursion is a technique for solving problems by breaking them down into smaller subproblems. In functional programming, recursion is often used as a way to simplify code and make it more elegant. This is because recursion allows for the abstraction of repetitive tasks, making code more readable and maintainable.
+
+IV. Composition
+Functional programming emphasizes the use of composition over inheritance. Composition allows for the creation of new functions by combining existing functions, rather than inheriting functionality from a parent class. This approach promotes code reuse and makes it easier to reason about the behavior of code.
+
+V. Conclusion
+Functional programming is a powerful and elegant approach to software development that emphasizes immutability, recursion, and composition. By embracing these principles, developers can create software that is more predictable, maintainable, and reusable. As the popularity of functional programming continues to grow, it is likely that more and more developers will adopt this approach to software development.
+
 Use of object oriented design
-1. abstraction: simplify the reality and focus on the relevant feature, like the data and behaviour, of the object
-2. encapsulation: the implementation detail are bound together and hidden, only expose the interface of the object to the user
+1. abstraction: simplify the reality and focus on the relevant data and behaviour of the object
+2. encapsulation: the implementation detail are bound together and hidden, only expose the interface of the object to the user, restrict the access and change other data
 3. inheritance: the child class can inherit or override the data and behaviour of the parent class, and add its own data and behaviour
-4. polymorphism: different object can have the same interface, and the user can use the same interface to interact with different object
+4. polymorphism: use the same interface to work with different object but bahave differently according to the object type
 
 SOILD principle of object oriented design:
 1. single responsibility principle: a class should have only one reason to change
@@ -27,9 +61,34 @@ Guide of functional programming:
 4. Make use of immutability and keep the original data unchanged, and return the new data
 
 Functional programming vs object oriented programming:
-1. functional programming is more declarative, object oriented programming is more imperative (functional programming is more about what to do, object oriented programming is more about how to do it)
-2. functional programming is more about using pure function to transform data, object oriented programming is more about using object and its state to perform behaviour
-3. use functional programming if the state needs to be stored, use object oriented programming if the behaviour is complex
+What are the main basic components of any computer program? They are data (what the program is allowed to know) and programmed behavior (what it is allowed to do with this data). 
+What is the key difference in the way OOP and FP are approaching computer programming? Well, the way OOP is using relies on combining data and behaviors related to that data into one place, which is called “object.” Using objects allows programmers to simplify the way their programs work. Functional programming on the other hand states that data and behavior should remain two different things and not be separated for the overall clarity, easily understandable code, and higher code reusability.
+1. Concept and definition: OOP is based on the concept of objects as an abstract data type, which can include multiple data and behaviour and may even contain other objects. FP, on the other hand, has a core emphasis on the evaluation of functions, with each function receive and return data and performing a specific behavour on the data.
+2. Fundamental elements: In OOP, the fundamental elements are objects and methods, with mutable data used. In FP, the fundamental elements are functions and variables, with data in functions being immutable.
+1. functional programming is more declarative, object oriented programming is more imperative (functional programming is more about describing the desired outcome, object oriented programming is more about how to accomplish a task)
+2. functional programming is more about using pure function to transform data, object oriented programming is more about using object and its state to perform behaviour. Use functional programming if the state needs to be stored, use object oriented programming if the behaviour is complex
+4. Modularity and abstraction: OOP achieves modularity and abstraction through encapsulation and inheritance, where the internal details of an object are hidden and only a public interface is exposed.  FP achieves modularity and abstraction through the composition and reuse of single-purpose functions, higher-order functions, and closures, which allow for composable, reusable, and generic functions.
+4. Concurrency and parallelism: OOP can face difficulties in concurrent and parallel programming due to its reliance on shared mutable state. FP, on the other hand, is better suited for concurrent and parallel programming due to its emphasis on immutability and the avoidance of side-effects.
+7. Functional programming is more suited for functional testing as it allows you to test each function independently, whereas OOP requires testing the entire object and its interactions with other objects.
+8. Functional programming is more suitable for mathematical and computational problems, whereas OOP is more suitable for modelling real-world objects and their interactions.
+9. Flexibility and adding data/functions: OOP languages provide an easy way to add new data and functions to the existing program, whereas in FP languages, adding new things to programs is less convenient and more complex.
+10. Data hiding and security: OOP languages support data hiding, which ultimately allows the creation of secure programs. With functional programming, data hiding is not possible, which can be an obstacle if you are looking to develop a secure program with an FP language.
+
+OOP and FP are two different programming paradigms, each with its own pros and cons. OOP is more commonly used and is better suited for large and complex projects. It is relatively easy to understand and master, making it suitable for beginners. OOP works well in back-end development as it allows for packing everything up and keeping it secure from unauthorized parties. However, OOP can have lower code reusability and potential unexpected side effects.
+Functional programming is better suited for when complexity is contained and specified, and is often used in front-end development where clean code and transparent functions are important. It can provide a reliable performance without unexpected side effects. However, when it comes to the development of complex systems that would potentially need extensive scaling, FP is less effective and applicable compared to OOP.
+
+Procedural programming vs Functional programming vs Object-oriented programming
+
+Functional programming focuses on expressions
+Expressions have values which undergo computational instruction as evaluation of mathematical functions but there's no way to manipulate the state.
+
+Procedural programming focuses on statements
+Statements don't have values and instead modify the inner state.
+
+Objective programming, also known as object-oriented programming, is a programming paradigm that focuses on the use of objects and their interactions to design and implement software. It is based on the concepts of classes, objects, encapsulation, inheritance, and polymorphism.
+
+Procedural programming would plan everything into steps, and solves the problem by implementing one step (a procedure) at a time. On the other hand, functional programming would emphasize the divide-and-conquer approach, where the problem is divided into sub-problem, then each sub-problem is solved (creating a function to solve that sub problem) and the results are combined to create the answer for the whole problem. Lastly, Objective programming would mimic the real world by create a mini-world inside the computer with many objects, each of which has a (somewhat) unique characteristics, and interacts with others. From those interactions the result would emerge.
+
 
 guide to write function:
 1. do one thing and do it well
@@ -48,6 +107,17 @@ guide to write class:
 3. program to interface, not implementation (use interface to define the behaviour of the class, not the implementation detail)
 4. use delegation to reuse code (use delegation to reuse the behaviour of the class, not the data)
 5. separate the implemntation detail from the interface (use interface to define the behaviour of the class, not the implementation detail)
+
+Composition over inheritance
+When to Use Component over Extension:
+When a single entity spans multiple domains and it's important to keep them isolated, use a component class for each domain. This will reduce the entity to a simple container of components. This will allow for more flexibility in managing and modifying the different domains and even adding functionality without affecting the rest of the entity or creating a hierarchy.
+When you have a class that interacts with multiple domains and you want to keep the functionality decoupled, use composition to create separate component classes for each domain to keep the functionality separate and maintain a clear separation of concerns.
+When you want to define a variety of objects that share different capabilities, but using inheritance does not provide enough granularity in reusing specific capabilities, use composition to selectively add the desired capabilities to each object.
+When to Use Extension Over Component:
+When you have a class that has a single clear responsibility and you want to add a specific functionality to it, use inheritance (extension) to inherit from the base class and add the desired functionality.
+When you have a clear hierarchy of classes and want to maintain the inheritance structure, use extension to inherit from the parent class and add new functionality.
+When you want to reuse a common functionality across multiple classes, use extension to create a base class with the common functionality and inherit from it in other classes.
+When the added functionality is closely related to the existing functionality of the class, use extension to keep the functionality together in the same class.
 
 design pattern:
 1. factory pattern: creational design pattern, separate the creation and use of the object, lets you define an interface for creating objects, but decide the creation logic using different subclasses at run-time.
@@ -163,3 +233,32 @@ Creating a function that generates unique IDs
 Creating a function that has access to a specific configuration or settings, like a database connection or a logging configuration
 Creating a function that maintains the state of a program, such as a game or a user session
 It is not recommended to use closures in situations where the state that needs to be maintained is global or shared among different functions, it is better to use a global variable or a class-based solution. Additionally, if the closure function is going to be used by many different parts of the program, it can become difficult to keep track of its state and can lead to unexpected behavior.
+
+Chapter 1: Introduction to Object-Oriented Programming
+Chapter 2: Classes and Objects
+Chapter 3: Inheritance and Polymorphism
+Chapter 4: Object-Oriented Design Principles
+Chapter 5: Encapsulation and Information Hiding
+Chapter 6: Abstraction and Interfaces
+Chapter 7: Composition over Inheritance
+
+In object-oriented programming, polymorphism allows for a single action to be performed in different ways by defining one interface and multiple implementations. One way to achieve polymorphic behavior and code reuse is through the principle of composition over inheritance.
+
+Composition is a way to combine objects or data types into more complex ones, rather than inheriting from a base or parent class. This is achieved through a "has-a" relationship, where a class is designed based on what it does, rather than what it is. In contrast, inheritance uses an "is-a" relationship, where a child class inherits behaviors from a parent class.
+
+The main advantage of composition is that it is more flexible than inheritance. Classes and objects created through composition are loosely coupled, making it easier to change the component parts. This allows for greater flexibility in program design and ease of maintenance.
+
+It's important to note that composition and inheritance are not mutually exclusive concepts. In situations where a super class and subclass share the exact same implementation, inheritance may be the more appropriate choice. However, when many classes share a behavior that is common across different hierarchies, composition through the use of interfaces or design patterns may be more suitable.
+
+When implementing composition, there is no single "correct" way as it depends on the language. Techniques such as interfaces, object merging, and design patterns can be used to achieve composition. However, one drawback of composition is that methods provided by the component may have to be re-implemented.
+
+In summary, composition over inheritance is a principle used in object-oriented programming to achieve polymorphic behavior and code reuse by composing objects out of other objects, rather than trying to find commonality between them and creating an inheritance hierarchy. Composition is a more flexible approach that allows for greater flexibility in program design and ease of maintenance. However, it is important to consider the specific needs of a program before deciding whether to use composition or inheritance.
+
+Chapter 8: SOLID Principles
+Chapter 9: Design Patterns and their Implementation
+Chapter 10: Dependency Injection and Dependency Inversion
+Chapter 11: Concurrency, Multithreading, and Optimization
+Chapter 12: Exception Handling, Debugging, and Troubleshooting
+Chapter 13: Testing and Validation
+Chapter 14: Deployment and Maintenance
+Chapter 15: Object-Oriented Design in Practice

@@ -15,17 +15,17 @@ class Agent(ABC):
         self.health = health
         self.position = position
 
-    @abstractmethod
     def move(self, dx, dy):
-        pass
+        self.position = (self.position[0]+dx, self.position[1]+dy)
 
-    @abstractmethod
     def take_damage(self, damage: int) -> None:
-        pass
+        self.health -= damage
     
-    @abstractmethod
     def distance_to_agent(self, other_agent: Agent) -> int:
-        pass
+        x1, y1 = self.position
+        x2, y2 = other_agent.position
+        distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+        return int(distance)
     
     @abstractmethod
     def take_turn(self, possible_weapons, closest_enemy):
@@ -37,6 +37,10 @@ class Agent(ABC):
     
     @abstractmethod
     def attack(self, enemy):
+        pass
+    
+    @abstractmethod
+    def scavenge(self, possible_weapons):
         pass
 
 class AgentManager:
@@ -111,16 +115,13 @@ class Human(Agent):
     """
     
     def move(self, dx, dy):
-        self.position = (self.position[0]+dx, self.position[1]+dy)
-        
+        super().move(dx, dy)
+
     def take_damage(self, damage: int) -> None:
-        self.health -= damage
+        super().take_damage(damage)
         
     def distance_to_agent(self, other_agent: Agent) -> int:
-        x1, y1 = self.position
-        x2, y2 = other_agent.position
-        distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
-        return int(distance)
+        return super().distance_to_agent(other_agent)
         
     def take_turn(self, possible_weapons, closest_enemy):
         if closest_enemy is not None:
@@ -269,16 +270,13 @@ class Zombie(Agent):
     """
     
     def move(self, dx, dy):
-        self.position = (self.position[0]+dx, self.position[1]+dy)
+        super().move(dx, dy)
         
     def take_damage(self, damage: int) -> None:
-        self.health -= damage
+        super().take_damage(damage)
         
     def distance_to_agent(self, other_agent: Agent) -> int:
-        x1, y1 = self.position
-        x2, y2 = other_agent.position
-        distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
-        return int(distance)
+        return super().distance_to_agent(other_agent)
 
     def take_turn(self, closest_human):
         # If there are any humans in range, attack the closest one
@@ -299,6 +297,9 @@ class Zombie(Agent):
     def attack(self, human):
         # Deal 10 damage to the human
         human.take_damage(20)
+        
+    def scavenge(self, possible_weapons):
+        pass
 
 # Manage all zombies in the apocalypse
 class ZombieManager(AgentManager):
