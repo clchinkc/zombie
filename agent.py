@@ -44,6 +44,8 @@ class Agent(ABC):
         pass
 
 class AgentManager(ABC):
+    
+    @abstractmethod
     def __init__(self):
         self.agents = []
     
@@ -381,33 +383,76 @@ class AgentFactory:
 
 # may use builder pattern if the product is composite or if there are more parameters
 
-# a zombie apocalypse and manages the humans and zombies
-class ZombieApocalypse:
+class Game(ABC):
 
-    def __init__(self, num_zombies, num_humans, school_size):
-        self.map = [[None for _ in range(school_size)] for _ in range(school_size)] # a 2D list representing the map, with None representing a empty cell and a human or zombie representing a cell occupied by human or zombie
+        # template method pattern
+        @abstractmethod
+        def __init__(self, grid, agentfactory):
+            self.grid = grid
+            self.agentfactory = agentfactory
+            self.agents = []
+        
+        @abstractmethod
+        def simulate(self, agent_count, num_turns):
+            self.initialize(agent_count)
+            self.run(num_turns)
+            self.print_map()
+        
+        @abstractmethod
+        def create_agent(self, **kwargs):
+            return self.agentfactory.produce(**kwargs)
+        
+        @abstractmethod
+        def initialize(self, agent_count):
+            for _ in range(agent_count):
+                self.agents.append(self.create_agent())
+                self.grid.append(self.create_agent())
+        
+        @abstractmethod
+        def run(self, num_turns):
+            for _ in range(num_turns):
+                self.take_turn()
+                if self.end_condition():
+                    break
+        
+        @abstractmethod
+        def take_turn(self, **kwargs):
+            for agent in self.agents:
+                agent.take_turn()
+        
+        @abstractmethod
+        def end_condition(self, **kwargs):
+            return len(self.agents) == 0
+        
+        @abstractmethod
+        def print_map(self, **kwargs):
+            for row in self.grid:
+                for cell in row:
+                    print(cell, end=" ")
+                print()
+
+# a zombie apocalypse and manages the humans and zombies
+class ZombieApocalypse(Game):
+
+    def __init__(self):
         self.human_manager = HumanManager() # the human manager instance to manage the humans
         self.zombie_manager = ZombieManager() # the zombie manager instance to manage the zombies
         self.factory = AgentFactory()
-        self.initialize(num_zombies, num_humans, school_size)
         self.possible_weapons = [
             Weapon("Baseball Bat", 20, 2),
             Weapon("Pistol", 30, 5),
             Weapon("Rifle", 40, 8),
             Weapon("Molotov Cocktail", 50, 3),
         ]
-        
-    def initialize(self, num_zombies, num_humans, school_size):
-        # Initializes the humans and zombies in the map.
-        self.factory.register_character("human", HumanFactory)
-        self.factory.register_character("zombie", ZombieFactory)
-        for i in range(num_humans):
-            self.human_manager.add_agent(self.create_agent(school_size, i, "human"))
-        for i in range(num_zombies):
-            self.zombie_manager.add_agent(self.create_agent(school_size, i, "zombie"))
-            
+    
+    def simulate(self, num_zombies, num_humans, school_size, num_turns):
+        # Simulates the game.
+        self.initialize(num_zombies, num_humans, school_size)
+        self.run(num_turns)
+        self.print_map()
+    
     # separate the creation and the use for humans and zombies
-    def create_agent(self, school_size, id, type) -> Agent:
+    def create_agent(self, id, school_size, type) -> Agent:
         arguments = {
             "type": type,
             "id": id,
@@ -420,9 +465,19 @@ class ZombieApocalypse:
     # ensure legal location
     # factory pattern for weapons
     # factory pattern for map
+        
+    def initialize(self, num_zombies, num_humans, school_size):
+        self.map = [[None for _ in range(school_size)] for _ in range(school_size)] # a 2D list representing the map, with None representing a empty cell and a human or zombie representing a cell occupied by human or zombie
+        # Initializes the humans and zombies in the map.
+        self.factory.register_character("human", HumanFactory)
+        self.factory.register_character("zombie", ZombieFactory)
+        for i in range(num_humans):
+            self.human_manager.add_agent(self.create_agent(i, school_size, "human"))
+        for i in range(num_zombies):
+            self.zombie_manager.add_agent(self.create_agent(i, school_size, "zombie"))
     
             
-    def simulate(self, num_turns):
+    def run(self, num_turns):
         # while number of humans > 0 and number of zombies > 0
         for i in range(num_turns):
             print(f"Turn {i+1}")
@@ -430,8 +485,9 @@ class ZombieApocalypse:
             self.zombie_manager.print_zombie_info()
             print()
             self.take_turn()
-            if len(self.human_manager.humans) == 0 or len(self.zombie_manager.agents) == 0:
+            if self.end_condition():
                 break
+
     # an escape position or method for humans to win
             
     def take_turn(self):
@@ -444,17 +500,20 @@ class ZombieApocalypse:
         for human in self.human_manager.humans:
             closest_zombie = self.human_manager.get_closest_zombie(human)
             human.take_turn(self.possible_weapons, closest_zombie)
+        # End the turn by removing dead humans and zombies from the map.
+        for human in self.human_manager.humans:
+            if human.health <= 0:
+                self.map[human.position[0]][human.position[1]] = None
+                self.human_manager.humans.remove(human)
+        for zombie in self.zombie_manager.agents:
+            if zombie.health <= 0:
+                self.map[zombie.position[0]][zombie.position[1]] = None
+                self.zombie_manager.agents.remove(zombie)
+                
+    # move agent to a new location only if the new location is empty
     
-    def move_agent(self, agent, dx, dy):
-        # Move an agent on the map by changing its position attribute and updating the map list.
-        # return True if the agent was successfully moved, False otherwise.
-        if 0 <= agent.position[0] + dx < len(self.map) and 0 <= agent.position[1] + dy < len(self.map[0]):
-            if self.map[agent.position[0] + dx][agent.position[1] + dy] == 0:
-                agent.position = (agent.position[0] + dx, agent.position[1] + dy)
-                self.map[agent.position[0]][agent.position[1]] = agent
-                self.map[agent.position[0] - dx][agent.position[1] - dy] = None
-                return True
-        return False
+    def end_condition(self):
+        return len(self.human_manager.humans) == 0 or len(self.zombie_manager.agents) == 0
     
     def print_map(self):
         # Print the map in a readable format.
@@ -469,9 +528,12 @@ class ZombieApocalypse:
             print()
 
 
+apocalypse = ZombieApocalypse()
+apocalypse.simulate(num_zombies=10, 
+                    num_humans=10, 
+                    school_size=10, 
+                    num_turns=10)
 
-apocalypse = ZombieApocalypse(5, 5, 5)
-apocalypse.simulate(10)
 
 """
 Change the inheritance to abstract class or protocol

@@ -129,6 +129,10 @@ https://www.youtube.com/watch?v=zGbPd4ZP39Y
 The Strategy Pattern is a behavioural design pattern that allows for the selection from a family of algorithms. It defines a family of algorithms, encapsulates each algorithm into a separate class, and makes them interchangeable within the family.
 This is achieved by creating an abstract class and providing a common interface that utilizes various concrete data classes, without the need to know the implementation details.
 The pattern should be used when the desired behaviour needs to be selected at runtime based on input or other factors. By separating the logic of an algorithm from its usage, the same algorithm can be used in multiple classes, and new algorithms can be added to the program without modifying existing code.
+3. template method pattern
+Template Method is a behavioral design pattern that defines the skeleton of an algorithm in the template method of the superclass, deferring the details to subclasses. Template method lets subclasses customize certain steps of the algorithm without changing the algorithm's overall structure.
+The abstract class defines a template method that define the overall structure of the algorithm, including calls to abstract methods that are implemented by subclasses. The template method can also include concrete methods that provide a default implementation for some of the steps of the algorithm. This provides a way to define a common behavior for a set of related classes, while allowing for variations in the details of the behavior.
+This pattern is often used in situations where a common set of steps needs to be performed, but the implementation of one or more of those steps may vary.
 
 Not suitable to implement:
 3. builder pattern
@@ -163,10 +167,8 @@ For example, we can have a 'Car' interface and two classes that implement this i
 https://andrewbrookins.com/technology/mixins-in-python-and-ruby-compared/
 4. plugin pattern: let the user to add new behaviour to the object without modifying the existing code at runtime, by adding new plugin
 https://github.com/ArjanCodes/2021-plugin-architecture
-5. adapter pattern: convert the interface of a class into another interface the clients expect. Adapter lets classes work together that couldn't otherwise because of incompatible interfaces
-6. template method pattern: define the skeleton of an algorithm in an operation, deferring some steps to subclasses. Template method lets subclasses redefine certain steps of an algorithm without changing the algorithm's structure
+
 7. composite pattern: compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly
-8. state pattern: allow an object to alter its behaviour when its internal state changes. The object will appear to change its class
 9. iterator pattern: provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation
 10. observer pattern: define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically
 https://www.youtube.com/watch?v=oNalXg67XEE
@@ -185,18 +187,22 @@ https://www.youtube.com/watch?v=oNalXg67XEE
 Not suggested design pattern:
 22. singleton pattern
 ensure only one instance of the class exist and provide a global point of access to create the instance if it doesn't exist
-
 23. delegate pattern
 Delegation Pattern is a structural design pattern that lets you pass necessary requests from a client object (main object) to a service object (helper object) without making the service object a part of the client object's class, by using meta-programming.
 https://erikscode.space/index.php/2020/08/01/delegate-and-decorate-in-python-part-1-the-delegation-pattern/
-
 24. decorator pattern
 Decorator Pattern is a structural design pattern that lets you attach new behaviors to objects by placing these objects inside special wrapper objects that contain the behaviors, provide a flexible alternative to subclassing for extending functionality
 https://erikscode.space/index.php/2020/08/02/delegate-and-decorate-in-python-part-2-the-decorator-pattern/
 Reusable decorator
 Decorator with other attributes and methods can inherit from base decorator class
 https://erikscode.space/index.php/2020/08/03/delegate-and-decorate-in-python-part-3-reusable-decorators/
-
+25. lazy initialization pattern
+Lazy initialization is a design pattern that delays the creation of an object, the calculation of a value, or some other expensive process until the first time it is needed
+5. adapter pattern: convert the interface of a class into another interface the clients expect. Adapter lets classes work together that couldn't otherwise because of incompatible interfaces
+Adapter is recognizable by a constructor which takes an instance of a different abstract/interface type. When the adapter receives a call to any of its methods, it translates parameters to the appropriate format and then directs the call to one or several methods of the wrapped object.
+The Adapter pattern is pretty common in Python code. It’s very often used in systems based on some legacy code. In such cases, Adapters make legacy code work with modern classes.
+https://refactoring.guru/design-patterns/adapter/python/example
+8. state pattern: allow an object to alter its behaviour when its internal state changes. The object will appear to change its class
 
 
 optimization:
