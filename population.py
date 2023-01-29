@@ -266,7 +266,7 @@ class School:
         # Create a 2D grid representing the school with each cell can contain a Individual object
         self.grid: list[list[Optional[Individual]]] \
             = [[None for _ in range(school_size)]
-               for _ in range(school_size)]
+                for _ in range(school_size)]
         self.strategy_factory = MovementStrategyFactory()
 
         # may turn to width and height
@@ -381,22 +381,157 @@ class School:
     def __repr__(self) -> str:
         return "%s(%d,%d)" % (self.__class__.__name__, self.school_size)
 
+# Observer Pattern
+class Observer(ABC):
+    
+    @abstractmethod
+    def __init__(self) -> None:
+        pass
+    
+    @abstractmethod
+    def update(self) -> None:
+        pass
+    
+    @abstractmethod
+    def display_observation(self) -> None:
+        pass
+
+class PopulationObserver(Observer):
+    
+    def __init__(self, population: Population) -> None:
+        self.subject = population
+        self.subject.attach_observer(self)
+        self.statistics = {}
+        self.agent_list = []
+        
+    def update(self, statistics: dict[str, float], agent_list: list[Individual], grid: list[list[Optional[Individual]]]) -> None:
+        self.statistics = statistics
+        self.agent_list = agent_list
+        
+    def display_observation(self, format='text'):
+        if format == 'text':
+            self.print_text_statistics()
+        elif format == 'chart':
+            self.print_chart_statistics()
+        
+        # animation, table
+        
+    def print_text_statistics(self):
+        population_size = self.statistics['population_size']
+        num_healthy = self.statistics['num_healthy']
+        num_infected = self.statistics['num_infected']
+        num_zombie = self.statistics['num_zombie']
+        num_dead = self.statistics['num_dead']
+        healthy_percentage = num_healthy / (population_size+1e-10)
+        infected_percentage = num_infected / (population_size+1e-10)
+        zombie_percentage = num_zombie / (population_size+1e-10)
+        dead_percentage = num_dead / (population_size+1e-10)
+        infected_rate = num_infected / (num_healthy+1e-10)
+        turning_rate = num_zombie / (num_infected+1e-10)
+        death_rate = num_dead / (num_zombie+1e-10)
+        infection_probability = self.statistics['infection_probability']
+        turning_probability = self.statistics['turning_probability']
+        death_probability = self.statistics['death_probability']
+        migration_probability = self.statistics['migration_probability']
+        print("Population Statistics:")
+        print(f"Population Size: {population_size}")
+        print(f"Healthy: {num_healthy} ({healthy_percentage:.2%})")
+        print(f"Infected: {num_infected} ({infected_percentage:.2%})")
+        print(f"Zombie: {num_zombie} ({zombie_percentage:.2%})")
+        print(f"Dead: {num_dead} ({dead_percentage:.2%})")
+        print(f"Infection Probability: {infection_probability:.2%} -> Infected Rate: {infected_rate:.2%}")
+        print(f"Turning Probability: {turning_probability:.2%} -> Turning Rate: {turning_rate:.2%}")
+        print(f"Death Probability: {death_probability:.2%} -> Death Rate: {death_rate:.2%}")
+        print(f"Migration Probability: {migration_probability:.2%}")
+        print()
+    """
+    # may format the output in the subject and print it directly here
+    
+    def print_text_statistics(self):
+        print("Population Statistics:")
+        for key, value in self.statistics.items():
+            print(f"{key}: {value}")
+            
+    # subject notify method push info to update method of observer
+    # but the subject don't know what info observer want to display
+    # or let observer pull info from subject using get method of subject
+    # but observer need to get info from subject one by one
+    """
+    
+    def print_chart_statistics(self):
+        # Analyze the results by observing the changes in the population over time
+        cell_states = [individual.state for individual in self.agent_list]
+        counts = {state: cell_states.count(state) for state in list(State)}
+        # Add a bar chart to show the counts of each state in the population
+        plt.bar(np.asarray(State.value_list()), list(
+                counts.values()), tick_label=State.name_list())
+        # Show the plot
+        plt.show()
+
+class SchoolObserver(Observer):
+    
+    def __init__(self, population: Population) -> None:
+        self.subject = population
+        self.subject.attach_observer(self)
+        self.agent_list = []
+        self.grid = []
+        
+    def update(self, statistics: dict[str, float], agent_list: list[Individual], grid: list[list[Optional[Individual]]]) -> None:
+        self.agent_list = agent_list
+        self.grid = grid
+        
+    def display_observation(self, format='text'):
+        if format == 'text':
+            self.print_text_statistics()
+        elif format == 'chart':
+            self.print_chart_statistics()
+        
+        # animation, table
+        
+    def print_text_statistics(self):
+        print("Print School:")
+        for row in self.grid:
+            for cell in row:
+                if cell is None:
+                    print(" ", end=" ")
+                elif cell.state == State.HEALTHY:
+                    print("H", end=" ")
+                elif cell.state == State.INFECTED:
+                    print("I", end=" ")
+                elif cell.state == State.ZOMBIE:
+                    print("Z", end=" ")
+                elif cell.state == State.DEAD:
+                    print("D", end=" ")
+                else:
+                    raise ValueError("Invalid state")
+            print()
+        print()
+            
+    def print_chart_statistics(self):
+        # create a scatter plot of the population
+        cell_states_value = [
+            individual.state.value for individual in self.agent_list]
+        x = [individual.location[0] for individual in self.agent_list]
+        y = [individual.location[1] for individual in self.agent_list]
+        plt.scatter(x, y, c=cell_states_value)
+        plt.show()
 
 class Population:
 
     def __init__(self, school_size: int, population_size: int) -> None:
         self.school: School = School(school_size)
-        self.population: list[Individual] = []
-        self.severity = 0.
+        self.agent_list: list[Individual] = []
+        self.severity: float = 0.
         self.init_population(school_size, population_size)
         self.update_population_metrics()
+        self.observers = []
 
     def add_individual(self, individual: Individual) -> None:
-        self.population.append(individual)
+        self.agent_list.append(individual)
         self.school.add_individual(individual)
 
     def remove_individual(self, individual: Individual) -> None:
-        self.population.remove(individual)
+        self.agent_list.remove(individual)
         self.school.remove_individual(individual.location)
 
     def create_individual(self, id: int, school_size: int) -> Individual:
@@ -434,6 +569,8 @@ class Population:
             print("Got Individual Info")
             self.school.get_info()
             print("Got School Info")
+            self.notify_observers()
+            print("Notified Observers")
             if self.num_healthy == 0:
                 print("All individuals are infected")
                 break
@@ -442,23 +579,23 @@ class Population:
                 break
 
     def update_grid(self) -> None:
-        self.school.update_grid(self.population, self.migration_probability)
+        self.school.update_grid(self.agent_list, self.migration_probability)
 
     def update_state(self) -> None:
-        for individual in self.population:
+        for individual in self.agent_list:
             individual.update_state(self.severity)
             if individual.state == State.DEAD:
                 self.school.remove_individual(individual.location)
 
     def update_population_metrics(self) -> None:
         self.num_healthy = sum(
-            1 for individual in self.population if individual.state == State.HEALTHY)
+            1 for individual in self.agent_list if individual.state == State.HEALTHY)
         self.num_infected = sum(
-            1 for individual in self.population if individual.state == State.INFECTED)
+            1 for individual in self.agent_list if individual.state == State.INFECTED)
         self.num_zombie = sum(
-            1 for individual in self.population if individual.state == State.ZOMBIE)
+            1 for individual in self.agent_list if individual.state == State.ZOMBIE)
         self.num_dead = sum(
-            1 for individual in self.population if individual.state == State.DEAD)
+            1 for individual in self.agent_list if individual.state == State.DEAD)
         self.population_size = self.num_healthy + \
             self.num_infected + self.num_zombie + self.num_dead
         self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity)))
@@ -471,106 +608,32 @@ class Population:
 
     def get_all_individual_info(self) -> None:
         print(f'Population of size {self.population_size}' + '\n' +
-              '\n'.join([individual.get_info() for individual in self.population]))
+                '\n'.join([individual.get_info() for individual in self.agent_list]))
 
-    def observe_population(self) -> None:
-        # Count the number of individuals in each state
-        num_healthy = self.num_healthy
-        num_infected = self.num_infected
-        num_zombie = self.num_zombie
-        num_dead = self.num_dead
+    def attach_observer(self, observer: Observer) -> None:
+        self.observers.append(observer)
+        
+    def detach_observer(self, observer: Observer) -> None:
+        self.observers.remove(observer)
+        
+    def notify_observers(self) -> None:
+        for observer in self.observers:
+            observer.update(self.get_population_statistics(), 
+                            self.agent_list, 
+                            self.school.grid)
 
-        # Calculate the percentage of cells in each state
-        healthy_percent = num_healthy / \
-            (num_healthy + num_infected + num_zombie + 1e-10)
-        infected_percent = num_infected / \
-            (num_healthy + num_infected + num_zombie + 1e-10)
-        zombie_percent = num_zombie / \
-            (num_healthy + num_infected + num_zombie + 1e-10)
-
-        # Calculate the rate of infection, turning, and death
-        infection_rate = num_infected / (num_healthy + num_infected + 1e-10)
-        turning_rate = num_zombie / (num_infected + 1e-10)
-        death_rate = num_dead / (num_infected + num_zombie + 1e-10)
-
-        # Print the results
-        print("Number of healthy individuals:", num_healthy)
-        print("Number of infected individuals:", num_infected)
-        print("Number of zombie individuals:", num_zombie)
-        print("Number of dead individuals:", num_dead)
-        print("Percentage of healthy cells:", healthy_percent)
-        print("Percentage of infected cells:", infected_percent)
-        print("Percentage of zombie cells:", zombie_percent)
-        print("Infection rate:", infection_rate)
-        print("Turning rate:", turning_rate)
-        print("Death rate:", death_rate)
-
-    def observe_school(self) -> None:
-        # Print a visual representation of the school, with each cell represented by a character
-        for row in self.school.grid:
-            for cell in row:
-                if cell == State.HEALTHY:
-                    print("H", end="")
-                elif cell == State.INFECTED:
-                    print("I", end="")
-                elif cell == State.ZOMBIE:
-                    print("Z", end="")
-                elif cell == State.DEAD:
-                    print("D", end="")
-            print()
-
-    def plot_school(self) -> None:
-        # create a scatter plot of the population
-        cell_states_value = [
-            individual.state.value for individual in self.population]
-        x = [individual.location[0] for individual in self.population]
-        y = [individual.location[1] for individual in self.population]
-        plt.scatter(x, y, c=cell_states_value)
-        plt.show()
-
-    def plot_population(self) -> None:
-        # Analyze the results by observing the changes in the population over time
-        cell_states = [individual.state for individual in self.population]
-        counts = {state: cell_states.count(state) for state in list(State)}
-
-        # Add a bar chart to show the counts of each state in the population
-        plt.bar(np.asarray(State.value_list()), list(
-                counts.values()), tick_label=State.name_list())
-
-        # Show the plot
-        plt.show()
-
-    def animation(self) -> None:
-        # create an animation of the grid throughout the simulation
-        # create a figure and axis
-        fig, ax = plt.subplots()
-
-        # create a scatter plot of the population
-        cell_states_value = [
-            individual.state.value for individual in self.population]
-        x = [individual.location[0] for individual in self.population]
-        y = [individual.location[1] for individual in self.population]
-        sc = ax.scatter(x, y, c=cell_states_value)
-
-        # create a function to update the scatter plot
-        def update(i):
-            # update the scatter plot
-            cell_states_value = [
-                individual.state.value for individual in self.population]
-            x = [individual.location[0] for individual in self.population]
-            y = [individual.location[1] for individual in self.population]
-            sc.set_offsets(np.c_[x, y])
-            sc.set_array(np.array(cell_states_value))
-            return sc
-
-        # create an animation
-        anim = animation.FuncAnimation(
-            fig, update, frames=100, interval=100, blit=True)
-
-        # show the animation
-        plt.show()
-
-    # animation not working
+    def get_population_statistics(self) -> dict[str, float]:
+        # returns a dictionary of population statistics
+        return {"num_healthy": self.num_healthy,
+                "num_infected": self.num_infected,
+                "num_zombie": self.num_zombie,
+                "num_dead": self.num_dead,
+                "population_size": self.population_size,
+                "infection_probability": self.infection_probability,
+                "turning_probability": self.turning_probability,
+                "death_probability": self.death_probability,
+                "migration_probability": self.migration_probability
+                }
 
     def __str__(self) -> str:
         return f'Population with {self.num_healthy} healthy, {self.num_infected} infected, {self.num_zombie} zombie, and {self.num_dead} dead individuals'
@@ -581,15 +644,17 @@ def main():
     # create a SchoolZombieApocalypse object
     school_sim = Population(school_size=10, population_size=1)
 
+    # create Observer objects
+    population_observer = PopulationObserver(school_sim)
+    school_observer = SchoolObserver(school_sim)
+    
     # run the population for a given time period
-    school_sim.run_population(5)
+    school_sim.run_population(num_time_steps=5)
+    
+    # observe the statistics of the population
+    population_observer.display_observation(format="chart")
+    school_observer.display_observation(format="chart")
 
-    # observe the changes in the population and school over time
-    # school_sim.observe_population()
-    # school_sim.observe_school()
-    # school_sim.plot_school()
-    # school_sim.plot_population()
-    # school_sim.animation()
 
 if __name__ == "__main__":
     main()
@@ -948,4 +1013,83 @@ Clients depend only on the abstraction but any implementation could be plugged i
 It uses the Bridge pattern to separate the abstraction (the interface) from the implementation (the concrete classes). The CarInterface and Car classes define the interface for the car and the SportsCar and Truck classes are the abstraction classes that inherit the Car class. The SportsCarInterface, XTruck, YTruck, XSportsCar, and YSportsCar classes are the concrete classes that implement the drive method.
 By using this pattern, the implementation of the drive method is decoupled from the Car class and its subclasses. This means that the implementation can be easily swapped out without affecting any references or dependencies on the code. This makes the code more maintainable because changes to the implementation do not require changes to the abstraction or existing references to it.
 Additionally, the use of different classes for different manufacturers allows for easy swapping of implementations based on the manufacturer. For example, you could swap out the XTruck class for the YTruck class and the Car class would still work correctly because it is only dependent on the TruckInterface and not the concrete class. This makes the code more flexible and allows for easier updates and changes in the future.
+"""
+"""
+The Observer pattern is a design pattern in which an object, called the subject, maintains a list of its dependents, called observers, and notifies them automatically of any changes to its state. This allows multiple objects to be notified and updated when a change occurs in the subject, without the need for tight coupling between the objects.
+
+An example use case of the Observer pattern in Python is a weather forecasting application. The subject in this case would be the weather data, and the observers would be the different views or displays of the weather data (e.g. a text display, a graph, a map).
+
+class Subject:
+    def __init__(self):
+        self._observers = []
+
+    def register(self, observer):
+        self._observers.append(observer)
+
+    def unregister(self, observer):
+        self._observers.remove(observer)
+
+    def notify(self):
+        for observer in self._observers:
+            observer.update()
+
+class Observer:
+    def update(self):
+        pass
+
+class WeatherData(Subject):
+    def __init__(self):
+        super().__init__()
+        self._temperature = 0
+        self._humidity = 0
+        self._pressure = 0
+
+    def set_measurements(self, temperature, humidity, pressure):
+        self._temperature = temperature
+        self._humidity = humidity
+        self._pressure = pressure
+        self.notify()
+
+    def get_temperature(self):
+        return self._temperature
+
+    def get_humidity(self):
+        return self._humidity
+
+    def get_pressure(self):
+        return self._pressure
+
+class TextDisplay(Observer):
+    def __init__(self, weather_data):
+        self._weather_data = weather_data
+        weather_data.register(self)
+
+    def update(self):
+        temperature = self._weather_data.get_temperature()
+        humidity = self._weather_data.get_humidity()
+        pressure = self._weather_data.get_pressure()
+        print("Temperature: {} F, Humidity: {}%, Pressure: {} inHg".format(temperature, humidity, pressure))
+
+class GraphDisplay(Observer):
+    def __init__(self, weather_data):
+        self._weather_data = weather_data
+        weather_data.register(self)
+
+    def update(self):
+        temperature = self._weather_data.get_temperature()
+        humidity = self._weather_data.get_humidity()
+        pressure = self._weather_data.get_pressure()
+        print("Graph Display: Temperature: {} F, Humidity: {}%, Pressure: {} inHg".format(temperature, humidity, pressure))
+
+class MapDisplay(Observer):
+    def __init__(self, weather_data):
+        self._weather_data = weather_data
+        weather_data.register(self)
+
+    def update(self):
+        temperature = self._weather_data.get_temperature()
+        humidity = self._weather_data.get_humidity()
+        pressure = self._weather_data.get_pressure()
+        print("Map Display: Temperature: {} F, Humidity: {}%, Pressure: {} inHg".format(temperature,
+
 """

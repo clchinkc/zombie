@@ -133,6 +133,15 @@ The pattern should be used when the desired behaviour needs to be selected at ru
 Template Method is a behavioral design pattern that defines the skeleton of an algorithm in the template method of the superclass, deferring the details to subclasses. Template method lets subclasses customize certain steps of the algorithm without changing the algorithm's overall structure.
 The abstract class defines a template method that define the overall structure of the algorithm, including calls to abstract methods that are implemented by subclasses. The template method can also include concrete methods that provide a default implementation for some of the steps of the algorithm. This provides a way to define a common behavior for a set of related classes, while allowing for variations in the details of the behavior.
 This pattern is often used in situations where a common set of steps needs to be performed, but the implementation of one or more of those steps may vary.
+10. observer pattern
+Observer pattern is a behavioural design pattern that define a one-to-many dependency between a subject and its observers so that when one object changes state, all its dependents are notified and updated by calling one of their methods
+The observer pattern addresses the following problems:
+A one-to-many dependency between objects should be defined without making the objects tightly coupled.
+When one object changes state, an open-ended number of dependent objects should be updated automatically.
+An object can notify multiple other objects.
+One way to implement this would be to create a separate observer class that implements the observer pattern.
+The sole responsibility of a subject is to maintain a list of observers and to notify them of state changes by calling their update() operation. The responsibility of observers is to register and unregister themselves with a subject (in order to be notified of state changes) and to update their state (to synchronize their state with the subject's state) when they are notified as well as display them in different UI. This makes subject and observers loosely coupled. Subject and observers have no explicit knowledge of each other. Observers can be added and removed independently at run time.
+https://www.youtube.com/watch?v=oNalXg67XEE
 
 Not suitable to implement:
 3. builder pattern
@@ -170,8 +179,7 @@ https://github.com/ArjanCodes/2021-plugin-architecture
 
 7. composite pattern: compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly
 9. iterator pattern: provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation
-10. observer pattern: define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically
-https://www.youtube.com/watch?v=oNalXg67XEE
+
 11. command pattern: encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations
 12. proxy pattern: provide a surrogate or placeholder for another object to control access to it
 13. flyweight pattern: use sharing to support large numbers of fine-grained objects efficiently
