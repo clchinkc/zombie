@@ -354,4 +354,6 @@ This process would allow the students in the population to adapt and evolve over
 """
 https://github.com/topics/natural-selection?l=python
 https://stackoverflow.com/questions/46337156/python-genetic-algorithm-natural-selection
+https://blog.csdn.net/weixin_37790882/article/details/84034956
+https://blog.csdn.net/oxuzhenyi/article/details/70037833
 """

@@ -4,7 +4,6 @@ import cProfile
 import pstats
 import timeit
 from functools import update_wrapper, wraps
-from io import StringIO
 
 import line_profiler
 import memory_profiler
@@ -193,5 +192,10 @@ https://myapollo.com.tw/zh-tw/python-concurrent-futures/
 https://myapollo.com.tw/zh-tw/python-multiprocessing/
 https://myapollo.com.tw/zh-tw/more-about-python-multiprocessing/
 https://myapollo.com.tw/zh-tw/begin-to-asyncio/
+
+# If the decorated function is a method of a uneditable class
+# and the decorator need to accept parameter, 
+# can use dataclass for the class 
+# and lock the decorator with the init variable using partial
 
 """

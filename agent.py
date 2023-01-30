@@ -387,6 +387,7 @@ class AgentFactory:
             raise ValueError(f"unknown character type {character_type!r}") from None
         return creator_func.create_agent(**args_copy)
 
+# store counter in factory
 # may use builder pattern if the product is composite or if there are more parameters
 
 class Game(ABC):
@@ -553,4 +554,24 @@ wrongly moving more than one space
 """
 This revised code separates the simulation and its agents into separate classes. The ZombieApocalypse class stores instances of the HumanManager and ZombieManager classes, and has methods to advance the simulation by a single time step, add or remove humans and zombies from the simulation, and print a representation of the simulation map. The Human and Zombie classes both inherit from the Agent class and have additional attributes and methods specific to their roles in the simulation. The HumanManager and ZombieManager classes have methods to add and remove humans and zombies, respectively.
 You can use this code to create and manipulate a simulation of a zombie apocalypse with humans and zombies. You can initialize the simulation with a certain number of humans and zombies using the ZombieApocalypse class, and advance the simulation by a single time step using its step method. You can add or remove humans and zombies from the simulation during runtime using the add_human and remove_human methods of the HumanManager class, and the add_zombie and remove_zombie methods of the ZombieManager class. You can also visualize the state of the simulation or retrieve information about the positions and attributes of the humans and zombies using the print_map method of the ZombieApocalypse class or the get_agents_within_range method of the Human or Zombie class.
+"""
+
+"""
+map, filter, zip
+"""
+
+"""
+namedtuple
+functools
+iterator, itertools
+https://myapollo.com.tw/zh-tw/python-itertools-more-itertools/
+collections
+"""
+
+"""
+debugging
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247494272&idx=1&sn=adbc9770fc995785b061ace35f5a81c2&chksm=fdc8dda6cabf54b002dddd81c15a4eb45d5236561dfa823af0c33782a499449ea03cc72d07ac&scene=21#wechat_redirect
+https://github.com/nedbat/coveragepy
+speed up
+https://mp.weixin.qq.com/s/M7DdUWLzqOLVR7qJFmvZdA
 """

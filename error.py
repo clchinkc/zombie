@@ -3,6 +3,7 @@ f= open ('error.txt')
 text=f.read()
 import nltk
 
+
 def VerbFormError(tags):
     if tags[2].startswith('V') and tags[2] != 'VB':
         if tags[1] == 'MD' or tags [1] == 'TO':
@@ -42,6 +43,7 @@ def SubjectVerbAgreementError(tags):
 sents= nltk.sent_tokenize(text)
 
 import string
+
 wordlist=nltk.corpus.words.words()
 wnl=nltk.WordNetLemmatizer()
 
@@ -90,16 +92,12 @@ for sent in sents:
     
 
 f.close()        
-    
-    
-    
-   
-  
-    
-    
+
+"""
+https://itw01.com/2PGPMEX.html
+https://www.lanqiao.cn/courses/828
+"""
 
 
 
 
-
-# %%

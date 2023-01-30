@@ -23,6 +23,15 @@ Capstone projects: high complexity (put everything together, >500 lines, use int
 Social media clones, like twitter, discord, reddit, etc.
 Ecommerce store and website
 
+A To-Do List Application where a user can:
+Create, view, update and delete tasks (CRUD operations)
+Mark tasks as completed or pending
+Reorder tasks by priority or due date
+Option to set reminders for tasks
+Store tasks persistently using a database like SQLite or MySQL.
+Frontend: HTML, CSS, JavaScript (with a framework such as React or Vue)
+Backend: Python (with a web framework like Flask or Django)
+
 Project suggestions
 https://www.dataquest.io/blog/python-projects-for-beginners/
 https://github.com/karan/Projects
@@ -31,28 +40,81 @@ https://realpython.com/intermediate-python-project-ideas/
 https://hackr.io/blog/python-projects
 https://www.upgrad.com/blog/python-projects-ideas-topics-beginners/
 https://www.crio.do/blog/python-projects-for-developers/
+https://github.com/RichardFu123/pythonTools
+https://blog.csdn.net/pdcfighting/article/details/125669955?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-1-125669955-blog-126788849.pc_relevant_aa2&spm=1001.2101.3001.4242.2&utm_relevant_index=3
+Django 搭建简易博客
+Flask 开发轻博客
+https://github.com/zky001/fluent-python-translate
+Python 实现康威生命游戏
+https://zhuanlan.zhihu.com/p/95526617
 
 Software Design
+https://zh.wikipedia.org/zh-tw/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E8%89%BA%E6%9C%AF
 https://erikscode.space/index.php/category/software-design/
 https://www.coursera.org/programs/coursera-for-hkust-yetdg?collectionId=3Jzsr&currentTab=CATALOG&productId=0ImdBwolEeyCoBKtfSoizQ&productType=s12n&showMiniModal=true
+https://github.com/aosabook/500lines
+https://github.com/HT524/500LineorLess_CN
 
 Web development
 https://www.coursera.org/programs/coursera-for-hkust-yetdg?collectionId=3Jzsr&currentTab=CATALOG&productId=Tn_VM61TEeaH0xIrfa92QA&productType=s12n&showMiniModal=true
 
+Frontend + backend
+https://github.com/ashutoshpipriye/Calculator-using-Flask
+Python开发简单计算器
+https://blog.csdn.net/weixin_45621944/article/details/109906498
+https://juejin.cn/post/6844903545712410631
+https://www.51cto.com/article/697947.html
+https://github.com/erezsh/plyplus/blob/master/examples/calc.py
+https://github.com/lark-parser/lark/blob/master/examples/calc.py
 
-Code smell
+Chart animation
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247486653&idx=1&sn=92128455c20ada46b355f5166ba5d4b5&chksm=fdcb3b9bcabcb28de6cb8f5c08a557f5078aede86b21fc151babc29dde8451d0a3a60efd0a51&scene=21#wechat_redirect
+https://www.dunderdata.com/blog/create-a-bar-chart-race-animation-in-python-with-matplotlib
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247490218&idx=1&sn=19f061116f4939038b90aa18085505ad&chksm=fdcb2d8ccabca49ab88171cb16d641cc059506a5646766a5bc24ee0910140b92d4902aa8057c&scene=21#wechat_redirect
+https://igoamazing.com/python-plotly/
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500033&idx=1&sn=79acaead7ea5106b9280ee7d65efc97a&chksm=fdc8f627cabf7f31e5aed380b11c535e3e54860e3800e341bb64099ad08828d3c16a859ced0a&scene=21#wechat_redirect
+
+
+Reinforcement learning
+https://blog.csdn.net/abcdefg90876/article/details/108459475
+https://blog.csdn.net/qq_30615903/article/details/80774384
+
+Code style
+https://en.wikipedia.org/wiki/Coding_best_practices
 https://www.youtube.com/watch?v=Kl3_Gmn4Ujg
 https://www.youtube.com/watch?v=zmWf_cHyo8s
+https://google.github.io/styleguide/pyguide.html
+https://www.youtube.com/watch?v=wgWwJSnhgDU
 
 Unit test
 https://www.youtube.com/watch?v=ULxMQ57engo
 https://www.youtube.com/watch?v=NI5IGAim8XU
+pytest vs unittest
+https://myapollo.com.tw/zh-tw/7-useful-pytest-plugins/
 
 Python
 https://www.python.org/
 https://realpython.com/
 https://www.datacamp.com/
 https://learnpython.org/
+https://github.com/JustDoPython/python-100-day/tree/master/
+https://github.com/Python-World
+https://github.com/RichardFu123/PythonDoc
+https://zhuanlan.zhihu.com/p/260175468
+https://github.com/RichardFu123/HardWayLearnTyping/tree/master/Python3
+https://blog.csdn.net/ityard/article/details/117757782
+https://www.zhihu.com/question/300985609/answer/1225638751
+https://zhuanlan.zhihu.com/p/554467866
+https://zhuanlan.zhihu.com/p/409383965
+https://python3-cookbook.readthedocs.io/zh_CN/latest/chapters/p01_data_structures_algorithms.html
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247497696&idx=1&sn=ea99acc80156b27049682d631aad3ff6&chksm=fdc8c0c6cabf49d093daa9e0ff60351389ccf9c8f3c56bdcb14cb7aa29d7c3523826a13ae871&scene=21#wechat_redirect
+https://zhuanlan.zhihu.com/p/103466869
+https://zhuanlan.zhihu.com/p/411708536
+https://zhuanlan.zhihu.com/p/421726412
+https://www.zhihu.com/question/24590883/answer/1220720307
+https://zhuanlan.zhihu.com/p/87891142
+https://zhuanlan.zhihu.com/p/87894542
+https://automatetheboringstuff.com/2e/
 
 All language
 https://techbeamers.com/
@@ -61,16 +123,20 @@ https://www.coursera.org/
 https://www.khanacademy.org/computing
 https://www.geeksforgeeks.org/
 https://github.com/sindresorhus/awesome
+https://www.lanqiao.cn/courses/?tag=%E5%85%A8%E9%83%A8&category=%E5%85%A8%E9%83%A8&fee=all&sort=default&level=all&from_login_page=true
 
 Youtube video
 https://www.youtube.com/user/Computerphile
 
 React
+https://www.youtube.com/watch?v=Ym6RYyRBPaA
+https://www.youtube.com/watch?v=bmpI252DmiI
 https://github.com/lironharel/how-react-works
 react tutorial google search
 https://reactjs.org/tutorial/tutorial.html#declaring-a-winner Lifting State Up, Again
 https://codepen.io/gaearon/pen/LyyXgK
 https://www.youtube.com/watch?v=cKfevf-iIHA Visual IDE
+https://github.com/girishgr8/Resume-Builder
 
 Javascript
 https://developer.mozilla.org/zh-TW/docs/Learn/JavaScript
@@ -79,19 +145,37 @@ CSS
 https://www.udemy.com/course/infinity-creative-css-animation-course/
 https://www.udemy.com/course/complete-responsive-website-design-from-scratch/
 
-Web development
+Web design
 https://www.creative-tim.com/blog/web-design/
 https://www.creative-tim.com/blog/web-development/
 https://www.creative-tim.com/blog/web-design/web-design-tips-outstanding-site/
 
 Pygame
+https://www.epubit.com/articleDetails?id=NC7E3EF941B50000116101A401B63E380 four in row
 https://github.com/Gooodgis/dont-touch-my-presents 3 day project
+
+tkinter game
+https://zhuanlan.zhihu.com/p/45870821
+
+java game
+https://github.com/TheCherno/Genesis/tree/master/src/com/thecherno/ld24
 
 Open source project
 https://opensource.guide/how-to-contribute/
 
 Command line search
 https://www.commands.dev/
+
+leetcode
+https://github.com/RichardFu123/LeetCode_Py
+
+Coding interview
+https://www.youtube.com/watch?v=SVvr3ZjtjI8
+https://github.com/jwasham/coding-interview-university
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247497696&idx=1&sn=ea99acc80156b27049682d631aad3ff6&chksm=fdc8c0c6cabf49d093daa9e0ff60351389ccf9c8f3c56bdcb14cb7aa29d7c3523826a13ae871&scene=21#wechat_redirect
+
+Digital marketing
+https://welly.tw/digital-marketing/learn-google-lesson
 
 Currency converter
 https://www.thepythoncode.com/article/make-a-currency-converter-in-python
@@ -102,6 +186,7 @@ https://realpython.com/tutorials/api/
 https://www.mindk.com/blog/how-to-build-an-api/
 https://anderfernandez.com/en/blog/how-to-create-api-python/
 https://zh.m.wikipedia.org/zh-tw/%E6%B5%81%E5%BC%8F%E6%8E%A5%E5%8F%A3
+https://github.com/soimort/you-get/wiki/%E4%B8%AD%E6%96%87%E8%AF%B4%E6%98%8E
 https://github.com/hugapi/hug
 https://github.com/CUNY-CL/wikipron
 https://github.com/WolframResearch/WolframClientForPython
@@ -118,8 +203,93 @@ Command line application
 https://betterprogramming.pub/designing-beautiful-command-line-applications-with-python-72bd2f972ea
 https://towardsdatascience.com/how-to-build-and-publish-command-line-applications-with-python-96065049abc1
 
-Face recognition
+Command line visualization
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500786&idx=1&sn=ea7c33617f7fe0cb6afd4d67b5bcd072&chksm=fdc8f4d4cabf7dc29ff75bf66b27b89f37beccb84bfa59fb3f2be519468570449971b90fcf28&scene=21#wechat_redirect
+
+GUI
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247499523&idx=1&sn=24f8be16f9131acef084732bd7de8885&chksm=fdc8c825cabf41337fabdd4a925cdaf73dab2e63ce0ef6aeeb59ae157d32a6f8d907cb173aa1&scene=21#wechat_redirect
+https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/zPpn56Yf3JFuxkXyuLqMPw
+
+Web scripting
+Urllib、Requests、BeautifulSoup、XPath、Selenium、Scrapy、分布式爬虫
+https://docs.qq.com/doc/DTVJzZXh5TmJSR1V4
+https://cloud.tencent.com/developer/article/1932575
+https://cloud.tencent.com/developer/article/1711098
+https://cloud.tencent.com/developer/article/1805616?from=article.detail.1933412&areaSource=106000.12&traceId=UFNK0ysEGqXdJ11eHR4vk
+https://blog.csdn.net/VictoriaSue/article/details/107792075?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-1-107792075-blog-80965797.pc_relevant_3mothn_strategy_recovery&spm=1001.2101.3001.4242.2&utm_relevant_index=4
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247484076&idx=1&sn=fac8b75e2fbdb8eecff16b1faa4dc7f2&chksm=fdcb358acabcbc9c20769d3800f77f7cafb16844486e2c3fd35b0d567923eeac352189cc6285&scene=21#wechat_redirect
+
+Web scripting + Data analysis
+https://cloud.tencent.com/developer/article/1757720
+https://cloud.tencent.com/developer/article/1652650?from=article.detail.1757720&areaSource=106000.4&traceId=oaKOSKjMncUTDrbTfPJDl
+https://blog.51cto.com/u_6315133/5015472
+
+Web scripting + Data processing + mysql
+https://blog.51cto.com/u_9399369/1953469
+
+Recommendation systemusing flask and mysql
+https://github.com/Qing93/anime_recommend
+https://zhuanlan.zhihu.com/p/22494721
+https://whuhan2013.github.io/blog/2016/11/07/flask-mysql-learn/
+
+python + mysql
+https://www.51cto.com/article/708748.html
+
+API + Data analysis + Data visualization
+http://blog.itpub.net/69982434/viewspace-2738661
+
+Visualizing map
+https://zhuanlan.zhihu.com/p/388573380
+https://cloud.tencent.com/developer/article/1933412
+https://blog.51cto.com/u_14848199/3809668
+https://blog.51cto.com/u_13389043/5166211
+
+Data visualization
+Matplotlib
+https://zhuanlan.zhihu.com/p/388287863
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247488470&idx=1&sn=d54ae505d004e61a1de7d53fba67207a&chksm=fdcb24f0cabcade6e85db9065fc835be4bdf3fd98643b05072d1ad608972f472cc581cb2b342&scene=21#wechat_redirect
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247501498&idx=1&sn=626c5506b3df40d7d1aed491ae381129&chksm=fdc8f19ccabf788a435ebda1946d7dc3d8fdccb394b7a4c3efa61e0cc04deabf74c252b4cba7&scene=21#wechat_redirect
+Seaborn
+https://zhuanlan.zhihu.com/p/395103497
+https://blog.51cto.com/u_13389043/3155923
+pyecharts
+https://zhuanlan.zhihu.com/p/446927854
+https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/RZ0d9FWDJDPH2IqrIsThMw
+https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/FjNzAxkioePPG1a6vR0jTQ
+plotly
+https://zhuanlan.zhihu.com/p/387268377
+R language
+https://mp.weixin.qq.com/s?__biz=MzkzMDE4NTc5NA==&mid=2247494348&idx=1&sn=d57f4ada61f32fd7d125a8e8d56188ae&chksm=c27cbde1f50b34f73615468d6f218b0e7a395d9981b911635b45319848d292a87d27fe7bf309&scene=132#wechat_redirect
+jupyter notebook only
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247491053&idx=1&sn=308114cc5de8b0ac4ee6f2d6e5ae13dd&chksm=fdcb2acbcabca3dd0c1559b37b4060b602a3a6f46a042541fcf553b40bf9959be8e1ea2b0762&scene=21#wechat_redirect
+PyG2Plot
+https://zhuanlan.zhihu.com/p/413293073
+
+Word cloud
+https://cloud.tencent.com/developer/article/1931771
+https://blog.csdn.net/yimixgg/article/details/80965797
+
+Stock + mysql
+https://freewechat.com/a/MzAwMjYxNjcwMw==/2456404246/1
+
+Python + excel
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500457&idx=1&sn=4f7a84d76129883a7ed94f16a43a8467&chksm=fdc8f58fcabf7c999724243d7955b6982164e9a310b75fa8df75e4965ace76394a83606fff02&scene=21#wechat_redirect
+
+Streamlit excel deployment to web
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500178&idx=1&sn=61e10fca7a9e1dfd588a4428c9527e4d&chksm=fdc8f6b4cabf7fa2428de25b1fee6601c86f25c26ff4b50372bf303bcfbaa12e8067d2acc76d&scene=21#wechat_redirect
+
+File management
+https://mp.weixin.qq.com/s/91ZbgtakKUBfodKRYjD8PQ
+https://mp.weixin.qq.com/s/w1YkMlOGaU_Ixo1ZyPzx0w
+
+ascii
+https://zhuanlan.zhihu.com/p/245651042
+
+Opencv
 https://realpython.com/face-recognition-with-python/
+
+Tensorflow
+https://github.com/RichardFu123/tensorflow/tree/master/CNN
 
 Courses
 1. A JavaScript Course
@@ -159,11 +329,15 @@ Course 2 - https://geni.us/UYduHpz
 Course 1 - https://geni.us/WLN5p
 Course 2 - https://geni.us/IW7V6D4
 
-10 A "I Didn't Get A Computer Science Degree Course"
+10. A "I Didn't Get A Computer Science Degree Course"
 A+ Core 1 - https://geni.us/0UIw
 A+ Core 2 - https://geni.us/4dFqqmU
 Network+ - https://geni.us/4L1g
 Security+ - https://geni.us/KaWhOB
+
+「CS106A 程式設計方法論」（Programming methodology）
+進階課程 CS106B
+電腦科學課程（CS107、CS110）
 
 Research interview process
 Blind

@@ -365,11 +365,11 @@ class School:
         self.remove_individual(old_location)
         self.add_individual(individual)
 
-    def get_info(self) -> None:
+    def print_info(self) -> None:
         for column in self.grid:
             for individual in column:
                 if individual is not None:
-                    print(individual.id, end=" ")
+                    print(individual.state.value, end=" ")
                 else:
                     print(" ", end=" ")
             print()
@@ -565,9 +565,9 @@ class Population:
             print("Updated State")
             self.update_population_metrics()
             print("Updated Population Metrics")
-            self.get_all_individual_info()
+            self.print_all_individual_info()
             print("Got Individual Info")
-            self.school.get_info()
+            self.school.print_info()
             print("Got School Info")
             self.notify_observers()
             print("Notified Observers")
@@ -606,7 +606,7 @@ class Population:
 
         # may use other metrics or functions to calculate the probability of infection, turning, death, migration
 
-    def get_all_individual_info(self) -> None:
+    def print_all_individual_info(self) -> None:
         print(f'Population of size {self.population_size}' + '\n' +
                 '\n'.join([individual.get_info() for individual in self.agent_list]))
 
