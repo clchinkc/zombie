@@ -404,9 +404,9 @@ class PopulationObserver(Observer):
         self.statistics = {}
         self.agent_list = []
         
-    def update(self, statistics: dict[str, float], agent_list: list[Individual], grid: list[list[Optional[Individual]]]) -> None:
-        self.statistics = statistics
-        self.agent_list = agent_list
+    def update(self) -> None:
+        self.statistics = self.subject.get_population_statistics()
+        self.agent_list = self.subject.agent_list
         
     def display_observation(self, format='text'):
         if format == 'text':
@@ -476,9 +476,9 @@ class SchoolObserver(Observer):
         self.agent_list = []
         self.grid = []
         
-    def update(self, statistics: dict[str, float], agent_list: list[Individual], grid: list[list[Optional[Individual]]]) -> None:
-        self.agent_list = agent_list
-        self.grid = grid
+    def update(self) -> None:
+        self.agent_list = self.subject.agent_list
+        self.grid = self.subject.school.grid
         
     def display_observation(self, format='text'):
         if format == 'text':
@@ -618,9 +618,7 @@ class Population:
         
     def notify_observers(self) -> None:
         for observer in self.observers:
-            observer.update(self.get_population_statistics(), 
-                            self.agent_list, 
-                            self.school.grid)
+            observer.update()
 
     def get_population_statistics(self) -> dict[str, float]:
         # returns a dictionary of population statistics
@@ -1015,81 +1013,51 @@ By using this pattern, the implementation of the drive method is decoupled from 
 Additionally, the use of different classes for different manufacturers allows for easy swapping of implementations based on the manufacturer. For example, you could swap out the XTruck class for the YTruck class and the Car class would still work correctly because it is only dependent on the TruckInterface and not the concrete class. This makes the code more flexible and allows for easier updates and changes in the future.
 """
 """
-The Observer pattern is a design pattern in which an object, called the subject, maintains a list of its dependents, called observers, and notifies them automatically of any changes to its state. This allows multiple objects to be notified and updated when a change occurs in the subject, without the need for tight coupling between the objects.
+class Command:
+    def execute(self):
+        raise NotImplementedError
 
-An example use case of the Observer pattern in Python is a weather forecasting application. The subject in this case would be the weather data, and the observers would be the different views or displays of the weather data (e.g. a text display, a graph, a map).
+class SimpleCommand(Command):
+    def __init__(self, receiver, action):
+        self._receiver = receiver
+        self._action = action
 
-class Subject:
+    def execute(self):
+        self._receiver.do_action(self._action)
+
+class Receiver: # perform the actions
+    def do_action(self, action):
+        print(f"Performing action: {action}")
+
+class Invoker: # invokes the action command
     def __init__(self):
-        self._observers = []
+        self._commands = []
 
-    def register(self, observer):
-        self._observers.append(observer)
+    def store_command(self, command):
+        self._commands.append(command)
 
-    def unregister(self, observer):
-        self._observers.remove(observer)
+    def execute_commands(self):
+        for command in self._commands:
+            command.execute()
 
-    def notify(self):
-        for observer in self._observers:
-            observer.update()
+# q: what does client do with this?
+# a: Client creates commands and passes them to the invoker
+receiver = Receiver()
+command = SimpleCommand(receiver, "Action 1")
+invoker = Invoker()
+invoker.store_command(command)
+invoker.execute_commands()  # Output: Performing action: Action 1
 
-class Observer:
-    def update(self):
-        pass
+invoker does not know anything about the receiver or the command.
+Receiver and command should be decoupled from each other.
+This can be done by not delegating the command execution to the receiver.
+Instead, the command should be responsible for executing the action.
 
-class WeatherData(Subject):
-    def __init__(self):
-        super().__init__()
-        self._temperature = 0
-        self._humidity = 0
-        self._pressure = 0
-
-    def set_measurements(self, temperature, humidity, pressure):
-        self._temperature = temperature
-        self._humidity = humidity
-        self._pressure = pressure
-        self.notify()
-
-    def get_temperature(self):
-        return self._temperature
-
-    def get_humidity(self):
-        return self._humidity
-
-    def get_pressure(self):
-        return self._pressure
-
-class TextDisplay(Observer):
-    def __init__(self, weather_data):
-        self._weather_data = weather_data
-        weather_data.register(self)
-
-    def update(self):
-        temperature = self._weather_data.get_temperature()
-        humidity = self._weather_data.get_humidity()
-        pressure = self._weather_data.get_pressure()
-        print("Temperature: {} F, Humidity: {}%, Pressure: {} inHg".format(temperature, humidity, pressure))
-
-class GraphDisplay(Observer):
-    def __init__(self, weather_data):
-        self._weather_data = weather_data
-        weather_data.register(self)
-
-    def update(self):
-        temperature = self._weather_data.get_temperature()
-        humidity = self._weather_data.get_humidity()
-        pressure = self._weather_data.get_pressure()
-        print("Graph Display: Temperature: {} F, Humidity: {}%, Pressure: {} inHg".format(temperature, humidity, pressure))
-
-class MapDisplay(Observer):
-    def __init__(self, weather_data):
-        self._weather_data = weather_data
-        weather_data.register(self)
-
-    def update(self):
-        temperature = self._weather_data.get_temperature()
-        humidity = self._weather_data.get_humidity()
-        pressure = self._weather_data.get_pressure()
-        print("Map Display: Temperature: {} F, Humidity: {}%, Pressure: {} inHg".format(temperature,
+There are two ways to undo a command:
+1. Store the state of the receiver before executing the command in the command itself, combining the momento pattern
+2. Call an unexecute method of the receiver
+Use stack to store the commands and pop the last command to undo it, using FILO
+clone the command and store it in the stack, to ensure the command won't be change or called again, using prototype pattern
+use abstract class toimplement template method or storereceiver state, combine with template method pattern
 
 """

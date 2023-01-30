@@ -180,12 +180,21 @@ https://github.com/ArjanCodes/2021-plugin-architecture
 7. composite pattern: compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly
 9. iterator pattern: provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation
 
-11. command pattern: encapsulate a request as an object, thereby letting you parameterize clients with different requests, queue or log requests, and support undoable operations
+11. command pattern
+The command pattern is a behavioural design pattern that provides a way to encapsulate request method calls as objects that contain all information about the request. This allows for flexible and decoupled code, enabling passing requests as method arguments, delaying, queuing or logging a request’s execution, and supporting undo/redo.
+The main benefits of using the Command pattern are:
+Loose coupling: The requestor of an action is decoupled from the object that performs the action, which makes it easier to modify or extend the system without affecting the other parts.
+Encapsulation: The request is encapsulated as an object, converting parameters of a command function to data members of a command object, which makes it easier to store, manipulate, and pass around.
+Composite commands: The Command pattern makes it possible to build complex operations from simple individual commands, providing a way to perform multiple actions with a single request.
+Undo/Redo: By keeping track of a history of commands, it's possible to undo and redo actions in a user interface.
+Delayed execution: The Command pattern makes it possible to defer the execution of a command, which can be useful in certain scenarios, such as multithreaded environments or to implement a transaction mechanism.
 12. proxy pattern: provide a surrogate or placeholder for another object to control access to it
 13. flyweight pattern: use sharing to support large numbers of fine-grained objects efficiently
 14. facade pattern: provide a unified interface to a set of interfaces in a subsystem. Facade defines a higher-level interface that makes the subsystem easier to use
 16. memento pattern: without violating encapsulation, capture and externalize an object's internal state so that the object can be restored to this state later
 17. visitor pattern: represent an operation to be performed on the elements of an object structure. Visitor lets you define a new operation without changing the classes of the elements on which it operates
+The Visitor pattern is a behavioral design pattern that allows adding new behaviors to existing class hierarchy without altering any existing code. The Visitor pattern separates an algorithm from an object structure on which it operates.
+For example, the Command pattern can be used to encapsulate a request as an object, and the Observer pattern can be used to notify interested parties about the request's execution, and the Visitor pattern can be used to add new functionality to the request without altering its class.
 18. chain of responsibility pattern: avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request. Chain the receiving objects and pass the request along the chain until an object handles it
 19. interpreter pattern: given a language, define a representation for its grammar along with an interpreter that uses the representation to interpret sentences in the language
 20. mediator pattern: define an object that encapsulates how a set of objects interact. Mediator promotes loose coupling by keeping objects from referring to each other explicitly, and it lets you vary their interaction independently

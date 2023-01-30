@@ -14,6 +14,12 @@ class Agent(ABC):
         self.id = id
         self.health = health
         self.position = position
+        
+        # 0's and 1's to represent the agent's genome
+        # the genome can be used to determine the agent's behavior
+        # state, health and size can be used to determine the agent's fitness
+        # location, direction, speed, energy, infection, infection time, death
+        # can be used to determine the agent's state
 
     def move(self, dx, dy):
         self.position = (self.position[0]+dx, self.position[1]+dy)
