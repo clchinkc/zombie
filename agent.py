@@ -21,11 +21,14 @@ class Agent(ABC):
         # location, direction, speed, energy, infection, infection time, death
         # can be used to determine the agent's state
 
+    # Fluent interface
     def move(self, dx, dy):
         self.position = (self.position[0]+dx, self.position[1]+dy)
+        return self
 
-    def take_damage(self, damage: int) -> None:
+    def take_damage(self, damage: int):
         self.health -= damage
+        return self
     
     def distance_to_agent(self, other_agent: Agent) -> int:
         x1, y1 = self.position
@@ -111,10 +114,10 @@ class Human(Agent):
     """
     
     def move(self, dx, dy):
-        super().move(dx, dy)
+        return super().move(dx, dy)
 
-    def take_damage(self, damage: int) -> None:
-        super().take_damage(damage)
+    def take_damage(self, damage: int):
+        return super().take_damage(damage)
         
     def distance_to_agent(self, other_agent: Agent) -> int:
         return super().distance_to_agent(other_agent)
@@ -267,10 +270,10 @@ class Zombie(Agent):
     """
     
     def move(self, dx, dy):
-        super().move(dx, dy)
+        return super().move(dx, dy)
         
-    def take_damage(self, damage: int) -> None:
-        super().take_damage(damage)
+    def take_damage(self, damage: int):
+        return super().take_damage(damage)
         
     def distance_to_agent(self, other_agent: Agent) -> int:
         return super().distance_to_agent(other_agent)

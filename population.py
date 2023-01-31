@@ -121,7 +121,6 @@ class ChaseHumansStrategy(MovementStrategy):
     # If the closest person is closer than the closest zombie, move towards the person, otherwise move away from the zombie
     # or move away from zombie is the priority and move towards person is the secondary priority
 
-
 @dataclass
 class NoMovementStrategy(MovementStrategy):
     

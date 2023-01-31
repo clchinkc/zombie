@@ -23,15 +23,6 @@ Capstone projects: high complexity (put everything together, >500 lines, use int
 Social media clones, like twitter, discord, reddit, etc.
 Ecommerce store and website
 
-A To-Do List Application where a user can:
-Create, view, update and delete tasks (CRUD operations)
-Mark tasks as completed or pending
-Reorder tasks by priority or due date
-Option to set reminders for tasks
-Store tasks persistently using a database like SQLite or MySQL.
-Frontend: HTML, CSS, JavaScript (with a framework such as React or Vue)
-Backend: Python (with a web framework like Flask or Django)
-
 Project suggestions
 https://www.dataquest.io/blog/python-projects-for-beginners/
 https://github.com/karan/Projects
@@ -47,16 +38,28 @@ Flask 开发轻博客
 https://github.com/zky001/fluent-python-translate
 Python 实现康威生命游戏
 https://zhuanlan.zhihu.com/p/95526617
+https://www.analyticsinsight.net/top-10-python-data-science-courses-and-boot-camps-to-know-in-2023/
 
 Software Design
 https://zh.wikipedia.org/zh-tw/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E8%89%BA%E6%9C%AF
+https://zh.m.wikipedia.org/zh-tw/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%9E%84%E9%80%A0%E5%92%8C%E8%A7%A3%E9%87%8A
+https://zh.wikipedia.org/zh-tw/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%8F%AF%E5%A4%8D%E7%94%A8%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%9F%BA%E7%A1%80
 https://erikscode.space/index.php/category/software-design/
 https://www.coursera.org/programs/coursera-for-hkust-yetdg?collectionId=3Jzsr&currentTab=CATALOG&productId=0ImdBwolEeyCoBKtfSoizQ&productType=s12n&showMiniModal=true
 https://github.com/aosabook/500lines
 https://github.com/HT524/500LineorLess_CN
+https://github.com/rohitksingh/Design_Patterns_aka_Hawai_Baatein
+http://users.encs.concordia.ca/~nikolaos/pattern_detection.html
+https://www.dofactory.com/net/design-patterns
+https://sourcemaking.com/design_patterns
+https://www.pluralsight.com/courses/python-design-patterns-playbook
+https://www.pluralsight.com/courses/patterns-library
+Fundamentals of Software Architecture: An Engineering Approach
+Clean Code: A Handbook of Agile Software Craftsmanship
 
 Web development
 https://www.coursera.org/programs/coursera-for-hkust-yetdg?collectionId=3Jzsr&currentTab=CATALOG&productId=Tn_VM61TEeaH0xIrfa92QA&productType=s12n&showMiniModal=true
+https://stackoverflow.com/questions/37770620/how-to-include-markdown-md-files-inside-html-files
 
 Frontend + backend
 https://github.com/ashutoshpipriye/Calculator-using-Flask
@@ -66,6 +69,17 @@ https://juejin.cn/post/6844903545712410631
 https://www.51cto.com/article/697947.html
 https://github.com/erezsh/plyplus/blob/master/examples/calc.py
 https://github.com/lark-parser/lark/blob/master/examples/calc.py
+https://www.accordbox.com/blog/how-to-combine-frontend-and-backend-for-python-web-developers/
+
+flask
+https://realpython.com/learning-paths/flask-by-example/
+
+django
+https://www.djangoproject.com/
+https://realpython.com/tutorials/django/
+https://realpython.com/get-started-with-django-1/
+https://realpython.com/django-diary-project-python/
+https://realpython.com/django-social-network-1/
 
 Chart animation
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247486653&idx=1&sn=92128455c20ada46b355f5166ba5d4b5&chksm=fdcb3b9bcabcb28de6cb8f5c08a557f5078aede86b21fc151babc29dde8451d0a3a60efd0a51&scene=21#wechat_redirect
@@ -117,6 +131,8 @@ https://zhuanlan.zhihu.com/p/87894542
 https://automatetheboringstuff.com/2e/
 
 All language
+https://github.com/8483/notes
+https://drive.google.com/file/d/1uBuPRFSjCywLmerNK843XUMODyM5p5Ap/view
 https://techbeamers.com/
 https://www.codecademy.com/
 https://www.coursera.org/
@@ -144,6 +160,12 @@ https://developer.mozilla.org/zh-TW/docs/Learn/JavaScript
 CSS
 https://www.udemy.com/course/infinity-creative-css-animation-course/
 https://www.udemy.com/course/complete-responsive-website-design-from-scratch/
+
+pyscript
+https://realpython.com/pyscript-python-in-browser/
+
+template language
+https://realpython.com/primer-on-jinja-templating/
 
 Web design
 https://www.creative-tim.com/blog/web-design/
