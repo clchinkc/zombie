@@ -140,6 +140,7 @@ class MovementStrategyFactory:
         legal_directions = school.get_legal_directions(individual)
         # get neighbors
         neighbors = school.get_neighbors(individual.location, individual.sight_range)
+        # early exit
         # if no neighbors, random movement
         if not neighbors:
             return RandomMovementStrategy(individual, legal_directions, neighbors)
@@ -176,6 +177,14 @@ class Individual:
     def __init__(self, id: int, state: State, location: tuple[int, int], movement_strategy: Any[MovementStrategy] = RandomMovementStrategy) -> None:
         self.id: int = id
         self.state: State = state
+        if self.state == State.HEALTHY:
+            self.state_machine = HealthyMachine(self)
+        elif self.state == State.INFECTED:
+            self.state_machine = InfectedMachine(self)
+        elif self.state == State.ZOMBIE:
+            self.state_machine = ZombieMachine(self)
+        elif self.state == State.DEAD:
+            pass
         self.location: tuple[int, int] = location
         self.connections: list[Individual] = []
         self.infection_severity: float = 0.0
@@ -201,48 +210,7 @@ class Individual:
 
     def update_state(self, severity: float) -> None:
         # Update the state of the individual based on the current state and the interactions with other people
-        if self.state == State.HEALTHY:
-            if self.is_infected(severity):
-                self.state = State.INFECTED
-        elif self.state == State.INFECTED:
-            self.infection_severity += 0.1
-            if self.is_turned():
-                self.state = State.ZOMBIE
-            elif self.is_died(severity):
-                self.state = State.DEAD
-        elif self.state == State.ZOMBIE:
-            if self.is_died(severity):
-                self.state = State.DEAD
-
-    # cellular automaton
-    def is_infected(self, severity: float) -> bool:
-        infection_probability = 1 / (1 + math.exp(-severity))
-        for individual in self.connections:
-            if individual.state == State.ZOMBIE:
-                if random.random() < infection_probability:
-                    return True
-        return False
-    
-    # probability = severity / school.max_severity
-    # probability *= 1 - math.exp(-self.interaction_duration/average_interaction_duration_for_infection)
-    # probability *= 1 - math.exp(-distance / average_distance_for_infection)
-
-
-    # cellular automaton
-    def is_turned(self) -> bool:
-        turning_probability = self.infection_severity
-        if random.random() < turning_probability:
-            return True
-        return False
-
-    # cellular automaton
-    def is_died(self, severity: float) -> bool:
-        death_probability = severity
-        for individual in self.connections:
-            if individual.state == State.HEALTHY or individual.state == State.INFECTED:
-                if random.random() < death_probability:
-                    return True
-        return False
+        self.state_machine.update_state(severity)
 
     def get_info(self) -> str:
         return f"Individual {self.id} is {self.state.name} and is located at {self.location}, having connections with {self.connections}, infection severity {self.infection_severity}, interact range {self.interact_range}, and sight range {self.sight_range}."
@@ -255,6 +223,64 @@ class Individual:
 
 # seperate inheritance for human and zombie class
 
+# state pattern
+class StateMachine(ABC):
+    
+    def __init__(self, context: Individual) -> None:
+        self.context = context
+
+    @abstractmethod
+    def update_state(self, severity: float) -> None:
+        pass
+
+    def is_infected(self, context: Individual, severity: float) -> bool:
+        infection_probability = 1 / (1 + math.exp(-severity))
+        for other in context.connections:
+            if other.state == State.ZOMBIE:
+                if random.random() < infection_probability:
+                    return True
+        return False
+    
+    def is_turned(self, context: Individual, severity: float) -> bool:
+        turning_probability = context.infection_severity
+        if random.random() < turning_probability:
+            return True
+        return False
+    
+    def is_died(self, context: Individual, severity: float) -> bool:
+        death_probability = severity
+        for other in context.connections:
+            if other.state == State.HEALTHY or other.state == State.INFECTED:
+                if random.random() < death_probability:
+                    return True
+        return False
+    
+# can add methods that change behaviour based on the state
+
+class HealthyMachine(StateMachine):
+    # cellular automaton
+    def update_state(self, severity: float) -> None:
+        if self.is_infected(self.context, severity):
+            self.context.state = State.INFECTED
+    
+    # probability = severity / school.max_severity
+    # probability *= 1 - math.exp(-self.interaction_duration/average_interaction_duration_for_infection)
+    # probability *= 1 - math.exp(-distance / average_distance_for_infection)
+
+class InfectedMachine(StateMachine):
+    # cellular automaton
+    def update_state(self, severity: float) -> None:
+        self.context.infection_severity += 0.1
+        if self.is_turned(self.context, severity):
+            self.context.state = State.ZOMBIE
+        elif self.is_died(self.context, severity):
+            self.context.state = State.DEAD
+
+class ZombieMachine(StateMachine):
+    # cellular automaton
+    def update_state(self, severity: float) -> None:
+        if self.is_died(self.context, severity):
+            self.context.state = State.DEAD
 
 class School:
 
@@ -678,6 +704,10 @@ Survivor movement - each survivor moves one unit away from the nearest zombie
 a: individual: zombie and survivor, cell: position, grid: zombie_positions and survivor_positions, simulation: update_simulation()
 
 
+functional programming
+save_data() save the necessary data in a save order
+load_data() load the necessary data in a load order
+refresh() refresh the data in the simulation according to time
 
 birth_probability, death_probability, infection_probability, turning_probability, death_probability, connection_probability, movement_probability, attack_probability may be changed to adjust the simulation
 

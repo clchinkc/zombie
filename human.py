@@ -390,6 +390,19 @@ class Simulation:
 # speed controls who attacks first, if dead can't attack back
 # or not in turn-based game, attack in interval of speed time after encountering (use threading)
 
+# fire that can spread on the grid with time passing
+# increment fire time by fire speed
+# fire can hurt both human and zombie
+# fire can be extinguished by water
+
+# layout that affects the game
 # add wall class, human and zombie can't move through wall, may place barrier to create complex grid
 # add door class, only human can move through door
 # add barricade class, human may place barricade which has health and can be destroyed by huamn and zombie
+
+# add health bar for human and zombie
+
+# agents form a group and move together and attack, defend together
+
+# https://replit.com/@ShiGame/TALKING-JOAQUIN#main.py
+# https://zhuanlan.zhihu.com/p/134692590

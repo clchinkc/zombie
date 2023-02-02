@@ -7,10 +7,11 @@ Flocking algorithms: You could use algorithms such as Boids or Reynolds' steerin
 
 Machine learning algorithms: You could use machine learning techniques such as reinforcement learning or decision trees to train people and zombies to make more intelligent decisions about their movements. This could allow the simulation to adapt and improve over time, and could potentially enable the people and zombies to learn from their experiences and make more effective decisions in the future.
 """
-
-import queue
 import heapq
+import queue
+import random
 
+"""
 maze = [
     ["#", "O", "#", "#", "#", "#", "#", "#", "#"],
     ["#", " ", " ", " ", " ", " ", " ", " ", "#"],
@@ -22,11 +23,62 @@ maze = [
     ["#", " ", " ", " ", " ", " ", " ", " ", "#"],
     ["#", "#", "#", "#", "#", "#", "#", "X", "#"]
 ]
+"""
 
+# generates a maze of the given size with natural path
+# but does not ensure that the maze is solvable
+def generate_maze(size):
+    maze = [["#" for _ in range(size)] for _ in range(size)]
+    for i in range(len(maze)):
+        for j in range(len(maze[0])):
+            if i == 0 or i == len(maze) - 1 or j == 0 or j == len(maze[0]) - 1:
+                maze[i][j] = "@"
+    if random.randint(0, 1) == 0:
+        start = (0, random.randint(1, size-2))
+        exit = (size-1, random.randint(1, size-2))
+    else:
+        start = (random.randint(1, size-2), 0)
+        exit = (random.randint(1, size-2), size-1)
+    
+    natural_rendering(size, maze, start, exit)
+    
+    for i in range(len(maze)):
+        for j in range(len(maze[0])):
+            if i == 0 or i == len(maze) - 1 or j == 0 or j == len(maze[0]) - 1:
+                maze[i][j] = "#"
+    maze[start[0]][start[1]] = "O"
+    maze[exit[0]][exit[1]] = "X"
 
-# pathfinder without stdscr
+    return maze, start, exit
 
-def print_maze():
+def natural_rendering(size, maze, start, exit):
+    back = [start]
+    pos = start
+    while back:
+        if pos == exit:
+            break
+        choices = []
+        if size-2 >= pos[0] >= 1 and maze[pos[0]-2][pos[1]] == "#":
+            choices.append([pos[0]-2, pos[1]])
+        if 0 <= pos[0] <= size-3 and maze[pos[0]+2][pos[1]] == "#":
+            choices.append([pos[0]+2, pos[1]])
+        if size-2 >= pos[1] >= 1 and maze[pos[0]][pos[1]-2] == "#":
+            choices.append([pos[0], pos[1]-2])
+        if 0 <= pos[1] <= size-3 and maze[pos[0]][pos[1]+2] == "#":
+            choices.append([pos[0], pos[1]+2])
+        if choices:
+            choice = random.choice(choices)
+            maze[(pos[0]+choice[0])//2][(pos[1]+choice[1])//2] = " "
+            maze[choice[0]][choice[1]] = " "
+            pos = choice
+            back.append(pos)
+        else:
+            pos = back.pop(random.randint(0, len(back)-1))
+
+# may use depth first search
+# https://makeschool.org/mediabook/oa/tutorials/trees-and-mazes/generating-a-maze-with-dfs/
+
+def print_maze(maze):
     for row in maze:
         for cell in row:
             print(cell, end=" ")
@@ -66,11 +118,59 @@ def find_neighbors(maze, row, col):
 
     return neighbors
 
-
+# find path using A* algorithm
 def find_path(maze, start, end):
-    """
-    Find the shortest path from start to end using the A* algorithm.
-    """
+    # Find the shortest path from start to end using the A* algorithm.
+
+    start_pos = start
+    end_pos = end
+
+    # priority queue for storing unexplored nodes
+    heap = []
+    heapq.heappush(heap, (0, start_pos, []))
+
+    visited = set()  # set of visited nodes
+
+    while heap:
+        cost, current_pos, path = heapq.heappop(heap)
+        row, col = current_pos
+
+        if current_pos == end_pos:
+            return path
+
+        if current_pos in visited:
+            continue
+
+        neighbors = find_neighbors(maze, row, col)
+        for neighbor in neighbors:
+            if neighbor in visited:
+                continue
+
+            r, c = neighbor
+            if maze[r][c] == "#":
+                continue
+
+            # calculate cost of reaching this neighbor
+            g = cost + 1  # movement cost
+            h = manhattan_distance(
+                neighbor, end_pos)  # heuristic cost
+            f = g + h  # total cost
+
+            new_path = path + [neighbor]
+            heapq.heappush(heap, (f, neighbor, new_path))
+            visited.add(current_pos)
+
+    return path
+
+def manhattan_distance(start, end):
+    x1, y1 = start
+    x2, y2 = end
+    return abs(x1 - x2) + abs(y1 - y2)
+
+"""
+def find_path(maze, start, end):
+
+    # Find the shortest path from start to end using the A* algorithm.
 
     start_pos = start
     end_pos = end
@@ -101,64 +201,18 @@ def find_path(maze, start, end):
             visited.add(neighbor)
 
     return new_path
+"""
 
 # may return first element of the path for the destination of this epoch
 
-"""
-def find_path(self, start, end):
-    # Find the shortest path from start to end using the A* algorithm.
-
-    start_pos = start
-    end_pos = end
-
-    # priority queue for storing unexplored nodes
-    heap = []
-    heapq.heappush(heap, (0, start_pos, []))
-
-    visited = set()  # set of visited nodes
-
-    while heap:
-        cost, current_pos, path = heapq.heappop(heap)
-        row, col = current_pos
-
-        if current_pos == end_pos:
-            return path
-
-        if current_pos in visited:
-            continue
-
-        neighbors = find_neighbors(row, col)
-        for neighbor in neighbors:
-            if neighbor in visited:
-                continue
-
-            r, c = neighbor
-            if self.layout[r][c] == "#":
-                continue
-
-            # calculate cost of reaching this neighbor
-            g = cost + 1  # movement cost
-            h = self.manhattan_distance(
-                neighbor, end_pos)  # heuristic cost
-            f = g + h  # total cost
-
-            new_path = path + [neighbor]
-            heapq.heappush(heap, (f, neighbor, new_path))
-            visited.add(current_pos)
-
-    return path
-
-def manhattan_distance(self, start, end):
-    x1, y1 = start
-    x2, y2 = end
-    return abs(x1 - x2) + abs(y1 - y2)
-"""
-
-
-def print_new_maze(path):
+def print_new_maze(maze, path, start, end):
     for row in range(len(maze)):
         for col in range(len(maze[0])):
-            if (row, col) in path:
+            if (row, col) == start:
+                print("O", end=" ")
+            elif (row, col) == end:
+                print("X", end=" ")
+            elif (row, col) in path:
                 print("o", end=" ")
             else:
                 print(maze[row][col], end=" ")
@@ -167,11 +221,31 @@ def print_new_maze(path):
 
 
 def path_finding():
-    start = start_location(maze)
-    end = end_location(maze)
-    path = find_path(maze, start, end)
-    print_maze()
-    print_new_maze(path)
+    maze, start, exit = generate_maze(10)
+    #start = start_location(maze)
+    #exit = end_location(maze)
+    path = find_path(maze, start, exit)
+    print_maze(maze)
+    print_new_maze(maze, path, start, exit)
 
 
 path_finding()
+
+"""
+class maze:
+	def __init__(self,layout,exits=None,name='Maze',time=0,random=None,rand_up=False,end=None):
+		self.layout=layout
+		self.exits=exits
+		self.name=name.capitalize()
+		self.time=time*60
+		self.random=random
+		self.up=rand_up
+		self.end=end
+	def get_maze(self):
+		if self.random:
+			return generate(self.random*4-1,self.up)
+		else:
+			return self.layout
+	def get_exits(self):
+		return self.exits
+"""
