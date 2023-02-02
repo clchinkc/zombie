@@ -7,17 +7,20 @@ And my ability to build clean pure python code
 Portfolio Website Project
 Showcase my html, css, and javascript understanding
 And the ability to combine frontend and backend
-# advanced: react
+# advanced: react, portfolio github
 
 Some other projects that I can do to showcase other skills
 
 Simple projects: low complexity (do less than 5 things, <200 lines, no libraries), high visibility, do betweeen 4-8
-Digital clock + to-do list -> expense tracker
+Digital clock + to-do list -> budget and expense tracker
++ calculator + data analysis -> budget and expense planner
 
 Intermediate projects: medium complexity (do more than 5 things, <500 lines, minimal use of libraries or frameworks), do between 3-5
-Video games, like space invaders, snake, tetris, pong, etc.
-Calculator
-Craigslist webscraper
+Video games, like space invaders, snake, tetris, pong, tic-tac-tor, etc.
+stock market simulator -> stock market simulator with strategy to buy and sell stocks based on data analysis and ability to backtest
+Craigslist webscraper -> craigslist webscraper with gui
+Quiz app -> quiz app with database
+note app -> note app with encryption
 
 Capstone projects: high complexity (put everything together, >500 lines, use integrations, like frontend, backend, database, api, software, multiple libraries and frameworks), cool to put on cv, more interesting than existing solutions, do between 1-3
 Social media clones, like twitter, discord, reddit, etc.
@@ -39,6 +42,70 @@ https://github.com/zky001/fluent-python-translate
 Python 实现康威生命游戏
 https://zhuanlan.zhihu.com/p/95526617
 https://www.analyticsinsight.net/top-10-python-data-science-courses-and-boot-camps-to-know-in-2023/
+https://python-course.eu/oop/polynomial-class.php
+https://langchain.readthedocs.io/en/latest/getting_started/getting_started.html
+
+Web development
+https://www.coursera.org/programs/coursera-for-hkust-yetdg?collectionId=3Jzsr&currentTab=CATALOG&productId=Tn_VM61TEeaH0xIrfa92QA&productType=s12n&showMiniModal=true
+https://stackoverflow.com/questions/37770620/how-to-include-markdown-md-files-inside-html-files
+https://github.com/topics/boilerplate-code
+https://replit.com/@AdityaAnanya007/Fronteditor
+https://replit.com/@andrevladica/LEGEND-OF-THE-TEXT
+https://github.com/orgs/creativetimofficial/repositories
+
+Frontend + backend
+https://tms-dev-blog.com/python-backend-with-javascript-frontend-how-to/
+https://github.com/ashutoshpipriye/Calculator-using-Flask
+Python开发简单计算器
+https://blog.csdn.net/weixin_45621944/article/details/109906498
+https://juejin.cn/post/6844903545712410631
+https://www.51cto.com/article/697947.html
+https://github.com/erezsh/plyplus/blob/master/examples/calc.py
+https://github.com/lark-parser/lark/blob/master/examples/calc.py
+https://www.accordbox.com/blog/how-to-combine-frontend-and-backend-for-python-web-developers/
+https://github.com/HamishHamiltonSmith/Visgraph-Graphing-Calculator
+https://www.codecademy.com/learn/connecting-front-end-to-back-end
+https://stackoverflow.blog/2020/02/03/is-it-time-for-a-front-end-framework/
+How frontend and backend is connected
+Integrate frontend and backend
+https://vsupalov.com/how-backend-and-frontend-communicate/
+https://www.youtube.com/watch?v=ACI8EDbaXzo
+https://github.com/FredrikOseberg/spa-frontend
+https://github.com/FredrikOseberg/spa-api
+
+flask
+https://realpython.com/learning-paths/flask-by-example/
+https://devpress.csdn.net/python/62f50b327e66823466189be4.html
+https://www.educative.io/courses/flask-develop-web-applications-in-python
+https://www.digitalocean.com/community/tutorials/how-to-create-your-first-web-application-using-flask-and-python-3
+https://www.digitalocean.com/community/tutorials/how-to-make-a-web-application-using-flask-in-python-3
+https://realpython.com/python-web-applications/
+https://realpython.com/python-web-applications-with-flask-part-ii/
+https://www.jetbrains.com/help/pycharm/creating-web-application-with-flask.html
+https://www.fullstackpython.com/flask.html
+https://www.freecodecamp.org/news/how-to-build-a-web-application-using-flask-and-deploy-it-to-the-cloud-3551c985e492/
+Flask example GitHub
+https://www.educative.io/collection/page/10370001/5948104969027584/4612762156400640/project
+
+django
+https://www.djangoproject.com/
+https://realpython.com/tutorials/django/
+https://realpython.com/get-started-with-django-1/
+https://realpython.com/django-diary-project-python/
+https://realpython.com/django-social-network-1/
+
+Chart animation
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247486653&idx=1&sn=92128455c20ada46b355f5166ba5d4b5&chksm=fdcb3b9bcabcb28de6cb8f5c08a557f5078aede86b21fc151babc29dde8451d0a3a60efd0a51&scene=21#wechat_redirect
+https://www.dunderdata.com/blog/create-a-bar-chart-race-animation-in-python-with-matplotlib
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247490218&idx=1&sn=19f061116f4939038b90aa18085505ad&chksm=fdcb2d8ccabca49ab88171cb16d641cc059506a5646766a5bc24ee0910140b92d4902aa8057c&scene=21#wechat_redirect
+https://igoamazing.com/python-plotly/
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500033&idx=1&sn=79acaead7ea5106b9280ee7d65efc97a&chksm=fdc8f627cabf7f31e5aed380b11c535e3e54860e3800e341bb64099ad08828d3c16a859ced0a&scene=21#wechat_redirect
+
+Reinforcement learning
+https://blog.csdn.net/abcdefg90876/article/details/108459475
+https://blog.csdn.net/qq_30615903/article/details/80774384
+https://towardsdatascience.com/advanced-visualization-techniques-for-time-series-analysis-14eeb17ec4b0
+https://worldmodels.github.io/
 
 Software Design
 https://zh.wikipedia.org/zh-tw/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E8%89%BA%E6%9C%AF
@@ -56,42 +123,19 @@ https://www.pluralsight.com/courses/python-design-patterns-playbook
 https://www.pluralsight.com/courses/patterns-library
 Fundamentals of Software Architecture: An Engineering Approach
 Clean Code: A Handbook of Agile Software Craftsmanship
-
-Web development
-https://www.coursera.org/programs/coursera-for-hkust-yetdg?collectionId=3Jzsr&currentTab=CATALOG&productId=Tn_VM61TEeaH0xIrfa92QA&productType=s12n&showMiniModal=true
-https://stackoverflow.com/questions/37770620/how-to-include-markdown-md-files-inside-html-files
-
-Frontend + backend
-https://github.com/ashutoshpipriye/Calculator-using-Flask
-Python开发简单计算器
-https://blog.csdn.net/weixin_45621944/article/details/109906498
-https://juejin.cn/post/6844903545712410631
-https://www.51cto.com/article/697947.html
-https://github.com/erezsh/plyplus/blob/master/examples/calc.py
-https://github.com/lark-parser/lark/blob/master/examples/calc.py
-https://www.accordbox.com/blog/how-to-combine-frontend-and-backend-for-python-web-developers/
-
-flask
-https://realpython.com/learning-paths/flask-by-example/
-
-django
-https://www.djangoproject.com/
-https://realpython.com/tutorials/django/
-https://realpython.com/get-started-with-django-1/
-https://realpython.com/django-diary-project-python/
-https://realpython.com/django-social-network-1/
-
-Chart animation
-https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247486653&idx=1&sn=92128455c20ada46b355f5166ba5d4b5&chksm=fdcb3b9bcabcb28de6cb8f5c08a557f5078aede86b21fc151babc29dde8451d0a3a60efd0a51&scene=21#wechat_redirect
-https://www.dunderdata.com/blog/create-a-bar-chart-race-animation-in-python-with-matplotlib
-https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247490218&idx=1&sn=19f061116f4939038b90aa18085505ad&chksm=fdcb2d8ccabca49ab88171cb16d641cc059506a5646766a5bc24ee0910140b92d4902aa8057c&scene=21#wechat_redirect
-https://igoamazing.com/python-plotly/
-https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500033&idx=1&sn=79acaead7ea5106b9280ee7d65efc97a&chksm=fdc8f627cabf7f31e5aed380b11c535e3e54860e3800e341bb64099ad08828d3c16a859ced0a&scene=21#wechat_redirect
-
-
-Reinforcement learning
-https://blog.csdn.net/abcdefg90876/article/details/108459475
-https://blog.csdn.net/qq_30615903/article/details/80774384
+clean architecture 實作篇
+https://dev.to/dyarleniber/hexagonal-architecture-and-clean-architecture-with-examples-48oi
+clean/hexagonal architecture
+gang of four design patterns
+solid principles in python
+object oriented pipeline python
+https://zh.m.wikipedia.org/zh-tw/%E5%8F%8D%E5%B0%84%E5%BC%8F%E7%BC%96%E7%A8%8B
+https://github.com/kamranahmedse/design-patterns-for-humans
+https://github.com/faif/python-patterns
+https://github.com/kelvins/design-patterns-python
+https://github.com/PacktPublishing/Mastering-Python-Design-Patterns-Second-Edition
+https://github.com/RefactoringGuru/design-patterns-python
+https://zh.wikipedia.org/zh-tw/%E7%BB%93%E6%9E%84%E5%8C%96%E7%BC%96%E7%A8%8B
 
 Code style
 https://en.wikipedia.org/wiki/Coding_best_practices
@@ -105,6 +149,7 @@ https://www.youtube.com/watch?v=ULxMQ57engo
 https://www.youtube.com/watch?v=NI5IGAim8XU
 pytest vs unittest
 https://myapollo.com.tw/zh-tw/7-useful-pytest-plugins/
+patch
 
 Python
 https://www.python.org/
@@ -140,6 +185,7 @@ https://www.khanacademy.org/computing
 https://www.geeksforgeeks.org/
 https://github.com/sindresorhus/awesome
 https://www.lanqiao.cn/courses/?tag=%E5%85%A8%E9%83%A8&category=%E5%85%A8%E9%83%A8&fee=all&sort=default&level=all&from_login_page=true
+https://github.com/TheAlgorithms
 
 Youtube video
 https://www.youtube.com/user/Computerphile
@@ -153,6 +199,7 @@ https://reactjs.org/tutorial/tutorial.html#declaring-a-winner Lifting State Up, 
 https://codepen.io/gaearon/pen/LyyXgK
 https://www.youtube.com/watch?v=cKfevf-iIHA Visual IDE
 https://github.com/girishgr8/Resume-Builder
+https://dev.to/imshines/a-simple-weather-app-using-react-and-openweathermap-api-10m2
 
 Javascript
 https://developer.mozilla.org/zh-TW/docs/Learn/JavaScript
@@ -171,16 +218,43 @@ Web design
 https://www.creative-tim.com/blog/web-design/
 https://www.creative-tim.com/blog/web-development/
 https://www.creative-tim.com/blog/web-design/web-design-tips-outstanding-site/
+https://www.creative-tim.com/product/soft-ui-dashboard?utm_medium=social&utm_source=youtube&utm_campaign=free+admins+short
+https://www.creative-tim.com/product/argon-dashboard?utm_medium=social&utm_source=youtube&utm_campaign=free+admins+short
+https://www.creative-tim.com/product/material-dashboard?utm_medium=social&utm_source=youtube&utm_campaign=free+admins+short
+https://www.creative-tim.com/product/black-dashboard?utm_medium=social&utm_source=youtube&utm_campaign=free+admins+short
+
+evolution game
+https://replit.com/search?query=evolution
+
+Python game
+https://replit.com/@LMNtal/Star-Wars-A-New-Recruit#AGM/Templates/Actions/reactive_combat_action.py - using https://github.com/ljmanso/AGM
+https://replit.com/@HyperHacker/Alchemy?v=1
+https://replit.com/@HyperHacker/Chess?v=1#main.py
+https://replit.com/@MonsusBattlebus/Five-Nights-At-Freddys-Python-Edition
 
 Pygame
 https://www.epubit.com/articleDetails?id=NC7E3EF941B50000116101A401B63E380 four in row
 https://github.com/Gooodgis/dont-touch-my-presents 3 day project
+https://replit.com/@ChompingDragon/Super-Mario-Bros-for-ReplitREAD-ALL-INSTRUCTIONS#main.py
+https://replit.com/@LukeBlake/Tank-game
+https://replit.com/@Carson-Sernick/carsoncraft
+https://replit.com/@ChompingDragon/Super-Smash-Bros-for-Replit-part-2-READ-ALL-INSTRUCTIONS
+https://python-course.eu/applications-python/snake-in-python.php
 
 tkinter game
 https://zhuanlan.zhihu.com/p/45870821
 
 java game
-https://github.com/TheCherno/Genesis/tree/master/src/com/thecherno/ld24
+https://github.com/TheCherno/Genesis/tree/master/src/com/thecherno/ld24 - changing to c++ youtube
+
+c++ game
+https://replit.com/@MuhammadHariz/Seamulator-V33-Game#main.cpp
+
+web game
+https://replit.com/@IroncladDev/P5Platformer
+https://replit.com/@phil-mac/DefCraft
+https://replit.com/@Sazgr/Random-3D-Terrain-Generator
+https://replit.com/@1Tim/Blocky-Platformer-Maker-simple
 
 Open source project
 https://opensource.guide/how-to-contribute/
@@ -217,11 +291,16 @@ https://github.com/markdouthwaite/minimal-flask-api
 https://medium.com/quick-code/absolute-beginners-guide-to-slaying-apis-using-python-7b380dc82236
 https://github.com/ml-tooling/lazydocs
 
+Api
+https://github.com/EnZon3/TWS-dataset_gen - hosted on https://replit.com/@EnZon3/The-Worlds-Sentiment
+
 Chatbot
 https://github.com/jaspreetsidhu3/voice_assistant
 https://www.edureka.co/blog/how-to-make-a-chatbot-in-python/#chatterbot
+https://github.com/hackermondev/AllKnowledgeBob
 
 Command line application
+https://github.com/lxgr-linux/pokete
 https://betterprogramming.pub/designing-beautiful-command-line-applications-with-python-72bd2f972ea
 https://towardsdatascience.com/how-to-build-and-publish-command-line-applications-with-python-96065049abc1
 
@@ -280,6 +359,8 @@ https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/RZ0d9FWDJDPH2IqrIsTh
 https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/FjNzAxkioePPG1a6vR0jTQ
 plotly
 https://zhuanlan.zhihu.com/p/387268377
+mapbox
+https://www.educative.io/collection/page/10370001/5993792801079296/5430842847657984/project
 R language
 https://mp.weixin.qq.com/s?__biz=MzkzMDE4NTc5NA==&mid=2247494348&idx=1&sn=d57f4ada61f32fd7d125a8e8d56188ae&chksm=c27cbde1f50b34f73615468d6f218b0e7a395d9981b911635b45319848d292a87d27fe7bf309&scene=132#wechat_redirect
 jupyter notebook only
@@ -290,6 +371,7 @@ https://zhuanlan.zhihu.com/p/413293073
 Word cloud
 https://cloud.tencent.com/developer/article/1931771
 https://blog.csdn.net/yimixgg/article/details/80965797
+https://python-course.eu/applications-python/python-wordcloud-tutorial.php
 
 Stock + mysql
 https://freewechat.com/a/MzAwMjYxNjcwMw==/2456404246/1
@@ -306,12 +388,21 @@ https://mp.weixin.qq.com/s/w1YkMlOGaU_Ixo1ZyPzx0w
 
 ascii
 https://zhuanlan.zhihu.com/p/245651042
+https://replit.com/@ArchimedesLi/Desmos-Art-Generator
 
 Opencv
 https://realpython.com/face-recognition-with-python/
 
 Tensorflow
 https://github.com/RichardFu123/tensorflow/tree/master/CNN
+
+text classification
+https://python-course.eu/machine-learning/introduction-text-classification.php
+https://python-course.eu/machine-learning/text-classification-in-python.php
+
+Musical score
+https://python-course.eu/applications-python/musical-scores-with-python.php
+https://python-course.eu/applications-python/fibonacci-to-music-score.php
 
 Courses
 1. A JavaScript Course

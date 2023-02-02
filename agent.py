@@ -577,4 +577,6 @@ https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247494272&idx=1&sn=adbc97
 https://github.com/nedbat/coveragepy
 speed up
 https://mp.weixin.qq.com/s/M7DdUWLzqOLVR7qJFmvZdA
+threading
+https://python-course.eu/applications-python/threads.php
 """
