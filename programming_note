@@ -143,6 +143,54 @@ One way to implement this would be to create a separate observer class that impl
 The sole responsibility of a subject is to maintain a list of observers and to notify them of state changes by calling their update() operation. The responsibility of observers is to register and unregister themselves with a subject (in order to be notified of state changes) and to update their state (to synchronize their state with the subject's state) when they are notified as well as display them in different UI. This makes subject and observers loosely coupled. Subject and observers have no explicit knowledge of each other. Observers can be added and removed independently at run time.
 https://www.youtube.com/watch?v=oNalXg67XEE
 
+11. state pattern
+The State pattern is a behavioral design pattern that allows an object to alter its behavior when its internal state changes as if the object changes its class.
+It appears as a series of state objects and a context object whose behavior varies as its state object changes. The state objects are responsible for defining the behavior for a particular state, and the context delegates state-specific behavior to the current state object. The pattern provides a clean way to encapsulate varying behaviour and state transitions independent to the state, making it more lose-coupled and easier to add new states or modify existing ones.
+
+A monolithic object's behavior is a function of its state, and it must change its behavior at run-time depending on that state. Or, an application is characterized by large and numerous case statements that vector flow of control based on the state of the application.
+The State pattern is a solution to the problem of how to make behavior depend on state. The design consists of a "wrapper" class that serves as the interface for the object and a set of related "wrappee" classes that handle the specific behavior for each state. The wrappee classes have an extra input that allows them to communicate with the wrapper class. This way, the complex behavior of the object can be separated and organized into the wrappee classes, making it easier for the wrapper class to manage the object's behavior.
+
+The pattern provides two solutions to these problems:
+Encapsulate state-specific behavior in separate state objects, each implementing a shared state interface.
+A class delegates state-specific behavior to its current state object, rather than implementing it directly, making the class independent of how the behavior is implemented.
+
+The State pattern does not specify where the state transitions will be defined. The choices are two: the "context" object, or each individual State derived class. The advantage of the latter option is ease of adding new State derived classes. The disadvantage is each State derived class has knowledge of (coupling to) its siblings, which introduces dependencies between subclasses.
+
+A table-driven approach to designing finite state machines does a good job of specifying state transitions, but it is difficult to add actions to accompany the state transitions. The pattern-based approach uses code (instead of data structures) to specify state transitions, but it does a good job of accommodating state transition actions.
+
+While moving the code to the state class, you might discover that it depends on private members of the context. There are several workarounds:
+Make these fields or methods public.
+Turn the behavior you’re extracting into a public method in the context and call it from the state class. This way is ugly but quick, and you can always fix it later.
+Nest the state classes into the context class, but only if your programming language supports nesting classes.
+In the context class, add a reference field of the state interface type and a public setter that allows overriding the value of that field.
+
+Similar patterns:
+Flyweight explains when and how State objects can be shared.
+Interpreter can use State to define parsing contexts.
+The structure of State and Bridge are identical (except that Bridge admits hierarchies of envelope classes, whereas State allows only one). The two patterns use the same structure to solve different problems: State allows an object's behavior to change along with its state, while Bridge's intent is to decouple an abstraction from its implementation so that the two can vary independently.
+It may look similar to the Strategy pattern, Both patterns are based on composition: they change the behavior of the context by delegating some work to helper objects.  But State can be considered as an extension of Strategy. In the State pattern, the particular states may be aware of each other and able to initiate transitions between state of the context at will, whereas strategies makes these objects completely independent and unaware of each other. Also, Strategy is a bind-once pattern where the choice of algorithm is stable, whereas State is more dynamic with the state of the "context" object causes it to select from its "palette" of Strategy objects.
+
+The State pattern consists of three components:
+Context: an interface for clients to interact with, carrying a concrete state object that represents the current state of an object.
+State: an interface for declaring what each concrete state should do.
+Concrete State: provides implementation for state-specific methods declared in the State interface, may also inherit from the interface to share common behavior, may have a backreference to the context, allowing them to access information from the context and initiate state transitions
+The pattern suggests creating classes for each state of an object and moving state-specific behaviors into these classes. The context object, instead of implementing all behaviors itself, stores a reference to a state object and delegates state-related tasks to it. To transition to another state, Both the context and concrete states can replace the current state object linked to the context.
+
+The State pattern should be used when:
+When an object has polymorphic behaviors based on its current state, there are many states, and the state-specific code changes often. The pattern aggregates state-specific code into separate named classes, improving cohesion and making it easier to add or change states.
+When a class has complex conditionals that control its behavior based on field values. The pattern removes the dependency on the if/else or switch/case conditional logic and reduces the complexity of the main class.
+When there is duplication in code across similar states and transitions of a state machine. The pattern allows for hierarchies of state classes and reduces duplication by extracting common code into base classes.
+
+Combining state design pattern and finite state machine
+The state design pattern is used to encapsulate the behavior of an object depending on its state. The state implementation reflects the behavior the object should have when being in that state.
+A finite state machine describes a computational machine that is in exactly one state at any given time. It can change from one to another state in response to some input / trigger / event.
+The emphasis of the state design pattern is on encapsulation of behavior to create reusable, maintainable components (the states). The focus of the finite state machine is on states and their transitions (captured by the state diagram) but not on the actual behavior (that’s an implementation detail).
+These two concepts can be combined by using a finite state machine to describe and manage the states and their transitions for an object that delegates behavior to state objects using the state design pattern.
+
+The State Machine is a centralized approach, with all transitions represented in one place in a table, resulting in better optimization and readability. The State Pattern is a decentralized approach, where each stand along state is encapsulated, allowing for flexible replacement of states, but slower due to state switching.
+The choice between the two depends on the importance of state behavior and the need for a hierarchy of state transitions. In state machine, we care what action is applied when the object is transitioned to the next state. In state pattern, we care about how the object behave in those states.
+The State Pattern abstracts and decouples states and allows easy addition and replacement of states, while the State Machine abstracts the state diagram itself and decouples it from the transition payloads.
+
 Not suitable to implement:
 3. builder pattern
 The Builder pattern is a design pattern that separates the construction of a complex object from its representation. The idea behind this pattern is to break down the construction of a complex object into smaller, manageable steps that can be executed in a specific order, often building a composite object. This allows for greater flexibility and control over the final product, as well as the ability to change the type or representation of the object at any step.
@@ -170,16 +218,6 @@ RefinedAbstraction: It implements abstraction:
 Implementor: It defines an interface for implementation
 ConcreteImplementor: It implements Implementor interface.
 For example, we can have a 'Car' interface and two classes that implement this interface: 'SportsCar' and 'Truck'. The 'Car' interface will have the methods and properties that both 'SportsCar' and 'Truck' classes should have. Then, we define the 'SportsCar' and 'Truck' classes that will have their own unique implementations of the 'drive' method. The 'SportsCar' class can have a drive method that prints "Driving a sports car at high speed!" and the 'Truck' class can have a drive method that prints "Driving a truck at low speed." Now we can create instances of these classes and use them interchangeably without changing the implementation of the car class. This allows us to add new subclasses with new implementations without modifying the Car class and this make the code more maintainable and flexible.
-
-
-3. mixin pattern
-https://andrewbrookins.com/technology/mixins-in-python-and-ruby-compared/
-4. plugin pattern: let the user to add new behaviour to the object without modifying the existing code at runtime, by adding new plugin
-https://github.com/ArjanCodes/2021-plugin-architecture
-
-7. composite pattern: compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly
-9. iterator pattern: provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation
-
 11. command pattern
 The command pattern is a behavioural design pattern that provides a way to encapsulate request method calls as objects that contain all information about the request. This allows for flexible and decoupled code, enabling passing requests as method arguments, delaying, queuing or logging a request’s execution, and supporting undo/redo.
 The main benefits of using the Command pattern are:
@@ -188,7 +226,17 @@ Encapsulation: The request is encapsulated as an object, converting parameters o
 Composite commands: The Command pattern makes it possible to build complex operations from simple individual commands, providing a way to perform multiple actions with a single request.
 Undo/Redo: By keeping track of a history of commands, it's possible to undo and redo actions in a user interface.
 Delayed execution: The Command pattern makes it possible to defer the execution of a command, which can be useful in certain scenarios, such as multithreaded environments or to implement a transaction mechanism.
-12. proxy pattern: provide a surrogate or placeholder for another object to control access to it
+
+
+
+3. mixin pattern
+https://andrewbrookins.com/technology/mixins-in-python-and-ruby-compared/
+4. plugin pattern: let the user to add new behaviour to the object without modifying the existing code at runtime, by adding new plugin
+https://github.com/ArjanCodes/2021-plugin-architecture
+7. composite pattern: compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly
+9. iterator pattern: provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation
+
+
 13. flyweight pattern: use sharing to support large numbers of fine-grained objects efficiently
 14. facade pattern: provide a unified interface to a set of interfaces in a subsystem. Facade defines a higher-level interface that makes the subsystem easier to use
 16. memento pattern: without violating encapsulation, capture and externalize an object's internal state so that the object can be restored to this state later
@@ -219,125 +267,49 @@ Lazy initialization is a design pattern that delays the creation of an object, t
 Adapter is recognizable by a constructor which takes an instance of a different abstract/interface type. When the adapter receives a call to any of its methods, it translates parameters to the appropriate format and then directs the call to one or several methods of the wrapped object.
 The Adapter pattern is pretty common in Python code. It’s very often used in systems based on some legacy code. In such cases, Adapters make legacy code work with modern classes.
 https://refactoring.guru/design-patterns/adapter/python/example
-8. state pattern: allow an object to alter its behaviour when its internal state changes. The object appears as if the object changed its class.
-The State pattern is a behavioral design pattern that allows an object to alter its behavior when its internal state changes. It appears as a series of classes that represent various states and a context object whose behavior varies as its state object changes. The state objects are responsible for defining the behavior for a particular state, and the context delegates state-specific behavior to the current state object. The pattern provides a clean way to manage state transitions and behavior, making it easier to add new states or modify existing ones.
-Intent
-Allow an object to alter its behavior when its internal state changes. The object will appear to change its class.
-An object-oriented state machine
-wrapper + polymorphic wrappee + collaboration
-Problem
-A monolithic object's behavior is a function of its state, and it must change its behavior at run-time depending on that state. Or, an application is characterized by large and numerous case statements that vector flow of control based on the state of the application.
+12. proxy pattern
+Proxy design pattern is a structural design pattern that provides a a proxy object as the substitute or placeholder for another object and controls and manage access to the original object, allowing you to perform tasks either before or after the request reaches the original object without changing the original object.
+Create a new proxy class with the same interface as the original service object, and delegate all requests from clients to the real service object. Upon receiving a request from a client, the proxy creates a real service object and delegates all the work to it.
+The proxy acts as a database object and allows for execution of actions before or after the primary logic of the class without the client or the real database object even knowing. This is because the proxy implements the same interface as the original class, and can be passed to any client that expects a real service object.
+https://refactoring.guru/images/patterns/diagrams/proxy/structure.png?id=f2478a82a84e1a1e512a8414bf1abd1c
+The Service Interface declares the interface of the Service. The proxy must follow this interface to be able to disguise itself as a service object.
+The Service is a class that provides some useful business logic.
+The Proxy class has a reference field that points to a service object. After the proxy finishes its processing (e.g., lazy initialization, logging, access control, caching, etc.), it passes the request to the service object.
+Usually, proxies manage the full lifecycle of their service objects.
+The Client should work with both services and proxies via the same interface. This way you can pass a proxy into any code that expects a service object.
+The Proxy pattern is used for several purposes:
+Lazy initialization (virtual proxy): Delay object creation until needed for saving system resources.
+Access control (protection proxy): Restrict the use of service object to specific clients by checking client credentials.
+Local execution of a remote service (remote proxy): Handle nasty details of passing client requests to a remote service object located on a server on the network.
+Logging requests (logging proxy): Keep a history of requests made to a service object by logging each request before passing it.
+Caching request results (caching proxy): Cache results of client requests for efficient reuse and management of cache life cycle.
+Smart reference: Keep track of clients using the service object and do other action accordingly.
+Synchronization: Provide safe access by locking the object during accessing, so that multiple threads can access the same object without error.
+Complexity Hiding (Facade Proxy): Complexity hiding and access control for a group of complex objects.
+How to implement
+Create a interface and the service object and proxy object both follows. That makes proxy and service objects interchangeable. If extracting the interface from the service class is not possible, make the proxy a subclass of the service class to inherit the interface of the service.
+Implement the proxy class with a pointer for storing a reference to the service object and the interface. Usually, proxies create and manage the whole life cycle of their services. On rare occasions, the client passes a service to the proxy via a constructor.
+Implement the proxy methods according to their purposes. In most cases, after doing some work, the proxy should delegate the work to the service object.
+Consider introducing a creation method that decides whether the client gets a proxy or a real service. This can be a simple static method in the proxy class or a full-blown factory method.
+Consider implementing lazy initialization for the service object.
+Why Use It?
+Loose coupling
+The Proxy pattern allows for loose coupling of core logic and added functionality. Instead of a single class performing multiple tasks, the core logic is implemented in a primary class and added functionality is implemented in a separate class that extends the primary class. This makes maintenance and extension of functionality easier and helps adhere to the Single Responsibility Principle. An example is dividing two integers, which can be split into a primary Division class for core logic and a ProxyDivision class for added functionality such as exception handling and logging. The use of the same interface for both classes and the composition structure allows for easy swapping and extending the classes for extra functionality without touching their internal logics directly.
+Enhanced Testability
+The proxy pattern enhances testability by separating core logic and added functionality. This allows for testing each component separately and makes tests more succinct and modular. In the example of the Division and ProxyDivision classes, the Division class can be tested first, with unit tests focused on the core logic, before testing the additional functionalities provided by the ProxyDivision class. This separation of core logic from added functionality results in more reliable and rigorous unit tests.
+Pros and Cons
+You can control the service object without clients knowing about it.
+You can manage the lifecycle of the service object when clients don’t care about it.
+The proxy works even if the service object isn’t ready or is not available.
+Open/Closed Principle. You can introduce new proxies without changing the service or clients.
+The code may become more complicated since you need to introduce a lot of new classes.
+The response from the service might get delayed.
+Relations with Other Patterns
+Adapter provides a different interface to the wrapped object, Proxy provides it with the same interface, and Decorator provides it with an enhanced interface.
+Facade is similar to Proxy in that both buffer a complex entity and initialize it on its own. Unlike Facade, Proxy has the same interface as its service object, which makes them interchangeable.
+Decorator and Proxy have similar structures, but very different intents. Both patterns are built on the composition principle, where one object is supposed to delegate some of the work to another. The difference is that a Proxy usually manages the life cycle of its service object on its own, whereas the composition of Decorators is always controlled by the client. Decorators add some functionality to the original object, while Proxies control access to it.
 
-Discussion
-The State pattern is a solution to the problem of how to make behavior depend on state.
 
-Define a "context" class to present a single interface to the outside world.
-Define a State abstract base class.
-Represent the different "states" of the state machine as derived classes of the State base class.
-Define state-specific behavior in the appropriate State derived classes.
-Maintain a pointer to the current "state" in the "context" class.
-To change the state of the state machine, change the current "state" pointer.
-The State pattern does not specify where the state transitions will be defined. The choices are two: the "context" object, or each individual State derived class. The advantage of the latter option is ease of adding new State derived classes. The disadvantage is each State derived class has knowledge of (coupling to) its siblings, which introduces dependencies between subclasses.
-
-A table-driven approach to designing finite state machines does a good job of specifying state transitions, but it is difficult to add actions to accompany the state transitions. The pattern-based approach uses code (instead of data structures) to specify state transitions, but it does a good job of accommodating state transition actions.
-
-Structure
-The state machine's interface is encapsulated in the "wrapper" class. The wrappee hierarchy's interface mirrors the wrapper's interface with the exception of one additional parameter. The extra parameter allows wrappee derived classes to call back to the wrapper class as necessary. Complexity that would otherwise drag down the wrapper class is neatly compartmented and encapsulated in a polymorphic hierarchy to which the wrapper object delegates.
-
-Check list
-Identify an existing class, or create a new class, that will serve as the "state machine" from the client's perspective. That class is the "wrapper" class.
-Create a State base class that replicates the methods of the state machine interface. Each method takes one additional parameter: an instance of the wrapper class. The State base class specifies any useful "default" behavior.
-Create a State derived class for each domain state. These derived classes only override the methods they need to override.
-The wrapper class maintains a "current" State object.
-All client requests to the wrapper class are simply delegated to the current State object, and the wrapper object's this pointer is passed.
-The State methods change the "current" state in the wrapper object as appropriate.
-
-Rules of thumb
-State objects are often Singletons.
-Flyweight explains when and how State objects can be shared.
-Interpreter can use State to define parsing contexts.
-Strategy has 2 different implementations, the first is similar to State. The difference is in binding times (Strategy is a bind-once pattern, whereas State is more dynamic).
-The structure of State and Bridge are identical (except that Bridge admits hierarchies of envelope classes, whereas State allows only one). The two patterns use the same structure to solve different problems: State allows an object's behavior to change along with its state, while Bridge's intent is to decouple an abstraction from its implementation so that the two can vary independently.
-The implementation of the State pattern builds on the Strategy pattern. The difference between State and Strategy is in the intent. With Strategy, the choice of algorithm is fairly stable. With State, a change in the state of the "context" object causes it to select from its "palette" of Strategy objects.
-https://sourcemaking.com/files/v2/content/patterns/State1.png
-https://sourcemaking.com/files/v2/content/patterns/State_example1.png
-https://refactoring.guru/images/patterns/diagrams/state/solution-en.png?id=2db312e603c026421063dddef065b170
-The State pattern suggests that you create new classes for all possible states of an object and extract all state-specific behaviors into these classes.
-Instead of implementing all behaviors on its own, the original object, called context, stores a reference to one of the state objects that represents its current state, and delegates all the state-related work to that object.
-To transition the context into another state, replace the active state object with another object that represents that new state. This is possible only if all state classes follow the same interface and the context itself works with these objects through that interface.
-This structure may look similar to the Strategy pattern, but there’s one key difference. In the State pattern, the particular states may be aware of each other and initiate transitions from one state to another, whereas strategies almost never know about each other.
-https://refactoring.guru/images/patterns/diagrams/state/structure-en.png?id=38c5cc3a610a201e5bc26a441c63d327
-Context stores a reference to one of the concrete state objects and delegates to it all state-specific work. The context communicates with the state object via the state interface. The context exposes a setter for passing it a new state object.
-The State interface declares the state-specific methods. These methods should make sense for all concrete states because you don’t want some of your states to have useless methods that will never be called.
-Concrete States provide their own implementations for the state-specific methods. To avoid duplication of similar code across multiple states, you may provide intermediate abstract classes that encapsulate some common behavior.
-State objects may store a backreference to the context object. Through this reference, the state can fetch any required info from the context object, as well as initiate state transitions.
-Both context and concrete states can set the next state of the context and perform the actual state transition by replacing the state object linked to the context.
-https://refactoring.guru/images/patterns/diagrams/state/example.png?id=1ffdb109b3ebb85d223b9d1651d2034c
-Applicability
- Use the State pattern when you have an object that behaves differently depending on its current state, the number of states is enormous, and the state-specific code changes frequently.
- The pattern suggests that you extract all state-specific code into a set of distinct classes. As a result, you can add new states or change existing ones independently of each other, reducing the maintenance cost.
-
- Use the pattern when you have a class polluted with massive conditionals that alter how the class behaves according to the current values of the class’s fields.
- The State pattern lets you extract branches of these conditionals into methods of corresponding state classes. While doing so, you can also clean temporary fields and helper methods involved in state-specific code out of your main class.
-
- Use State when you have a lot of duplicate code across similar states and transitions of a condition-based state machine.
- The State pattern lets you compose hierarchies of state classes and reduce duplication by extracting common code into abstract base classes.
-
-While moving the code to the state class, you might discover that it depends on private members of the context. There are several workarounds:
-Make these fields or methods public.
-Turn the behavior you’re extracting into a public method in the context and call it from the state class. This way is ugly but quick, and you can always fix it later.
-Nest the state classes into the context class, but only if your programming language supports nesting classes.
-In the context class, add a reference field of the state interface type and a public setter that allows overriding the value of that field.
-
-State can be considered as an extension of Strategy. Both patterns are based on composition: they change the behavior of the context by delegating some work to helper objects. Strategy makes these objects completely independent and unaware of each other. However, State doesn’t restrict dependencies between concrete states, letting them alter the state of the context at will.
-
-In State pattern a class behavior changes based on its state. This type of design pattern comes under behavior pattern.
-In State pattern, we create objects which represent various states and a context object whose behavior varies as its state object changes.
-
-Implementation
-We are going to create a State interface defining an action and concrete state classes implementing the State interface. Context is a class which carries a State.
-
-The state pattern is one of the behavioral design patterns. A state design pattern is used when an Object changes its behavior based on its internal state. If we have to change the behavior of an object based on its state, we can have a state variable in the Object and use the if-else condition block to perform different actions based on the state. The state pattern is used to provide a systematic and lose-coupled way to achieve this through Context and State implementations.
-Context: Defines an interface for clients to interact. It maintains references to concrete state objects which may be used to define the current state of objects.
-State: Defines interface for declaring what each concrete state should do.
-ConcreteState: Provides the implementation for methods defined in State.
-
-Advantages of State Design Pattern
-
-With State pattern, the benefits of implementing polymorphic behavior are evident, and it is also easier to add states to support additional behavior.
-In the State design pattern, an object’s behavior is the result of the function of its state, and the behavior gets changed at runtime depending on the state. This removes the dependency on the if/else or switch/case conditional logic. For example, in the TV remote scenario, we could have also implemented the behavior by simply writing one class and method that will ask for a parameter and perform an action (switch the TV on/off) with an if/else block.
-The State design pattern also improves Cohesion since state-specific behaviors are aggregated into the ConcreteState classes, which are placed in one location in the code.
-It can make your code easier to read. Your code may be simpler to comprehend if the behavior is divided into several states, with each state having a distinct name that is both obvious and descriptive.
-You may find it helpful to follow the Single Responsibility Principle (SRP). According to the SRP, a class should only have one cause to modify. You may guarantee that each state has a clear and distinct duty by encapsulating the behavior in multiple states, which can make your code easier to maintain and alter.
-Disadvantages of State Design Pattern
-
-The State design pattern can be used when we need to change the state of the object at runtime by inputting into it different subclasses of some State base class. This circumstance is an advantage and disadvantage at the same time because we have a clear separate State class with some logic and on the other hand the number of classes grows up.
-
-The state pattern is a behavioral software design pattern that allows an object to alter its behavior when its internal state changes. This pattern is close to the concept of finite-state machines. The state pattern can be interpreted as a strategy pattern, which is able to switch a strategy through invocations of methods defined in the pattern's interface.
-
-The state pattern is used in computer programming to encapsulate varying behavior for the same object, based on its internal state. This can be a cleaner way for an object to change its behavior at runtime without resorting to conditional statements and thus improve maintainability.[1]: 395 
-
-Overview
-
-A sample UML class and sequence diagram for the State design pattern.[2]
-The state design pattern is one of twenty-three design patterns documented by the Gang of Four that describe how to solve recurring design problems. Such problems cover the design of flexible and reusable object-oriented software, such as objects that are easy to implement, change, test, and reuse.[3]
-
-The state pattern is set to solve two main problems:[4]
-
-An object should change its behavior when its internal state changes.
-State-specific behavior should be defined independently. That is, adding new states should not affect the behavior of existing states.
-Implementing state-specific behavior directly within a class is inflexible because it commits the class to a particular behavior and makes it impossible to add a new state or change the behavior of an existing state later, independently from the class, without changing the class. In this, the pattern describes two solutions:
-
-Define separate (state) objects that encapsulate state-specific behavior for each state. That is, define an interface (state) for performing state-specific behavior, and define classes that implement the interface for each state.
-A class delegates state-specific behavior to its current state object instead of implementing state-specific behavior directly.
-This makes a class independent of how state-specific behavior is implemented. New states can be added by defining new state classes. A class can change its behavior at run-time by changing its current state object.
-
-Structure
-
-State in UML[1]
-In the accompanying Unified Modeling Language (UML) class diagram, the Context class doesn't implement state-specific behavior directly. Instead, Context refers to the State interface for performing state-specific behavior (state.handle()), which makes Context independent of how state-specific behavior is implemented. The ConcreteStateA and ConcreteStateB classes implement the State interface, that is, implement (encapsulate) the state-specific behavior for each state. The UML sequence diagram shows the run-time interactions:
-
-The Context object delegates state-specific behavior to different State objects. First, Context calls handle(this) on its current (initial) state object (ConcreteStateA), which performs the operation and calls setState(ConcreteStateB) on Context to change context's current state to ConcreteStateB. The next time, Context again calls handle(this) on its current state object (ConcreteStateB), which performs the operation and changes context's current state to ConcreteStateA.
 
 optimization:
 1. refactor and extract method

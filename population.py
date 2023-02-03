@@ -177,14 +177,6 @@ class Individual:
     def __init__(self, id: int, state: State, location: tuple[int, int], movement_strategy: Any[MovementStrategy] = RandomMovementStrategy) -> None:
         self.id: int = id
         self.state: State = state
-        if self.state == State.HEALTHY:
-            self.state_machine = HealthyMachine(self)
-        elif self.state == State.INFECTED:
-            self.state_machine = InfectedMachine(self)
-        elif self.state == State.ZOMBIE:
-            self.state_machine = ZombieMachine(self)
-        elif self.state == State.DEAD:
-            pass
         self.location: tuple[int, int] = location
         self.connections: list[Individual] = []
         self.infection_severity: float = 0.0
@@ -209,6 +201,14 @@ class Individual:
         return movement_strategy.choose_direction()
 
     def update_state(self, severity: float) -> None:
+        if self.state == State.HEALTHY:
+            self.state_machine = HealthyMachine(self)
+        elif self.state == State.INFECTED:
+            self.state_machine = InfectedMachine(self)
+        elif self.state == State.ZOMBIE:
+            self.state_machine = ZombieMachine(self)
+        elif self.state == State.DEAD:
+            pass
         # Update the state of the individual based on the current state and the interactions with other people
         self.state_machine.update_state(severity)
 

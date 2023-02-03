@@ -569,12 +569,15 @@ functools
 iterator, itertools
 https://myapollo.com.tw/zh-tw/python-itertools-more-itertools/
 collections
+metaprogramming (register lead classes, singleton)
+https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Metaprogramming.html#the-metaclass-hook
 """
 
 """
 debugging
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247494272&idx=1&sn=adbc9770fc995785b061ace35f5a81c2&chksm=fdc8dda6cabf54b002dddd81c15a4eb45d5236561dfa823af0c33782a499449ea03cc72d07ac&scene=21#wechat_redirect
 https://github.com/nedbat/coveragepy
+https://ithelp.ithome.com.tw/articles/10078821
 speed up
 https://mp.weixin.qq.com/s/M7DdUWLzqOLVR7qJFmvZdA
 threading

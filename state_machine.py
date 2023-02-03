@@ -42,8 +42,9 @@ At the end of the simulation, we print the final q_values table to see how the a
 """
 
 import random
-import numpy as np
 from functools import partial, update_wrapper
+
+import numpy as np
 
 # define the possible states
 # determined by actions and events
@@ -480,4 +481,8 @@ class Map:
 """
 https://colab.research.google.com/drive/1ZPdHpFxwdxMp-BGK8rb45BtzpF_jqfGY
 https://colab.research.google.com/drive/1S9_V3p-dMwMFupG9qjUZQ0zhqwWcnSpG#scrollTo=v5q59hTFhanA
+"""
+"""
+https://github.com/pytransitions/transitions
+https://www.askpython.com/python-modules/state-machines-python
 """
