@@ -1,5 +1,6 @@
 import pickle
 
+
 class PickleStorage(object):
     def __init__(self, filename):
         self.filename = filename
@@ -20,5 +21,5 @@ data = PickleStorage('data.pickle').load()
 PickleStorage('data.pickle').save(data)
 
 
-
+# pickle to store intermediate result across sessions
 

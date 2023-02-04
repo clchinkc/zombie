@@ -1,10 +1,14 @@
 from __future__ import annotations
-import time
-import random
+
 import math
+import random
+import time
 from enum import Enum, auto
+
 import numpy as np
+
 from timeit_decorator import performance_decorator
+
 
 # Define the states and transitions for the state machine model
 class State(Enum):
@@ -145,3 +149,67 @@ def test_performance_2():
     print(f"Second version took {end_time - start_time} seconds")
     
 # test_performance_2()
+
+
+class Population:
+
+    def __init__(self, num_agents: int, num_schools: int) -> None:
+        self.num_agents: int = num_agents
+        self.num_schools: int = num_schools
+        self.agents: list[Agent] = []
+        self.schools: list[School] = []
+        self.homes: list[Home] = []
+        self.workplaces: list[Workplace] = []
+        self.hospitals: list[Hospital] = []
+        self.supermarkets: list[Supermarket] = []
+        self.parks: list[Park] = []
+        self.gyms: list[Gym] = []
+        self.banks: list[Bank] = []
+        self.restaurants: list[Restaurant] = []
+        self.transportations: list[Transportation] = []
+        self.cinemas: list[Cinema] = []
+        self.malls: list[Mall] = []
+        self.streets: list[Street] = []
+        self.buildings: list[Building] = []
+        self.locations: list[Location] = []
+        self.create_agents()
+        self.create_schools()
+        self.create_homes()
+        self.create_workplaces()
+        self.create_hospitals()
+        self.create_supermarkets()
+        self.create_parks()
+        self.create_gyms()
+        self.create_banks()
+        self.create_restaurants()
+        self.create_transportations()
+        self.create_cinemas()
+        self.create_malls()
+        self.create_streets()
+        self.create_buildings()
+        self.create_locations()
+        self.create_connections()
+
+class Myclass:
+    def __init__(self):
+        self.x = 1
+        self.y = 2
+        self.z = 3
+
+    def print(self) -> str:
+        info = f"{self.__class__.__name__}\n"
+        for var in vars(self):
+            info += f"{var}: {getattr(self, var)}\n"
+        return info
+    
+    def __repr__(self):
+        return "{classname}({variables})".format(classname=self.__class__.__name__, variables=", ".join([str(getattr(self, var)) for var in vars(self)]))
+
+    def __str__(self):
+        return f"Myclass {self.x} {self.y} {self.z}"
+    
+
+newclass = Myclass()
+print(newclass.print())
+print(newclass.__repr__())
+print(newclass.__str__())

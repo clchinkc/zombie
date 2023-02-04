@@ -1,10 +1,11 @@
 
 import random
 from dataclasses import dataclass
+from typing import Union
 
 ## Overall description
 
-
+"""
 class Human:
     def __init__(self, id, position, health, strength, armour, speed, intelligence):
         self.id = id
@@ -18,33 +19,11 @@ class Human:
         self.weapon = None
 
     @property
-    def defence(self):
+    def defense(self):
         return self.armour*random.uniform(0.5, 1.5)
 
     def choose_action(self):
-        # choose between move, attack, pick up item, use item
-        # if low health, use item
-        # elif there is enemy nearby, attack
-        # elif there is item nearby, pick up
-        # elif there is human nearby, trade
-        # elif there is enough condition, craft item
-        # else move
         pass
-    
-    """
-    def choose_action(self, agent):
-	neighbors = self.get_neighbors(agent)
-	if isinstance(agent, Human):
-		for neighbor in neighbors:
-			if isinstance(neighbor, Zombie):
-				return "attack"
-		return "move"
-	elif isinstance(agent, Zombie):
-		for neighbor in neighbors:
-			if isinstance(neighbor, Human):
-				return "attack"
-		return "move"
-    """
 
     def move(self, dx, dy):
         self.position[0] += dx
@@ -52,7 +31,7 @@ class Human:
 
     def attack(self, enemy):
         damage = (self.strength+self.weapon.damage)*random.uniform(0.5, 1.5)
-        damage -= enemy.defence
+        damage -= enemy.defense
         enemy.health -= damage
     
     def pick_up(self, item):
@@ -79,7 +58,7 @@ class Human:
             self.intelligence += item.intelligence
             self.inventory.remove(item)
             
-    def direction(self, grid):
+    def choose_direction(self, grid):
         # move away from zombies, move towards humans, with a degree of exploration when low of items and weapons
         # if there is no human or zombie nearby, move randomly
         # check if it is a valid move
@@ -153,21 +132,6 @@ class Zombie:
         # if there is enemy nearby, attack
         # else move
         pass
-    
-    """
-    def choose_action(self, agent):
-	neighbors = self.get_neighbors(agent)
-	if isinstance(agent, Human):
-		for neighbor in neighbors:
-			if isinstance(neighbor, Zombie):
-				return "attack"
-		return "move"
-	elif isinstance(agent, Zombie):
-		for neighbor in neighbors:
-			if isinstance(neighbor, Human):
-				return "attack"
-		return "move"
-    """
 
     def move(self, dx, dy):
         self.position[0] += dx
@@ -178,7 +142,7 @@ class Zombie:
         damage -= enemy.defence
         enemy.health -= damage
         
-    def direction(self, grid):
+    def choose_direction(self, grid):
         # move towards humans
         # if there is no human or zombie nearby, move randomly
         # check if it is a valid move
@@ -196,7 +160,7 @@ class Zombie:
     def die(self):
         pass
 
-
+"""
 class Environment:
     def __init__(self, m, n, item):
         self.grid = [[None for _ in range(m)] for _ in range(n)] # 2D list of None (empty), Human, Zombie
@@ -206,17 +170,23 @@ class Environment:
         self.zombies = [(random.randint(0, m-1), random.randint(0, n-1)) for _ in range(10)]
         self.item = item # list of location of weapon, power-up, other resources
         
-    def get_item(self, location):
+    def get_item(self, location) -> Union[Weapon, PowerUp]:
         if location in self.item:
             return self.grid[location[0]][location[1]]
+        else:
+            raise Exception('No item at this location')
         
-    def get_zombie(self, location):
+    def get_zombie(self, location) -> Zombie:
         if location in self.zombies:
             return self.grid[location[0]][location[1]]
+        else:
+            raise Exception('No zombie at this location')
         
-    def get_human(self, location):
+    def get_human(self, location) -> Human:
         if location in self.humans:
             return self.grid[location[0]][location[1]]
+        else:
+            raise Exception('No human at this location')
 
     def add_human(self, location, human):
         self.humans.append(location)
@@ -301,9 +271,9 @@ class Environment:
                             human = self.get_human((x, y))
                             zombie.attack(human)
                             if human.health <= 0:
-                                self.remove_human(human_location)
+                                self.remove_human(human.position)
                                 zombie = Zombie()
-                                self.add_zombie(human_location, zombie)
+                                self.add_zombie(human.position, zombie)
                             break
             elif action == "move":
                 dx, dy = zombie.choose_direction(self.grid)

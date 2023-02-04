@@ -4,16 +4,21 @@ import math
 import random
 from abc import ABC, abstractmethod
 from dataclasses import astuple, dataclass, field
-from typing import Any, Callable
+from typing import Any, Callable, Union
+
+from human import PowerUp
 
 
 class Agent(ABC):
     
     @abstractmethod
-    def __init__(self, id: int, health: int, position: tuple[int, int]):
+    def __init__(self, id: int, position: tuple[int, int], health: int=100, strength: int=10, armour: int=5, speed: int=1):
         self.id = id
-        self.health = health
         self.position = position
+        self.health = health
+        self.strength = strength
+        self.armour = armour
+        self.speed = speed
         
         # 0's and 1's to represent the agent's genome
         # the genome can be used to determine the agent's behavior
@@ -21,20 +26,18 @@ class Agent(ABC):
         # location, direction, speed, energy, infection, infection time, death
         # can be used to determine the agent's state
 
-    # Fluent interface
     def move(self, dx, dy):
-        self.position = (self.position[0]+dx, self.position[1]+dy)
-        return self
-
-    def take_damage(self, damage: int):
-        self.health -= damage
-        return self
+        self.position = (self.position[0]+dx, 
+                        self.position[1]+dy)
     
     def distance_to_agent(self, other_agent: Agent) -> int:
         x1, y1 = self.position
         x2, y2 = other_agent.position
         distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
         return int(distance)
+
+    def take_damage(self, damage: Union[int, float]):
+        self.health -= damage
     
     @abstractmethod
     def take_turn(self, possible_weapons, closest_enemy):
@@ -51,6 +54,15 @@ class Agent(ABC):
     @abstractmethod
     def scavenge(self, possible_weapons):
         pass
+    
+    def __str__(self) -> str:
+        info = f"{self.__class__.__name__}\n"
+        for var in vars(self):
+            info += f"{var}: {getattr(self, var)}\n"
+        return info
+    
+    def __repr__(self) -> str:
+        return "{classname}({variables})".format(classname=self.__class__.__name__, variables=", ".join([str(getattr(self, var)) for var in vars(self)]))
 
 class AgentManager(ABC):
     
@@ -89,8 +101,10 @@ class AgentManager(ABC):
 
 
 class Human(Agent):
-    def __init__(self, id, health, position, weapon=None):
-        super().__init__(id, health, position)
+    def __init__(self, id, position, health, strength, armour, speed, intelligence, weapon=None):
+        super().__init__(id, position, health, strength, armour, speed)
+        self.intelligence = intelligence
+        self.inventory = []
         self.weapon = weapon
         self.connections = []
         
@@ -104,23 +118,38 @@ class Human(Agent):
         if self._health <= 0:
             print(f"Human {self.id} has died!")
             apocalypse.human_manager.remove_agent(self)
-            zombie = Zombie(len(apocalypse.zombie_manager.agents), 100, self.position)
+            zombie = Zombie(len(apocalypse.zombie_manager.agents), self.position, 100, 10, 0, 1)
             apocalypse.zombie_manager.add_agent(zombie)
+            
+    @property
+    def defense(self):
+        return self.armour*random.uniform(0.5, 1.5)
             
     """
     @cached_property
     def closest_enemy(self):
         return min(apocalypse.zombie_manager.zombies, key=lambda x: distance(self.position, x.position))
     """
+    """
+    def choose_action(self):
+        # choose between move, attack, pick up item, use item
+        # if low health, use item
+        # elif there is enemy nearby, attack
+        # elif there is item nearby, pick up
+        # elif there is human nearby, trade
+        # elif there is enough condition, craft item
+        # else move
+        pass
+    """
     
     def move(self, dx, dy):
         return super().move(dx, dy)
-
-    def take_damage(self, damage: int):
-        return super().take_damage(damage)
         
     def distance_to_agent(self, other_agent: Agent) -> int:
         return super().distance_to_agent(other_agent)
+
+    def take_damage(self, damage: Union[int, float]):
+        return super().take_damage(damage-self.defense)
         
     def take_turn(self, possible_weapons, closest_enemy):
         if closest_enemy is not None:
@@ -141,7 +170,8 @@ class Human(Agent):
         
     def attack(self, zombie):
         # Calculate the damage dealt to the zombie
-        damage = 10 if self.weapon == None else 10+self.weapon.damage
+        damage = self.strength*random.uniform(0.5, 1.5)
+        damage += self.weapon.damage if self.weapon is not None else 0
         # Deal the damage to the zombie
         zombie.take_damage(damage)
 
@@ -174,18 +204,33 @@ class Human(Agent):
                     self.attack_agent(agent, neighbor)
     """
 
+# PowerUp is created randomly and found
+# not created when found
+
     def scavenge(self, possible_weapons):
         # Roll a dice to determine if the human finds any supplies
         if random.random() < 0.5:
             # Human has found some supplies
-            supplies = random.randint(5, 10)
-            self.health += supplies
+            supplies = PowerUp(self.position, 10, 0, 0, 0, 0)
+            self.inventory.append(supplies)
         # Roll a dice to determine if the human finds a new weapon
         if random.random() < 0.2:
             # Human has found a new weapon
             new_weapon = random.choice(possible_weapons)
             if self.weapon is None or (new_weapon.damage * new_weapon.range > self.weapon.damage * self.weapon.range):
                 self.weapon = new_weapon
+                
+    def use_item(self, item):
+        if isinstance(item, Weapon):
+            self.weapon = item
+            self.inventory.remove(item)
+        elif isinstance(item, PowerUp):
+            self.health += item.health
+            self.strength += item.strength
+            self.armour += item.armour
+            self.speed += item.speed
+            self.intelligence += item.intelligence
+            self.inventory.remove(item)
 
 
 # Manage all humans in the apocalypse
@@ -238,6 +283,11 @@ class HumanManager(AgentManager):
                 else:
                     agent2.health -= agent1.health
                     agent1.health += agent1.health
+                    
+    # may trade weapon and armour
+    # more clever conditions, based on intelligence
+    # trade different items, like specific amount of food for weapon
+    # craft method that takes food and turns it into item
 
     def print_human_info(self):
         print("Humans:")
@@ -247,8 +297,8 @@ class HumanManager(AgentManager):
 
 class Zombie(Agent):
 
-    def __init__(self, id, health, position):
-        super().__init__(id, health, position)
+    def __init__(self, id, position, health, strength, armour, speed):
+        super().__init__(id, position, health, strength, armour, speed)
         self.connections = []
 
     @property
@@ -262,21 +312,32 @@ class Zombie(Agent):
         if self.health <= 0:
             # Remove the zombie from the list of zombies
             apocalypse.zombie_manager.remove_agent(self)
+
+    @property
+    def defense(self):
+        return self.armour*random.uniform(0.5, 1.5)
             
     """
     @cached_property
     def closest_enemy(self):
         return min(apocalypse.zombie_manager.zombies, key=lambda x: distance(self.position, x.position))
     """
+    """
+    def choose_action(self):
+        # choose between move, attack
+        # if there is enemy nearby, attack
+        # else move
+        pass
+    """
     
     def move(self, dx, dy):
         return super().move(dx, dy)
         
-    def take_damage(self, damage: int):
-        return super().take_damage(damage)
-        
     def distance_to_agent(self, other_agent: Agent) -> int:
         return super().distance_to_agent(other_agent)
+        
+    def take_damage(self, damage: Union[int, float]):
+        return super().take_damage(damage-self.defense)
 
     def take_turn(self, closest_human):
         # If there are any humans in range, attack the closest one
@@ -295,8 +356,9 @@ class Zombie(Agent):
     # check legal move
 
     def attack(self, human):
+        damage = self.strength*random.uniform(0.5, 1.5)
         # Deal 10 damage to the human
-        human.take_damage(20)
+        human.take_damage(damage)
         
     def scavenge(self, possible_weapons):
         pass
@@ -345,12 +407,22 @@ class Weapon:
     
     def __post_init__(self):
         object.__setattr__(self, "trading_value", self.damage * self.range)
-        
-    def __iter__(self):
-        yield from astuple(self)
     
     def __str__(self):
-        return f"{self.name} ({self.damage} damage, {self.range} range)"
+        return f"Weapon {self.name}: {self.damage} damage, {self.range} range"
+
+@dataclass(order=True, frozen=True) # slots=True
+class PowerUp:
+    
+    location: tuple[int, int]
+    health: int
+    strength: int
+    armour: int
+    speed: int
+    intelligence: int
+    
+    def __str__(self):
+        return f"PowerUp at {self.location}: health={self.health}, strength={self.strength}, armour={self.armour}, speed={self.speed}, intelligence={self.intelligence}"
 
 # Abstract Factory Pattern
 class AbstractAgentFactory(ABC):
@@ -466,7 +538,6 @@ class ZombieApocalypse(Game):
         arguments = {
             "type": type,
             "id": id,
-            "health": 100,
             "location": (random.randint(0, school_size-1),
                         random.randint(0, school_size-1))
         }
@@ -521,6 +592,10 @@ class ZombieApocalypse(Game):
                 self.zombie_manager.agents.remove(zombie)
                 
     # move agent to a new location only if the new location is empty
+    
+    def escape(self, agent):
+        # define a escape location for the agent to win
+        pass
     
     def end_condition(self):
         return len(self.human_manager.humans) == 0 or len(self.zombie_manager.agents) == 0
@@ -578,6 +653,7 @@ debugging
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247494272&idx=1&sn=adbc9770fc995785b061ace35f5a81c2&chksm=fdc8dda6cabf54b002dddd81c15a4eb45d5236561dfa823af0c33782a499449ea03cc72d07ac&scene=21#wechat_redirect
 https://github.com/nedbat/coveragepy
 https://ithelp.ithome.com.tw/articles/10078821
+a debug mode that print all variables
 speed up
 https://mp.weixin.qq.com/s/M7DdUWLzqOLVR7qJFmvZdA
 threading

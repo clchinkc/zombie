@@ -76,3 +76,82 @@ It is also possible to further refine and enrich the simulation by incorporating
 https://jeffbradberry.com/posts/2015/09/intro-to-monte-carlo-tree-search/
 """
 
+"""
+Class Name: ZombieAgent
+
+Attributes:
+
+health: Integer value representing the health of the zombie
+attack: Integer value representing the damage the zombie can cause
+speed: Integer value representing the speed of the zombie
+location: A tuple representing the location of the zombie in the game world
+isAlive: Boolean value representing whether the zombie is alive or dead
+Methods:
+
+move(): This method updates the location of the zombie based on its speed
+attack(target): This method reduces the health of the target based on the zombie's attack power
+isDead(): This method returns a boolean value representing whether the zombie is alive or dead
+takeDamage(damage): This method reduces the health of the zombie based on the damage received
+Class Name: PlayerAgent
+
+Attributes:
+
+health: Integer value representing the health of the player
+attack: Integer value representing the damage the player can cause
+speed: Integer value representing the speed of the player
+location: A tuple representing the location of the player in the game world
+isAlive: Boolean value representing whether the player is alive or dead
+Methods:
+
+move(): This method updates the location of the player based on its speed
+attack(target): This method reduces the health of the target based on the player's attack power
+isDead(): This method returns a boolean value representing whether the player is alive or dead
+takeDamage(damage): This method reduces the health of the player based on the damage received
+pickupItem(item): This method adds the item to the player's inventory
+Class Name: Item
+
+Attributes:
+
+name: String representing the name of the item
+effect: String representing the effect of the item on the player's health or attack power
+Methods:
+
+useItem(): This method applies the effect of the item to the player's health or attack power.
+"""
+
+"""
+The game simulation consists of three main classes: ZombieAgent, PlayerAgent, and Item.
+
+The ZombieAgent class has the following components:
+
+Physics Component: Includes location, speed, and isAlive attributes that describe the zombie's physical state in the game world.
+Graphic Component: Includes model and animation attributes that describe the visual appearance and movement of the zombie.
+State Component: Includes health, attack, and state attributes that describe the status and behavior of the zombie.
+AI Component: Includes behavior and target attributes that describe the zombie's artificial intelligence and behavior in the game world.
+The PlayerAgent class has the following components:
+
+Physics Component: Includes location, speed, and isAlive attributes that describe the player's physical state in the game world.
+Graphic Component: Includes model and animation attributes that describe the visual appearance and movement of the player.
+State Component: Includes health, attack, inventory, and state attributes that describe the status and behavior of the player.
+Input Component: Includes controls attribute that describes the player's inputs in the game world.
+The Item class has the following components:
+
+Physics Component: Includes location attribute that describes the item's physical state in the game world.
+Graphic Component: Includes model attribute that describes the visual appearance of the item.
+State Component: Includes name, effect, and isPickedUp attributes that describe the status and properties of the item.
+Audio Component: Includes sound attribute that describes the audio effect to play when the item is picked up or used.
+
+
+For the physics component, you can use the PyBullet library in Python. This library provides physics simulation capabilities, including rigid body dynamics, collision detection, and soft body dynamics.
+
+For the graphic component, you can use the Blender or Panda3D libraries in Python. These libraries provide advanced 3D graphics and animation capabilities, including modeling, texturing, rigging, and animation.
+
+For the state component, you can use the NumPy library in Python. This library provides powerful array processing capabilities that can be used to store and manipulate state data for game objects.
+
+For the AI component, you can use the Pygame library in Python. This library provides a set of modules for game programming, including AI capabilities such as decision-making and pathfinding.
+
+For the input component, you can use the Pygame library in Python. This library provides modules for handling keyboard, mouse, and joystick inputs, as well as support for game controller and other input devices.
+
+For the audio component, you can use the Pygame library in Python. This library provides modules for playing sound effects and music, as well as support for loading and manipulating sound data.
+
+"""

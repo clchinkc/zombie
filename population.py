@@ -41,6 +41,65 @@ class State(Enum):
     def value_list(cls) -> list[int]:
         return [enm.value for enm in State]
 
+# state pattern
+class StateMachine(ABC):
+    
+    def __init__(self, context: Individual) -> None:
+        self.context = context
+
+    @abstractmethod
+    def update_state(self, severity: float) -> None:
+        pass
+
+    def is_infected(self, context: Individual, severity: float) -> bool:
+        infection_probability = 1 / (1 + math.exp(-severity))
+        for other in context.connections:
+            if other.state == State.ZOMBIE:
+                if random.random() < infection_probability:
+                    return True
+        return False
+    
+    def is_turned(self, context: Individual, severity: float) -> bool:
+        turning_probability = context.infection_severity
+        if random.random() < turning_probability:
+            return True
+        return False
+    
+    def is_died(self, context: Individual, severity: float) -> bool:
+        death_probability = severity
+        for other in context.connections:
+            if other.state == State.HEALTHY or other.state == State.INFECTED:
+                if random.random() < death_probability:
+                    return True
+        return False
+    
+# can add methods that change behaviour based on the state
+
+class HealthyMachine(StateMachine):
+    # cellular automaton
+    def update_state(self, severity: float) -> None:
+        if self.is_infected(self.context, severity):
+            self.context.state = State.INFECTED
+    
+    # probability = severity / school.max_severity
+    # probability *= 1 - math.exp(-self.interaction_duration/average_interaction_duration_for_infection)
+    # probability *= 1 - math.exp(-distance / average_distance_for_infection)
+
+class InfectedMachine(StateMachine):
+    # cellular automaton
+    def update_state(self, severity: float) -> None:
+        self.context.infection_severity += 0.1
+        if self.is_turned(self.context, severity):
+            self.context.state = State.ZOMBIE
+        elif self.is_died(self.context, severity):
+            self.context.state = State.DEAD
+
+class ZombieMachine(StateMachine):
+    # cellular automaton
+    def update_state(self, severity: float) -> None:
+        if self.is_died(self.context, severity):
+            self.context.state = State.DEAD
+
 # Strategy pattern
 class MovementStrategy(ABC):
     
@@ -189,18 +248,21 @@ class Individual:
     def sight_range(self) -> int:
         return self.interact_range + 3
 
-    def add_connection(self, other: Individual) -> None:
+    # fluent interface
+    def add_connection(self, other: Individual) -> Individual:
         self.connections.append(other)
+        return self
 
-    def move(self, direction: tuple[int, int]) -> None:
+    def move(self, direction: tuple[int, int]) -> Individual:
         self.location = tuple(np.add(self.location, direction))
         # self.location[0] += direction[0]
         # self.location[1] += direction[1]
+        return self
         
-    def choose_direction(self, movement_strategy):
+    def choose_direction(self, movement_strategy) -> tuple[int, int]:
         return movement_strategy.choose_direction()
 
-    def update_state(self, severity: float) -> None:
+    def update_state(self, severity: float) -> Individual:
         if self.state == State.HEALTHY:
             self.state_machine = HealthyMachine(self)
         elif self.state == State.INFECTED:
@@ -211,6 +273,7 @@ class Individual:
             pass
         # Update the state of the individual based on the current state and the interactions with other people
         self.state_machine.update_state(severity)
+        return self
 
     def get_info(self) -> str:
         return f"Individual {self.id} is {self.state.name} and is located at {self.location}, having connections with {self.connections}, infection severity {self.infection_severity}, interact range {self.interact_range}, and sight range {self.sight_range}."
@@ -221,66 +284,8 @@ class Individual:
     def __repr__(self) -> str:
         return "%s(%d, %d, %s)" % (self.__class__.__name__, self.id, self.state.value, self.location)
 
-# seperate inheritance for human and zombie class
+# separate inheritance for human and zombie class
 
-# state pattern
-class StateMachine(ABC):
-    
-    def __init__(self, context: Individual) -> None:
-        self.context = context
-
-    @abstractmethod
-    def update_state(self, severity: float) -> None:
-        pass
-
-    def is_infected(self, context: Individual, severity: float) -> bool:
-        infection_probability = 1 / (1 + math.exp(-severity))
-        for other in context.connections:
-            if other.state == State.ZOMBIE:
-                if random.random() < infection_probability:
-                    return True
-        return False
-    
-    def is_turned(self, context: Individual, severity: float) -> bool:
-        turning_probability = context.infection_severity
-        if random.random() < turning_probability:
-            return True
-        return False
-    
-    def is_died(self, context: Individual, severity: float) -> bool:
-        death_probability = severity
-        for other in context.connections:
-            if other.state == State.HEALTHY or other.state == State.INFECTED:
-                if random.random() < death_probability:
-                    return True
-        return False
-    
-# can add methods that change behaviour based on the state
-
-class HealthyMachine(StateMachine):
-    # cellular automaton
-    def update_state(self, severity: float) -> None:
-        if self.is_infected(self.context, severity):
-            self.context.state = State.INFECTED
-    
-    # probability = severity / school.max_severity
-    # probability *= 1 - math.exp(-self.interaction_duration/average_interaction_duration_for_infection)
-    # probability *= 1 - math.exp(-distance / average_distance_for_infection)
-
-class InfectedMachine(StateMachine):
-    # cellular automaton
-    def update_state(self, severity: float) -> None:
-        self.context.infection_severity += 0.1
-        if self.is_turned(self.context, severity):
-            self.context.state = State.ZOMBIE
-        elif self.is_died(self.context, severity):
-            self.context.state = State.DEAD
-
-class ZombieMachine(StateMachine):
-    # cellular automaton
-    def update_state(self, severity: float) -> None:
-        if self.is_died(self.context, severity):
-            self.context.state = State.DEAD
 
 class School:
 
@@ -1089,4 +1094,46 @@ Use stack to store the commands and pop the last command to undo it, using FILO
 clone the command and store it in the stack, to ensure the command won't be change or called again, using prototype pattern
 use abstract class toimplement template method or storereceiver state, combine with template method pattern
 
+"""
+
+"""
+Visitor pattern
+# Define the elements that can be visited
+class Element:
+    def accept(self, visitor):
+        visitor.visit(self)
+
+class ConcreteElementA(Element):
+    def operationA(self):
+        print("Performing operation A on ConcreteElementA")
+
+class ConcreteElementB(Element):
+    def operationB(self):
+        print("Performing operation B on ConcreteElementB")
+
+# Define the visitor that will perform operations on the elements
+class Visitor:
+    def visit(self, element):
+        element.operationA()
+
+class ConcreteVisitor1(Visitor):
+    def visit(self, element):
+        if isinstance(element, ConcreteElementA):
+            element.operationA()
+        elif isinstance(element, ConcreteElementB):
+            element.operationB()
+
+# Use the visitor to perform operations on elements
+elements = [ConcreteElementA(), ConcreteElementB()]
+visitor = ConcreteVisitor1()
+for element in elements:
+    element.accept(visitor)
+
+# Output:
+# Performing operation A on ConcreteElementA
+# Performing operation B on ConcreteElementB
+
+# the logic of selecting the operation depending on the element is moved to the visitor
+# In this example, the ConcreteElementA and ConcreteElementB classes define the objects that can be visited, and the ConcreteVisitor1 class defines the operations that can be performed on those objects. The accept method in the Element class allows the visitor to perform operations on the elements, and the visit method in the Visitor class is the entry point for the visitor to perform the operation.
+# By using the visitor pattern, we can separate the operations from the elements and add new operations or change existing ones without modifying the elements themselves.
 """
