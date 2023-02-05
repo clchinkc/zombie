@@ -114,14 +114,6 @@
         "documentation": {}
     },
     {
-        "label": "astuple",
-        "importPath": "dataclasses",
-        "description": "dataclasses",
-        "isExtraImport": true,
-        "detail": "dataclasses",
-        "documentation": {}
-    },
-    {
         "label": "dataclass",
         "importPath": "dataclasses",
         "description": "dataclasses",
@@ -131,14 +123,6 @@
     },
     {
         "label": "field",
-        "importPath": "dataclasses",
-        "description": "dataclasses",
-        "isExtraImport": true,
-        "detail": "dataclasses",
-        "documentation": {}
-    },
-    {
-        "label": "dataclass",
         "importPath": "dataclasses",
         "description": "dataclasses",
         "isExtraImport": true,
@@ -194,14 +178,6 @@
         "documentation": {}
     },
     {
-        "label": "Union",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
         "label": "Any",
         "importPath": "typing",
         "description": "typing",
@@ -239,14 +215,6 @@
         "description": "typing",
         "isExtraImport": true,
         "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "PowerUp",
-        "importPath": "human",
-        "description": "human",
-        "isExtraImport": true,
-        "detail": "human",
         "documentation": {}
     },
     {
@@ -583,7 +551,7 @@
         "kind": 6,
         "importPath": "agent",
         "description": "agent",
-        "peekOfCode": "class AgentManager(ABC):\n    @abstractmethod\n    def __init__(self):\n        self.agents = []\n    @abstractmethod\n    def add_agent(self, agent: Agent) -> None:\n        pass\n    @abstractmethod\n    def remove_agent(self, agent: Agent) -> None:\n        pass",
+        "peekOfCode": "class AgentManager(ABC):\n    @abstractmethod\n    def __init__(self):\n        self.zombies = []\n    @abstractmethod\n    def add_agent(self, agent: Agent) -> None:\n        pass\n    @abstractmethod\n    def remove_agent(self, agent: Agent) -> None:\n        pass",
         "detail": "agent",
         "documentation": {}
     },
@@ -678,6 +646,15 @@
         "documentation": {}
     },
     {
+        "label": "Grid",
+        "kind": 6,
+        "importPath": "agent",
+        "description": "agent",
+        "peekOfCode": "class Grid:\n    def __init__(self, width, height):\n        self.width = width\n        self.height = height\n        self.grid = [[None for _ in range(width)] for _ in range(height)]\n    def __str__(self):\n        return \"\\n\".join([\"\".join([str(cell) for cell in row]) for row in self.grid])\n    def __getitem__(self, location):\n        return self.grid[location[0]][location[1]]\n    def __setitem__(self, location, value):",
+        "detail": "agent",
+        "documentation": {}
+    },
+    {
         "label": "Game",
         "kind": 6,
         "importPath": "agent",
@@ -700,7 +677,7 @@
         "kind": 5,
         "importPath": "agent",
         "description": "agent",
-        "peekOfCode": "apocalypse = ZombieApocalypse()\napocalypse.simulate(num_zombies=10, \n                    num_humans=10, \n                    school_size=10, \n                    num_turns=10)\n\"\"\"\nChange the inheritance to abstract class or protocol\n\"\"\"\n\"\"\"\ntake damage not working",
+        "peekOfCode": "apocalypse = ZombieApocalypse()\napocalypse.simulate(num_zombies=10, \n                    num_humans=10, \n                    school_size=10, \n                    num_turns=10)\n\"\"\"\ntake damage not working\nwrongly moving more than one space\n\"\"\"\n\"\"\"",
         "detail": "agent",
         "documentation": {}
     },
@@ -801,6 +778,213 @@
         "description": "error",
         "peekOfCode": "def SubjectVerbAgreementError(tags):\n    if tags[2].startswith('V') and tags[2] == 'VBP':\n        if tags[1] == 'NN' or tags [1] == 'NNP':\n            return True\n        elif tags[0] == 'NN' or tags [0] == 'NNP':\n            return True\n        else:\n            return False\n    elif tags[2].startswith('V') and tags[2] == 'VBZ':\n        if tags[1] == 'NNS' or tags [1] == 'NNPS':",
         "detail": "error",
+        "documentation": {}
+    },
+    {
+        "label": "delay_print",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def delay_print(s,speed=0.05):\n\tglobal stop\n\tif speed==0.05 and speedrun:speed=0\n\tfor c in s:\n\t\tsys.stdout.write(c)\n\t\tsys.stdout.flush()\n\t\ttime.sleep(speed)\n\t\tif stop:\n\t\t\tstop=True\n\t\t\tbreak",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "box_check",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def box_check():\n\tboxes=set()\n\tfor y in range(len(room)):\n\t\tfor x in range(len(room[0])):\n\t\t\tif room[y][x] in range(-8,-4):\n\t\t\t\tboxes.add((x,y))\n\tfor x in boxes:\n\t\tconveyer_box(x[0],x[1])\n# hadles what happens if an error accurs\ndef save():",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "save",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def save():\n\tglobal save_order,save_maze\n\tif not (non or debug):\n\t\tsave={}\n\t\tsave_maze=copy.deepcopy(master_maze)\n\t\tfor y in save_maze:\n\t\t\tfor x in y:\n\t\t\t\t\tx.pop(0)\n\t\tfor x in save_order:\n\t\t\tsave[x]=globals()[x]",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "load",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def load():\n\tglobal xpos,ypos,roomx,roomy,health,oil,bombs,max_health,past_rooms,master_maze\n\tSaveFile=db[name]\n\tfor i in SaveFile:\n\t\tif i=='save_maze':\n\t\t\tsave_maze=SaveFile[i]\n\t\t\tfor y in range(len(master_maze)):\n\t\t\t\t# clear()\n\t\t\t\t# print('['+('#'*y)+(' '*(len(master_maze)-y)+']'))\n\t\t\t\tfor x in range(len(master_maze[y])):",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "refresh",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def refresh():\n\tglobal runery,saving,level_time,health,fire_time,room,state\n\twhile playing:\n\t\trunery-=1\n\t\tif state==\"maze\":\n\t\t\tif level_time<time.time()-150:\n\t\t\t\thealth-=1\n\t\t\t\tlevel_time+=10\n\t\t\t\tif health<=0:\n\t\t\t\t\trespawn()",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "on_error",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def on_error():\n\tglobal roomx,roomy,xpos,ypos,cp\n\tprint(\"An error accured, SUS\")\n\tif speedrun:print(time.time() -start)\n\trespawn()\n# controls the actions the your key preses cause while in the maze\ndef respawn():\n\tglobal xpos,ypos,roomx,roomy,health,maze,room,level_time\n\troomx,roomy,xpos,ypos=cp\n\thealth=3",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "respawn",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def respawn():\n\tglobal xpos,ypos,roomx,roomy,health,maze,room,level_time\n\troomx,roomy,xpos,ypos=cp\n\thealth=3\n\tlevel_time=float('inf')\n\tmaze=master_maze[roomy][roomx]\n\troom=maze[0].get_maze()\n\tfor y in range(len(room)):\n\t\tfor x in range(len(room[0])):\n\t\t\tif room[y][x] in(-2,-9):room[y][x]=0",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "leaderboard",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def leaderboard():\n\tif non:return'Sorry you need an account to see the leaderboard'\n\tlb=db['lb']\n\tdisplay=\"\"\n\tfor x in lb:\n\t\tif not x:display+='-None-\\n'\n\t\telse:display+=f'{x[0]}: {int(x[1]//60)}:{int(x[1]%60)}.{round(x[1]%1*100)}\\n'\n\treturn display\ngetLB=threading.Thread(target=leaderboard)\ndef on_press(key):",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "on_press",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def on_press(key):\n\tglobal xblit,yblit,state,dir,past,char,fire_speed\n\tif key in [keys.UP,\"w\"]:\n\t\tdir=0\n\t\tyblit-=1\n\telif key in [keys.DOWN,\"s\"]:\n\t\tdir=2\n\t\tyblit+=1\n\telif key in [keys.LEFT,\"a\"]:\n\t\tdir=3",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "conveyor",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def conveyor():\n\tglobal xpos,ypos\n\txtest=xpos\n\tytest=ypos\n\tdir=room[ypos][xpos]-13\n\tif dir not in range(4):dir = room[ypos][xpos]+8\n\tif dir not in range(4):return\n\tif dir==0:ytest-=1\n\telif dir==1:xtest+=1\n\telif dir==2:ytest+=1",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "conveyer_box",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def conveyer_box(xpos,ypos):\n\tglobal room\n\tdest=[]\n\troom[ypos][xpos]+=21\n\tif (room[ypos][xpos]-13)==0:\n\t\tdest=[ypos-1,xpos]\n\telif (room[ypos][xpos]-13)==1:\n\t\tdest=[ypos,xpos+1]\n\telif (room[ypos][xpos]-13)==2:\n\t\tdest=[ypos+1,xpos]",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "hotkey",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def hotkey(key):\n\tglobal hotkeys,cursor_pos\n\tif key in hotkeys.keys():return use(hotkeys[key])\n\telse:\n\t\tcursor_pos=0\n\t\twhile True:\n\t\t\tmessage=''\n\t\t\tfor x in range(len(inventory)):\n\t\t\t\tif x==cursor_pos:message+=\"➞ \"\n\t\t\t\telse:message+=\"  \"",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "main_menu",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def main_menu():\n\tglobal cursor_pos,debug,isSave\n\tif non:isSave=False\n\telse:isSave=name in db.keys()\n\tchar=0\n\tkey='None'\n\tif not isSave:cursor_pos+=1\n\twhile True:\n\t\tmessage=''\n\t\tfor x in range(len(startMenu)):",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "use",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def use(item):\n\tglobal inventory,past_rooms,roomx,roomy,xpos,ypos,style,oil,song,darkness,bombs,doubleCost,room,maze,max_health,health\n\tif item=='map':map()\n\telif item==\"goggles\":delay_print(\"Looking through these goggles you can see he trueth\")\n\telif item==\"heart\":\n\t\tmax_health+=1\n\t\thealth=max_health\n\telif item==\"dark\":darkness=not darkness\n\telif item==\"double cost\":doubleCost=not doubleCost\n\telif item==\"up\":",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "run_shop",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def run_shop(shop,key):\n\tglobal money,inventory,oil,cursor_pos,bombs\n\tif key == keys.ESC:return draw_maze()\n\tif key in [keys.ENTER,\"d\",keys.RIGHT]:\n\t\tif cursor_pos==len(shop):\n\t\t\tcursor_pos=0\n\t\t\treturn draw_maze()\n\t\telif shop[cursor_pos][1]<=money and shop[cursor_pos][0] not in inventory:\n\t\t\tmoney -= shop[cursor_pos][1]\n\t\t\tif shop[cursor_pos][0]==\"lamp oil\":",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "menu",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def menu(key=None):\n\tglobal inventory,cursor_pos\n\tif oil>0 and \"lantern\" not in inventory:inventory.append(\"lantern\")\n\tif bombs>0 and \"bombs\" not in inventory:inventory.append(\"bombs\")\n\tif key == keys.ESC: return draw_maze()\n\tif key in (keys.UP,\"w\"):\n\t\tif cursor_pos>0:cursor_pos-=1\n\t\telse:cursor_pos=len(inventory)\n\telif key in (keys.DOWN,\"s\"):\n\t\tif cursor_pos<len(inventory):cursor_pos+=1",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "map",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def map():\n\tglobal roomx,roomy,room,maze\n\tcursorx=roomx\n\tcursory=roomy\n\twhile True:\n\t\tmessage=''\n\t\tfor y in range(len(master_maze)):\n\t\t\tfor x in range(roomx-5,roomx+5):\n\t\t\t\tif x<0 or x>len(master_maze[y])-1:continue\n\t\t\t\tif debug:",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "draw_maze",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def draw_maze(message=\"\",death=False):\n\tglobal state,past\n\tstate=\"maze\"\n\tylen=len(room)\n\txlen=len(room[0])\n\tdisplay=\"\"\n\tif level_time<float('inf'):\n\t\tTimeLeft=level_time+150-time.time()\n\t\tif (TimeLeft<60 and TimeLeft%1>.5)or TimeLeft<10:\n\t\t\tdisplay+='\\u001b[31m'",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "update_pos",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def update_pos(xtest,ytest):\n\tglobal xpos,ypos,display,sword\n\txpos=xtest\n\typos=ytest\n\tdisplay=draw_maze(\"ACTIVE\"*debug)\n\tif display:print(display)\n\tsword=False\ndef movement():\n\tglobal xblit,yblit,xpos,ypos,roomy,roomx,runery,inventory,health,state,past_rooms,cp,money,room,maze,cursor_pos,push,playing,saving,speedrun,level_time,fire_time,escape,fire_speed\n\txtest=xpos+xblit",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "movement",
+        "kind": 2,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "def movement():\n\tglobal xblit,yblit,xpos,ypos,roomy,roomx,runery,inventory,health,state,past_rooms,cp,money,room,maze,cursor_pos,push,playing,saving,speedrun,level_time,fire_time,escape,fire_speed\n\txtest=xpos+xblit\n\tytest=ypos+yblit\n\tylen=len(room)\n\txlen=len(room[0])\n\t# moves the player between rooms\n\tif ytest<0 or ytest>ylen-1 or xtest<0 or xtest>xlen-1:\n\t\tpast_rooms.append([roomx,roomy,xpos,ypos])\n\t\tdir = [ytest>ylen-1,xtest<0,ytest<0,xtest>xlen-1].index(True)",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "\t\tdir",
+        "kind": 5,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "\t\tdir = [ytest>ylen-1,xtest<0,ytest<0,xtest>xlen-1].index(True)\n\t\trunery=15\n\t\tif dir==2:roomy-=1\n\t\telif dir==3:roomx+=1\n\t\telif dir==0:roomy+=1\n\t\telif dir==1:roomx-=1\n\t\tmaze=master_maze[roomy][roomx]\n\t\tif not maze[0]:\n\t\t\tif dir==0:roomy-=1\n\t\t\telif dir==1:roomx+=1",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "\tname",
+        "kind": 5,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "\tname = input().capitalize()\n\ttime.sleep(0.5)\nmain_menu()\n# start of game\n# delay_print(\"\\nHello I am Mr. Hoisington\")\n# time.sleep(0.5)\n# delay_print('\\nWelcome to my experience')\n# time.sleep(0.5)\nif name in name_responses.keys():\n\tfor x in name_responses[name]:",
+        "detail": "game_loop_reference",
+        "documentation": {}
+    },
+    {
+        "label": "\tkey",
+        "kind": 5,
+        "importPath": "game_loop_reference",
+        "description": "game_loop_reference",
+        "peekOfCode": "\tkey = getkey()\n\tif state==\"maze\":\n\t\ton_press(key)\n\telif state == \"shop\":\n\t\t# moves the cursor position in the shop\n\t\tif key in (keys.UP,\"w\"):\n\t\t\tif cursor_pos > 0:cursor_pos-=1\n\t\t\telse:cursor_pos=len(shop)\n\t\telif key in (keys.DOWN,\"s\"):\n\t\t\tif cursor_pos < len(shop):cursor_pos+=1",
+        "detail": "game_loop_reference",
         "documentation": {}
     },
     {
@@ -912,78 +1096,6 @@
         "documentation": {}
     },
     {
-        "label": "Human",
-        "kind": 6,
-        "importPath": "human",
-        "description": "human",
-        "peekOfCode": "class Human:\n    def __init__(self, id, position, health, strength, armour, speed, intelligence):\n        self.id = id\n        self.position = position\n        self.health = health\n        self.strength = strength\n        self.armour = armour\n        self.speed = speed\n        self.intelligence = intelligence\n        self.inventory = []",
-        "detail": "human",
-        "documentation": {}
-    },
-    {
-        "label": "Weapon",
-        "kind": 6,
-        "importPath": "human",
-        "description": "human",
-        "peekOfCode": "class Weapon:\n    location: tuple\n    damage: int\n@dataclass\nclass PowerUp:\n    location: tuple\n    health: int\n    strength: int\n    armour: int\n    speed: int",
-        "detail": "human",
-        "documentation": {}
-    },
-    {
-        "label": "PowerUp",
-        "kind": 6,
-        "importPath": "human",
-        "description": "human",
-        "peekOfCode": "class PowerUp:\n    location: tuple\n    health: int\n    strength: int\n    armour: int\n    speed: int\n    intelligence: int\nclass Zombie:\n    def __init__(self, id, position, health, strength, speed, armour, intelligence):\n        self.id = id",
-        "detail": "human",
-        "documentation": {}
-    },
-    {
-        "label": "Zombie",
-        "kind": 6,
-        "importPath": "human",
-        "description": "human",
-        "peekOfCode": "class Zombie:\n    def __init__(self, id, position, health, strength, speed, armour, intelligence):\n        self.id = id\n        self.position = position\n        self.health = health\n        self.strength = strength\n        self.speed = speed\n        self.armour = armour\n        self.intelligence = intelligence\n    @property",
-        "detail": "human",
-        "documentation": {}
-    },
-    {
-        "label": "Environment",
-        "kind": 6,
-        "importPath": "human",
-        "description": "human",
-        "peekOfCode": "class Environment:\n    def __init__(self, m, n, item):\n        self.grid = [[None for _ in range(m)] for _ in range(n)] # 2D list of None (empty), Human, Zombie\n        # list of randomly assigned location of human\n        self.humans = [(random.randint(0, m-1), random.randint(0, n-1)) for _ in range(10)]\n        # list of randomly assigned location of zombie\n        self.zombies = [(random.randint(0, m-1), random.randint(0, n-1)) for _ in range(10)]\n        self.item = item # list of location of weapon, power-up, other resources\n    def get_item(self, location) -> Union[Weapon, PowerUp]:\n        if location in self.item:",
-        "detail": "human",
-        "documentation": {}
-    },
-    {
-        "label": "Simulation",
-        "kind": 6,
-        "importPath": "human",
-        "description": "human",
-        "peekOfCode": "class Simulation:\n    def __init__(self, m, n, item):\n        self.env = Environment(m, n, item)\n    def run(self):\n        # update\n        # print\n        pass\n    def plot(self):\n        pass\n## Advanced",
-        "detail": "human",
-        "documentation": {}
-    },
-    {
-        "label": "\t\t\taction",
-        "kind": 5,
-        "importPath": "human",
-        "description": "human",
-        "peekOfCode": "\t\t\taction = self.choose_action(agent)\n\t\t\tif action == \"move\":\n\t\t\t\tdirection = self.choose_direction(agent)\n\t\t\t\tself.move_agent(agent, direction)\n\t\t\telif action == \"attack\":\n\t\t\t\tself.attack_neighbors(agent)\n\t\t\telse:\n\t\t\t\tcontinue\n\t\"\"\"\n    def end_condition(self):",
-        "detail": "human",
-        "documentation": {}
-    },
-    {
-        "label": "\t\t\t\tdirection",
-        "kind": 5,
-        "importPath": "human",
-        "description": "human",
-        "peekOfCode": "\t\t\t\tdirection = self.choose_direction(agent)\n\t\t\t\tself.move_agent(agent, direction)\n\t\t\telif action == \"attack\":\n\t\t\t\tself.attack_neighbors(agent)\n\t\t\telse:\n\t\t\t\tcontinue\n\t\"\"\"\n    def end_condition(self):\n        pass\n    def print_grid(self):",
-        "detail": "human",
-        "documentation": {}
-    },
-    {
         "label": "Interpreter",
         "kind": 6,
         "importPath": "interpreter",
@@ -1008,213 +1120,6 @@
         "description": "interpreter",
         "peekOfCode": "what_to_execute = {\n    \"instructions\": [(\"LOAD_VALUE\", 0),\n                    (\"STORE_NAME\", 0),\n                    (\"LOAD_VALUE\", 1),\n                    (\"STORE_NAME\", 1),\n                    (\"LOAD_NAME\", 0),\n                    (\"LOAD_NAME\", 1),\n                    (\"ADD_TWO_VALUES\", None),\n                    (\"PRINT_ANSWER\", None)],\n    \"numbers\": [1, 2],",
         "detail": "interpreter",
-        "documentation": {}
-    },
-    {
-        "label": "delay_print",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def delay_print(s,speed=0.05):\n\tglobal stop\n\tif speed==0.05 and speedrun:speed=0\n\tfor c in s:\n\t\tsys.stdout.write(c)\n\t\tsys.stdout.flush()\n\t\ttime.sleep(speed)\n\t\tif stop:\n\t\t\tstop=True\n\t\t\tbreak",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "box_check",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def box_check():\n\tboxes=set()\n\tfor y in range(len(room)):\n\t\tfor x in range(len(room[0])):\n\t\t\tif room[y][x] in range(-8,-4):\n\t\t\t\tboxes.add((x,y))\n\tfor x in boxes:\n\t\tconveyer_box(x[0],x[1])\n# hadles what happens if an error accurs\ndef save():",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "save",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def save():\n\tglobal save_order,save_maze\n\tif not (non or debug):\n\t\tsave={}\n\t\tsave_maze=copy.deepcopy(master_maze)\n\t\tfor y in save_maze:\n\t\t\tfor x in y:\n\t\t\t\t\tx.pop(0)\n\t\tfor x in save_order:\n\t\t\tsave[x]=globals()[x]",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "load",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def load():\n\tglobal xpos,ypos,roomx,roomy,health,oil,bombs,max_health,past_rooms,master_maze\n\tSaveFile=db[name]\n\tfor i in SaveFile:\n\t\tif i=='save_maze':\n\t\t\tsave_maze=SaveFile[i]\n\t\t\tfor y in range(len(master_maze)):\n\t\t\t\t# clear()\n\t\t\t\t# print('['+('#'*y)+(' '*(len(master_maze)-y)+']'))\n\t\t\t\tfor x in range(len(master_maze[y])):",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "refresh",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def refresh():\n\tglobal runery,saving,level_time,health,fire_time,room,state\n\twhile playing:\n\t\trunery-=1\n\t\tif state==\"maze\":\n\t\t\tif level_time<time.time()-150:\n\t\t\t\thealth-=1\n\t\t\t\tlevel_time+=10\n\t\t\t\tif health<=0:\n\t\t\t\t\trespawn()",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "on_error",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def on_error():\n\tglobal roomx,roomy,xpos,ypos,cp\n\tprint(\"An error accured, SUS\")\n\tif speedrun:print(time.time() -start)\n\trespawn()\n# controls the actions the your key preses cause while in the maze\ndef respawn():\n\tglobal xpos,ypos,roomx,roomy,health,maze,room,level_time\n\troomx,roomy,xpos,ypos=cp\n\thealth=3",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "respawn",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def respawn():\n\tglobal xpos,ypos,roomx,roomy,health,maze,room,level_time\n\troomx,roomy,xpos,ypos=cp\n\thealth=3\n\tlevel_time=float('inf')\n\tmaze=master_maze[roomy][roomx]\n\troom=maze[0].get_maze()\n\tfor y in range(len(room)):\n\t\tfor x in range(len(room[0])):\n\t\t\tif room[y][x] in(-2,-9):room[y][x]=0",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "leaderboard",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def leaderboard():\n\tif non:return'Sorry you need an account to see the leaderboard'\n\tlb=db['lb']\n\tdisplay=\"\"\n\tfor x in lb:\n\t\tif not x:display+='-None-\\n'\n\t\telse:display+=f'{x[0]}: {int(x[1]//60)}:{int(x[1]%60)}.{round(x[1]%1*100)}\\n'\n\treturn display\ngetLB=threading.Thread(target=leaderboard)\ndef on_press(key):",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "on_press",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def on_press(key):\n\tglobal xblit,yblit,state,dir,past,char,fire_speed\n\tif key in [keys.UP,\"w\"]:\n\t\tdir=0\n\t\tyblit-=1\n\telif key in [keys.DOWN,\"s\"]:\n\t\tdir=2\n\t\tyblit+=1\n\telif key in [keys.LEFT,\"a\"]:\n\t\tdir=3",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "conveyor",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def conveyor():\n\tglobal xpos,ypos\n\txtest=xpos\n\tytest=ypos\n\tdir=room[ypos][xpos]-13\n\tif dir not in range(4):dir = room[ypos][xpos]+8\n\tif dir not in range(4):return\n\tif dir==0:ytest-=1\n\telif dir==1:xtest+=1\n\telif dir==2:ytest+=1",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "conveyer_box",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def conveyer_box(xpos,ypos):\n\tglobal room\n\tdest=[]\n\troom[ypos][xpos]+=21\n\tif (room[ypos][xpos]-13)==0:\n\t\tdest=[ypos-1,xpos]\n\telif (room[ypos][xpos]-13)==1:\n\t\tdest=[ypos,xpos+1]\n\telif (room[ypos][xpos]-13)==2:\n\t\tdest=[ypos+1,xpos]",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "hotkey",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def hotkey(key):\n\tglobal hotkeys,cursor_pos\n\tif key in hotkeys.keys():return use(hotkeys[key])\n\telse:\n\t\tcursor_pos=0\n\t\twhile True:\n\t\t\tmessage=''\n\t\t\tfor x in range(len(inventory)):\n\t\t\t\tif x==cursor_pos:message+=\"➞ \"\n\t\t\t\telse:message+=\"  \"",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "main_menu",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def main_menu():\n\tglobal cursor_pos,debug,isSave\n\tif non:isSave=False\n\telse:isSave=name in db.keys()\n\tchar=0\n\tkey='None'\n\tif not isSave:cursor_pos+=1\n\twhile True:\n\t\tmessage=''\n\t\tfor x in range(len(startMenu)):",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "use",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def use(item):\n\tglobal inventory,past_rooms,roomx,roomy,xpos,ypos,style,oil,song,darkness,bombs,doubleCost,room,maze,max_health,health\n\tif item=='map':map()\n\telif item==\"goggles\":delay_print(\"Looking through these goggles you can see he trueth\")\n\telif item==\"heart\":\n\t\tmax_health+=1\n\t\thealth=max_health\n\telif item==\"dark\":darkness=not darkness\n\telif item==\"double cost\":doubleCost=not doubleCost\n\telif item==\"up\":",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "run_shop",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def run_shop(shop,key):\n\tglobal money,inventory,oil,cursor_pos,bombs\n\tif key == keys.ESC:return draw_maze()\n\tif key in [keys.ENTER,\"d\",keys.RIGHT]:\n\t\tif cursor_pos==len(shop):\n\t\t\tcursor_pos=0\n\t\t\treturn draw_maze()\n\t\telif shop[cursor_pos][1]<=money and shop[cursor_pos][0] not in inventory:\n\t\t\tmoney -= shop[cursor_pos][1]\n\t\t\tif shop[cursor_pos][0]==\"lamp oil\":",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "menu",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def menu(key=None):\n\tglobal inventory,cursor_pos\n\tif oil>0 and \"lantern\" not in inventory:inventory.append(\"lantern\")\n\tif bombs>0 and \"bombs\" not in inventory:inventory.append(\"bombs\")\n\tif key == keys.ESC: return draw_maze()\n\tif key in (keys.UP,\"w\"):\n\t\tif cursor_pos>0:cursor_pos-=1\n\t\telse:cursor_pos=len(inventory)\n\telif key in (keys.DOWN,\"s\"):\n\t\tif cursor_pos<len(inventory):cursor_pos+=1",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "map",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def map():\n\tglobal roomx,roomy,room,maze\n\tcursorx=roomx\n\tcursory=roomy\n\twhile True:\n\t\tmessage=''\n\t\tfor y in range(len(master_maze)):\n\t\t\tfor x in range(roomx-5,roomx+5):\n\t\t\t\tif x<0 or x>len(master_maze[y])-1:continue\n\t\t\t\tif debug:",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "draw_maze",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def draw_maze(message=\"\",death=False):\n\tglobal state,past\n\tstate=\"maze\"\n\tylen=len(room)\n\txlen=len(room[0])\n\tdisplay=\"\"\n\tif level_time<float('inf'):\n\t\tTimeLeft=level_time+150-time.time()\n\t\tif (TimeLeft<60 and TimeLeft%1>.5)or TimeLeft<10:\n\t\t\tdisplay+='\\u001b[31m'",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "update_pos",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def update_pos(xtest,ytest):\n\tglobal xpos,ypos,display,sword\n\txpos=xtest\n\typos=ytest\n\tdisplay=draw_maze(\"ACTIVE\"*debug)\n\tif display:print(display)\n\tsword=False\ndef movement():\n\tglobal xblit,yblit,xpos,ypos,roomy,roomx,runery,inventory,health,state,past_rooms,cp,money,room,maze,cursor_pos,push,playing,saving,speedrun,level_time,fire_time,escape,fire_speed\n\txtest=xpos+xblit",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "movement",
-        "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def movement():\n\tglobal xblit,yblit,xpos,ypos,roomy,roomx,runery,inventory,health,state,past_rooms,cp,money,room,maze,cursor_pos,push,playing,saving,speedrun,level_time,fire_time,escape,fire_speed\n\txtest=xpos+xblit\n\tytest=ypos+yblit\n\tylen=len(room)\n\txlen=len(room[0])\n\t# moves the player between rooms\n\tif ytest<0 or ytest>ylen-1 or xtest<0 or xtest>xlen-1:\n\t\tpast_rooms.append([roomx,roomy,xpos,ypos])\n\t\tdir = [ytest>ylen-1,xtest<0,ytest<0,xtest>xlen-1].index(True)",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "\t\tdir",
-        "kind": 5,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "\t\tdir = [ytest>ylen-1,xtest<0,ytest<0,xtest>xlen-1].index(True)\n\t\trunery=15\n\t\tif dir==2:roomy-=1\n\t\telif dir==3:roomx+=1\n\t\telif dir==0:roomy+=1\n\t\telif dir==1:roomx-=1\n\t\tmaze=master_maze[roomy][roomx]\n\t\tif not maze[0]:\n\t\t\tif dir==0:roomy-=1\n\t\t\telif dir==1:roomx+=1",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "\tname",
-        "kind": 5,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "\tname = input().capitalize()\n\ttime.sleep(0.5)\nmain_menu()\n# start of game\n# delay_print(\"\\nHello I am Mr. Hoisington\")\n# time.sleep(0.5)\n# delay_print('\\nWelcome to my experience')\n# time.sleep(0.5)\nif name in name_responses.keys():\n\tfor x in name_responses[name]:",
-        "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "\tkey",
-        "kind": 5,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "\tkey = getkey()\n\tif state==\"maze\":\n\t\ton_press(key)\n\telif state == \"shop\":\n\t\t# moves the cursor position in the shop\n\t\tif key in (keys.UP,\"w\"):\n\t\t\tif cursor_pos > 0:cursor_pos-=1\n\t\t\telse:cursor_pos=len(shop)\n\t\telif key in (keys.DOWN,\"s\"):\n\t\t\tif cursor_pos < len(shop):cursor_pos+=1",
-        "detail": "main",
         "documentation": {}
     },
     {

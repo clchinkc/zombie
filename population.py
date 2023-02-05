@@ -709,6 +709,7 @@ Survivor movement - each survivor moves one unit away from the nearest zombie
 a: individual: zombie and survivor, cell: position, grid: zombie_positions and survivor_positions, simulation: update_simulation()
 
 
+
 functional programming
 save_data() save the necessary data in a save order
 load_data() load the necessary data in a load order
