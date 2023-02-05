@@ -721,6 +721,8 @@ functools
 iterator, itertools
 https://myapollo.com.tw/zh-tw/python-itertools-more-itertools/
 collections
+assert
+https://www.youtube.com/watch?v=96mDQrlceEk&ab_channel=Indently
 metaprogramming (register lead classes, singleton)
 https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Metaprogramming.html#the-metaclass-hook
 """

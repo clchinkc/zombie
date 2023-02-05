@@ -35,7 +35,6 @@ https://hackr.io/blog/python-projects
 https://www.upgrad.com/blog/python-projects-ideas-topics-beginners/
 https://www.crio.do/blog/python-projects-for-developers/
 https://github.com/RichardFu123/pythonTools
-https://blog.csdn.net/pdcfighting/article/details/125669955?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-1-125669955-blog-126788849.pc_relevant_aa2&spm=1001.2101.3001.4242.2&utm_relevant_index=3
 Django 搭建简易博客
 Flask 开发轻博客
 https://github.com/zky001/fluent-python-translate
@@ -44,6 +43,7 @@ https://zhuanlan.zhihu.com/p/95526617
 https://www.analyticsinsight.net/top-10-python-data-science-courses-and-boot-camps-to-know-in-2023/
 https://python-course.eu/oop/polynomial-class.php
 https://langchain.readthedocs.io/en/latest/getting_started/getting_started.html
+https://medium.com/pipeline-a-data-engineering-resource/creating-the-dashboard-that-got-me-a-data-analyst-job-offer-de3f0d6b1771
 
 Web development
 https://www.coursera.org/programs/coursera-for-hkust-yetdg?collectionId=3Jzsr&currentTab=CATALOG&productId=Tn_VM61TEeaH0xIrfa92QA&productType=s12n&showMiniModal=true
@@ -149,6 +149,7 @@ https://ithelp.ithome.com.tw/articles/10080473
 https://zh.m.wikipedia.org/zh-tw/%E8%BD%AC%E5%8F%91_(%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1)
 https://ithelp.ithome.com.tw/users/20112528/ironman/2113
 http://butunclebob.com/ArticleS.UncleBob.PrinciplesOfOod
+軟體工程筆記
 
 Code style
 https://en.wikipedia.org/wiki/Coding_best_practices
@@ -187,6 +188,8 @@ https://www.zhihu.com/question/24590883/answer/1220720307
 https://zhuanlan.zhihu.com/p/87891142
 https://zhuanlan.zhihu.com/p/87894542
 https://automatetheboringstuff.com/2e/
+https://medium.com/techtofreedom/11-python-tricks-to-show-off-your-advanced-skills-4ea2d53a9f7c
+https://python.plainenglish.io/mastering-python-the-10-most-difficult-concepts-and-how-to-learn-them-3973dd15ced4
 
 All language
 https://github.com/8483/notes
@@ -219,6 +222,8 @@ https://developer.mozilla.org/zh-TW/docs/Learn/JavaScript
 https://github.com/Code-Bullet/WebsiteTest
 https://github.com/Code-Bullet/MarbleCalculator
 https://notfalse.net/64/js-dom-2017
+https://www.coursera.org/specializations/javascript-beginner
+https://www.coursera.org/learn/html-css-javascript-for-web-developers
 
 CSS
 https://www.udemy.com/course/infinity-creative-css-animation-course/
@@ -230,6 +235,9 @@ https://dev.to/
 https://www.theodinproject.com/
 https://codemyui.com/
 https://www.30secondsofcode.org/
+
+html
+https://www.codecademy.com/learn/learn-html
 
 pyscript
 https://realpython.com/pyscript-python-in-browser/
@@ -331,11 +339,16 @@ https://github.com/markdouthwaite/minimal-flask-api
 https://medium.com/quick-code/absolute-beginners-guide-to-slaying-apis-using-python-7b380dc82236
 https://github.com/ml-tooling/lazydocs
 https://github.com/EnZon3/TWS-dataset_gen - hosted on https://replit.com/@EnZon3/The-Worlds-Sentiment
+how to design an api in python
 
 Chatbot
+https://github.com/yihui-he/ActGPT
+https://github.com/nat/natbot
 https://github.com/jaspreetsidhu3/voice_assistant
 https://www.edureka.co/blog/how-to-make-a-chatbot-in-python/#chatterbot
 https://github.com/hackermondev/AllKnowledgeBob
+https://github.com/f/awesome-chatgpt-prompts
+https://island-stretch-3e4.notion.site/Best-Chat-GPT-Resources-b54f0284c7644583b59dd9a332f46af8
 
 Command line application
 https://github.com/lxgr-linux/pokete
@@ -418,8 +431,9 @@ https://freewechat.com/a/MzAwMjYxNjcwMw==/2456404246/1
 Python + excel
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500457&idx=1&sn=4f7a84d76129883a7ed94f16a43a8467&chksm=fdc8f58fcabf7c999724243d7955b6982164e9a310b75fa8df75e4965ace76394a83606fff02&scene=21#wechat_redirect
 
-Streamlit excel deployment to web
+Streamlit
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500178&idx=1&sn=61e10fca7a9e1dfd588a4428c9527e4d&chksm=fdc8f6b4cabf7fa2428de25b1fee6601c86f25c26ff4b50372bf303bcfbaa12e8067d2acc76d&scene=21#wechat_redirect
+https://medium.com/@joetrankang/i-built-a-customer-retention-dashboard-with-python-and-streamlit-in-under-20-minutes-as-a-data-d49605a2a5c3
 
 File management
 https://mp.weixin.qq.com/s/91ZbgtakKUBfodKRYjD8PQ
@@ -442,6 +456,13 @@ https://python-course.eu/machine-learning/text-classification-in-python.php
 Musical score
 https://python-course.eu/applications-python/musical-scores-with-python.php
 https://python-course.eu/applications-python/fibonacci-to-music-score.php
+
+Rust
+https://learn.microsoft.com/en-us/training/paths/rust-first-steps/
+https://github.com/rust-lang/rustlings
+https://www.youtube.com/watch?v=zF34dRivLOw&ab_channel=TraversyMedia
+https://www.youtube.com/watch?v=T_KrYLW4jw8&list=PLzMcBGfZo4-nyLTlSRBvo0zjSnCnqjHYQ&ab_channel=TechWithTim
+https://www.youtube.com/playlist?list=PLlrxD0HtieHjbTjrchBwOVks_sr8EVW1x
 
 Courses
 1. A JavaScript Course
