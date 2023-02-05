@@ -285,14 +285,6 @@
         "documentation": {}
     },
     {
-        "label": "generate",
-        "importPath": "maze_gen",
-        "description": "maze_gen",
-        "isExtraImport": true,
-        "detail": "maze_gen",
-        "documentation": {}
-    },
-    {
         "label": "heapq",
         "kind": 6,
         "isExtraImport": true,
@@ -1125,18 +1117,9 @@
     {
         "label": "maze",
         "kind": 6,
-        "importPath": "mazes",
-        "description": "mazes",
-        "peekOfCode": "class maze:\n\tdef __init__(self,layout,exits=None,name='Maze',time=0,random=None,rand_up=False,end=None):\n\t\tself.layout=layout\n\t\tself.exits=exits\n\t\tself.name=name.capitalize()\n\t\tself.time=time*60\n\t\tself.random=random\n\t\tself.up=rand_up\n\t\tself.end=end\n\tdef get_maze(self):",
-        "detail": "mazes",
-        "documentation": {}
-    },
-    {
-        "label": "maze",
-        "kind": 6,
         "importPath": "pathfinder",
         "description": "pathfinder",
-        "peekOfCode": "class maze:\n\tdef __init__(self,layout,exits=None,name='Maze',time=0,random=None,rand_up=False,end=None):\n\t\tself.layout=layout\n\t\tself.exits=exits\n\t\tself.name=name.capitalize()\n\t\tself.time=time*60\n\t\tself.random=random\n\t\tself.up=rand_up\n\t\tself.end=end\n\tdef get_maze(self):",
+        "peekOfCode": "class maze:\n\tdef __init__(self,layout,exits=None,name='Maze',time=0,random=None,end=None):\n\t\tself.layout=layout # a list of lists of numbers\n\t\tself.exits=exits # a list of the exits in the order of north, east, south, west\n\t\tself.name=name.capitalize() # the name of the maze\n\t\tself.time=time*60\n\t\tself.random=random # the size of the random maze\n\t\tself.end=end # the end message\n\tdef get_maze(self):\n\t\tif self.random:",
         "detail": "pathfinder",
         "documentation": {}
     },
