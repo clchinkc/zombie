@@ -36,9 +36,10 @@ https://medium.com/onedegree-tech-blog/%E7%82%BA%E4%BB%80%E9%BA%BC%E6%88%91%E8%A
 https://www.youtube.com/watch?v=ZtInesLXD-Y
 """
 
+import random
+
 # python decorator to count time it take for a function using time.time()
 from typing import Optional
-import random
 
 
 def time_it(func):
@@ -418,7 +419,7 @@ class Grid:
                         try:
                             destination = self.grid[row +
                                                     move_row][col+move_column]
-                        except:
+                        except IndexError:
                             continue
                         trials += 1
                         if trials >= 1000:

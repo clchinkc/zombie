@@ -109,6 +109,10 @@ https://towardsdatascience.com/advanced-visualization-techniques-for-time-series
 https://worldmodels.github.io/
 https://en.wikipedia.org/wiki/Multi-objective_optimization
 https://analyticsindiamag.com/top-reinforcement-learning-algorithms/
+https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
+https://pythonprogramming.net/deep-q-learning-dqn-reinforcement-learning-python-tutorial/
+https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
+
 
 Software Design
 https://zh.wikipedia.org/zh-tw/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E8%89%BA%E6%9C%AF
@@ -150,6 +154,7 @@ https://zh.m.wikipedia.org/zh-tw/%E8%BD%AC%E5%8F%91_(%E9%9D%A2%E5%90%91%E5%AF%B9
 https://ithelp.ithome.com.tw/users/20112528/ironman/2113
 http://butunclebob.com/ArticleS.UncleBob.PrinciplesOfOod
 軟體工程筆記
+https://developer-advocacy.com/
 
 Code style
 https://en.wikipedia.org/wiki/Coding_best_practices
@@ -271,6 +276,17 @@ https://replit.com/@LukeBlake/Tank-game
 https://replit.com/@Carson-Sernick/carsoncraft
 https://replit.com/@ChompingDragon/Super-Smash-Bros-for-Replit-part-2-READ-ALL-INSTRUCTIONS
 https://python-course.eu/applications-python/snake-in-python.php
+https://github.com/techwithtim/Pygame-Tutorials
+https://github.com/techwithtim/PygameForBeginners
+https://github.com/techwithtim/PyMunk-Physics-Simulation
+
+neat
+https://github.com/AMMIROSOH/RacingCar
+https://github.com/CodeReclaimers/neat-python/tree/master/examples/single-pole-balancing
+https://github.com/techwithtim/NEAT-Flappy-Bird
+https://github.com/monokim/framework_tutorial
+https://neat-python.readthedocs.io/en/latest/
+https://github.com/monokim/PyHuman
 
 tkinter game
 https://zhuanlan.zhihu.com/p/45870821
@@ -367,6 +383,7 @@ https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/zPpn56Yf3JFuxkXyuLqM
 Web scripting
 Urllib、Requests、BeautifulSoup、XPath、Selenium、Scrapy、分布式爬虫
 python mysql or other database project
+https://github.com/techwithtim/Beautiful-Soup-Tutorial
 https://docs.qq.com/doc/DTVJzZXh5TmJSR1V4
 https://cloud.tencent.com/developer/article/1932575
 https://cloud.tencent.com/developer/article/1711098

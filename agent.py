@@ -732,6 +732,7 @@ debugging
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247494272&idx=1&sn=adbc9770fc995785b061ace35f5a81c2&chksm=fdc8dda6cabf54b002dddd81c15a4eb45d5236561dfa823af0c33782a499449ea03cc72d07ac&scene=21#wechat_redirect
 https://github.com/nedbat/coveragepy
 https://ithelp.ithome.com.tw/articles/10078821
+https://about.codecov.io/blog/writing-better-tests-with-ai-and-github-copilot/
 a debug mode that print all variables in each steps and allow user control of the agents in the map
 speed up
 https://mp.weixin.qq.com/s/M7DdUWLzqOLVR7qJFmvZdA
@@ -745,6 +746,7 @@ https://python-course.eu/applications-python/threads.php
 
 # use one grid for item, one grid for weapon, one grid for other resources, one grid for human, one grid for zombie
 # so that we can use 1 and 0 to represent whether there is an item or not and use numpy to do matrix operation
+# control using underlying probabilistic model
 
 # human may attack human
 
@@ -767,6 +769,8 @@ https://python-course.eu/applications-python/threads.php
 # if zombie is close and no melee weapon, use ranged weapon
 # choose weapon according to distance and then damage
 # each weapon has a different attack method (use strategy pattern)
+
+# may move towards weapon and item inside visual range
 
 # velocity and acceleration for human and zombie
 

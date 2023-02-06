@@ -218,6 +218,46 @@
         "documentation": {}
     },
     {
+        "label": "App",
+        "importPath": "kivy.app",
+        "description": "kivy.app",
+        "isExtraImport": true,
+        "detail": "kivy.app",
+        "documentation": {}
+    },
+    {
+        "label": "BoxLayout",
+        "importPath": "kivy.uix.boxlayout",
+        "description": "kivy.uix.boxlayout",
+        "isExtraImport": true,
+        "detail": "kivy.uix.boxlayout",
+        "documentation": {}
+    },
+    {
+        "label": "Button",
+        "importPath": "kivy.uix.button",
+        "description": "kivy.uix.button",
+        "isExtraImport": true,
+        "detail": "kivy.uix.button",
+        "documentation": {}
+    },
+    {
+        "label": "GridLayout",
+        "importPath": "kivy.uix.gridlayout",
+        "description": "kivy.uix.gridlayout",
+        "isExtraImport": true,
+        "detail": "kivy.uix.gridlayout",
+        "documentation": {}
+    },
+    {
+        "label": "Label",
+        "importPath": "kivy.uix.label",
+        "description": "kivy.uix.label",
+        "isExtraImport": true,
+        "detail": "kivy.uix.label",
+        "documentation": {}
+    },
+    {
         "label": "nltk",
         "kind": 6,
         "isExtraImport": true,
@@ -282,6 +322,64 @@
         "description": "replit",
         "isExtraImport": true,
         "detail": "replit",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "tkinter",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "Entry",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "OptionMenu",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "filedialog",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "messagebox",
+        "importPath": "tkinter",
+        "description": "tkinter",
+        "isExtraImport": true,
+        "detail": "tkinter",
+        "documentation": {}
+    },
+    {
+        "label": "Image",
+        "importPath": "PIL",
+        "description": "PIL",
+        "isExtraImport": true,
+        "detail": "PIL",
         "documentation": {}
     },
     {
@@ -671,6 +769,15 @@
         "description": "agent",
         "peekOfCode": "apocalypse = ZombieApocalypse()\napocalypse.simulate(num_zombies=10, \n                    num_humans=10, \n                    school_size=10, \n                    num_turns=10)\n\"\"\"\ntake damage not working\nwrongly moving more than one space\n\"\"\"\n\"\"\"",
         "detail": "agent",
+        "documentation": {}
+    },
+    {
+        "label": "Calculator",
+        "kind": 6,
+        "importPath": "calculator",
+        "description": "calculator",
+        "peekOfCode": "class Calculator(App):\n    def build(self):\n        root_layout = BoxLayout(orientation='vertical')\n        self.solution = Label(text=\" \", halign=\"right\", size_hint_y=0.75, font_size=50)\n        button_symbols = [['7', '8', '9', '+'], \n                        ['4', '5', '6', '-'], \n                        ['1', '2', '3', '*'], \n                        ['.', '0', '/', '=']]\n        button_grid = GridLayout(cols=4, size_hint_y=2)\n        for row in button_symbols:",
+        "detail": "calculator",
         "documentation": {}
     },
     {
@@ -1085,6 +1192,69 @@
         "description": "genetic",
         "peekOfCode": "best = ga.run()[0]\n# print the best solution found by the genetic algorithm\nprint(best)\n\"\"\"\nThe MovementControl class takes the following arguments in its __init__ method:\nmap: a 2D array representing the map of the simulation\nperson_pos: a tuple with the position (x, y) of the person on the map\nzombie_positions: a list of tuples with the positions (x, y) of the zombies on the map\nlimit: an integer representing the maximum number of iterations the genetic algorithm will run\nsize: an integer representing the size of the population (number of chromosomes in each generation)",
         "detail": "genetic",
+        "documentation": {}
+    },
+    {
+        "label": "select_directory",
+        "kind": 2,
+        "importPath": "image_converter",
+        "description": "image_converter",
+        "peekOfCode": "def select_directory():\n    root = tk.Tk()\n    root.withdraw()\n    directory = filedialog.askdirectory(\n        title = \"Select a directory\",\n        mustexist = True\n    )\n    return directory\ndef choose_format(root, original_format, converted_format):\n    tk.Label(root, text=\"Original format:\").grid(row=0, column=0)",
+        "detail": "image_converter",
+        "documentation": {}
+    },
+    {
+        "label": "choose_format",
+        "kind": 2,
+        "importPath": "image_converter",
+        "description": "image_converter",
+        "peekOfCode": "def choose_format(root, original_format, converted_format):\n    tk.Label(root, text=\"Original format:\").grid(row=0, column=0)\n    original_format_entry = OptionMenu(root, original_format, \"webp\", \"jpeg\", \"png\", \"svg\")\n    original_format_entry.grid(row=0, column=1)\n    tk.Label(root, text=\"Converted format:\").grid(row=1, column=0)\n    converted_format_entry = OptionMenu(root, converted_format, \"webp\", \"jpeg\", \"png\", \"svg\")\n    converted_format_entry.grid(row=1, column=1)\n    tk.Button(root, text=\"Convert\", command=lambda: convert_format(directory, original_format, converted_format)).grid(row=2, column=0, columnspan=2, pady=10)\ndef convert_format(directory, original_format, converted_format):\n    for filename in os.listdir(directory):",
+        "detail": "image_converter",
+        "documentation": {}
+    },
+    {
+        "label": "convert_format",
+        "kind": 2,
+        "importPath": "image_converter",
+        "description": "image_converter",
+        "peekOfCode": "def convert_format(directory, original_format, converted_format):\n    for filename in os.listdir(directory):\n        if filename.endswith(\".\" + original_format.get()):\n            image = Image.open(os.path.join(directory, filename))\n            image.save(os.path.join(directory, filename.replace(\".\" + original_format.get(), \".\" + converted_format.get())), converted_format.get().upper())\n    messagebox.showinfo(\"Success\", \"All images in the selected directory have been converted to the selected format.\")\nroot = tk.Tk()\noriginal_format = tk.StringVar()\nconverted_format = tk.StringVar()\nchoose_format(root, original_format, converted_format)",
+        "detail": "image_converter",
+        "documentation": {}
+    },
+    {
+        "label": "root",
+        "kind": 5,
+        "importPath": "image_converter",
+        "description": "image_converter",
+        "peekOfCode": "root = tk.Tk()\noriginal_format = tk.StringVar()\nconverted_format = tk.StringVar()\nchoose_format(root, original_format, converted_format)\ndirectory = select_directory()\nif directory:\n    root.mainloop()\nelse:\n    messagebox.showerror(\"Error\", \"No directory was selected.\")",
+        "detail": "image_converter",
+        "documentation": {}
+    },
+    {
+        "label": "original_format",
+        "kind": 5,
+        "importPath": "image_converter",
+        "description": "image_converter",
+        "peekOfCode": "original_format = tk.StringVar()\nconverted_format = tk.StringVar()\nchoose_format(root, original_format, converted_format)\ndirectory = select_directory()\nif directory:\n    root.mainloop()\nelse:\n    messagebox.showerror(\"Error\", \"No directory was selected.\")",
+        "detail": "image_converter",
+        "documentation": {}
+    },
+    {
+        "label": "converted_format",
+        "kind": 5,
+        "importPath": "image_converter",
+        "description": "image_converter",
+        "peekOfCode": "converted_format = tk.StringVar()\nchoose_format(root, original_format, converted_format)\ndirectory = select_directory()\nif directory:\n    root.mainloop()\nelse:\n    messagebox.showerror(\"Error\", \"No directory was selected.\")",
+        "detail": "image_converter",
+        "documentation": {}
+    },
+    {
+        "label": "directory",
+        "kind": 5,
+        "importPath": "image_converter",
+        "description": "image_converter",
+        "peekOfCode": "directory = select_directory()\nif directory:\n    root.mainloop()\nelse:\n    messagebox.showerror(\"Error\", \"No directory was selected.\")",
+        "detail": "image_converter",
         "documentation": {}
     },
     {

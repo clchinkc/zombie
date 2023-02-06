@@ -315,14 +315,21 @@ class School:
     # may change the add/remove function to accept individual class as well as location
 
     def update_connections(self) -> None:
-        for i in range(len(self.grid)):
-            for j in range(len(self.grid[i])):
-                cell = self.get_individual((i, j))
-                if cell == None:
+        for row in self.grid:
+            for cell in row:
+                if cell is None:
                     continue
-                neighbors = self.get_neighbors((i, j), cell.interact_range)
+                neighbors = self.get_neighbors((cell.location), cell.interact_range)
                 for neighbor in neighbors:
                     cell.add_connection(neighbor)
+                    
+    """
+            for i in range(len(self.grid)):
+            for j in range(len(self.grid[i])):
+                cell = self.get_individual((i, j))
+                
+                neighbors = self.get_neighbors((i, j), cell.interact_range)
+    """
 
     # update the grid in the population based on their interactions with other people
     def update_grid(self, population: list[Individual], migration_probability: float) -> None:
@@ -330,7 +337,7 @@ class School:
             i, j = individuals.location
             cell = self.get_individual((i, j))
 
-            if cell == None:
+            if cell is None:
                 raise Exception(
                     f"Individual {individuals.id} is not in the grid")
 

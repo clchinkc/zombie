@@ -20,7 +20,7 @@ def performance_decorator(mode='all'):
                 time = min(res) / 100
                 try:
                     print(f'Execution time of method {func.__name__} from class {func.__qualname__.split(".")[0]} is {time:.5f} seconds')
-                except:
+                except AttributeError:
                     print(f'Execution time of function {func.__name__} is {time:.5f} seconds')
                 print()
             
