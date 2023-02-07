@@ -707,6 +707,8 @@ apocalypse.simulate(num_zombies=10,
 """
 take damage not working
 wrongly moving more than one space
+can use "in" to check if a variable is in a list and return a boolean
+
 """
 
 """
@@ -725,10 +727,18 @@ assert
 https://www.youtube.com/watch?v=96mDQrlceEk&ab_channel=Indently
 metaprogramming (register lead classes, singleton)
 https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Metaprogramming.html#the-metaclass-hook
+function factory python
+https://levelup.gitconnected.com/how-to-create-callable-objects-in-python-python-oop-complete-course-part-20-15fe46e3e2c3
+namedtuple vs dataclass
+use of hashing in game
+Techniques for advanced functional programming using lambda functions and partial function application.
+Concurrent programming methods to optimize how your code interacts with APIs.
+Advanced control logic using iterators and generators.
 """
 
 """
 debugging
+use logging module logging.debug()/logging.info()/logging.warning()/logging.error()/logging.critical()
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247494272&idx=1&sn=adbc9770fc995785b061ace35f5a81c2&chksm=fdc8dda6cabf54b002dddd81c15a4eb45d5236561dfa823af0c33782a499449ea03cc72d07ac&scene=21#wechat_redirect
 https://github.com/nedbat/coveragepy
 https://ithelp.ithome.com.tw/articles/10078821
@@ -738,6 +748,12 @@ speed up
 https://mp.weixin.qq.com/s/M7DdUWLzqOLVR7qJFmvZdA
 threading
 https://python-course.eu/applications-python/threads.php
+subprocessing
+https://www.digitalocean.com/community/tutorials/how-to-use-subprocess-to-run-external-programs-in-python-3
+python package the project
+dependency management
+Pipenv is a direct competitor to Poetry, but I like Poetry better. Poetry is a more active project and works with the relatively new pyproject.toml file. I’m also a bit of a rebel, so having a group of Python developers who call themselves the “Python Packaging Authority” tell me to use Pipenv is a turn-off.
+On the other hand, I have used pip-tools. If you aren’t ready to jump into a dependency manager like Poetry yet, but you would like to automate tracking transitive dependencies, pip-tools is a good start. The post RIP Pipenv has great arguments for using pip-tools. I would still use pip-tools, but I grew tired of writing pip-compile. Poetry makes everything easier.
 """
 
 # Advanced

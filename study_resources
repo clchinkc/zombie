@@ -21,6 +21,8 @@ stock market simulator -> stock market simulator with strategy to buy and sell s
 Craigslist webscraper -> craigslist webscraper with gui
 Quiz app -> quiz app with database
 note app -> note app with encryption
+visualize complexity python
+stock prediction github
 
 Capstone projects: high complexity (put everything together, >500 lines, use integrations, like frontend, backend, database, api, software, multiple libraries and frameworks), cool to put on cv, more interesting than existing solutions, do between 1-3
 Social media clones, like twitter, discord, reddit, etc.
@@ -38,12 +40,19 @@ https://github.com/RichardFu123/pythonTools
 Django 搭建简易博客
 Flask 开发轻博客
 https://github.com/zky001/fluent-python-translate
-Python 实现康威生命游戏
+Python 实现康威生命游戏 (pygame)
 https://zhuanlan.zhihu.com/p/95526617
 https://www.analyticsinsight.net/top-10-python-data-science-courses-and-boot-camps-to-know-in-2023/
 https://python-course.eu/oop/polynomial-class.php
 https://langchain.readthedocs.io/en/latest/getting_started/getting_started.html
 https://medium.com/pipeline-a-data-engineering-resource/creating-the-dashboard-that-got-me-a-data-analyst-job-offer-de3f0d6b1771
+Recommendation system
+https://github.com/anthonyli358/spotify-recommender-systems
+https://github.com/Qing93/anime_recommend
+https://zhuanlan.zhihu.com/p/22494721
+https://whuhan2013.github.io/blog/2016/11/07/flask-mysql-learn/
+Currency converter
+https://www.thepythoncode.com/article/make-a-currency-converter-in-python
 
 Web development
 https://www.coursera.org/programs/coursera-for-hkust-yetdg?collectionId=3Jzsr&currentTab=CATALOG&productId=Tn_VM61TEeaH0xIrfa92QA&productType=s12n&showMiniModal=true
@@ -53,6 +62,8 @@ https://replit.com/@AdityaAnanya007/Fronteditor
 https://replit.com/@andrevladica/LEGEND-OF-THE-TEXT
 https://github.com/orgs/creativetimofficial/repositories
 https://github.com/transitive-bullshit/yt-semantic-search
+https://dev.to/ericchapman/create-a-backend-in-javascript-introduction-to-node-js-215a
+https://github.com/3b1b/3Blue1Brown.com
 
 Frontend + backend
 https://tms-dev-blog.com/python-backend-with-javascript-frontend-how-to/
@@ -75,6 +86,7 @@ https://github.com/FredrikOseberg/spa-frontend
 https://github.com/FredrikOseberg/spa-api
 
 flask
+https://flask.palletsprojects.com/en/2.0.x/quickstart/#a-minimal-application
 https://realpython.com/learning-paths/flask-by-example/
 https://devpress.csdn.net/python/62f50b327e66823466189be4.html
 https://www.educative.io/courses/flask-develop-web-applications-in-python
@@ -87,6 +99,7 @@ https://www.fullstackpython.com/flask.html
 https://www.freecodecamp.org/news/how-to-build-a-web-application-using-flask-and-deploy-it-to-the-cloud-3551c985e492/
 Flask example GitHub
 https://www.educative.io/collection/page/10370001/5948104969027584/4612762156400640/project
+https://www.youtube.com/watch?v=kng-mJJby8g&ab_channel=TechWithTim
 
 django
 https://www.djangoproject.com/
@@ -94,6 +107,7 @@ https://realpython.com/tutorials/django/
 https://realpython.com/get-started-with-django-1/
 https://realpython.com/django-diary-project-python/
 https://realpython.com/django-social-network-1/
+https://www.freecodecamp.org/news/learn-django-by-building-a-marketplace/
 
 Chart animation
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247486653&idx=1&sn=92128455c20ada46b355f5166ba5d4b5&chksm=fdcb3b9bcabcb28de6cb8f5c08a557f5078aede86b21fc151babc29dde8451d0a3a60efd0a51&scene=21#wechat_redirect
@@ -115,6 +129,7 @@ https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 
 
 Software Design
+https://www.cis.upenn.edu/~bcpierce/courses/670Fall04/GreatWorksInPL.shtml
 https://zh.wikipedia.org/zh-tw/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E8%89%BA%E6%9C%AF
 https://zh.m.wikipedia.org/zh-tw/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%9E%84%E9%80%A0%E5%92%8C%E8%A7%A3%E9%87%8A
 https://zh.wikipedia.org/zh-tw/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%EF%BC%9A%E5%8F%AF%E5%A4%8D%E7%94%A8%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E8%BD%AF%E4%BB%B6%E7%9A%84%E5%9F%BA%E7%A1%80
@@ -155,6 +170,21 @@ https://ithelp.ithome.com.tw/users/20112528/ironman/2113
 http://butunclebob.com/ArticleS.UncleBob.PrinciplesOfOod
 軟體工程筆記
 https://developer-advocacy.com/
+cross-cutting concern
+https://notfalse.net/tag/%e4%be%9d%e8%b3%b4%e5%80%92%e7%bd%ae%e5%8e%9f%e5%89%87
+https://zh.wikipedia.org/zh-tw/%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5
+https://zh.wikipedia.org/zh-tw/%E4%BE%9D%E8%B5%96%E5%8F%8D%E8%BD%AC%E5%8E%9F%E5%88%99
+Fundamental Concepts in Programming Languages
+http://c2.com/ppr/
+http://c2.com/doc/oopsla87.html
+https://ithelp.ithome.com.tw/articles/10079701
+https://ithelp.ithome.com.tw/articles/10080201
+https://ithelp.ithome.com.tw/users/20107637/ironman/1927
+http://teddy-chen-tw.blogspot.com/2011/12/1.html
+Head First Design Patterns
+https://towardsdatascience.com/10-common-software-architectural-patterns-in-a-nutshell-a0b47a1e9013
+https://www.youtube.com/watch?v=tv-_1er1mWI&ab_channel=Fireship
+https://www.arjancodes.com/mindset
 
 Code style
 https://en.wikipedia.org/wiki/Coding_best_practices
@@ -210,17 +240,25 @@ https://github.com/TheAlgorithms
 
 Youtube video
 https://www.youtube.com/user/Computerphile
+https://www.youtube.com/@Senegoddess/videos
+https://www.youtube.com/@TheCherno/videos
 
 React
 https://www.youtube.com/watch?v=Ym6RYyRBPaA
 https://www.youtube.com/watch?v=bmpI252DmiI
 https://github.com/lironharel/how-react-works
+https://reactjs.org/tutorial/tutorial.html
 react tutorial google search
 https://reactjs.org/tutorial/tutorial.html#declaring-a-winner Lifting State Up, Again
 https://codepen.io/gaearon/pen/LyyXgK
 https://www.youtube.com/watch?v=cKfevf-iIHA Visual IDE
 https://github.com/girishgr8/Resume-Builder
 https://dev.to/imshines/a-simple-weather-app-using-react-and-openweathermap-api-10m2
+https://dev.to/rammcodes/build-these-5-projects-to-get-hired-as-a-junior-react-developer-asap-3098
+https://scrimba.com/learn/learnreact?utm_source=blog&utm_campaign=frontend-developer-guide
+
+typescript
+https://ithelp.ithome.com.tw/users/20109783/ironman/1659
 
 Javascript
 https://developer.mozilla.org/zh-TW/docs/Learn/JavaScript
@@ -240,10 +278,13 @@ https://dev.to/
 https://www.theodinproject.com/
 https://codemyui.com/
 https://www.30secondsofcode.org/
+https://neumorphism.io/#e0e0e0
+https://codepen.io/yangfan44777/pen/kMrNaP
+https://github.com/Rahulfordev/icon-hover
 
 html
 https://www.codecademy.com/learn/learn-html
-
+https://www.freecodecamp.org/news/tag/front-end-development/
 pyscript
 https://realpython.com/pyscript-python-in-browser/
 
@@ -258,7 +299,7 @@ https://www.creative-tim.com/product/soft-ui-dashboard?utm_medium=social&utm_sou
 https://www.creative-tim.com/product/argon-dashboard?utm_medium=social&utm_source=youtube&utm_campaign=free+admins+short
 https://www.creative-tim.com/product/material-dashboard?utm_medium=social&utm_source=youtube&utm_campaign=free+admins+short
 https://www.creative-tim.com/product/black-dashboard?utm_medium=social&utm_source=youtube&utm_campaign=free+admins+short
-
+https://ithelp.ithome.com.tw/users/20065859/ironman/1499
 evolution game
 https://replit.com/search?query=evolution
 
@@ -296,6 +337,7 @@ https://github.com/TheCherno/Genesis/tree/master/src/com/thecherno/ld24 - changi
 
 c++ game
 https://replit.com/@MuhammadHariz/Seamulator-V33-Game#main.cpp
+https://thatonegamedev.com/cpp/c-packages-for-a-custom-game-engine/
 
 web game
 https://replit.com/@IroncladDev/P5Platformer
@@ -307,7 +349,7 @@ https://github.com/Code-Bullet/Tetris-AI-Javascript
 https://github.com/Code-Bullet/NEAT-Template-JavaScript
 https://github.com/Code-Bullet/Hill-Climb-Racing-AI
 https://itch.io/jam/brackeys-5
-
+https://github.com/tranchikhang/MedievalWar
 Open source project
 https://opensource.guide/how-to-contribute/
 
@@ -317,6 +359,7 @@ https://www.commands.dev/
 coding website
 leetcode
 https://github.com/RichardFu123/LeetCode_Py
+https://www.youtube.com/@leetcode6863
 hackerrank
 codewars
 topcoder
@@ -330,14 +373,14 @@ Coding interview
 https://www.youtube.com/watch?v=SVvr3ZjtjI8
 https://github.com/jwasham/coding-interview-university
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247497696&idx=1&sn=ea99acc80156b27049682d631aad3ff6&chksm=fdc8c0c6cabf49d093daa9e0ff60351389ccf9c8f3c56bdcb14cb7aa29d7c3523826a13ae871&scene=21#wechat_redirect
+https://github.com/girishgr8/Resume-Builder
 
 Digital marketing
 https://welly.tw/digital-marketing/learn-google-lesson
 
-Currency converter
-https://www.thepythoncode.com/article/make-a-currency-converter-in-python
 
 blockchain project
+https://www.analyticsinsight.net/top-10-programming-languages-for-building-blockchain-applications/
 
 API
 python api project
@@ -379,12 +422,14 @@ https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500786&idx=1&sn=ea7c33
 GUI
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247499523&idx=1&sn=24f8be16f9131acef084732bd7de8885&chksm=fdc8c825cabf41337fabdd4a925cdaf73dab2e63ce0ef6aeeb59ae157d32a6f8d907cb173aa1&scene=21#wechat_redirect
 https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/zPpn56Yf3JFuxkXyuLqMPw
+https://opensource.com/resources/python/gui-frameworks?intcmp=7016000000127cYAAQ
+
 
 Web scripting
 Urllib、Requests、BeautifulSoup、XPath、Selenium、Scrapy、分布式爬虫
-python mysql or other database project
 https://github.com/techwithtim/Beautiful-Soup-Tutorial
 https://docs.qq.com/doc/DTVJzZXh5TmJSR1V4
+https://stylengineer.com/program/python-stock-stockcodelookup-guide/
 https://cloud.tencent.com/developer/article/1932575
 https://cloud.tencent.com/developer/article/1711098
 https://cloud.tencent.com/developer/article/1805616?from=article.detail.1933412&areaSource=106000.12&traceId=UFNK0ysEGqXdJ11eHR4vk
@@ -399,13 +444,12 @@ https://blog.51cto.com/u_6315133/5015472
 Web scripting + Data processing + mysql
 https://blog.51cto.com/u_9399369/1953469
 
-Recommendation systemusing flask and mysql
-https://github.com/Qing93/anime_recommend
-https://zhuanlan.zhihu.com/p/22494721
-https://whuhan2013.github.io/blog/2016/11/07/flask-mysql-learn/
-
-python + mysql
+database
+python mysql or other database project
+https://www.freecodecamp.org/news/how-to-build-a-backend-application/
+mysql
 https://www.51cto.com/article/708748.html
+https://blog.boot.dev/backend/top-backend-technologies/
 
 API + Data analysis + Data visualization
 http://blog.itpub.net/69982434/viewspace-2738661
@@ -438,6 +482,7 @@ jupyter notebook only
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247491053&idx=1&sn=308114cc5de8b0ac4ee6f2d6e5ae13dd&chksm=fdcb2acbcabca3dd0c1559b37b4060b602a3a6f46a042541fcf553b40bf9959be8e1ea2b0762&scene=21#wechat_redirect
 PyG2Plot
 https://zhuanlan.zhihu.com/p/413293073
+python-graph gallery
 
 Word cloud
 https://cloud.tencent.com/developer/article/1931771
@@ -471,6 +516,8 @@ https://github.com/RichardFu123/tensorflow/tree/master/CNN
 text classification
 https://python-course.eu/machine-learning/introduction-text-classification.php
 https://python-course.eu/machine-learning/text-classification-in-python.php
+https://pycaret.gitbook.io/docs/get-started/tutorials
+Berkeley CS188
 
 Musical score
 https://python-course.eu/applications-python/musical-scores-with-python.php

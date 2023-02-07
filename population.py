@@ -324,9 +324,9 @@ class School:
                     cell.add_connection(neighbor)
                     
     """
-            for i in range(len(self.grid)):
-            for j in range(len(self.grid[i])):
-                cell = self.get_individual((i, j))
+        for i, row in enumerate(self.grid):
+            for j, cell in enumerate(row):
+                # cell = self.get_individual((i, j))
                 
                 neighbors = self.get_neighbors((i, j), cell.interact_range)
     """
@@ -715,7 +715,13 @@ Survivor movement - each survivor moves one unit away from the nearest zombie
 
 a: individual: zombie and survivor, cell: position, grid: zombie_positions and survivor_positions, simulation: update_simulation()
 
+Move random probability to be param
 
+Q learning as one strategy
+state machine should be a part of population and input individual as argument to process
+game world and q-table singleton
+
+https://python-course.eu/applications-python/levenshtein-distance.php
 
 functional programming
 save_data() save the necessary data in a save order
@@ -1055,6 +1061,10 @@ By using this pattern, the implementation of the drive method is decoupled from 
 Additionally, the use of different classes for different manufacturers allows for easy swapping of implementations based on the manufacturer. For example, you could swap out the XTruck class for the YTruck class and the Car class would still work correctly because it is only dependent on the TruckInterface and not the concrete class. This makes the code more flexible and allows for easier updates and changes in the future.
 """
 """
+Switch as invoker, switchable object as receiver, joined by composition and the resulting object control the switch using a function and show the results using the switchable object
+
+https://zh.m.wikipedia.org/zh-tw/%E5%91%BD%E4%BB%A4%E6%A8%A1%E5%BC%8F
+
 class Command:
     def execute(self):
         raise NotImplementedError
