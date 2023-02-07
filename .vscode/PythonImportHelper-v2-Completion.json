@@ -218,24 +218,6 @@
         "documentation": {}
     },
     {
-        "label": "nltk",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "nltk",
-        "description": "nltk",
-        "detail": "nltk",
-        "documentation": {}
-    },
-    {
-        "label": "string",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "string",
-        "description": "string",
-        "detail": "string",
-        "documentation": {}
-    },
-    {
         "label": "time,sys,os,threading,copy,random",
         "kind": 6,
         "isExtraImport": true,
@@ -752,24 +734,6 @@
         "description": "component",
         "peekOfCode": "def createBjorn():\n    return GameObject(PlayerInputComponent(), \n                        BjornPhysicsComponent(), \n                        BjornGraphicsComponent())\n\"\"\"\nUser inputcomponent that has method using Character as input to update the Character\nUpdate the inputcomponent inside the Character update method\nThe Character own the inputcomponent that control the Character velocity by a specific acceleration stored inside inputcomponent\nThe character also own a physicscomponent that change the Character position according to its velocity and world.resolve collision function with the character and world as input\nThe character also own a graphicscomponent that points to left if velocity lower than 0 else right and graphic.draw function with character and graphics as input",
         "detail": "component",
-        "documentation": {}
-    },
-    {
-        "label": "VerbFormError",
-        "kind": 2,
-        "importPath": "error",
-        "description": "error",
-        "peekOfCode": "def VerbFormError(tags):\n    if tags[2].startswith('V') and tags[2] != 'VB':\n        if tags[1] == 'MD' or tags [1] == 'TO':\n            return True\n        elif tags[0] == 'MD' or tags [0] == 'TO':\n            return True\n        else:\n            return False\n    else:\n        return False",
-        "detail": "error",
-        "documentation": {}
-    },
-    {
-        "label": "SubjectVerbAgreementError",
-        "kind": 2,
-        "importPath": "error",
-        "description": "error",
-        "peekOfCode": "def SubjectVerbAgreementError(tags):\n    if tags[2].startswith('V') and tags[2] == 'VBP':\n        if tags[1] == 'NN' or tags [1] == 'NNP':\n            return True\n        elif tags[0] == 'NN' or tags [0] == 'NNP':\n            return True\n        else:\n            return False\n    elif tags[2].startswith('V') and tags[2] == 'VBZ':\n        if tags[1] == 'NNS' or tags [1] == 'NNPS':",
-        "detail": "error",
         "documentation": {}
     },
     {

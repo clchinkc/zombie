@@ -1,6 +1,6 @@
 {
 	"editor.formatOnSave": false,
-	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.defaultFormatter": "ms-python.black-formatter",
 	"editor.formatOnSaveMode": "modificationsIfAvailable",
 	"editor.autoIndent": "keep",
 	"editor.detectIndentation": true,

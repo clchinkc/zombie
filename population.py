@@ -721,8 +721,6 @@ Q learning as one strategy
 state machine should be a part of population and input individual as argument to process
 game world and q-table singleton
 
-https://python-course.eu/applications-python/levenshtein-distance.php
-
 functional programming
 save_data() save the necessary data in a save order
 load_data() load the necessary data in a load order

@@ -46,6 +46,7 @@ https://www.analyticsinsight.net/top-10-python-data-science-courses-and-boot-cam
 https://python-course.eu/oop/polynomial-class.php
 https://langchain.readthedocs.io/en/latest/getting_started/getting_started.html
 https://medium.com/pipeline-a-data-engineering-resource/creating-the-dashboard-that-got-me-a-data-analyst-job-offer-de3f0d6b1771
+https://www.youtube.com/watch?v=jl5yUEdekEM&ab_channel=TechWithTim
 Recommendation system
 https://github.com/anthonyli358/spotify-recommender-systems
 https://github.com/Qing93/anime_recommend
@@ -64,8 +65,10 @@ https://github.com/orgs/creativetimofficial/repositories
 https://github.com/transitive-bullshit/yt-semantic-search
 https://dev.to/ericchapman/create-a-backend-in-javascript-introduction-to-node-js-215a
 https://github.com/3b1b/3Blue1Brown.com
+faker js
 
 Frontend + backend
+https://github.com/TheOdinProject
 https://tms-dev-blog.com/python-backend-with-javascript-frontend-how-to/
 https://github.com/ashutoshpipriye/Calculator-using-Flask
 Python开发简单计算器
@@ -226,6 +229,26 @@ https://automatetheboringstuff.com/2e/
 https://medium.com/techtofreedom/11-python-tricks-to-show-off-your-advanced-skills-4ea2d53a9f7c
 https://python.plainenglish.io/mastering-python-the-10-most-difficult-concepts-and-how-to-learn-them-3973dd15ced4
 
+c++
+“The Most Important C++ Books...Ever”
+The C++ Programming Language by Bjarne Stroustrup
+Effective C++ by Scott Meyers
+Design Patterns by Erich Gamma, Richard Helm, Ralph Johnson, and John Vlissides
+International Standard for C++
+Modern C++ Design by Andrei Alexandrescu
+“The Most Important C++ Non-Book Publications...Ever”
+Programming in C++, Rules and Recommendations by Mats Henricson and Erik Nyquist
+“Exception Handling: A False Sense of Security” by Tom Cargill
+“Curiously Recurring Template Patterns,” by Jim Coplien
+“Using C++ Template Metaprograms” by Todd Veldhuizen
+“Exception-Safety in Generic Components” by David Abrahams
+“The Most Important C++ Software...Ever”
+Cfront by AT&T Bell Telephone Laboratories
+GCC by the GNU Project
+Visual C++ by Microsoft
+The Standard Template Library, originally by HP
+The Libraries at Boost
+
 All language
 https://github.com/8483/notes
 https://drive.google.com/file/d/1uBuPRFSjCywLmerNK843XUMODyM5p5Ap/view
@@ -256,6 +279,7 @@ https://github.com/girishgr8/Resume-Builder
 https://dev.to/imshines/a-simple-weather-app-using-react-and-openweathermap-api-10m2
 https://dev.to/rammcodes/build-these-5-projects-to-get-hired-as-a-junior-react-developer-asap-3098
 https://scrimba.com/learn/learnreact?utm_source=blog&utm_campaign=frontend-developer-guide
+https://www.freecodecamp.org/news/how-to-build-a-calculator-app-using-react-native-a-step-by-step-tutorial/
 
 typescript
 https://ithelp.ithome.com.tw/users/20109783/ironman/1659
@@ -308,8 +332,11 @@ https://replit.com/@LMNtal/Star-Wars-A-New-Recruit#AGM/Templates/Actions/reactiv
 https://replit.com/@HyperHacker/Alchemy?v=1
 https://replit.com/@HyperHacker/Chess?v=1#main.py
 https://replit.com/@MonsusBattlebus/Five-Nights-At-Freddys-Python-Edition
+https://www.analyticsinsight.net/top-5-programming-languages-you-should-know-as-a-game-developer/
 
 Pygame
+https://opensource.com/article/17/12/game-framework-python
+https://opensource.com/article/17/12/game-python-add-a-player
 https://www.epubit.com/articleDetails?id=NC7E3EF941B50000116101A401B63E380 four in row
 https://github.com/Gooodgis/dont-touch-my-presents 3 day project
 https://replit.com/@ChompingDragon/Super-Mario-Bros-for-ReplitREAD-ALL-INSTRUCTIONS#main.py
@@ -338,6 +365,7 @@ https://github.com/TheCherno/Genesis/tree/master/src/com/thecherno/ld24 - changi
 c++ game
 https://replit.com/@MuhammadHariz/Seamulator-V33-Game#main.cpp
 https://thatonegamedev.com/cpp/c-packages-for-a-custom-game-engine/
+https://opensource.com/article/22/11/extend-c-python
 
 web game
 https://replit.com/@IroncladDev/P5Platformer
@@ -424,17 +452,21 @@ https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247499523&idx=1&sn=24f8be
 https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/zPpn56Yf3JFuxkXyuLqMPw
 https://opensource.com/resources/python/gui-frameworks?intcmp=7016000000127cYAAQ
 
-
 Web scripting
 Urllib、Requests、BeautifulSoup、XPath、Selenium、Scrapy、分布式爬虫
 https://github.com/techwithtim/Beautiful-Soup-Tutorial
 https://docs.qq.com/doc/DTVJzZXh5TmJSR1V4
-https://stylengineer.com/program/python-stock-stockcodelookup-guide/
 https://cloud.tencent.com/developer/article/1932575
 https://cloud.tencent.com/developer/article/1711098
 https://cloud.tencent.com/developer/article/1805616?from=article.detail.1933412&areaSource=106000.12&traceId=UFNK0ysEGqXdJ11eHR4vk
 https://blog.csdn.net/VictoriaSue/article/details/107792075?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-1-107792075-blog-80965797.pc_relevant_3mothn_strategy_recovery&spm=1001.2101.3001.4242.2&utm_relevant_index=4
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247484076&idx=1&sn=fac8b75e2fbdb8eecff16b1faa4dc7f2&chksm=fdcb358acabcbc9c20769d3800f77f7cafb16844486e2c3fd35b0d567923eeac352189cc6285&scene=21#wechat_redirect
+
+stock
+https://stylengineer.com/program/python-stock-stockcodelookup-guide/
+https://www.finlab.tw/%E7%94%A8%E7%88%AC%E8%9F%B2%E7%88%AC%E5%85%A8%E4%B8%96%E7%95%8C%E8%82%A1%E5%83%B9/
+https://www.finlab.tw/%E5%88%A9%E7%94%A8pandas%E8%BC%95%E9%AC%86%E5%8F%96%E5%BE%97%E6%AD%B7%E5%8F%B2%E8%82%A1%E5%83%B9/
+https://ithelp.ithome.com.tw/m/users/20103826/ironman/3032?sc=iThelpR
 
 Web scripting + Data analysis
 https://cloud.tencent.com/developer/article/1757720
@@ -461,6 +493,7 @@ https://blog.51cto.com/u_14848199/3809668
 https://blog.51cto.com/u_13389043/5166211
 
 Data visualization
+https://zhuanlan.zhihu.com/p/148748125?utm_id=0
 Matplotlib
 https://zhuanlan.zhihu.com/p/388287863
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247488470&idx=1&sn=d54ae505d004e61a1de7d53fba67207a&chksm=fdcb24f0cabcade6e85db9065fc835be4bdf3fd98643b05072d1ad608972f472cc581cb2b342&scene=21#wechat_redirect
@@ -582,3 +615,9 @@ Research interview process
 Blind
 Glassdoor
 
+Useful python libraries
+PDFMiner - extract text from PDF
+camelot - extract tables from PDF
+livepython - track variables in runtime
+ftfy - fix text encoding
+icecream - debug print
