@@ -737,6 +737,7 @@ Advanced control logic using iterators and generators.
 """
 
 """
+sys exit
 debugging
 use logging module logging.debug()/logging.info()/logging.warning()/logging.error()/logging.critical()
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247494272&idx=1&sn=adbc9770fc995785b061ace35f5a81c2&chksm=fdc8dda6cabf54b002dddd81c15a4eb45d5236561dfa823af0c33782a499449ea03cc72d07ac&scene=21#wechat_redirect
@@ -750,6 +751,7 @@ threading
 https://python-course.eu/applications-python/threads.php
 subprocessing
 https://www.digitalocean.com/community/tutorials/how-to-use-subprocess-to-run-external-programs-in-python-3
+https://codereview.stackexchange.com/questions/120790/distributed-system-simulator?rq=1
 python package the project
 dependency management
 Pipenv is a direct competitor to Poetry, but I like Poetry better. Poetry is a more active project and works with the relatively new pyproject.toml file. I’m also a bit of a rebel, so having a group of Python developers who call themselves the “Python Packaging Authority” tell me to use Pipenv is a turn-off.

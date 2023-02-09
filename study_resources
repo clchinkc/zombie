@@ -66,21 +66,24 @@ https://github.com/transitive-bullshit/yt-semantic-search
 https://dev.to/ericchapman/create-a-backend-in-javascript-introduction-to-node-js-215a
 https://github.com/3b1b/3Blue1Brown.com
 faker js
+fast api
+https://github.com/ashutoshpipriye/Book_App_using_nodejs_postgresql_react
+https://github.com/dypsilon/frontend-dev-bookmarks
 
 Frontend + backend
 https://github.com/TheOdinProject
 https://tms-dev-blog.com/python-backend-with-javascript-frontend-how-to/
-https://github.com/ashutoshpipriye/Calculator-using-Flask
-Python开发简单计算器
+
 https://blog.csdn.net/weixin_45621944/article/details/109906498
 https://juejin.cn/post/6844903545712410631
 https://www.51cto.com/article/697947.html
-https://github.com/erezsh/plyplus/blob/master/examples/calc.py
-https://github.com/lark-parser/lark/blob/master/examples/calc.py
+
 https://www.accordbox.com/blog/how-to-combine-frontend-and-backend-for-python-web-developers/
-https://github.com/HamishHamiltonSmith/Visgraph-Graphing-Calculator
 https://www.codecademy.com/learn/connecting-front-end-to-back-end
-https://stackoverflow.blog/2020/02/03/is-it-time-for-a-front-end-framework/
+https://towardsdatascience.com/the-right-way-to-build-an-api-with-python-cd08ab285f8f
+http://developerscorner.in/
+
+
 How frontend and backend is connected
 Integrate frontend and backend
 https://vsupalov.com/how-backend-and-frontend-communicate/
@@ -103,6 +106,10 @@ https://www.freecodecamp.org/news/how-to-build-a-web-application-using-flask-and
 Flask example GitHub
 https://www.educative.io/collection/page/10370001/5948104969027584/4612762156400640/project
 https://www.youtube.com/watch?v=kng-mJJby8g&ab_channel=TechWithTim
+https://github.com/ashutoshpipriye/Falsk-application-of-Iris-prediction-on-pythonanywhere.com
+https://github.com/ashutoshpipriye/Book_detail-API_in_Flask
+https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world
+https://thinkinfi.com/upload-and-display-image-in-flask-python/
 
 django
 https://www.djangoproject.com/
@@ -111,6 +118,7 @@ https://realpython.com/get-started-with-django-1/
 https://realpython.com/django-diary-project-python/
 https://realpython.com/django-social-network-1/
 https://www.freecodecamp.org/news/learn-django-by-building-a-marketplace/
+https://www.udemy.com/course/django-python-advanced/
 
 Chart animation
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247486653&idx=1&sn=92128455c20ada46b355f5166ba5d4b5&chksm=fdcb3b9bcabcb28de6cb8f5c08a557f5078aede86b21fc151babc29dde8451d0a3a60efd0a51&scene=21#wechat_redirect
@@ -195,6 +203,7 @@ https://www.youtube.com/watch?v=Kl3_Gmn4Ujg
 https://www.youtube.com/watch?v=zmWf_cHyo8s
 https://google.github.io/styleguide/pyguide.html
 https://www.youtube.com/watch?v=wgWwJSnhgDU
+https://www.youtube.com/watch?v=8OKTAedgFYg&ab_channel=PatrickLoeber
 
 Unit test
 https://www.youtube.com/watch?v=ULxMQ57engo
@@ -228,6 +237,9 @@ https://zhuanlan.zhihu.com/p/87894542
 https://automatetheboringstuff.com/2e/
 https://medium.com/techtofreedom/11-python-tricks-to-show-off-your-advanced-skills-4ea2d53a9f7c
 https://python.plainenglish.io/mastering-python-the-10-most-difficult-concepts-and-how-to-learn-them-3973dd15ced4
+https://github.com/lukepolson/youtube_channel/tree/main/Python%20Tutorial%20Series
+https://github.com/lukepolson/pydata-book
+https://github.com/lukepolson/Python-Self-Learning
 
 c++
 “The Most Important C++ Books...Ever”
@@ -260,11 +272,16 @@ https://www.geeksforgeeks.org/
 https://github.com/sindresorhus/awesome
 https://www.lanqiao.cn/courses/?tag=%E5%85%A8%E9%83%A8&category=%E5%85%A8%E9%83%A8&fee=all&sort=default&level=all&from_login_page=true
 https://github.com/TheAlgorithms
+https://github.com/practical-tutorials/project-based-learning
+https://github.com/bregman-arie/devops-exercises
+https://github.com/mtdvio/every-programmer-should-know
+https://github.com/kamranahmedse/developer-roadmap
 
 Youtube video
 https://www.youtube.com/user/Computerphile
 https://www.youtube.com/@Senegoddess/videos
 https://www.youtube.com/@TheCherno/videos
+https://www.youtube.com/@aarthificial/videos
 
 React
 https://www.youtube.com/watch?v=Ym6RYyRBPaA
@@ -280,9 +297,14 @@ https://dev.to/imshines/a-simple-weather-app-using-react-and-openweathermap-api-
 https://dev.to/rammcodes/build-these-5-projects-to-get-hired-as-a-junior-react-developer-asap-3098
 https://scrimba.com/learn/learnreact?utm_source=blog&utm_campaign=frontend-developer-guide
 https://www.freecodecamp.org/news/how-to-build-a-calculator-app-using-react-native-a-step-by-step-tutorial/
+https://github.com/ashutoshpipriye/Basic-React-Things
+https://github.com/ashutoshpipriye/react-crypto
 
 typescript
 https://ithelp.ithome.com.tw/users/20109783/ironman/1659
+https://github.com/motion-canvas
+
+Vue, svelete, angular
 
 Javascript
 https://developer.mozilla.org/zh-TW/docs/Learn/JavaScript
@@ -291,6 +313,15 @@ https://github.com/Code-Bullet/MarbleCalculator
 https://notfalse.net/64/js-dom-2017
 https://www.coursera.org/specializations/javascript-beginner
 https://www.coursera.org/learn/html-css-javascript-for-web-developers
+https://github.com/ashutoshpipriye/advanced-javascipt
+https://github.com/ashutoshpipriye/Javascript-projects-with-basic
+https://github.com/jonasschmedtmann/complete-javascript-course
+https://pig-game-v2.netlify.app/
+https://bankist.netlify.app/
+https://bankist-dom.netlify.app/
+https://mapty.netlify.app/
+https://forkify-v2.netlify.app/
+https://github.com/HamishHamiltonSmith/Visgraph-Graphing-Calculator
 
 CSS
 https://www.udemy.com/course/infinity-creative-css-animation-course/
@@ -347,6 +378,10 @@ https://python-course.eu/applications-python/snake-in-python.php
 https://github.com/techwithtim/Pygame-Tutorials
 https://github.com/techwithtim/PygameForBeginners
 https://github.com/techwithtim/PyMunk-Physics-Simulation
+https://www.youtube.com/watch?v=0qYu66olR64&ab_channel=ScreWiew
+
+pyglet
+https://www.youtube.com/watch?v=KbiRYkoBV34&ab_channel=DreamsofCode
 
 neat
 https://github.com/AMMIROSOH/RacingCar
@@ -366,6 +401,8 @@ c++ game
 https://replit.com/@MuhammadHariz/Seamulator-V33-Game#main.cpp
 https://thatonegamedev.com/cpp/c-packages-for-a-custom-game-engine/
 https://opensource.com/article/22/11/extend-c-python
+https://www.youtube.com/watch?v=_yyKYl1LAHM&list=WL&index=69&ab_channel=Barji
+https://www.youtube.com/watch?v=iEn0ozP-jxc&list=WL&index=67&ab_channel=PolyMars
 
 web game
 https://replit.com/@IroncladDev/P5Platformer
@@ -396,12 +433,15 @@ Reply Challenges
 edabit
 spoj
 
+readme
+https://github.com/ashutoshpipriye/Awesome-Profile-README-templates
 
 Coding interview
 https://www.youtube.com/watch?v=SVvr3ZjtjI8
 https://github.com/jwasham/coding-interview-university
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247497696&idx=1&sn=ea99acc80156b27049682d631aad3ff6&chksm=fdc8c0c6cabf49d093daa9e0ff60351389ccf9c8f3c56bdcb14cb7aa29d7c3523826a13ae871&scene=21#wechat_redirect
 https://github.com/girishgr8/Resume-Builder
+https://github.com/jwasham/coding-interview-university
 
 Digital marketing
 https://welly.tw/digital-marketing/learn-google-lesson
@@ -516,6 +556,8 @@ https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247491053&idx=1&sn=308114
 PyG2Plot
 https://zhuanlan.zhihu.com/p/413293073
 python-graph gallery
+dashboards
+https://thinkinfi.com/make-interactive-dashboard-using-dash-with-python/
 
 Word cloud
 https://cloud.tencent.com/developer/article/1931771
@@ -551,6 +593,8 @@ https://python-course.eu/machine-learning/introduction-text-classification.php
 https://python-course.eu/machine-learning/text-classification-in-python.php
 https://pycaret.gitbook.io/docs/get-started/tutorials
 Berkeley CS188
+https://thinkinfi.com/fasttext-for-text-classification-python/
+https://thinkinfi.com/accurate-language-detection-using-fasttext-python/
 
 Musical score
 https://python-course.eu/applications-python/musical-scores-with-python.php
@@ -610,6 +654,20 @@ Security+ - https://geni.us/KaWhOB
 「CS106A 程式設計方法論」（Programming methodology）
 進階課程 CS106B
 電腦科學課程（CS107、CS110）
+
+AI For Business
+https://www.coursera.org/specializations/ai-for-business-wharton?irclickid=0ocwtz0ecxyNWfrQtGQZjznDUkA3s9TTAXmm2k0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3568609&utm_content=b2c
+
+Azure for all
+https://learn.microsoft.com/zh-tw/training/browse/?roles=ai-engineer
+test
+https://learn.microsoft.com/zh-tw/certifications/browse/?roles=ai-engineer
+
+AI for everyone
+https://www.coursera.org/learn/ai-for-everyone?action=enroll&irclickid=0ocwtz0ecxyNWfrQtGQZjznDUkA3s7XymSWswU0&irgwc=1&utm_campaign=1359989&utm_content=b2c&utm_medium=partners&utm_source=impact
+follow up course
+https://www.coursera.org/deeplearning-ai
+
 
 Research interview process
 Blind

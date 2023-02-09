@@ -625,21 +625,15 @@ class Population:
                 self.school.remove_individual(individual.location)
 
     def update_population_metrics(self) -> None:
-        self.num_healthy = sum(
-            1 for individual in self.agent_list if individual.state == State.HEALTHY)
-        self.num_infected = sum(
-            1 for individual in self.agent_list if individual.state == State.INFECTED)
-        self.num_zombie = sum(
-            1 for individual in self.agent_list if individual.state == State.ZOMBIE)
-        self.num_dead = sum(
-            1 for individual in self.agent_list if individual.state == State.DEAD)
-        self.population_size = self.num_healthy + \
-            self.num_infected + self.num_zombie + self.num_dead
+        self.num_healthy = sum(1 for individual in self.agent_list if individual.state == State.HEALTHY)
+        self.num_infected = sum(1 for individual in self.agent_list if individual.state == State.INFECTED)
+        self.num_zombie = sum(1 for individual in self.agent_list if individual.state == State.ZOMBIE)
+        self.num_dead = sum(1 for individual in self.agent_list if individual.state == State.DEAD)
+        self.population_size = self.num_healthy + self.num_infected + self.num_zombie
         self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity)))
         self.turning_probability = 1 - (1 / (1 + math.exp(-self.severity)))
         self.death_probability = self.severity
-        self.migration_probability = self.population_size / \
-            (self.population_size + 1)
+        self.migration_probability = self.population_size / (self.population_size + 1)
 
         # may use other metrics or functions to calculate the probability of infection, turning, death, migration
 
@@ -746,6 +740,21 @@ Additionally, the model could be expanded to include more detailed information a
 such as the locations of classrooms, doors, and other features. 
 This could allow for more accurate simulations of the movement 
 and interactions of students, teachers, and zombies within the school environment.
+"""
+
+"""
+The code defines a class called "River" which is used to represent a river that contains various animals. The class has the following methods and attributes:
+init: This method is used to initialize the River object and it takes the length of the river as an input. It creates an array of length equal to the length of the river and stores it in the "_contents" attribute.
+add_random: This method is used to add an animal to a random cell in the river. It takes an animal as an input and adds it to a random cell in the "_contents" array.
+update: This method updates the river according to certain rules. It iterates through each cell in the "_contents" array and updates it using the "_update_cell" method.
+_update_cell: This method updates a single cell in the "_contents" array. It takes two inputs: "cell" and "index". It determines if the cell is None, and if it is not None, it checks if there is another animal in an adjacent cell. If there is another animal, it will either fight or mate with the other animal, depending on their species and gender.
+_eat: This method is used when a fish cell encounters another animal. The fish cell always gets eaten in this scenario.
+_fight: This method is used when two animals of the same species encounter each other. The weaker animal gets killed in this scenario.
+_move: This method is used when an animal moves from one cell to another. It takes two inputs: "old_index" and "new_index".
+_spawn: This method is used when two animals of the same species encounter each other and mate. It creates a new instance of the animal in a free cell in the "_contents" array.
+str: This method returns a string representation of the river, with each cell separated by a "|".
+Finally, the code includes a "main" section that creates a River object of length 10, and it updates and prints the river for 10 years.
+In summary, the River class is used to simulate a river that contains various animals and it updates the river based on certain rules such as fighting, mating, moving, and eating.
 """
 
 """

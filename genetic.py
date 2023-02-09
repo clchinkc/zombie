@@ -356,4 +356,5 @@ https://github.com/topics/natural-selection?l=python
 https://stackoverflow.com/questions/46337156/python-genetic-algorithm-natural-selection
 https://blog.csdn.net/weixin_37790882/article/details/84034956
 https://blog.csdn.net/oxuzhenyi/article/details/70037833
+https://medium.datadriveninvestor.com/genetic-algorithm-made-intuitive-with-natural-selection-and-python-project-from-scratch-3462f7793a3f
 """

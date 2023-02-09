@@ -1,3 +1,8 @@
+
+"""Projectiles
+https://github.com/lukepolson/youtube_channel/blob/main/Python%20Tutorial%20Series/object_oriented.ipynb
+"""
+
 """
 major pillars of an engine: input, graphics, physics, entities, and audio
 """
@@ -155,10 +160,11 @@ Use the grid-based movement mechanics to constrain the movement of objects, you 
 You can also use the grid-based approach to implement the pathfinding algorithm in the game.
 """
 
-import numpy as np
-
 # dynamics
 import math
+
+import numpy as np
+
 
 class Particle:
     def __init__(self, pos, vel, acc, mass):
@@ -243,6 +249,7 @@ def dynamic():
 
 
 import math
+
 
 class Circle:
     def __init__(self, x, y, radius, mass, velocity_x, velocity_y, elasticity):
@@ -474,6 +481,7 @@ def collision():
 # from cpp
 
 from dataclasses import dataclass
+
 
 # dynamics
 @dataclass

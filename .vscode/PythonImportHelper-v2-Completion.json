@@ -218,6 +218,74 @@
         "documentation": {}
     },
     {
+        "label": "matplotlib.pyplot",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "matplotlib.pyplot",
+        "description": "matplotlib.pyplot",
+        "detail": "matplotlib.pyplot",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "pandas",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pandas",
+        "description": "pandas",
+        "detail": "pandas",
+        "documentation": {}
+    },
+    {
+        "label": "seaborn",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "seaborn",
+        "description": "seaborn",
+        "detail": "seaborn",
+        "documentation": {}
+    },
+    {
+        "label": "stats",
+        "importPath": "scipy",
+        "description": "scipy",
+        "isExtraImport": true,
+        "detail": "scipy",
+        "documentation": {}
+    },
+    {
+        "label": "LinearRegression",
+        "importPath": "sklearn.linear_model",
+        "description": "sklearn.linear_model",
+        "isExtraImport": true,
+        "detail": "sklearn.linear_model",
+        "documentation": {}
+    },
+    {
+        "label": "KMeans",
+        "importPath": "sklearn.cluster",
+        "description": "sklearn.cluster",
+        "isExtraImport": true,
+        "detail": "sklearn.cluster",
+        "documentation": {}
+    },
+    {
+        "label": "SentimentIntensityAnalyzer",
+        "importPath": "nltk.sentiment",
+        "description": "nltk.sentiment",
+        "isExtraImport": true,
+        "detail": "nltk.sentiment",
+        "documentation": {}
+    },
+    {
         "label": "time,sys,os,threading,copy,random",
         "kind": 6,
         "isExtraImport": true,
@@ -267,6 +335,55 @@
         "documentation": {}
     },
     {
+        "label": "numba",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numba",
+        "description": "numba",
+        "detail": "numba",
+        "documentation": {}
+    },
+    {
+        "label": "animation",
+        "importPath": "matplotlib",
+        "description": "matplotlib",
+        "isExtraImport": true,
+        "detail": "matplotlib",
+        "documentation": {}
+    },
+    {
+        "label": "cm",
+        "importPath": "matplotlib",
+        "description": "matplotlib",
+        "isExtraImport": true,
+        "detail": "matplotlib",
+        "documentation": {}
+    },
+    {
+        "label": "animation",
+        "importPath": "matplotlib",
+        "description": "matplotlib",
+        "isExtraImport": true,
+        "detail": "matplotlib",
+        "documentation": {}
+    },
+    {
+        "label": "pyplot",
+        "importPath": "matplotlib",
+        "description": "matplotlib",
+        "isExtraImport": true,
+        "detail": "matplotlib",
+        "documentation": {}
+    },
+    {
+        "label": "PillowWriter",
+        "importPath": "matplotlib.animation",
+        "description": "matplotlib.animation",
+        "isExtraImport": true,
+        "detail": "matplotlib.animation",
+        "documentation": {}
+    },
+    {
         "label": "heapq",
         "kind": 6,
         "isExtraImport": true,
@@ -282,15 +399,6 @@
         "importPath": "queue",
         "description": "queue",
         "detail": "queue",
-        "documentation": {}
-    },
-    {
-        "label": "numpy",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "numpy",
-        "description": "numpy",
-        "detail": "numpy",
         "documentation": {}
     },
     {
@@ -383,23 +491,6 @@
         "documentation": {}
     },
     {
-        "label": "matplotlib.pyplot",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "matplotlib.pyplot",
-        "description": "matplotlib.pyplot",
-        "detail": "matplotlib.pyplot",
-        "documentation": {}
-    },
-    {
-        "label": "animation",
-        "importPath": "matplotlib",
-        "description": "matplotlib",
-        "isExtraImport": true,
-        "detail": "matplotlib",
-        "documentation": {}
-    },
-    {
         "label": "fsolve",
         "importPath": "scipy.optimize",
         "description": "scipy.optimize",
@@ -413,6 +504,39 @@
         "description": "scipy.integrate",
         "isExtraImport": true,
         "detail": "scipy.integrate",
+        "documentation": {}
+    },
+    {
+        "label": "odeint",
+        "importPath": "scipy.integrate",
+        "description": "scipy.integrate",
+        "isExtraImport": true,
+        "detail": "scipy.integrate",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "perf_counter",
+        "importPath": "time",
+        "description": "time",
+        "isExtraImport": true,
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "tqdm",
+        "importPath": "tqdm",
+        "description": "tqdm",
+        "isExtraImport": true,
+        "detail": "tqdm",
         "documentation": {}
     },
     {
@@ -430,15 +554,6 @@
         "importPath": "tensorflow",
         "description": "tensorflow",
         "detail": "tensorflow",
-        "documentation": {}
-    },
-    {
-        "label": "time",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "time",
-        "description": "time",
-        "detail": "time",
         "documentation": {}
     },
     {
@@ -734,6 +849,96 @@
         "description": "component",
         "peekOfCode": "def createBjorn():\n    return GameObject(PlayerInputComponent(), \n                        BjornPhysicsComponent(), \n                        BjornGraphicsComponent())\n\"\"\"\nUser inputcomponent that has method using Character as input to update the Character\nUpdate the inputcomponent inside the Character update method\nThe Character own the inputcomponent that control the Character velocity by a specific acceleration stored inside inputcomponent\nThe character also own a physicscomponent that change the Character position according to its velocity and world.resolve collision function with the character and world as input\nThe character also own a graphicscomponent that points to left if velocity lower than 0 else right and graphic.draw function with character and graphics as input",
         "detail": "component",
+        "documentation": {}
+    },
+    {
+        "label": "df",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "df = pd.read_csv('data.csv')\n# Data cleaning\ndf.dropna(inplace=True)\ndf.reset_index(drop=True, inplace=True)\ndf['date'] = pd.to_datetime(df['date'])\n# Exploratory Data Analysis (EDA)\ndf.describe()\nsns.countplot(x='target', data=df)\n# Data Visualization\nsns.pairplot(df, x_vars=['feature1', 'feature2', 'feature3'], y_vars='target', height=7, aspect=0.7)",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "df['date']",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "df['date'] = pd.to_datetime(df['date'])\n# Exploratory Data Analysis (EDA)\ndf.describe()\nsns.countplot(x='target', data=df)\n# Data Visualization\nsns.pairplot(df, x_vars=['feature1', 'feature2', 'feature3'], y_vars='target', height=7, aspect=0.7)\n# Hypothesis Testing\nfrom scipy import stats\nstats.ttest_ind(df[df['target'] == 0]['feature1'], df[df['target'] == 1]['feature1'])\n# Predictive modeling",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "model",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "model = LinearRegression()\nX = df[['feature1', 'feature2', 'feature3']]\ny = df['target']\nmodel.fit(X, y)\n# Time Series Analysis\ndf_ts = df.set_index('date')\ndf_ts.plot(y='feature1')\n# Cluster analysis\nfrom sklearn.cluster import KMeans\nkmeans = KMeans(n_clusters=3)",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "X",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "X = df[['feature1', 'feature2', 'feature3']]\ny = df['target']\nmodel.fit(X, y)\n# Time Series Analysis\ndf_ts = df.set_index('date')\ndf_ts.plot(y='feature1')\n# Cluster analysis\nfrom sklearn.cluster import KMeans\nkmeans = KMeans(n_clusters=3)\nkmeans.fit(X)",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "y",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "y = df['target']\nmodel.fit(X, y)\n# Time Series Analysis\ndf_ts = df.set_index('date')\ndf_ts.plot(y='feature1')\n# Cluster analysis\nfrom sklearn.cluster import KMeans\nkmeans = KMeans(n_clusters=3)\nkmeans.fit(X)\ndf['segment'] = kmeans.predict(X)",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "df_ts",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "df_ts = df.set_index('date')\ndf_ts.plot(y='feature1')\n# Cluster analysis\nfrom sklearn.cluster import KMeans\nkmeans = KMeans(n_clusters=3)\nkmeans.fit(X)\ndf['segment'] = kmeans.predict(X)\n# Sentiment analysis\nfrom nltk.sentiment import SentimentIntensityAnalyzer\nsentiment = SentimentIntensityAnalyzer()",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "kmeans",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "kmeans = KMeans(n_clusters=3)\nkmeans.fit(X)\ndf['segment'] = kmeans.predict(X)\n# Sentiment analysis\nfrom nltk.sentiment import SentimentIntensityAnalyzer\nsentiment = SentimentIntensityAnalyzer()\ndf['sentiment'] = df['text'].apply(lambda x: sentiment.polarity_scores(x)['compound'])\n# Machine learning\n# ...\n# Insight generation",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "df['segment']",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "df['segment'] = kmeans.predict(X)\n# Sentiment analysis\nfrom nltk.sentiment import SentimentIntensityAnalyzer\nsentiment = SentimentIntensityAnalyzer()\ndf['sentiment'] = df['text'].apply(lambda x: sentiment.polarity_scores(x)['compound'])\n# Machine learning\n# ...\n# Insight generation\n# ...",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "sentiment",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "sentiment = SentimentIntensityAnalyzer()\ndf['sentiment'] = df['text'].apply(lambda x: sentiment.polarity_scores(x)['compound'])\n# Machine learning\n# ...\n# Insight generation\n# ...",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "df['sentiment']",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "df['sentiment'] = df['text'].apply(lambda x: sentiment.polarity_scores(x)['compound'])\n# Machine learning\n# ...\n# Insight generation\n# ...",
+        "detail": "data_analysis_template",
         "documentation": {}
     },
     {
@@ -1049,6 +1254,312 @@
         "description": "genetic",
         "peekOfCode": "best = ga.run()[0]\n# print the best solution found by the genetic algorithm\nprint(best)\n\"\"\"\nThe MovementControl class takes the following arguments in its __init__ method:\nmap: a 2D array representing the map of the simulation\nperson_pos: a tuple with the position (x, y) of the person on the map\nzombie_positions: a list of tuples with the positions (x, y) of the zombies on the map\nlimit: an integer representing the maximum number of iterations the genetic algorithm will run\nsize: an integer representing the size of the population (number of chromosomes in each generation)",
         "detail": "genetic",
+        "documentation": {}
+    },
+    {
+        "label": "solve_pop",
+        "kind": 2,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "def solve_pop(p1, p2, r):\n    for t in range(0,len(times)-1):\n        for i in range(0, len(p1[0])):\n            # Insulated Boundary Conditions\n            if i==0:\n                deriv2_1 = 2*p1[t][i+1] - 2*p1[t][i]\n                deriv2_2 = 2*p2[t][i+1] - 2*p2[t][i]\n            elif i==len(p1[0])-1:\n                deriv2_1 =  2*p1[t][i-1] - 2*p1[t][i]\n                deriv2_2 =  2*p2[t][i-1] - 2*p2[t][i]",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "animate",
+        "kind": 2,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "def animate(i):\n    line1.set_data(x,p1[500*i])\n    line2.set_data(x,p2[500*i])\n    line3.set_data(x,r)\n# Equal aspect ratio Figure with black background and no axes.\nfig, ax = plt.subplots(1, 1, figsize=(14,8))\nax.grid()\nline1, = ax.plot(x, p1[0], lw=3, label='Species 1, $d_1=${:.3f}'.format(d1))\nline2, = ax.plot(x, p2[0], lw=3, label='Species 2, $d_2=${:.3f}'.format(d2))\nline3, = ax.plot(x, r, ls='--', lw=3)",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "∂ρ/∂t",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "∂ρ/∂t = D∇^2ρ + α(r)ρ - βρ^2\n---\nwhere\nρ(r,t) is the density (in numbers) of a species at position r and time t\nρ(r,0), the distribution of species at the initial time\n---\nD∇^2ρ = diffusion of a species (i.e. a group of animals spreading out over some biome)\nD = diffusion rate\nd1 and d2 is the diffusion rate\n∇^2ρ(r) > 0 means average density around r is more dense",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "D∇^2ρ",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "D∇^2ρ = diffusion of a species (i.e. a group of animals spreading out over some biome)\nD = diffusion rate\nd1 and d2 is the diffusion rate\n∇^2ρ(r) > 0 means average density around r is more dense\n∇^2ρ(r) < 0 means average density around r is less dense\n---\nα(r)ρ = growth of the species with α(r) as the abundance of resources at point r\nα = growth rate\n---\nβρ^2 = death of the species, through natural causes and competition",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "D",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "D = diffusion rate\nd1 and d2 is the diffusion rate\n∇^2ρ(r) > 0 means average density around r is more dense\n∇^2ρ(r) < 0 means average density around r is less dense\n---\nα(r)ρ = growth of the species with α(r) as the abundance of resources at point r\nα = growth rate\n---\nβρ^2 = death of the species, through natural causes and competition\nβ = tolerance constant",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "α(r)ρ",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "α(r)ρ = growth of the species with α(r) as the abundance of resources at point r\nα = growth rate\n---\nβρ^2 = death of the species, through natural causes and competition\nβ = tolerance constant\n---\nwhen multiplying by β, one obtains this equation (all parameters follow from above):\n∂u/∂t = D∇^2u + α(r)u - u^2\nand in one dimension:\n∂u/∂t = d(∂^2u/∂x^2) + u(r(x) - u) letting r(x) be the resources given in time x",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "α",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "α = growth rate\n---\nβρ^2 = death of the species, through natural causes and competition\nβ = tolerance constant\n---\nwhen multiplying by β, one obtains this equation (all parameters follow from above):\n∂u/∂t = D∇^2u + α(r)u - u^2\nand in one dimension:\n∂u/∂t = d(∂^2u/∂x^2) + u(r(x) - u) letting r(x) be the resources given in time x\n---",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "βρ^2",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "βρ^2 = death of the species, through natural causes and competition\nβ = tolerance constant\n---\nwhen multiplying by β, one obtains this equation (all parameters follow from above):\n∂u/∂t = D∇^2u + α(r)u - u^2\nand in one dimension:\n∂u/∂t = d(∂^2u/∂x^2) + u(r(x) - u) letting r(x) be the resources given in time x\n---\nNow suppose there are two species with normalized densities u and v. The equation above can be adjusted by adding two new values a and b: the relative competing strengths of each species. The equations are given by\n∂u/∂t = d1(∂^2u/∂x^2) + u(r(x) - u - av)",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "β",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "β = tolerance constant\n---\nwhen multiplying by β, one obtains this equation (all parameters follow from above):\n∂u/∂t = D∇^2u + α(r)u - u^2\nand in one dimension:\n∂u/∂t = d(∂^2u/∂x^2) + u(r(x) - u) letting r(x) be the resources given in time x\n---\nNow suppose there are two species with normalized densities u and v. The equation above can be adjusted by adding two new values a and b: the relative competing strengths of each species. The equations are given by\n∂u/∂t = d1(∂^2u/∂x^2) + u(r(x) - u - av)\n∂v/∂t = d2(∂^2v/∂x^2) + v(r(x) - bu - v)",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "∂u/∂t",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "∂u/∂t = D∇^2u + α(r)u - u^2\nand in one dimension:\n∂u/∂t = d(∂^2u/∂x^2) + u(r(x) - u) letting r(x) be the resources given in time x\n---\nNow suppose there are two species with normalized densities u and v. The equation above can be adjusted by adding two new values a and b: the relative competing strengths of each species. The equations are given by\n∂u/∂t = d1(∂^2u/∂x^2) + u(r(x) - u - av)\n∂v/∂t = d2(∂^2v/∂x^2) + v(r(x) - bu - v)\nwith initial conditions u(x,0) = f(x) and v(x,0) = g(x)\na and b is the species competitiveness\na < b means species 1 is better at outcompeting species 2",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "∂u/∂t",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "∂u/∂t = d(∂^2u/∂x^2) + u(r(x) - u) letting r(x) be the resources given in time x\n---\nNow suppose there are two species with normalized densities u and v. The equation above can be adjusted by adding two new values a and b: the relative competing strengths of each species. The equations are given by\n∂u/∂t = d1(∂^2u/∂x^2) + u(r(x) - u - av)\n∂v/∂t = d2(∂^2v/∂x^2) + v(r(x) - bu - v)\nwith initial conditions u(x,0) = f(x) and v(x,0) = g(x)\na and b is the species competitiveness\na < b means species 1 is better at outcompeting species 2\na > b means species 1 is worse at outcompeting species 2\n---",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "∂u/∂t",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "∂u/∂t = d1(∂^2u/∂x^2) + u(r(x) - u - av)\n∂v/∂t = d2(∂^2v/∂x^2) + v(r(x) - bu - v)\nwith initial conditions u(x,0) = f(x) and v(x,0) = g(x)\na and b is the species competitiveness\na < b means species 1 is better at outcompeting species 2\na > b means species 1 is worse at outcompeting species 2\n---\nThe Question:\nWhat makes one species better at outcompeting another species given a closed boundary with a zero flux condition? (i.e. finite area and animals cannot leave the area). Things to keep in mind\na and b",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "∂v/∂t",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "∂v/∂t = d2(∂^2v/∂x^2) + v(r(x) - bu - v)\nwith initial conditions u(x,0) = f(x) and v(x,0) = g(x)\na and b is the species competitiveness\na < b means species 1 is better at outcompeting species 2\na > b means species 1 is worse at outcompeting species 2\n---\nThe Question:\nWhat makes one species better at outcompeting another species given a closed boundary with a zero flux condition? (i.e. finite area and animals cannot leave the area). Things to keep in mind\na and b\nd1 and d2",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "u(i,m+1)",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "u(i,m+1) = u(i,m) + (d1Δt)/(Δx^2) (u(i,m+1) + u(i,m-1) - 2u(i,m)) + u(i,m)(r(i) - u(i,m) - av(i,m))Δt\nv(i,m+1) = v(i,m) + (d2Δt)/(Δx^2) (v(i,m+1) + v(i,m-1) - 2v(i,m)) + v(i,m)(r(i) - bu(i,m) - v(i,m))Δt\ni = position index\nm = time index\n\"\"\"\nimport matplotlib.pyplot as plt\nimport numba\n# import libraries\nimport numpy as np\nfrom matplotlib import animation, cm",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "v(i,m+1)",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "v(i,m+1) = v(i,m) + (d2Δt)/(Δx^2) (v(i,m+1) + v(i,m-1) - 2v(i,m)) + v(i,m)(r(i) - bu(i,m) - v(i,m))Δt\ni = position index\nm = time index\n\"\"\"\nimport matplotlib.pyplot as plt\nimport numba\n# import libraries\nimport numpy as np\nfrom matplotlib import animation, cm\nfrom matplotlib.animation import PillowWriter",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "i",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "i = position index\nm = time index\n\"\"\"\nimport matplotlib.pyplot as plt\nimport numba\n# import libraries\nimport numpy as np\nfrom matplotlib import animation, cm\nfrom matplotlib.animation import PillowWriter\n# set up initial conditions",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "m",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "m = time index\n\"\"\"\nimport matplotlib.pyplot as plt\nimport numba\n# import libraries\nimport numpy as np\nfrom matplotlib import animation, cm\nfrom matplotlib.animation import PillowWriter\n# set up initial conditions\ntimes = np.linspace(0, 100, 100000)",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "times",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "times = np.linspace(0, 100, 100000)\nx = np.linspace(-2, 2, 60)\np1 = np.zeros([len(times), len(x)])\np2 = np.zeros([len(times), len(x)])\nr = np.exp(-x**2/0.1)\np1[0] = np.exp(-(x-1.2)**2/0.02)\np2[0] = np.exp(-(x+1.2)**2/0.02)\nd1 = 0.01 # higher means diffuse faster\nd2 = 0.1 # lower means diffuse slower\n# if same competitiveness, lower diffusion rate will seem to lose but always catch from behind",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "x",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "x = np.linspace(-2, 2, 60)\np1 = np.zeros([len(times), len(x)])\np2 = np.zeros([len(times), len(x)])\nr = np.exp(-x**2/0.1)\np1[0] = np.exp(-(x-1.2)**2/0.02)\np2[0] = np.exp(-(x+1.2)**2/0.02)\nd1 = 0.01 # higher means diffuse faster\nd2 = 0.1 # lower means diffuse slower\n# if same competitiveness, lower diffusion rate will seem to lose but always catch from behind\na = 1 # higher means better competitiveness",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "p1",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "p1 = np.zeros([len(times), len(x)])\np2 = np.zeros([len(times), len(x)])\nr = np.exp(-x**2/0.1)\np1[0] = np.exp(-(x-1.2)**2/0.02)\np2[0] = np.exp(-(x+1.2)**2/0.02)\nd1 = 0.01 # higher means diffuse faster\nd2 = 0.1 # lower means diffuse slower\n# if same competitiveness, lower diffusion rate will seem to lose but always catch from behind\na = 1 # higher means better competitiveness\nb = 0.5 # lower means worse competitiveness",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "p2",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "p2 = np.zeros([len(times), len(x)])\nr = np.exp(-x**2/0.1)\np1[0] = np.exp(-(x-1.2)**2/0.02)\np2[0] = np.exp(-(x+1.2)**2/0.02)\nd1 = 0.01 # higher means diffuse faster\nd2 = 0.1 # lower means diffuse slower\n# if same competitiveness, lower diffusion rate will seem to lose but always catch from behind\na = 1 # higher means better competitiveness\nb = 0.5 # lower means worse competitiveness\n# high competitiveness always get more resources and grow faster",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "r",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "r = np.exp(-x**2/0.1)\np1[0] = np.exp(-(x-1.2)**2/0.02)\np2[0] = np.exp(-(x+1.2)**2/0.02)\nd1 = 0.01 # higher means diffuse faster\nd2 = 0.1 # lower means diffuse slower\n# if same competitiveness, lower diffusion rate will seem to lose but always catch from behind\na = 1 # higher means better competitiveness\nb = 0.5 # lower means worse competitiveness\n# high competitiveness always get more resources and grow faster\n# equilibrium when same diffusion rate same competitiveness",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "p1[0]",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "p1[0] = np.exp(-(x-1.2)**2/0.02)\np2[0] = np.exp(-(x+1.2)**2/0.02)\nd1 = 0.01 # higher means diffuse faster\nd2 = 0.1 # lower means diffuse slower\n# if same competitiveness, lower diffusion rate will seem to lose but always catch from behind\na = 1 # higher means better competitiveness\nb = 0.5 # lower means worse competitiveness\n# high competitiveness always get more resources and grow faster\n# equilibrium when same diffusion rate same competitiveness\ndt = np.diff(times)[0]",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "p2[0]",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "p2[0] = np.exp(-(x+1.2)**2/0.02)\nd1 = 0.01 # higher means diffuse faster\nd2 = 0.1 # lower means diffuse slower\n# if same competitiveness, lower diffusion rate will seem to lose but always catch from behind\na = 1 # higher means better competitiveness\nb = 0.5 # lower means worse competitiveness\n# high competitiveness always get more resources and grow faster\n# equilibrium when same diffusion rate same competitiveness\ndt = np.diff(times)[0]\ndx = np.diff(x)[0]",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "d1",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "d1 = 0.01 # higher means diffuse faster\nd2 = 0.1 # lower means diffuse slower\n# if same competitiveness, lower diffusion rate will seem to lose but always catch from behind\na = 1 # higher means better competitiveness\nb = 0.5 # lower means worse competitiveness\n# high competitiveness always get more resources and grow faster\n# equilibrium when same diffusion rate same competitiveness\ndt = np.diff(times)[0]\ndx = np.diff(x)[0]\nplt.figure(figsize=(10,6))",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "d2",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "d2 = 0.1 # lower means diffuse slower\n# if same competitiveness, lower diffusion rate will seem to lose but always catch from behind\na = 1 # higher means better competitiveness\nb = 0.5 # lower means worse competitiveness\n# high competitiveness always get more resources and grow faster\n# equilibrium when same diffusion rate same competitiveness\ndt = np.diff(times)[0]\ndx = np.diff(x)[0]\nplt.figure(figsize=(10,6))\nplt.title(\"initial position\", loc='center')",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "a",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "a = 1 # higher means better competitiveness\nb = 0.5 # lower means worse competitiveness\n# high competitiveness always get more resources and grow faster\n# equilibrium when same diffusion rate same competitiveness\ndt = np.diff(times)[0]\ndx = np.diff(x)[0]\nplt.figure(figsize=(10,6))\nplt.title(\"initial position\", loc='center')\nplt.plot(x, r, color='green', label='Resources')\nplt.plot(x, p1[0], label='Species 1')",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "b",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "b = 0.5 # lower means worse competitiveness\n# high competitiveness always get more resources and grow faster\n# equilibrium when same diffusion rate same competitiveness\ndt = np.diff(times)[0]\ndx = np.diff(x)[0]\nplt.figure(figsize=(10,6))\nplt.title(\"initial position\", loc='center')\nplt.plot(x, r, color='green', label='Resources')\nplt.plot(x, p1[0], label='Species 1')\nplt.plot(x, p2[0], label='Species 2')",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "dt",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "dt = np.diff(times)[0]\ndx = np.diff(x)[0]\nplt.figure(figsize=(10,6))\nplt.title(\"initial position\", loc='center')\nplt.plot(x, r, color='green', label='Resources')\nplt.plot(x, p1[0], label='Species 1')\nplt.plot(x, p2[0], label='Species 2')\nplt.legend(loc='upper right')\nplt.show()\nprint(\"dt/dx**2 =\", dt/dx**2) # dt/dx**2 means how many times the species will diffuse in one time step",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "dx",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "dx = np.diff(x)[0]\nplt.figure(figsize=(10,6))\nplt.title(\"initial position\", loc='center')\nplt.plot(x, r, color='green', label='Resources')\nplt.plot(x, p1[0], label='Species 1')\nplt.plot(x, p2[0], label='Species 2')\nplt.legend(loc='upper right')\nplt.show()\nprint(\"dt/dx**2 =\", dt/dx**2) # dt/dx**2 means how many times the species will diffuse in one time step\n\"\"\"",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "line1,",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "line1, = ax.plot(x, p1[0], lw=3, label='Species 1, $d_1=${:.3f}'.format(d1))\nline2, = ax.plot(x, p2[0], lw=3, label='Species 2, $d_2=${:.3f}'.format(d2))\nline3, = ax.plot(x, r, ls='--', lw=3)\nax.legend(fontsize=20)\nani = animation.FuncAnimation(fig, animate, frames=400, interval=50)\nani.save('species.gif',writer='pillow',fps=10)\n\"\"\"\nThis is code to animate a solution of a 2 species and resource model.\nThe animate function takes an integer i as input and updates the plot at each time step.\nThe plot shows the population of species 1 and species 2 and the resources.",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "line2,",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "line2, = ax.plot(x, p2[0], lw=3, label='Species 2, $d_2=${:.3f}'.format(d2))\nline3, = ax.plot(x, r, ls='--', lw=3)\nax.legend(fontsize=20)\nani = animation.FuncAnimation(fig, animate, frames=400, interval=50)\nani.save('species.gif',writer='pillow',fps=10)\n\"\"\"\nThis is code to animate a solution of a 2 species and resource model.\nThe animate function takes an integer i as input and updates the plot at each time step.\nThe plot shows the population of species 1 and species 2 and the resources.\nThe animation is saved as a gif using the FuncAnimation function from the matplotlib animation library.",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "line3,",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "line3, = ax.plot(x, r, ls='--', lw=3)\nax.legend(fontsize=20)\nani = animation.FuncAnimation(fig, animate, frames=400, interval=50)\nani.save('species.gif',writer='pillow',fps=10)\n\"\"\"\nThis is code to animate a solution of a 2 species and resource model.\nThe animate function takes an integer i as input and updates the plot at each time step.\nThe plot shows the population of species 1 and species 2 and the resources.\nThe animation is saved as a gif using the FuncAnimation function from the matplotlib animation library.\nThe animation shows how the populations of both species and the resources change over time.",
+        "detail": "natural selection",
+        "documentation": {}
+    },
+    {
+        "label": "ani",
+        "kind": 5,
+        "importPath": "natural selection",
+        "description": "natural selection",
+        "peekOfCode": "ani = animation.FuncAnimation(fig, animate, frames=400, interval=50)\nani.save('species.gif',writer='pillow',fps=10)\n\"\"\"\nThis is code to animate a solution of a 2 species and resource model.\nThe animate function takes an integer i as input and updates the plot at each time step.\nThe plot shows the population of species 1 and species 2 and the resources.\nThe animation is saved as a gif using the FuncAnimation function from the matplotlib animation library.\nThe animation shows how the populations of both species and the resources change over time.\n\"\"\"",
+        "detail": "natural selection",
         "documentation": {}
     },
     {
@@ -2561,6 +3072,330 @@
         "description": "school",
         "peekOfCode": "class School:\n    def __init__(self, students, leaders, social_groups, alliances, hierarchy, supplies, weapons):\n        self.students = students\n        self.leaders = leaders\n        self.social_groups = social_groups\n        self.alliances = alliances\n        self.hierarchy = hierarchy\n        self.supplies = supplies\n        self.weapons = weapons\n    def form_alliance(self, student1, student2):",
         "detail": "school",
+        "documentation": {}
+    },
+    {
+        "label": "ODESolver",
+        "kind": 6,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "class ODESolver:\n    \"\"\"ODESolver\n    Solves ODE on the form:\n    u' = f(u, t), u(0) = U0\n    Parameters\n    ----------\n    f : callable\n        Right-hand-side function f(u, t)\n    \"\"\"\n    def __init__(self, f):",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "ForwardEuler",
+        "kind": 6,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "class ForwardEuler(ODESolver):\n    def advance(self):\n        u, f, i, t = self.u, self.f, self.i, self.t\n        dt = t[i + 1] - t[i]\n        return u[i, :] + dt * f(u[i, :], t[i])\nclass RungeKutta4(ODESolver):\n    def advance(self):\n        u, f, i, t = self.u, self.f, self.i, self.t\n        dt = t[i + 1] - t[i]\n        dt2 = dt / 2",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "RungeKutta4",
+        "kind": 6,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "class RungeKutta4(ODESolver):\n    def advance(self):\n        u, f, i, t = self.u, self.f, self.i, self.t\n        dt = t[i + 1] - t[i]\n        dt2 = dt / 2\n        K1 = dt * f(u[i, :], t[i])\n        K2 = dt * f(u[i, :] + 0.5 * K1, t[i] + dt2)\n        K3 = dt * f(u[i, :] + 0.5 * K2, t[i] + dt2)\n        K4 = dt * f(u[i, :] + K3, t[i] + dt)\n        return u[i, :] + (1 / 6) * (K1 + 2 * K2 + 2 * K3 + K4)",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "SIZR",
+        "kind": 6,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "class SIZR:\n    def __init__(\n        self, sigma, beta, rho, delta_S, delta_I, alpha, S0, I0, Z0, R0\n    ):\n        \"\"\"\n        The Zombie class\n        initial value:  S0, I0, Z0, R0\n        \"\"\"\n        for name, argument in locals().items():\n            if name not in ('self', 'S0', 'I0', 'R0', 'Z0'):",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "dAdt",
+        "kind": 2,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "def dAdt(A, t, beta, gamma, N):\n    S= A[0]\n    I = A[1]\n    R = A[2]\n    return [\n        -beta/N * S * I,\n        beta/N * S * I - gamma * I,\n        gamma*I\n    ]\n# Solve the model equations for (S_0, I_0, R_0) = (N-I_0, 574,0)",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "dS/dt",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "dS/dt = -(beta * S * Z)/(S + I + R)\ndI/dt = (beta * S * Z)/(S + I + R) - (gamma + delta) * I\ndR/dt = gamma * I\ndZ/dt = delta * I\nWhere:\nS = number of susceptible individuals\nI = number of infected individuals\nR = number of recovered individuals\nZ = number of zombies\nbeta = transmission rate",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "dI/dt",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "dI/dt = (beta * S * Z)/(S + I + R) - (gamma + delta) * I\ndR/dt = gamma * I\ndZ/dt = delta * I\nWhere:\nS = number of susceptible individuals\nI = number of infected individuals\nR = number of recovered individuals\nZ = number of zombies\nbeta = transmission rate\ngamma = incubation period",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "dR/dt",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "dR/dt = gamma * I\ndZ/dt = delta * I\nWhere:\nS = number of susceptible individuals\nI = number of infected individuals\nR = number of recovered individuals\nZ = number of zombies\nbeta = transmission rate\ngamma = incubation period\ndelta = death rate",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "dZ/dt",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "dZ/dt = delta * I\nWhere:\nS = number of susceptible individuals\nI = number of infected individuals\nR = number of recovered individuals\nZ = number of zombies\nbeta = transmission rate\ngamma = incubation period\ndelta = death rate\nWe can then use numerical methods, such as the Euler method, to solve the differential equations and estimate the progression of the human and zombie populations over time. This simulation can then be used to evaluate the impact of different response strategies and allocate resources accordingly.",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "S",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "S = number of susceptible individuals\nI = number of infected individuals\nR = number of recovered individuals\nZ = number of zombies\nbeta = transmission rate\ngamma = incubation period\ndelta = death rate\nWe can then use numerical methods, such as the Euler method, to solve the differential equations and estimate the progression of the human and zombie populations over time. This simulation can then be used to evaluate the impact of different response strategies and allocate resources accordingly.\nIn conclusion, the SIR model provides a useful framework for modeling the spread and impact of a zombie apocalypse and can inform effective response strategies to mitigate the consequences of the outbreak.\n\"\"\"",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "I",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "I = number of infected individuals\nR = number of recovered individuals\nZ = number of zombies\nbeta = transmission rate\ngamma = incubation period\ndelta = death rate\nWe can then use numerical methods, such as the Euler method, to solve the differential equations and estimate the progression of the human and zombie populations over time. This simulation can then be used to evaluate the impact of different response strategies and allocate resources accordingly.\nIn conclusion, the SIR model provides a useful framework for modeling the spread and impact of a zombie apocalypse and can inform effective response strategies to mitigate the consequences of the outbreak.\n\"\"\"\n# with: people with disease, to decide the infection rate and kill rate",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "R",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "R = number of recovered individuals\nZ = number of zombies\nbeta = transmission rate\ngamma = incubation period\ndelta = death rate\nWe can then use numerical methods, such as the Euler method, to solve the differential equations and estimate the progression of the human and zombie populations over time. This simulation can then be used to evaluate the impact of different response strategies and allocate resources accordingly.\nIn conclusion, the SIR model provides a useful framework for modeling the spread and impact of a zombie apocalypse and can inform effective response strategies to mitigate the consequences of the outbreak.\n\"\"\"\n# with: people with disease, to decide the infection rate and kill rate\n# without: extreme case of disease, underutilize location info, natural death vs turned into zombie two rate, seir model, other epidemic model example",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "Z",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "Z = number of zombies\nbeta = transmission rate\ngamma = incubation period\ndelta = death rate\nWe can then use numerical methods, such as the Euler method, to solve the differential equations and estimate the progression of the human and zombie populations over time. This simulation can then be used to evaluate the impact of different response strategies and allocate resources accordingly.\nIn conclusion, the SIR model provides a useful framework for modeling the spread and impact of a zombie apocalypse and can inform effective response strategies to mitigate the consequences of the outbreak.\n\"\"\"\n# with: people with disease, to decide the infection rate and kill rate\n# without: extreme case of disease, underutilize location info, natural death vs turned into zombie two rate, seir model, other epidemic model example\n# https://github.com/lukepolson/youtube_channel/blob/main/Python%20Metaphysics%20Series/vid2.ipynb",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "beta",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "beta = transmission rate\ngamma = incubation period\ndelta = death rate\nWe can then use numerical methods, such as the Euler method, to solve the differential equations and estimate the progression of the human and zombie populations over time. This simulation can then be used to evaluate the impact of different response strategies and allocate resources accordingly.\nIn conclusion, the SIR model provides a useful framework for modeling the spread and impact of a zombie apocalypse and can inform effective response strategies to mitigate the consequences of the outbreak.\n\"\"\"\n# with: people with disease, to decide the infection rate and kill rate\n# without: extreme case of disease, underutilize location info, natural death vs turned into zombie two rate, seir model, other epidemic model example\n# https://github.com/lukepolson/youtube_channel/blob/main/Python%20Metaphysics%20Series/vid2.ipynb\n# https://mysite.science.uottawa.ca/rsmith43/Zombies.pdf",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "gamma",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "gamma = incubation period\ndelta = death rate\nWe can then use numerical methods, such as the Euler method, to solve the differential equations and estimate the progression of the human and zombie populations over time. This simulation can then be used to evaluate the impact of different response strategies and allocate resources accordingly.\nIn conclusion, the SIR model provides a useful framework for modeling the spread and impact of a zombie apocalypse and can inform effective response strategies to mitigate the consequences of the outbreak.\n\"\"\"\n# with: people with disease, to decide the infection rate and kill rate\n# without: extreme case of disease, underutilize location info, natural death vs turned into zombie two rate, seir model, other epidemic model example\n# https://github.com/lukepolson/youtube_channel/blob/main/Python%20Metaphysics%20Series/vid2.ipynb\n# https://mysite.science.uottawa.ca/rsmith43/Zombies.pdf\n# https://www.youtube.com/watch?v=AvzQ-F3W708",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "delta",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "delta = death rate\nWe can then use numerical methods, such as the Euler method, to solve the differential equations and estimate the progression of the human and zombie populations over time. This simulation can then be used to evaluate the impact of different response strategies and allocate resources accordingly.\nIn conclusion, the SIR model provides a useful framework for modeling the spread and impact of a zombie apocalypse and can inform effective response strategies to mitigate the consequences of the outbreak.\n\"\"\"\n# with: people with disease, to decide the infection rate and kill rate\n# without: extreme case of disease, underutilize location info, natural death vs turned into zombie two rate, seir model, other epidemic model example\n# https://github.com/lukepolson/youtube_channel/blob/main/Python%20Metaphysics%20Series/vid2.ipynb\n# https://mysite.science.uottawa.ca/rsmith43/Zombies.pdf\n# https://www.youtube.com/watch?v=AvzQ-F3W708\n\"\"\"",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "N",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "N = total number of people\nbeta = infection constant\nInfection rate (Interaction between S and I) = (beta/N) * SI\ndS/dt = -Infection rate = -(beta/N) * SI\n---\ngamma = fraction of recovery\nRecovery rate(Interaction between I and R) = gamma * I\ndI/dt = Infection rate - Recovery rate = (beta/N) * SI - gamma * I\n---\ndR/dt = Recovery rate = gamma * I",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "beta",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "beta = infection constant\nInfection rate (Interaction between S and I) = (beta/N) * SI\ndS/dt = -Infection rate = -(beta/N) * SI\n---\ngamma = fraction of recovery\nRecovery rate(Interaction between I and R) = gamma * I\ndI/dt = Infection rate - Recovery rate = (beta/N) * SI - gamma * I\n---\ndR/dt = Recovery rate = gamma * I\n\"\"\"",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "dS/dt",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "dS/dt = -Infection rate = -(beta/N) * SI\n---\ngamma = fraction of recovery\nRecovery rate(Interaction between I and R) = gamma * I\ndI/dt = Infection rate - Recovery rate = (beta/N) * SI - gamma * I\n---\ndR/dt = Recovery rate = gamma * I\n\"\"\"\nimport matplotlib.pyplot as plt\nimport numpy as np",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "gamma",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "gamma = fraction of recovery\nRecovery rate(Interaction between I and R) = gamma * I\ndI/dt = Infection rate - Recovery rate = (beta/N) * SI - gamma * I\n---\ndR/dt = Recovery rate = gamma * I\n\"\"\"\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom scipy.integrate import odeint\ndef dAdt(A, t, beta, gamma, N):",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "dI/dt",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "dI/dt = Infection rate - Recovery rate = (beta/N) * SI - gamma * I\n---\ndR/dt = Recovery rate = gamma * I\n\"\"\"\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom scipy.integrate import odeint\ndef dAdt(A, t, beta, gamma, N):\n    S= A[0]\n    I = A[1]",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "dR/dt",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "dR/dt = Recovery rate = gamma * I\n\"\"\"\nimport matplotlib.pyplot as plt\nimport numpy as np\nfrom scipy.integrate import odeint\ndef dAdt(A, t, beta, gamma, N):\n    S= A[0]\n    I = A[1]\n    R = A[2]\n    return [",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "times",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "times = np.arange(0, 100, 1)\ngamma = 1/10\nN = 1.1e7\nbeta = 0.39\nS0, I0, R0 = N-574, 574, 0\nsol = odeint(dAdt, y0=[S0, I0, R0], t=times, args=(beta, gamma, N))\nS = sol.T[0]\nI = sol.T[1]\nR = sol.T[2]\nplt.plot(times, S)",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "gamma",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "gamma = 1/10\nN = 1.1e7\nbeta = 0.39\nS0, I0, R0 = N-574, 574, 0\nsol = odeint(dAdt, y0=[S0, I0, R0], t=times, args=(beta, gamma, N))\nS = sol.T[0]\nI = sol.T[1]\nR = sol.T[2]\nplt.plot(times, S)\nplt.plot(times, I)",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "N",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "N = 1.1e7\nbeta = 0.39\nS0, I0, R0 = N-574, 574, 0\nsol = odeint(dAdt, y0=[S0, I0, R0], t=times, args=(beta, gamma, N))\nS = sol.T[0]\nI = sol.T[1]\nR = sol.T[2]\nplt.plot(times, S)\nplt.plot(times, I)\nplt.plot(times, R)",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "beta",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "beta = 0.39\nS0, I0, R0 = N-574, 574, 0\nsol = odeint(dAdt, y0=[S0, I0, R0], t=times, args=(beta, gamma, N))\nS = sol.T[0]\nI = sol.T[1]\nR = sol.T[2]\nplt.plot(times, S)\nplt.plot(times, I)\nplt.plot(times, R)\nplt.grid()",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "sol",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "sol = odeint(dAdt, y0=[S0, I0, R0], t=times, args=(beta, gamma, N))\nS = sol.T[0]\nI = sol.T[1]\nR = sol.T[2]\nplt.plot(times, S)\nplt.plot(times, I)\nplt.plot(times, R)\nplt.grid()\n# The rate of hospitalizations is 5% of  and people stay in the hospital for 3 days on average. Find the number of people in the hosptial as a function of time.\nha = 0.05 * gamma * I",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "S",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "S = sol.T[0]\nI = sol.T[1]\nR = sol.T[2]\nplt.plot(times, S)\nplt.plot(times, I)\nplt.plot(times, R)\nplt.grid()\n# The rate of hospitalizations is 5% of  and people stay in the hospital for 3 days on average. Find the number of people in the hosptial as a function of time.\nha = 0.05 * gamma * I\nh = ha",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "I",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "I = sol.T[1]\nR = sol.T[2]\nplt.plot(times, S)\nplt.plot(times, I)\nplt.plot(times, R)\nplt.grid()\n# The rate of hospitalizations is 5% of  and people stay in the hospital for 3 days on average. Find the number of people in the hosptial as a function of time.\nha = 0.05 * gamma * I\nh = ha\nfor i in range(1, 5):",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "R",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "R = sol.T[2]\nplt.plot(times, S)\nplt.plot(times, I)\nplt.plot(times, R)\nplt.grid()\n# The rate of hospitalizations is 5% of  and people stay in the hospital for 3 days on average. Find the number of people in the hosptial as a function of time.\nha = 0.05 * gamma * I\nh = ha\nfor i in range(1, 5):\n    h += np.insert(ha, 0, np.zeros(i))[:-i]",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "ha",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "ha = 0.05 * gamma * I\nh = ha\nfor i in range(1, 5):\n    h += np.insert(ha, 0, np.zeros(i))[:-i]\nplt.plot(times, S)\nplt.plot(times, I)\nplt.plot(times, R)\nplt.plot(times, h)\nplt.grid()\n# https://github.com/gregwinther/youtube/tree/master/ODESolver",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "h",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "h = ha\nfor i in range(1, 5):\n    h += np.insert(ha, 0, np.zeros(i))[:-i]\nplt.plot(times, S)\nplt.plot(times, I)\nplt.plot(times, R)\nplt.plot(times, h)\nplt.grid()\n# https://github.com/gregwinther/youtube/tree/master/ODESolver\n# https://github.com/gregwinther/youtube/blob/master/disease_simulations/sizr.py",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "S'",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "S' = sigma - beta*S*Z - delta_S*S\nI' = beta*S*Z - rho*I - delta_I*I\nZ' = rho*I - alpha*S*Z\nR' = delta_S*S + delta_I*I + alpha*S*Z\n\"\"\"\nimport numpy as np\nfrom matplotlib import pyplot as plt\nclass SIZR:\n    def __init__(\n        self, sigma, beta, rho, delta_S, delta_I, alpha, S0, I0, Z0, R0",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "I'",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "I' = beta*S*Z - rho*I - delta_I*I\nZ' = rho*I - alpha*S*Z\nR' = delta_S*S + delta_I*I + alpha*S*Z\n\"\"\"\nimport numpy as np\nfrom matplotlib import pyplot as plt\nclass SIZR:\n    def __init__(\n        self, sigma, beta, rho, delta_S, delta_I, alpha, S0, I0, Z0, R0\n    ):",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "Z'",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "Z' = rho*I - alpha*S*Z\nR' = delta_S*S + delta_I*I + alpha*S*Z\n\"\"\"\nimport numpy as np\nfrom matplotlib import pyplot as plt\nclass SIZR:\n    def __init__(\n        self, sigma, beta, rho, delta_S, delta_I, alpha, S0, I0, Z0, R0\n    ):\n        \"\"\"",
+        "detail": "sir model",
+        "documentation": {}
+    },
+    {
+        "label": "R'",
+        "kind": 5,
+        "importPath": "sir model",
+        "description": "sir model",
+        "peekOfCode": "R' = delta_S*S + delta_I*I + alpha*S*Z\n\"\"\"\nimport numpy as np\nfrom matplotlib import pyplot as plt\nclass SIZR:\n    def __init__(\n        self, sigma, beta, rho, delta_S, delta_I, alpha, S0, I0, Z0, R0\n    ):\n        \"\"\"\n        The Zombie class",
+        "detail": "sir model",
         "documentation": {}
     },
     {
