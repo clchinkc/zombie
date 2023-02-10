@@ -32,6 +32,14 @@
         "documentation": {}
     },
     {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
         "label": "math",
         "kind": 6,
         "isExtraImport": true,
@@ -47,6 +55,38 @@
         "importPath": "random",
         "description": "random",
         "detail": "random",
+        "documentation": {}
+    },
+    {
+        "label": "ABC",
+        "importPath": "abc",
+        "description": "abc",
+        "isExtraImport": true,
+        "detail": "abc",
+        "documentation": {}
+    },
+    {
+        "label": "abstractmethod",
+        "importPath": "abc",
+        "description": "abc",
+        "isExtraImport": true,
+        "detail": "abc",
+        "documentation": {}
+    },
+    {
+        "label": "ABC",
+        "importPath": "abc",
+        "description": "abc",
+        "isExtraImport": true,
+        "detail": "abc",
+        "documentation": {}
+    },
+    {
+        "label": "abstractmethod",
+        "importPath": "abc",
+        "description": "abc",
+        "isExtraImport": true,
+        "detail": "abc",
         "documentation": {}
     },
     {
@@ -154,6 +194,14 @@
         "documentation": {}
     },
     {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
         "label": "Any",
         "importPath": "typing",
         "description": "typing",
@@ -171,6 +219,22 @@
     },
     {
         "label": "Union",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -335,12 +399,11 @@
         "documentation": {}
     },
     {
-        "label": "numba",
-        "kind": 6,
+        "label": "animation",
+        "importPath": "matplotlib",
+        "description": "matplotlib",
         "isExtraImport": true,
-        "importPath": "numba",
-        "description": "numba",
-        "detail": "numba",
+        "detail": "matplotlib",
         "documentation": {}
     },
     {
@@ -368,11 +431,28 @@
         "documentation": {}
     },
     {
+        "label": "animation",
+        "importPath": "matplotlib",
+        "description": "matplotlib",
+        "isExtraImport": true,
+        "detail": "matplotlib",
+        "documentation": {}
+    },
+    {
         "label": "pyplot",
         "importPath": "matplotlib",
         "description": "matplotlib",
         "isExtraImport": true,
         "detail": "matplotlib",
+        "documentation": {}
+    },
+    {
+        "label": "numba",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numba",
+        "description": "numba",
+        "detail": "numba",
         "documentation": {}
     },
     {
@@ -435,6 +515,22 @@
         "documentation": {}
     },
     {
+        "label": "auto",
+        "importPath": "enum",
+        "description": "enum",
+        "isExtraImport": true,
+        "detail": "enum",
+        "documentation": {}
+    },
+    {
+        "label": "Enum",
+        "importPath": "enum",
+        "description": "enum",
+        "isExtraImport": true,
+        "detail": "enum",
+        "documentation": {}
+    },
+    {
         "label": "Enum",
         "importPath": "enum",
         "description": "enum",
@@ -448,6 +544,14 @@
         "description": "enum",
         "isExtraImport": true,
         "detail": "enum",
+        "documentation": {}
+    },
+    {
+        "label": "cached_property",
+        "importPath": "functools",
+        "description": "functools",
+        "isExtraImport": true,
+        "detail": "functools",
         "documentation": {}
     },
     {
@@ -488,6 +592,14 @@
         "description": "functools",
         "isExtraImport": true,
         "detail": "functools",
+        "documentation": {}
+    },
+    {
+        "label": "count",
+        "importPath": "itertools",
+        "description": "itertools",
+        "isExtraImport": true,
+        "detail": "itertools",
         "documentation": {}
     },
     {
@@ -856,7 +968,7 @@
         "kind": 5,
         "importPath": "data_analysis_template",
         "description": "data_analysis_template",
-        "peekOfCode": "df = pd.read_csv('data.csv')\n# Data cleaning\ndf.dropna(inplace=True)\ndf.reset_index(drop=True, inplace=True)\ndf['date'] = pd.to_datetime(df['date'])\n# Exploratory Data Analysis (EDA)\ndf.describe()\nsns.countplot(x='target', data=df)\n# Data Visualization\nsns.pairplot(df, x_vars=['feature1', 'feature2', 'feature3'], y_vars='target', height=7, aspect=0.7)",
+        "peekOfCode": "df = pd.read_csv('data.csv')\n# Exploratory Data Analysis (EDA)\ndf.info()\ndf.describe()\n# Data cleaning\ndf.dropna(inplace=True)\ndf.reset_index(drop=True, inplace=True)\ndf['date'] = pd.to_datetime(df['date'])\n# Data Visualization\nsns.countplot(x='target', data=df)",
         "detail": "data_analysis_template",
         "documentation": {}
     },
@@ -865,7 +977,7 @@
         "kind": 5,
         "importPath": "data_analysis_template",
         "description": "data_analysis_template",
-        "peekOfCode": "df['date'] = pd.to_datetime(df['date'])\n# Exploratory Data Analysis (EDA)\ndf.describe()\nsns.countplot(x='target', data=df)\n# Data Visualization\nsns.pairplot(df, x_vars=['feature1', 'feature2', 'feature3'], y_vars='target', height=7, aspect=0.7)\n# Hypothesis Testing\nfrom scipy import stats\nstats.ttest_ind(df[df['target'] == 0]['feature1'], df[df['target'] == 1]['feature1'])\n# Predictive modeling",
+        "peekOfCode": "df['date'] = pd.to_datetime(df['date'])\n# Data Visualization\nsns.countplot(x='target', data=df)\nsns.pairplot(df, x_vars=['feature1', 'feature2', 'feature3'], y_vars='target', height=7, aspect=0.7)\n# Hypothesis Testing\nfrom scipy import stats\nstats.ttest_ind(df[df['target'] == 0]['feature1'], df[df['target'] == 1]['feature1'])\n# Predictive modeling\nfrom sklearn.linear_model import LinearRegression\nmodel = LinearRegression()",
         "detail": "data_analysis_template",
         "documentation": {}
     },
@@ -1254,6 +1366,87 @@
         "description": "genetic",
         "peekOfCode": "best = ga.run()[0]\n# print the best solution found by the genetic algorithm\nprint(best)\n\"\"\"\nThe MovementControl class takes the following arguments in its __init__ method:\nmap: a 2D array representing the map of the simulation\nperson_pos: a tuple with the position (x, y) of the person on the map\nzombie_positions: a list of tuples with the positions (x, y) of the zombies on the map\nlimit: an integer representing the maximum number of iterations the genetic algorithm will run\nsize: an integer representing the size of the population (number of chromosomes in each generation)",
         "detail": "genetic",
+        "documentation": {}
+    },
+    {
+        "label": "PopulationAnimator",
+        "kind": 6,
+        "importPath": "learn_animation",
+        "description": "learn_animation",
+        "peekOfCode": "class PopulationAnimator(Observer):\n    def __init__(self, population: Population) -> None:\n        self.subject = population\n        self.subject.attach_observer(self)\n        self.agent_history = []\n    def update(self) -> None:\n        self.agent_history.append(self.subject.agent_list)\n    def display_observation(self, format='text'):\n        if format == 'text':\n            self.print_text_statistics()",
+        "detail": "learn_animation",
+        "documentation": {}
+    },
+    {
+        "label": "update",
+        "kind": 2,
+        "importPath": "learn_animation",
+        "description": "learn_animation",
+        "peekOfCode": "def update(i):\n    for j in range(len(bars)):\n        bars[j].set_height(y[i][j])\n    text_box.set_text('timestep: {}'.format(i))\n# create the animation\nanim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000)\n# save the animation as an gif file\nanim.save('bar_chart_animation.gif', writer='pillow', fps=3)\n# show the animation\nplt.show()",
+        "detail": "learn_animation",
+        "documentation": {}
+    },
+    {
+        "label": "bar_chart_animation",
+        "kind": 2,
+        "importPath": "learn_animation",
+        "description": "learn_animation",
+        "peekOfCode": "def bar_chart_animation(x, y, ticks):\n    # create a figure and axis\n    fig, ax = plt.subplots()\n    # set the title and labels\n    ax.set_title('Bar Chart Animation')\n    ax.set_xlabel('x')\n    ax.set_ylabel('y')\n    # create the bar chart\n    bars = ax.bar(x, y[0], tick_label=ticks)\n    # create timestep labels",
+        "detail": "learn_animation",
+        "documentation": {}
+    },
+    {
+        "label": "x",
+        "kind": 5,
+        "importPath": "learn_animation",
+        "description": "learn_animation",
+        "peekOfCode": "x = np.array([1, 2, 3, 4])\nprint(x)\ny = [[1, 2, 3, 4], [1, 4, 9, 16], [1, 8, 27, 64]]\nprint(y)\nticks = ['one', 'two', 'three', 'four']\nprint(ticks)\n# create a figure and axis\nfig, ax = plt.subplots()\n# set the title and labels\nax.set_title('Bar Chart Animation')",
+        "detail": "learn_animation",
+        "documentation": {}
+    },
+    {
+        "label": "y",
+        "kind": 5,
+        "importPath": "learn_animation",
+        "description": "learn_animation",
+        "peekOfCode": "y = [[1, 2, 3, 4], [1, 4, 9, 16], [1, 8, 27, 64]]\nprint(y)\nticks = ['one', 'two', 'three', 'four']\nprint(ticks)\n# create a figure and axis\nfig, ax = plt.subplots()\n# set the title and labels\nax.set_title('Bar Chart Animation')\nax.set_xlabel('x')\nax.set_ylabel('y')",
+        "detail": "learn_animation",
+        "documentation": {}
+    },
+    {
+        "label": "ticks",
+        "kind": 5,
+        "importPath": "learn_animation",
+        "description": "learn_animation",
+        "peekOfCode": "ticks = ['one', 'two', 'three', 'four']\nprint(ticks)\n# create a figure and axis\nfig, ax = plt.subplots()\n# set the title and labels\nax.set_title('Bar Chart Animation')\nax.set_xlabel('x')\nax.set_ylabel('y')\n# create the bar chart\nbars = ax.bar(x, y[0], tick_label=ticks)",
+        "detail": "learn_animation",
+        "documentation": {}
+    },
+    {
+        "label": "bars",
+        "kind": 5,
+        "importPath": "learn_animation",
+        "description": "learn_animation",
+        "peekOfCode": "bars = ax.bar(x, y[0], tick_label=ticks)\n# create timestep labels\ntext_box = ax.text(0.05, 0.9, '', transform=ax.transAxes)\n# function to update the chart\ndef update(i):\n    for j in range(len(bars)):\n        bars[j].set_height(y[i][j])\n    text_box.set_text('timestep: {}'.format(i))\n# create the animation\nanim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000)",
+        "detail": "learn_animation",
+        "documentation": {}
+    },
+    {
+        "label": "text_box",
+        "kind": 5,
+        "importPath": "learn_animation",
+        "description": "learn_animation",
+        "peekOfCode": "text_box = ax.text(0.05, 0.9, '', transform=ax.transAxes)\n# function to update the chart\ndef update(i):\n    for j in range(len(bars)):\n        bars[j].set_height(y[i][j])\n    text_box.set_text('timestep: {}'.format(i))\n# create the animation\nanim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000)\n# save the animation as an gif file\nanim.save('bar_chart_animation.gif', writer='pillow', fps=3)",
+        "detail": "learn_animation",
+        "documentation": {}
+    },
+    {
+        "label": "anim",
+        "kind": 5,
+        "importPath": "learn_animation",
+        "description": "learn_animation",
+        "peekOfCode": "anim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000)\n# save the animation as an gif file\nanim.save('bar_chart_animation.gif', writer='pillow', fps=3)\n# show the animation\nplt.show()\n# group everything into a function that accept x, y, and ticks as parameters\ndef bar_chart_animation(x, y, ticks):\n    # create a figure and axis\n    fig, ax = plt.subplots()\n    # set the title and labels",
+        "detail": "learn_animation",
         "documentation": {}
     },
     {
@@ -2476,7 +2669,7 @@
         "kind": 2,
         "importPath": "population",
         "description": "population",
-        "peekOfCode": "def main():\n    # create a SchoolZombieApocalypse object\n    school_sim = Population(school_size=10, population_size=1)\n    # create Observer objects\n    population_observer = PopulationObserver(school_sim)\n    school_observer = SchoolObserver(school_sim)\n    # run the population for a given time period\n    school_sim.run_population(num_time_steps=5)\n    # observe the statistics of the population\n    population_observer.display_observation(format=\"chart\")",
+        "peekOfCode": "def main():\n    # create a SchoolZombieApocalypse object\n    school_sim = Population(school_size=10, population_size=5)\n    # create Observer objects\n    population_observer = PopulationObserver(school_sim)\n    #population_animator = PopulationAnimator(school_sim)\n    school_observer = SchoolObserver(school_sim)\n    # run the population for a given time period\n    school_sim.run_population(num_time_steps=3)\n    # observe the statistics of the population",
         "detail": "population",
         "documentation": {}
     },
@@ -2856,6 +3049,564 @@
         "description": "population1",
         "peekOfCode": "sensitivity_results = perform_sensitivity_analysis(\n    t0, t_final, P0, growth_rate, carrying_capacity, death_rate, emigration_rate, parameter_values)\nprint(\"Sensitivity results:\", sensitivity_results)\n# Plot the sensitivity analysis results\nfor i, sensitivity_result in enumerate(sensitivity_results):\n    plt.plot(t, sensitivity_result, label=f\"growth rate = {parameter_values[i]}\")\nplt.xlabel(\"Time\")\nplt.ylabel(\"Population size\")\nplt.legend()\nplt.show()",
         "detail": "population1",
+        "documentation": {}
+    },
+    {
+        "label": "State",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class State(Enum):\n    HEALTHY = auto()\n    INFECTED = auto()\n    ZOMBIE = auto()\n    DEAD = auto()\n    @classmethod\n    def name_list(cls) -> list[str]:\n        return [enm.name for enm in State]\n    @classmethod\n    def value_list(cls) -> list[int]:",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "StateMachine",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class StateMachine(ABC):\n    def __init__(self, context: Individual) -> None:\n        self.context = context\n    @abstractmethod\n    def update_state(self, severity: float) -> None:\n        pass\n    def is_infected(self, context: Individual, severity: float) -> bool:\n        infection_probability = 1 / (1 + math.exp(-severity))\n        for other in context.connections:\n            if other.state == State.ZOMBIE:",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "HealthyMachine",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class HealthyMachine(StateMachine):\n    # cellular automaton\n    def update_state(self, severity: float) -> None:\n        if self.is_infected(self.context, severity):\n            self.context.state = State.INFECTED\n    # probability = severity / school.max_severity\n    # probability *= 1 - math.exp(-self.interaction_duration/average_interaction_duration_for_infection)\n    # probability *= 1 - math.exp(-distance / average_distance_for_infection)\nclass InfectedMachine(StateMachine):\n    # cellular automaton",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "InfectedMachine",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class InfectedMachine(StateMachine):\n    # cellular automaton\n    def update_state(self, severity: float) -> None:\n        self.context.infection_severity += 0.1\n        if self.is_turned(self.context, severity):\n            self.context.state = State.ZOMBIE\n        elif self.is_died(self.context, severity):\n            self.context.state = State.DEAD\nclass ZombieMachine(StateMachine):\n    # cellular automaton",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "ZombieMachine",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class ZombieMachine(StateMachine):\n    # cellular automaton\n    def update_state(self, severity: float) -> None:\n        if self.is_died(self.context, severity):\n            self.context.state = State.DEAD\n# Strategy pattern\nclass MovementStrategy(ABC):\n    individual: Any[Individual]\n    legal_directions: list[tuple[int, int]]\n    neighbors: list[Individual]",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "MovementStrategy",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class MovementStrategy(ABC):\n    individual: Any[Individual]\n    legal_directions: list[tuple[int, int]]\n    neighbors: list[Individual]\n    @abstractmethod\n    def choose_direction(self, individual, school):\n        raise NotImplementedError\n@dataclass\n# if no neighbors, choose random direction\nclass RandomMovementStrategy(MovementStrategy):",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "RandomMovementStrategy",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class RandomMovementStrategy(MovementStrategy):\n    individual: Any[Individual]\n    legal_directions: list[tuple[int, int]]\n    neighbors: list[Individual]\n    def choose_direction(self):\n        return random.choice(self.legal_directions)\n@dataclass\n# if healthy or other having no alive neighbors\nclass FleeZombiesStrategy(MovementStrategy):\n    individual: Any[Individual]",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "FleeZombiesStrategy",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class FleeZombiesStrategy(MovementStrategy):\n    individual: Any[Individual]\n    legal_directions: list[tuple[int, int]]\n    neighbors: list[Individual]\n    def choose_direction(self):\n        zombies_locations = [zombies.location for zombies in self.neighbors if zombies.state == State.ZOMBIE]\n        return self.direction_against_closest(self.individual, self.legal_directions, zombies_locations)\n    # find the closest zombie and move away from it\n    def direction_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:\n        new_locations = [tuple(np.add(individual.location, direction))",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "ChaseHumansStrategy",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class ChaseHumansStrategy(MovementStrategy):\n    individual: Any[Individual]\n    legal_directions: list[tuple[int, int]]\n    neighbors: list[Individual]\n    def choose_direction(self):\n        alive_locations = [alive.location for alive in self.neighbors if alive.state == State.HEALTHY]\n        return self.direction_towards_closest(self.individual, self.legal_directions, alive_locations)\n    # find the closest human and move towards it\n    def direction_towards_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:\n        new_locations = [tuple(np.add(individual.location, direction))",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "NoMovementStrategy",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class NoMovementStrategy(MovementStrategy):\n    individual: Any[Individual]\n    legal_directions: list[tuple[int, int]]\n    neighbors: list[Individual]\n    def choose_direction(self):\n        return (0, 0)\n# may use init to store individual and school\n# may use function, use closure to store individual and school\nclass MovementStrategyFactory:\n    def create_strategy(self, individual, school):",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "MovementStrategyFactory",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class MovementStrategyFactory:\n    def create_strategy(self, individual, school):\n        # get legal directions\n        legal_directions = school.get_legal_directions(individual)\n        # get neighbors\n        neighbors = school.get_neighbors(individual.location, individual.sight_range)\n        # early exit\n        # if no neighbors, random movement\n        if not neighbors:\n            return RandomMovementStrategy(individual, legal_directions, neighbors)",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Individual",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Individual:\n    __slots__ = \"id\", \"state\", \"location\", \"connections\", \\\n        \"infection_severity\", \"interact_range\", \"__dict__\"\n    def __init__(self, id: int, state: State, location: tuple[int, int], movement_strategy: Any[MovementStrategy] = RandomMovementStrategy) -> None:\n        self.id: int = id\n        self.state: State = state\n        self.location: tuple[int, int] = location\n        self.connections: list[Individual] = []\n        self.infection_severity: float = 0.0\n        self.interact_range: int = 2",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "School",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class School:\n    __slots__ = \"school_size\", \"grid\", \"strategy_factory\"\n    def __init__(self, school_size: int) -> None:\n        self.school_size = school_size\n        # Create a 2D grid representing the school with each cell can contain a Individual object\n        self.grid: list[list[Optional[Individual]]] \\\n            = [[None for _ in range(school_size)]\n                for _ in range(school_size)]\n        self.strategy_factory = MovementStrategyFactory()\n        # may turn to width and height",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Observer",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Observer(ABC):\n    @abstractmethod\n    def __init__(self) -> None:\n        pass\n    @abstractmethod\n    def update(self) -> None:\n        pass\n    @abstractmethod\n    def display_observation(self) -> None:\n        pass",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "PopulationObserver",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class PopulationObserver(Observer):\n    def __init__(self, population: Population) -> None:\n        self.subject = population\n        self.subject.attach_observer(self)\n        self.statistics = {}\n        self.agent_list = []\n    def update(self) -> None:\n        self.statistics = self.subject.get_population_statistics()\n        self.agent_list = self.subject.agent_list\n    def display_observation(self, format='text'):",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "SchoolObserver",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class SchoolObserver(Observer):\n    def __init__(self, population: Population) -> None:\n        self.subject = population\n        self.subject.attach_observer(self)\n        self.agent_list = []\n        self.grid = []\n    def update(self) -> None:\n        self.agent_list = self.subject.agent_list\n        self.grid = self.subject.school.grid\n    def display_observation(self, format='text'):",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Population",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Population:\n    def __init__(self, school_size: int, population_size: int) -> None:\n        self.school: School = School(school_size)\n        self.agent_list: list[Individual] = []\n        self.severity: float = 0.\n        self.init_population(school_size, population_size)\n        self.update_population_metrics()\n        self.observers = []\n    def add_individual(self, individual: Individual) -> None:\n        self.agent_list.append(individual)",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Pizza",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Pizza:\n    def __init__(self):\n        self.dough = \"\"\n        self.sauce = \"\"\n        self.topping = []\n    def set_dough(self, dough):\n        self.dough = dough\n    def set_sauce(self, sauce):\n        self.sauce = sauce\n    def add_topping(self, topping):",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "PizzaBuilder",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class PizzaBuilder(ABC):\n    def __init__(self):\n        self.pizza = Pizza()\n    def create_new_pizza_product(self):\n        self.pizza = Pizza()\n    def get_pizza(self):\n        return self.pizza\n    @abstractmethod\n    def build_dough(self):\n        pass",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "HawaiianPizzaBuilder",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class HawaiianPizzaBuilder(PizzaBuilder):\n    def build_dough(self):\n        self.pizza.set_dough(\"cross\")\n    def build_sauce(self):\n        self.pizza.set_sauce(\"mild\")\n    def build_topping(self):\n        self.pizza.add_topping(\"ham\")\n        self.pizza.add_topping(\"pineapple\")\n# Concrete Builder\nclass SpicyPizzaBuilder(PizzaBuilder):",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "SpicyPizzaBuilder",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class SpicyPizzaBuilder(PizzaBuilder):\n    def build_dough(self):\n        self.pizza.set_dough(\"pan baked\")\n    def build_sauce(self):\n        self.pizza.set_sauce(\"hot\")\n    def build_topping(self):\n        self.pizza.set_topping(\"pepperoni\")\n        self.pizza.set_topping(\"salami\")\n# Director\nclass Waiter:",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Waiter",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Waiter:\n    def __init__(self):\n        self.pizza_builder = None\n    def set_pizza_builder(self, pb):\n        self.pizza_builder = pb\n    def get_pizza(self):\n        return self.pizza_builder.get_pizza()\n    def construct_pizza(self):\n        self.pizza_builder.create_new_pizza_product()\n        self.pizza_builder.build_dough()",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Car",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Car:\n    def drive(self):\n        print(\"Driving a car.\")\nclass SportsCar(Car):\n    def drive(self):\n        print(\"Driving a sports car at high speed!\")\ncar = SportsCar()\ncar.drive() # \"Driving a sports car at high speed!\"\nThe problem with this approach is that any changes made to the 'drive' method in the 'Car' class will also affect the 'SportsCar' class, as they share the same implementation. Additionally, if we want to add another type of car, we will have to create another subclass and repeat the same process, making the code more complex and less maintainable.\nWthout using the Bridge pattern, we would likely have a single class that contains both the interface and the implementation, making the code tightly coupled and less maintainable. This would mean that any changes made to the implementation would directly affect any references or dependencies on the code.",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "SportsCar",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class SportsCar(Car):\n    def drive(self):\n        print(\"Driving a sports car at high speed!\")\ncar = SportsCar()\ncar.drive() # \"Driving a sports car at high speed!\"\nThe problem with this approach is that any changes made to the 'drive' method in the 'Car' class will also affect the 'SportsCar' class, as they share the same implementation. Additionally, if we want to add another type of car, we will have to create another subclass and repeat the same process, making the code more complex and less maintainable.\nWthout using the Bridge pattern, we would likely have a single class that contains both the interface and the implementation, making the code tightly coupled and less maintainable. This would mean that any changes made to the implementation would directly affect any references or dependencies on the code.\n\"\"\"\n\"\"\"\n/* Implementor interface*/",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "ManualGea",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class ManualGear implements Gear{\n    public void handleGear(){\n        System.out.println(\"Manual gear\");\n    }\n}\n/* Concrete Implementor - 2 */\nclass AutoGear implements Gear{\n    public void handleGear(){\n        System.out.println(\"Auto gear\");\n    }",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "AutoGea",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class AutoGear implements Gear{\n    public void handleGear(){\n        System.out.println(\"Auto gear\");\n    }\n}\n/* Abstraction (abstract class) */\nabstract class Vehicle {\n    Gear gear;\n    public Vehicle(Gear gear){\n        this.gear = gear;",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Ca",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Car extends Vehicle{\n    public Car(Gear gear){\n        super(gear);\n        // initialize various other Car components to make the car\n    }\n    public void addGear(){\n        System.out.print(\"Car handles \");\n        gear.handleGear();\n    }\n}",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Truc",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Truck extends Vehicle{\n    public Truck(Gear gear){\n        super(gear);\n        // initialize various other Truck components to make the car\n    }\n    public void addGear(){\n        System.out.print(\"Truck handles \" );\n        gear.handleGear();\n    }\n}",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "CarInterface",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class CarInterface(ABC):\n    @abstractmethod\n    def drive(self):\n        pass\n# Abstraction\nclass Car(CarInterface):\n    def __init__(self, implementation):\n        self._implementation = implementation\n    def drive(self):\n        self._implementation.drive()",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Car",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Car(CarInterface):\n    def __init__(self, implementation):\n        self._implementation = implementation\n    def drive(self):\n        self._implementation.drive()\n# extra self-defined layer of abstraction\nclass SportsCarInterface:\n    @abstractmethod\n    def drive(self):\n        pass",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "SportsCarInterface",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class SportsCarInterface:\n    @abstractmethod\n    def drive(self):\n        pass\n# Refined Abstraction\nclass SportsCar(Car):\n    pass\n# extra self-defined layer of abstraction\nclass TruckInterface:\n    @abstractmethod",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "SportsCar",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class SportsCar(Car):\n    pass\n# extra self-defined layer of abstraction\nclass TruckInterface:\n    @abstractmethod\n    def drive(self):\n        pass\n# Refined Abstraction\nclass Truck(Car):\n    pass",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "TruckInterface",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class TruckInterface:\n    @abstractmethod\n    def drive(self):\n        pass\n# Refined Abstraction\nclass Truck(Car):\n    pass\n# Concrete Implementor\nclass XSportsCarInterface(SportsCarInterface):\n    def drive(self):",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Truck",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Truck(Car):\n    pass\n# Concrete Implementor\nclass XSportsCarInterface(SportsCarInterface):\n    def drive(self):\n        print(\"Driving a sports car from manufacturer X at high speed!\")\n# Concrete Implementor\nclass YSportsCarInterface(SportsCarInterface):\n    def drive(self):\n        print(\"Driving a sports car from manufacturer Y at high speed!\")",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "XSportsCarInterface",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class XSportsCarInterface(SportsCarInterface):\n    def drive(self):\n        print(\"Driving a sports car from manufacturer X at high speed!\")\n# Concrete Implementor\nclass YSportsCarInterface(SportsCarInterface):\n    def drive(self):\n        print(\"Driving a sports car from manufacturer Y at high speed!\")\n# Concrete Implementor\nclass XTruckInterface(TruckInterface):\n    def drive(self):",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "YSportsCarInterface",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class YSportsCarInterface(SportsCarInterface):\n    def drive(self):\n        print(\"Driving a sports car from manufacturer Y at high speed!\")\n# Concrete Implementor\nclass XTruckInterface(TruckInterface):\n    def drive(self):\n        print(\"Driving a truck from manufacturer X at low speed.\")\n# Concrete Implementor\nclass YTruckInterface(TruckInterface):\n    def drive(self):",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "XTruckInterface",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class XTruckInterface(TruckInterface):\n    def drive(self):\n        print(\"Driving a truck from manufacturer X at low speed.\")\n# Concrete Implementor\nclass YTruckInterface(TruckInterface):\n    def drive(self):\n        print(\"Driving a truck from manufacturer Y at low speed.\")\ncar1 = SportsCar(XSportsCarInterface())\ncar2 = SportsCar(YSportsCarInterface())\ncar3 = Truck(XTruckInterface())",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "YTruckInterface",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class YTruckInterface(TruckInterface):\n    def drive(self):\n        print(\"Driving a truck from manufacturer Y at low speed.\")\ncar1 = SportsCar(XSportsCarInterface())\ncar2 = SportsCar(YSportsCarInterface())\ncar3 = Truck(XTruckInterface())\ncar4 = Truck(YTruckInterface())\ncar1.drive() # \"Driving a sports car from manufacturer X at high speed!\"\ncar2.drive() # \"Driving a sports car from manufacturer Y at high speed!\"\ncar3.drive() # \"Driving a truck from manufacturer X at low speed.\"",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Command",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Command:\n    def execute(self):\n        raise NotImplementedError\nclass SimpleCommand(Command):\n    def __init__(self, receiver, action):\n        self._receiver = receiver\n        self._action = action\n    def execute(self):\n        self._receiver.do_action(self._action)\nclass Receiver: # perform the actions",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "SimpleCommand",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class SimpleCommand(Command):\n    def __init__(self, receiver, action):\n        self._receiver = receiver\n        self._action = action\n    def execute(self):\n        self._receiver.do_action(self._action)\nclass Receiver: # perform the actions\n    def do_action(self, action):\n        print(f\"Performing action: {action}\")\nclass Invoker: # invokes the action command",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Receiver",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Receiver: # perform the actions\n    def do_action(self, action):\n        print(f\"Performing action: {action}\")\nclass Invoker: # invokes the action command\n    def __init__(self):\n        self._commands = []\n    def store_command(self, command):\n        self._commands.append(command)\n    def execute_commands(self):\n        for command in self._commands:",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Invoker",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Invoker: # invokes the action command\n    def __init__(self):\n        self._commands = []\n    def store_command(self, command):\n        self._commands.append(command)\n    def execute_commands(self):\n        for command in self._commands:\n            command.execute()\n# q: what does client do with this?\n# a: Client creates commands and passes them to the invoker",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Element",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Element:\n    def accept(self, visitor):\n        visitor.visit(self)\nclass ConcreteElementA(Element):\n    def operationA(self):\n        print(\"Performing operation A on ConcreteElementA\")\nclass ConcreteElementB(Element):\n    def operationB(self):\n        print(\"Performing operation B on ConcreteElementB\")\n# Define the visitor that will perform operations on the elements",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "ConcreteElementA",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class ConcreteElementA(Element):\n    def operationA(self):\n        print(\"Performing operation A on ConcreteElementA\")\nclass ConcreteElementB(Element):\n    def operationB(self):\n        print(\"Performing operation B on ConcreteElementB\")\n# Define the visitor that will perform operations on the elements\nclass Visitor:\n    def visit(self, element):\n        element.operationA()",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "ConcreteElementB",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class ConcreteElementB(Element):\n    def operationB(self):\n        print(\"Performing operation B on ConcreteElementB\")\n# Define the visitor that will perform operations on the elements\nclass Visitor:\n    def visit(self, element):\n        element.operationA()\nclass ConcreteVisitor1(Visitor):\n    def visit(self, element):\n        if isinstance(element, ConcreteElementA):",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "Visitor",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class Visitor:\n    def visit(self, element):\n        element.operationA()\nclass ConcreteVisitor1(Visitor):\n    def visit(self, element):\n        if isinstance(element, ConcreteElementA):\n            element.operationA()\n        elif isinstance(element, ConcreteElementB):\n            element.operationB()\n# Use the visitor to perform operations on elements",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "ConcreteVisitor1",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class ConcreteVisitor1(Visitor):\n    def visit(self, element):\n        if isinstance(element, ConcreteElementA):\n            element.operationA()\n        elif isinstance(element, ConcreteElementB):\n            element.operationB()\n# Use the visitor to perform operations on elements\nelements = [ConcreteElementA(), ConcreteElementB()]\nvisitor = ConcreteVisitor1()\nfor element in elements:",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "def main():\n    # create a SchoolZombieApocalypse object\n    school_sim = Population(school_size=10, population_size=1)\n    # create Observer objects\n    population_observer = PopulationObserver(school_sim)\n    school_observer = SchoolObserver(school_sim)\n    # run the population for a given time period\n    school_sim.run_population(num_time_steps=5)\n    # observe the statistics of the population\n    population_observer.display_observation(format=\"chart\")",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "simulate_movement",
+        "kind": 2,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "def simulate_movement(self):\n    for i in range(self.width):\n        for j in range(self.height):\n            individual = self.grid[i][j]\n            if individual is not None:\n                # use the A* algorithm to find the shortest path to the nearest exit\n                start = (i, j)\n                # the four corners of the grid\n                exits = [(0, 0), (0, self.width-1),\n                        (self.height-1, 0), (self.height-1, self.width-1)]",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "a_star",
+        "kind": 2,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "def a_star(self, start, goals):\n    # implement the A* algorithm to find the shortest path from the start to one of the goals\n    # returns the distances and previous nodes for each node in the grid\n    pass\ndef reconstruct_path(self, previous, start, goal):\n    # implement the algorithm to reconstruct the path from the previous nodes\n    # returns the shortest path from the start to the goal\n    pass\n\"\"\"\n\"\"\"",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "reconstruct_path",
+        "kind": 2,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "def reconstruct_path(self, previous, start, goal):\n    # implement the algorithm to reconstruct the path from the previous nodes\n    # returns the shortest path from the start to the goal\n    pass\n\"\"\"\n\"\"\"\nHigh order function\nhttps://www.youtube.com/watch?v=4B24vYj_vaI\n\"\"\"\n\"\"\"",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "variance",
+        "kind": 5,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "variance = n * p * (1 - p)\nWhere n is the number of experiments.\n# defense that will decrease the probability of infection and death\nDefine the rules of the simulation\nZombie infection - if a zombie and survivor are in neighbouring cell, the survivor will become infected\nSurvivor attack - if a zombie and survivor are in neighbouring cell, if a zombie dies, it is removed from the simulation\nZombie movement - each zombie moves one unit towards a random direction\nSurvivor movement - each survivor moves one unit away from the nearest zombie\na: individual: zombie and survivor, cell: position, grid: zombie_positions and survivor_positions, simulation: update_simulation()\nMove random probability to be param",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "car",
+        "kind": 5,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "car = SportsCar()\ncar.drive() # \"Driving a sports car at high speed!\"\nThe problem with this approach is that any changes made to the 'drive' method in the 'Car' class will also affect the 'SportsCar' class, as they share the same implementation. Additionally, if we want to add another type of car, we will have to create another subclass and repeat the same process, making the code more complex and less maintainable.\nWthout using the Bridge pattern, we would likely have a single class that contains both the interface and the implementation, making the code tightly coupled and less maintainable. This would mean that any changes made to the implementation would directly affect any references or dependencies on the code.\n\"\"\"\n\"\"\"\n/* Implementor interface*/\ninterface Gear{\n    void handleGear();\n}",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "car1",
+        "kind": 5,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "car1 = SportsCar(XSportsCarInterface())\ncar2 = SportsCar(YSportsCarInterface())\ncar3 = Truck(XTruckInterface())\ncar4 = Truck(YTruckInterface())\ncar1.drive() # \"Driving a sports car from manufacturer X at high speed!\"\ncar2.drive() # \"Driving a sports car from manufacturer Y at high speed!\"\ncar3.drive() # \"Driving a truck from manufacturer X at low speed.\"\ncar4.drive() # \"Driving a truck from manufacturer Y at low speed.\"\nThe Bridge pattern is a way to separate an abstraction from its implementation, allowing for the two to vary independently. Using the example of a car, we can see how the Bridge pattern can be applied.\nWe can start by creating a Car abstract class to represent the commonality between all cars. This abstract class would have methods and properties that all types of cars should have, such as a drive method. Then, we can create various subclasses for different types of cars, such as a SportsCar and a Truck class. This is a robust design, as it allows for many more types of cars to be added in the future.",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "car2",
+        "kind": 5,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "car2 = SportsCar(YSportsCarInterface())\ncar3 = Truck(XTruckInterface())\ncar4 = Truck(YTruckInterface())\ncar1.drive() # \"Driving a sports car from manufacturer X at high speed!\"\ncar2.drive() # \"Driving a sports car from manufacturer Y at high speed!\"\ncar3.drive() # \"Driving a truck from manufacturer X at low speed.\"\ncar4.drive() # \"Driving a truck from manufacturer Y at low speed.\"\nThe Bridge pattern is a way to separate an abstraction from its implementation, allowing for the two to vary independently. Using the example of a car, we can see how the Bridge pattern can be applied.\nWe can start by creating a Car abstract class to represent the commonality between all cars. This abstract class would have methods and properties that all types of cars should have, such as a drive method. Then, we can create various subclasses for different types of cars, such as a SportsCar and a Truck class. This is a robust design, as it allows for many more types of cars to be added in the future.\nNow suppose that cars are provided by different manufacturers. We would have to create a hierarchy of car classes for manufacturer X and another for manufacturer Y. The problem now is that clients would need to know the difference between the manufacturers. And if we decide to support a third manufacturer, the codebase would become more complex.",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "car3",
+        "kind": 5,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "car3 = Truck(XTruckInterface())\ncar4 = Truck(YTruckInterface())\ncar1.drive() # \"Driving a sports car from manufacturer X at high speed!\"\ncar2.drive() # \"Driving a sports car from manufacturer Y at high speed!\"\ncar3.drive() # \"Driving a truck from manufacturer X at low speed.\"\ncar4.drive() # \"Driving a truck from manufacturer Y at low speed.\"\nThe Bridge pattern is a way to separate an abstraction from its implementation, allowing for the two to vary independently. Using the example of a car, we can see how the Bridge pattern can be applied.\nWe can start by creating a Car abstract class to represent the commonality between all cars. This abstract class would have methods and properties that all types of cars should have, such as a drive method. Then, we can create various subclasses for different types of cars, such as a SportsCar and a Truck class. This is a robust design, as it allows for many more types of cars to be added in the future.\nNow suppose that cars are provided by different manufacturers. We would have to create a hierarchy of car classes for manufacturer X and another for manufacturer Y. The problem now is that clients would need to know the difference between the manufacturers. And if we decide to support a third manufacturer, the codebase would become more complex.\nThe solution is to provide the main abstraction hierarchy, i.e. the Car abstract class and subclasses such as SportsCar and Truck, and then provide the interface (Bridge) that will exist between the abstraction and the implementation. So there will be a CarInterface, SportsCarInterface, and TruckInterface, which dictate the interface that each concrete car class must provide. The abstraction (Car class) does not know about the implementation, rather it knows about the interface. Finally, we can create a concrete implementation for each manufacturer. That is, XCar, XSportsCar, and XTruck, YCar, YSportsCar and YTruck.",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "car4",
+        "kind": 5,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "car4 = Truck(YTruckInterface())\ncar1.drive() # \"Driving a sports car from manufacturer X at high speed!\"\ncar2.drive() # \"Driving a sports car from manufacturer Y at high speed!\"\ncar3.drive() # \"Driving a truck from manufacturer X at low speed.\"\ncar4.drive() # \"Driving a truck from manufacturer Y at low speed.\"\nThe Bridge pattern is a way to separate an abstraction from its implementation, allowing for the two to vary independently. Using the example of a car, we can see how the Bridge pattern can be applied.\nWe can start by creating a Car abstract class to represent the commonality between all cars. This abstract class would have methods and properties that all types of cars should have, such as a drive method. Then, we can create various subclasses for different types of cars, such as a SportsCar and a Truck class. This is a robust design, as it allows for many more types of cars to be added in the future.\nNow suppose that cars are provided by different manufacturers. We would have to create a hierarchy of car classes for manufacturer X and another for manufacturer Y. The problem now is that clients would need to know the difference between the manufacturers. And if we decide to support a third manufacturer, the codebase would become more complex.\nThe solution is to provide the main abstraction hierarchy, i.e. the Car abstract class and subclasses such as SportsCar and Truck, and then provide the interface (Bridge) that will exist between the abstraction and the implementation. So there will be a CarInterface, SportsCarInterface, and TruckInterface, which dictate the interface that each concrete car class must provide. The abstraction (Car class) does not know about the implementation, rather it knows about the interface. Finally, we can create a concrete implementation for each manufacturer. That is, XCar, XSportsCar, and XTruck, YCar, YSportsCar and YTruck.\nClients depend only on the abstraction but any implementation could be plugged in. So in this setup, the abstraction (Car class) could be changed without changing any of the concrete classes, and the implementation could be changed without worrying about the abstraction. This allows for a more flexible and maintainable codebase.",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "receiver",
+        "kind": 5,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "receiver = Receiver()\ncommand = SimpleCommand(receiver, \"Action 1\")\ninvoker = Invoker()\ninvoker.store_command(command)\ninvoker.execute_commands()  # Output: Performing action: Action 1\ninvoker does not know anything about the receiver or the command.\nReceiver and command should be decoupled from each other.\nThis can be done by not delegating the command execution to the receiver.\nInstead, the command should be responsible for executing the action.\nThere are two ways to undo a command:",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "command",
+        "kind": 5,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "command = SimpleCommand(receiver, \"Action 1\")\ninvoker = Invoker()\ninvoker.store_command(command)\ninvoker.execute_commands()  # Output: Performing action: Action 1\ninvoker does not know anything about the receiver or the command.\nReceiver and command should be decoupled from each other.\nThis can be done by not delegating the command execution to the receiver.\nInstead, the command should be responsible for executing the action.\nThere are two ways to undo a command:\n1. Store the state of the receiver before executing the command in the command itself, combining the momento pattern",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "invoker",
+        "kind": 5,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "invoker = Invoker()\ninvoker.store_command(command)\ninvoker.execute_commands()  # Output: Performing action: Action 1\ninvoker does not know anything about the receiver or the command.\nReceiver and command should be decoupled from each other.\nThis can be done by not delegating the command execution to the receiver.\nInstead, the command should be responsible for executing the action.\nThere are two ways to undo a command:\n1. Store the state of the receiver before executing the command in the command itself, combining the momento pattern\n2. Call an unexecute method of the receiver",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "elements",
+        "kind": 5,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "elements = [ConcreteElementA(), ConcreteElementB()]\nvisitor = ConcreteVisitor1()\nfor element in elements:\n    element.accept(visitor)\n# Output:\n# Performing operation A on ConcreteElementA\n# Performing operation B on ConcreteElementB\n# the logic of selecting the operation depending on the element is moved to the visitor\n# In this example, the ConcreteElementA and ConcreteElementB classes define the objects that can be visited, and the ConcreteVisitor1 class defines the operations that can be performed on those objects. The accept method in the Element class allows the visitor to perform operations on the elements, and the visit method in the Visitor class is the entry point for the visitor to perform the operation.\n# By using the visitor pattern, we can separate the operations from the elements and add new operations or change existing ones without modifying the elements themselves.",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "visitor",
+        "kind": 5,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "visitor = ConcreteVisitor1()\nfor element in elements:\n    element.accept(visitor)\n# Output:\n# Performing operation A on ConcreteElementA\n# Performing operation B on ConcreteElementB\n# the logic of selecting the operation depending on the element is moved to the visitor\n# In this example, the ConcreteElementA and ConcreteElementB classes define the objects that can be visited, and the ConcreteVisitor1 class defines the operations that can be performed on those objects. The accept method in the Element class allows the visitor to perform operations on the elements, and the visit method in the Visitor class is the entry point for the visitor to perform the operation.\n# By using the visitor pattern, we can separate the operations from the elements and add new operations or change existing ones without modifying the elements themselves.\n\"\"\"",
+        "detail": "population_old",
         "documentation": {}
     },
     {

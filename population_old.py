@@ -18,7 +18,6 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cached_property
-from itertools import count
 from typing import Any, Optional
 
 import matplotlib.pyplot as plt
@@ -145,8 +144,10 @@ class FleeZombiesStrategy(MovementStrategy):
         distance_from_new_locations = [float(np.linalg.norm(np.subtract(closest_target, location)))
                                         for location in new_locations]
         max_distance = np.max(distance_from_new_locations)
-        max_distance_index = np.where(distance_from_new_locations == max_distance)[0]
-        return legal_directions[random.choice(max_distance_index)]
+        max_distance_index = np.where(
+            distance_from_new_locations == max_distance)
+        direction = new_locations[max_distance_index[0]]
+        return direction
         
 @dataclass
 # if zombie or other having no zombie neighbors
@@ -171,7 +172,8 @@ class ChaseHumansStrategy(MovementStrategy):
         # consider case where all distances are 0
         min_distance = np.min(distance_matrix[distance_matrix != 0])
         min_distance_index = np.where(distance_matrix == min_distance)
-        return legal_directions[random.choice(min_distance_index[0])]
+        direction = new_locations[min_distance_index[0][0]]
+        return direction
     
     # may use np.sign
 
@@ -205,22 +207,22 @@ class MovementStrategyFactory:
         alive_number = sum(1 for neighbor in neighbors if neighbor.state == State.HEALTHY)
         zombies_number = sum(1 for neighbor in neighbors if neighbor.state == State.ZOMBIE)
         # if no human neighbors, move away from the closest zombies
-        if alive_number == 0 and zombies_number > 0:
+        if alive_number == 0:
             return FleeZombiesStrategy(individual, legal_directions, neighbors)
         # if no zombies neighbors, move towards the closest human
-        elif zombies_number == 0 and alive_number > 0:
+        elif zombies_number == 0:
             return ChaseHumansStrategy(individual, legal_directions, neighbors)
         # if both human and zombies neighbors, zombies move towards the closest human and human move away from the closest zombies
         else:
-            if individual.state == State.ZOMBIE and alive_number > 0:
+            if individual.state == State.ZOMBIE:
                 return ChaseHumansStrategy(individual, legal_directions, neighbors)
-            elif individual.state in (State.HEALTHY, State.INFECTED) and zombies_number > 0:
+            elif individual.state in (State.HEALTHY, State.INFECTED):
                 return FleeZombiesStrategy(individual, legal_directions, neighbors)
             elif individual.state == State.DEAD:
                 return NoMovementStrategy(individual, legal_directions, neighbors)
             else:
                 raise Exception(
-                    f"Individual {individual.id} has invalid state {individual.state}")
+                    f"Individual {individual.id} has invalid state {individual.state.name}")
 
     # may consider update the grid according to the individual's location
     # after assigning all new locations to the individuals
@@ -301,7 +303,6 @@ class School:
         # may put Cell class in the grid where Cell class has individual attributes and rates
 
     def add_individual(self, individual: Individual) -> None:
-        print(individual.location)
         self.grid[int(individual.location[0])][int(
             individual.location[1])] = individual
 
@@ -311,7 +312,7 @@ class School:
     def remove_individual(self, location: tuple[int, int]) -> None:
         self.grid[location[0]][location[1]] = None
 
-    # may change the add\remove function to accept individual class as well as location
+    # may change the add/remove function to accept individual class as well as location
 
     def update_connections(self) -> None:
         for row in self.grid:
@@ -503,7 +504,6 @@ class PopulationObserver(Observer):
                 counts.values()), tick_label=State.name_list())
         # Show the plot
         plt.show()
-        
 
 class SchoolObserver(Observer):
     
@@ -671,26 +671,22 @@ class Population:
 def main():
 
     # create a SchoolZombieApocalypse object
-    school_sim = Population(school_size=10, population_size=5)
+    school_sim = Population(school_size=10, population_size=1)
 
     # create Observer objects
     population_observer = PopulationObserver(school_sim)
-    #population_animator = PopulationAnimator(school_sim)
     school_observer = SchoolObserver(school_sim)
     
     # run the population for a given time period
-    school_sim.run_population(num_time_steps=3)
+    school_sim.run_population(num_time_steps=5)
     
     # observe the statistics of the population
     population_observer.display_observation(format="chart")
-    #population_animator.display_observation(format="chart")
     school_observer.display_observation(format="chart")
 
 
 if __name__ == "__main__":
     main()
-    
-    
 
 """
 
