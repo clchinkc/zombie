@@ -1,36 +1,7 @@
 
 20 Pandas Functions for 80% of your Data Science Tasks
 
-1. pd.read_csv()
-pd.read_csv is a function in the panda's library in Python that is used to read a CSV (Comma Separated Values) file and convert it into a pandas DataFrame.
 
-Example:
-
-import pandas as pd
-df = pd.read_csv('Popular_Baby_Names.csv')
-
-In this example, the pd.read_csv function reads the file ‘data.csv’ and converts it into a DataFrame, which is then assigned to the variable ‘data’. The contents of the DataFrame can then be printed using the print function.
-
-It has many options like sep, header, index_col, skiprows, na_values etc.
-
-df = pd.read_csv('Popular_Baby_Names.csv', sep=';', header=0, index_col=0, skiprows=5, na_values='N/A')
-This example reads the CSV file data.csv, with ; as a separator, the first row as the header, the first column as an index, skipping the first 5 rows and replacing N/A with NaN.
-
-2. df.describe()
-The df.describe() method in pandas is used to generate summary statistics of various features of a DataFrame. It returns a new DataFrame that contains the count, mean, standard deviation, minimum, 25th percentile, median, 75th percentile, and maximum of each numerical column in the original DataFrame.
-
-print(df.describe())
-
-You can also include or exclude certain columns and also include non-numerical columns by passing appropriate arguments to the method.
-
-df.describe(include='all')  # include all columns
-
-df.describe(exclude='number') # exclude numerical columns
-
-3. df.info()
-df.info() is a method in pandas that is used to get a concise summary of the DataFrame, including the number of non-null values in each column, the data types of each column, and the memory usage of the DataFrame.
-
-print(df.info())
 
 4. df.plot()
 df.plot() is a method in pandas that is used to create various types of plots from a DataFrame. By default, it creates a line plot of all numerical columns in the DataFrame. But you can also pass the argument kind to specify the type of plot you want to create. Available options are line, bar, barh, hist, box, kde, density, area, pie, scatter, and hexbin.

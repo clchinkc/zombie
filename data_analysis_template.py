@@ -40,16 +40,17 @@ import seaborn as sns
 # Load the data
 df = pd.read_csv('data.csv')
 
+# Exploratory Data Analysis (EDA)
+df.info()
+df.describe()
+
 # Data cleaning
 df.dropna(inplace=True)
 df.reset_index(drop=True, inplace=True)
 df['date'] = pd.to_datetime(df['date'])
 
-# Exploratory Data Analysis (EDA)
-df.describe()
-sns.countplot(x='target', data=df)
-
 # Data Visualization
+sns.countplot(x='target', data=df)
 sns.pairplot(df, x_vars=['feature1', 'feature2', 'feature3'], y_vars='target', height=7, aspect=0.7)
 
 # Hypothesis Testing
