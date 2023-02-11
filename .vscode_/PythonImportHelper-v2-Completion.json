@@ -407,11 +407,12 @@
         "documentation": {}
     },
     {
-        "label": "animation",
-        "importPath": "matplotlib",
-        "description": "matplotlib",
+        "label": "numba",
+        "kind": 6,
         "isExtraImport": true,
-        "detail": "matplotlib",
+        "importPath": "numba",
+        "description": "numba",
+        "detail": "numba",
         "documentation": {}
     },
     {
@@ -455,15 +456,6 @@
         "documentation": {}
     },
     {
-        "label": "numba",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "numba",
-        "description": "numba",
-        "detail": "numba",
-        "documentation": {}
-    },
-    {
         "label": "PillowWriter",
         "importPath": "matplotlib.animation",
         "description": "matplotlib.animation",
@@ -496,6 +488,14 @@
         "importPath": "pickle",
         "description": "pickle",
         "detail": "pickle",
+        "documentation": {}
+    },
+    {
+        "label": "deepcopy",
+        "importPath": "copy",
+        "description": "copy",
+        "isExtraImport": true,
+        "detail": "copy",
         "documentation": {}
     },
     {
@@ -608,6 +608,14 @@
         "description": "functools",
         "isExtraImport": true,
         "detail": "functools",
+        "documentation": {}
+    },
+    {
+        "label": "count",
+        "importPath": "itertools",
+        "description": "itertools",
+        "isExtraImport": true,
+        "detail": "itertools",
         "documentation": {}
     },
     {
@@ -1445,87 +1453,6 @@
         "description": "genetic",
         "peekOfCode": "best = ga.run()[0]\n# print the best solution found by the genetic algorithm\nprint(best)\n\"\"\"\nThe MovementControl class takes the following arguments in its __init__ method:\nmap: a 2D array representing the map of the simulation\nperson_pos: a tuple with the position (x, y) of the person on the map\nzombie_positions: a list of tuples with the positions (x, y) of the zombies on the map\nlimit: an integer representing the maximum number of iterations the genetic algorithm will run\nsize: an integer representing the size of the population (number of chromosomes in each generation)",
         "detail": "genetic",
-        "documentation": {}
-    },
-    {
-        "label": "PopulationAnimator",
-        "kind": 6,
-        "importPath": "learn_animation",
-        "description": "learn_animation",
-        "peekOfCode": "class PopulationAnimator(Observer):\n    def __init__(self, population: Population) -> None:\n        self.subject = population\n        self.subject.attach_observer(self)\n        self.agent_history = []\n    def update(self) -> None:\n        self.agent_history.append(self.subject.agent_list)\n    def display_observation(self, format='text'):\n        if format == 'text':\n            self.print_text_statistics()",
-        "detail": "learn_animation",
-        "documentation": {}
-    },
-    {
-        "label": "update",
-        "kind": 2,
-        "importPath": "learn_animation",
-        "description": "learn_animation",
-        "peekOfCode": "def update(i):\n    for j in range(len(bars)):\n        bars[j].set_height(y[i][j])\n    text_box.set_text('timestep: {}'.format(i))\n# create the animation\nanim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000)\n# save the animation as an gif file\nanim.save('bar_chart_animation.gif', writer='pillow', fps=3)\n# show the animation\nplt.show()",
-        "detail": "learn_animation",
-        "documentation": {}
-    },
-    {
-        "label": "bar_chart_animation",
-        "kind": 2,
-        "importPath": "learn_animation",
-        "description": "learn_animation",
-        "peekOfCode": "def bar_chart_animation(x, y, ticks):\n    # create a figure and axis\n    fig, ax = plt.subplots()\n    # set the title and labels\n    ax.set_title('Bar Chart Animation')\n    ax.set_xlabel('x')\n    ax.set_ylabel('y')\n    # create the bar chart\n    bars = ax.bar(x, y[0], tick_label=ticks)\n    # create timestep labels",
-        "detail": "learn_animation",
-        "documentation": {}
-    },
-    {
-        "label": "x",
-        "kind": 5,
-        "importPath": "learn_animation",
-        "description": "learn_animation",
-        "peekOfCode": "x = np.array([1, 2, 3, 4])\nprint(x)\ny = [[1, 2, 3, 4], [1, 4, 9, 16], [1, 8, 27, 64]]\nprint(y)\nticks = ['one', 'two', 'three', 'four']\nprint(ticks)\n# create a figure and axis\nfig, ax = plt.subplots()\n# set the title and labels\nax.set_title('Bar Chart Animation')",
-        "detail": "learn_animation",
-        "documentation": {}
-    },
-    {
-        "label": "y",
-        "kind": 5,
-        "importPath": "learn_animation",
-        "description": "learn_animation",
-        "peekOfCode": "y = [[1, 2, 3, 4], [1, 4, 9, 16], [1, 8, 27, 64]]\nprint(y)\nticks = ['one', 'two', 'three', 'four']\nprint(ticks)\n# create a figure and axis\nfig, ax = plt.subplots()\n# set the title and labels\nax.set_title('Bar Chart Animation')\nax.set_xlabel('x')\nax.set_ylabel('y')",
-        "detail": "learn_animation",
-        "documentation": {}
-    },
-    {
-        "label": "ticks",
-        "kind": 5,
-        "importPath": "learn_animation",
-        "description": "learn_animation",
-        "peekOfCode": "ticks = ['one', 'two', 'three', 'four']\nprint(ticks)\n# create a figure and axis\nfig, ax = plt.subplots()\n# set the title and labels\nax.set_title('Bar Chart Animation')\nax.set_xlabel('x')\nax.set_ylabel('y')\n# create the bar chart\nbars = ax.bar(x, y[0], tick_label=ticks)",
-        "detail": "learn_animation",
-        "documentation": {}
-    },
-    {
-        "label": "bars",
-        "kind": 5,
-        "importPath": "learn_animation",
-        "description": "learn_animation",
-        "peekOfCode": "bars = ax.bar(x, y[0], tick_label=ticks)\n# create timestep labels\ntext_box = ax.text(0.05, 0.9, '', transform=ax.transAxes)\n# function to update the chart\ndef update(i):\n    for j in range(len(bars)):\n        bars[j].set_height(y[i][j])\n    text_box.set_text('timestep: {}'.format(i))\n# create the animation\nanim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000)",
-        "detail": "learn_animation",
-        "documentation": {}
-    },
-    {
-        "label": "text_box",
-        "kind": 5,
-        "importPath": "learn_animation",
-        "description": "learn_animation",
-        "peekOfCode": "text_box = ax.text(0.05, 0.9, '', transform=ax.transAxes)\n# function to update the chart\ndef update(i):\n    for j in range(len(bars)):\n        bars[j].set_height(y[i][j])\n    text_box.set_text('timestep: {}'.format(i))\n# create the animation\nanim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000)\n# save the animation as an gif file\nanim.save('bar_chart_animation.gif', writer='pillow', fps=3)",
-        "detail": "learn_animation",
-        "documentation": {}
-    },
-    {
-        "label": "anim",
-        "kind": 5,
-        "importPath": "learn_animation",
-        "description": "learn_animation",
-        "peekOfCode": "anim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000)\n# save the animation as an gif file\nanim.save('bar_chart_animation.gif', writer='pillow', fps=3)\n# show the animation\nplt.show()\n# group everything into a function that accept x, y, and ticks as parameters\ndef bar_chart_animation(x, y, ticks):\n    # create a figure and axis\n    fig, ax = plt.subplots()\n    # set the title and labels",
-        "detail": "learn_animation",
         "documentation": {}
     },
     {
@@ -3234,7 +3161,7 @@
         "kind": 6,
         "importPath": "population_old",
         "description": "population_old",
-        "peekOfCode": "class MovementStrategyFactory:\n    def create_strategy(self, individual, school):\n        # get legal directions\n        legal_directions = school.get_legal_directions(individual)\n        # get neighbors\n        neighbors = school.get_neighbors(individual.location, individual.sight_range)\n        # early exit\n        # if no neighbors, random movement\n        if not neighbors:\n            return RandomMovementStrategy(individual, legal_directions, neighbors)",
+        "peekOfCode": "class MovementStrategyFactory:\n    def create_strategy(self, individual, school):\n        # get legal directions\n        legal_directions = school.get_legal_directions(individual)\n        # early exit\n        if not legal_directions:\n            return NoMovementStrategy(individual, legal_directions, [])\n        # get neighbors\n        neighbors = school.get_neighbors(individual.location, individual.sight_range)\n        # early exit",
         "detail": "population_old",
         "documentation": {}
     },
@@ -3271,6 +3198,15 @@
         "importPath": "population_old",
         "description": "population_old",
         "peekOfCode": "class PopulationObserver(Observer):\n    def __init__(self, population: Population) -> None:\n        self.subject = population\n        self.subject.attach_observer(self)\n        self.statistics = {}\n        self.agent_list = []\n    def update(self) -> None:\n        self.statistics = self.subject.get_population_statistics()\n        self.agent_list = self.subject.agent_list\n    def display_observation(self, format='text'):",
+        "detail": "population_old",
+        "documentation": {}
+    },
+    {
+        "label": "PopulationAnimator",
+        "kind": 6,
+        "importPath": "population_old",
+        "description": "population_old",
+        "peekOfCode": "class PopulationAnimator(Observer):\n    def __init__(self, population: Population) -> None:\n        self.subject = population\n        self.subject.attach_observer(self)\n        self.agent_history = []\n    def update(self) -> None:\n        agent_list = deepcopy(self.subject.agent_list)\n        self.agent_history.append(agent_list)\n    def display_observation(self, format='chart'):\n        if format == 'chart':",
         "detail": "population_old",
         "documentation": {}
     },
@@ -3567,7 +3503,7 @@
         "kind": 2,
         "importPath": "population_old",
         "description": "population_old",
-        "peekOfCode": "def main():\n    # create a SchoolZombieApocalypse object\n    school_sim = Population(school_size=10, population_size=1)\n    # create Observer objects\n    population_observer = PopulationObserver(school_sim)\n    school_observer = SchoolObserver(school_sim)\n    # run the population for a given time period\n    school_sim.run_population(num_time_steps=5)\n    # observe the statistics of the population\n    population_observer.display_observation(format=\"chart\")",
+        "peekOfCode": "def main():\n    # create a SchoolZombieApocalypse object\n    school_sim = Population(school_size=10, population_size=10)\n    # create Observer objects\n    #population_observer = PopulationObserver(school_sim)\n    population_animator = PopulationAnimator(school_sim)\n    #school_observer = SchoolObserver(school_sim)\n    # run the population for a given time period\n    school_sim.run_population(num_time_steps=10)\n    # observe the statistics of the population",
         "detail": "population_old",
         "documentation": {}
     },

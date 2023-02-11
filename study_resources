@@ -73,23 +73,21 @@ https://github.com/dypsilon/frontend-dev-bookmarks
 Frontend + backend
 https://github.com/TheOdinProject
 https://tms-dev-blog.com/python-backend-with-javascript-frontend-how-to/
-
 https://blog.csdn.net/weixin_45621944/article/details/109906498
 https://juejin.cn/post/6844903545712410631
 https://www.51cto.com/article/697947.html
-
 https://www.accordbox.com/blog/how-to-combine-frontend-and-backend-for-python-web-developers/
 https://www.codecademy.com/learn/connecting-front-end-to-back-end
 https://towardsdatascience.com/the-right-way-to-build-an-api-with-python-cd08ab285f8f
 http://developerscorner.in/
-
-
 How frontend and backend is connected
 Integrate frontend and backend
 https://vsupalov.com/how-backend-and-frontend-communicate/
 https://www.youtube.com/watch?v=ACI8EDbaXzo
 https://github.com/FredrikOseberg/spa-frontend
 https://github.com/FredrikOseberg/spa-api
+https://ithelp.ithome.com.tw/users/20110962/ironman/3327
+Turbo Console Log
 
 flask
 https://flask.palletsprojects.com/en/2.0.x/quickstart/#a-minimal-application
@@ -305,6 +303,7 @@ https://ithelp.ithome.com.tw/users/20109783/ironman/1659
 https://github.com/motion-canvas
 
 Vue, svelete, angular
+https://www.smashingmagazine.com/2018/02/jquery-vue-javascript/
 
 Javascript
 https://developer.mozilla.org/zh-TW/docs/Learn/JavaScript
@@ -451,6 +450,7 @@ https://welly.tw/digital-marketing/learn-google-lesson
 
 blockchain project
 https://www.analyticsinsight.net/top-10-programming-languages-for-building-blockchain-applications/
+https://www.blocktempo.com/how-to-create-a-new-token-via-chatgpt/
 
 API
 python api project
@@ -472,7 +472,11 @@ how to design an api in python
 https://blog.szymonmiks.pl/p/how-i-start-every-new-python-backend-api-project/
 https://realpython.com/api-integration-in-python/
 https://www.linode.com/docs/guides/create-restful-api-using-python-and-flask/
-
+python anywhere
+heroku
+Code for python flask api server that takes 'GET' request with url as string and convert it to qr code image and send it back as api response
+How to make response downloadable
+rapidapi
 
 Chatbot
 eliza
@@ -529,8 +533,37 @@ mysql
 https://www.51cto.com/article/708748.html
 https://blog.boot.dev/backend/top-backend-technologies/
 
+Data analysis
+https://github.com/tinahuangyt/ETL_Project
+https://github.com/tinahuangyt/Pandas_Heroes-of-Pymoli/blob/master/Heroes%20of%20Pymoli%20Analysis.ipynb
+https://github.com/tinahuangyt/Python_PyBank-and-PyPoll
+
+Data visualization
+https://github.com/tinahuangyt/Matplotlib_Pymaceuticals
+https://github.com/tinahuangyt/Matplotlib_Pyber
+
 API + Data analysis + Data visualization
 http://blog.itpub.net/69982434/viewspace-2738661
+
+Data analysis + Data visualization + Web application (css/javascript)
+https://github.com/tinahuangyt/Plotly-Biodiversity
+https://github.com/tinahuangyt/Leaflet-Earthquake_mapping
+https://github.com/tinahuangyt/D3-DataJournalism
+https://github.com/tinahuangyt/JavaScript-UFO_Sightings
+https://github.com/tinahuangyt/CSS_Web-Visualization-Dashboard
+
+Web scraping + Data visualization + Web application (flask)
+https://github.com/tinahuangyt/WebScraping-Mission_to_Mars
+https://github.com/tinahuangyt/SQLAlchemy_Climate-Analysis
+
+API + Data analysis + Data visualization
+https://github.com/tinahuangyt/Python-API_World-Weather
+
+NLP + machine learning
+https://github.com/tinahuangyt/Project-NatureGeneticsCitation
+
+Machine learning
+https://github.com/tinahuangyt/MachineLearning-Expoplanet
 
 Visualizing map
 https://zhuanlan.zhihu.com/p/388573380
