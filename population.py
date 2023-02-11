@@ -15,6 +15,7 @@ from __future__ import annotations
 import math
 import random
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cached_property
@@ -195,6 +196,9 @@ class MovementStrategyFactory:
     def create_strategy(self, individual, school):
         # get legal directions
         legal_directions = school.get_legal_directions(individual)
+        # early exit
+        if not legal_directions:
+            return NoMovementStrategy(individual, legal_directions, [])
         # get neighbors
         neighbors = school.get_neighbors(individual.location, individual.sight_range)
         # early exit
@@ -214,13 +218,12 @@ class MovementStrategyFactory:
         else:
             if individual.state == State.ZOMBIE and alive_number > 0:
                 return ChaseHumansStrategy(individual, legal_directions, neighbors)
-            elif individual.state in (State.HEALTHY, State.INFECTED) and zombies_number > 0:
+            elif (individual.state == State.HEALTHY or individual.state == State.INFECTED) and zombies_number > 0:
                 return FleeZombiesStrategy(individual, legal_directions, neighbors)
             elif individual.state == State.DEAD:
                 return NoMovementStrategy(individual, legal_directions, neighbors)
             else:
-                raise Exception(
-                    f"Individual {individual.id} has invalid state {individual.state}")
+                return RandomMovementStrategy(individual, legal_directions, neighbors)
 
     # may consider update the grid according to the individual's location
     # after assigning all new locations to the individuals
@@ -301,7 +304,6 @@ class School:
         # may put Cell class in the grid where Cell class has individual attributes and rates
 
     def add_individual(self, individual: Individual) -> None:
-        print(individual.location)
         self.grid[int(individual.location[0])][int(
             individual.location[1])] = individual
 
@@ -337,8 +339,7 @@ class School:
             cell = self.get_individual((i, j))
 
             if cell is None:
-                raise Exception(
-                    f"Individual {individuals.id} is not in the grid")
+                continue
 
             if random.random() < migration_probability:
                 movement_strategy = self.strategy_factory.create_strategy(cell, self)
@@ -450,8 +451,6 @@ class PopulationObserver(Observer):
         elif format == 'chart':
             self.print_chart_statistics()
         
-        # animation, table
-        
     def print_text_statistics(self):
         population_size = self.statistics['population_size']
         num_healthy = self.statistics['num_healthy']
@@ -504,6 +503,115 @@ class PopulationObserver(Observer):
         # Show the plot
         plt.show()
         
+class PopulationAnimator(Observer):
+        
+    def __init__(self, population: Population) -> None:
+        self.subject = population
+        self.subject.attach_observer(self)
+        self.agent_history = []
+        
+    def update(self) -> None:
+        agent_list = deepcopy(self.subject.agent_list)
+        self.agent_history.append(agent_list)
+        
+    def display_observation(self, format='chart'):
+        if format == 'chart':
+            self.print_chart_animation()
+        
+        # table
+    
+    def print_chart_animation(self):
+        counts = []
+        for i in range(len(self.agent_history)):
+            cell_states = [individual.state for individual in self.agent_history[i]]
+            counts.append([cell_states.count(state) for state in list(State)])
+        self.bar_chart_animation(
+        np.array(State.value_list()), 
+                    counts, 
+                    State.name_list())
+    
+    def bar_chart_animation(self, x, y, ticks):
+        # create a figure and axis
+        fig, ax = plt.subplots()
+
+        # set the title and labels
+        ax.set_title('Bar Chart Animation')
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+
+        # create the bar chart
+        bars = ax.bar(x, y[0], tick_label=ticks)
+        
+        # create timestep labels
+        text_box = ax.text(0.05, 0.9, '', transform=ax.transAxes)
+
+        # function to update the chart
+        def update(i):
+            for j in range(len(bars)):
+                bars[j].set_height(y[i][j])
+            text_box.set_text(f'timestep = {i}')
+
+        # create the animation
+        anim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000)
+
+        # save the animation as an gif file
+        anim.save('bar_chart_animation.gif', writer='pillow', fps=3)
+
+        # show the animation
+        plt.show()
+        
+        
+    # animation
+    def print_school_animation(self):
+        # Create a figure
+        fig = plt.figure()
+        # Create a subplot
+        ax = fig.add_subplot(1, 1, 1)
+        # Create a scatter plot
+        sc = ax.scatter([], [], s=10)
+        # Create a text label
+        label = ax.text(0.02, 0.95, "", transform=ax.transAxes)
+        # Create an animation
+        ani = animation.FuncAnimation(fig, self.animate, frames=len(
+            self.agent_history), interval=100, blit=True, repeat=False, fargs=(sc, label))
+        # Show the plot
+        plt.show()
+        
+    def animate(self, i, sc, label):
+        # Get the current state of the population
+        agent_list = self.agent_history[i]
+        # Update the scatter plot
+        sc.set_offsets(np.asarray([agent.position for agent in agent_list]))
+        sc.set_color([agent.color for agent in agent_list])
+        # Update the text label
+        label.set_text(f"Day {i}")
+        return sc, label
+    
+    def animation_scatter(self):
+        # Create a figure
+        fig = plt.figure()
+        # Create a subplot
+        ax = fig.add_subplot(1, 1, 1)
+        # Create a scatter plot
+        sc = ax.scatter([], [], s=100)
+        # Create a text label
+        text = ax.text(0.02, 0.95, "", transform=ax.transAxes)
+        # Create a function to update the scatter plot
+        def animate(i):
+            # Get the current state of the population
+            agent_list = self.agent_history[i]
+            # Update the scatter plot
+            sc.set_offsets(np.asarray([agent.location for agent in agent_list]))
+            # Update the text
+            text.set_text(f"Day {i}")
+            # Return the artists set
+            return sc, text
+        # Create an animation
+        anim = animation.FuncAnimation(fig, animate, frames=len(self.agent_history), interval=100)
+        # Show the plot
+        plt.show()
+
+
 
 class SchoolObserver(Observer):
     
@@ -573,7 +681,7 @@ class Population:
 
     def create_individual(self, id: int, school_size: int) -> Individual:
         state_index = random.choices(
-            State.value_list(), weights=[0.9, 0.05, 0.05, 0.0])
+            State.value_list(), weights=[0.8, 0.1, 0.1, 0.0])
         state = State(state_index[0])
         while True:
             location = (random.randint(0, school_size-1),
@@ -608,12 +716,12 @@ class Population:
             print("Got School Info")
             self.notify_observers()
             print("Notified Observers")
-            if self.num_healthy == 0:
-                print("All individuals are infected")
-                break
-            elif self.num_infected == 0 and self.num_zombie == 0:
-                print("All individuals are healthy")
-                break
+            #if self.num_healthy == 0:
+            #    print("All individuals are infected")
+            #    break
+            #elif self.num_infected == 0 and self.num_zombie == 0:
+            #    print("All individuals are healthy")
+            #    break
 
     def update_grid(self) -> None:
         self.school.update_grid(self.agent_list, self.migration_probability)
@@ -628,7 +736,6 @@ class Population:
         self.num_healthy = sum(1 for individual in self.agent_list if individual.state == State.HEALTHY)
         self.num_infected = sum(1 for individual in self.agent_list if individual.state == State.INFECTED)
         self.num_zombie = sum(1 for individual in self.agent_list if individual.state == State.ZOMBIE)
-        self.num_dead = sum(1 for individual in self.agent_list if individual.state == State.DEAD)
         self.population_size = self.num_healthy + self.num_infected + self.num_zombie
         self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity)))
         self.turning_probability = 1 - (1 / (1 + math.exp(-self.severity)))
@@ -656,7 +763,6 @@ class Population:
         return {"num_healthy": self.num_healthy,
                 "num_infected": self.num_infected,
                 "num_zombie": self.num_zombie,
-                "num_dead": self.num_dead,
                 "population_size": self.population_size,
                 "infection_probability": self.infection_probability,
                 "turning_probability": self.turning_probability,
@@ -665,26 +771,26 @@ class Population:
                 }
 
     def __str__(self) -> str:
-        return f'Population with {self.num_healthy} healthy, {self.num_infected} infected, {self.num_zombie} zombie, and {self.num_dead} dead individuals'
+        return f'Population with {self.num_healthy} healthy, {self.num_infected} infected, and {self.num_zombie} zombie individuals'
 
 
 def main():
 
     # create a SchoolZombieApocalypse object
-    school_sim = Population(school_size=10, population_size=5)
+    school_sim = Population(school_size=10, population_size=10)
 
     # create Observer objects
-    population_observer = PopulationObserver(school_sim)
-    #population_animator = PopulationAnimator(school_sim)
-    school_observer = SchoolObserver(school_sim)
+    #population_observer = PopulationObserver(school_sim)
+    population_animator = PopulationAnimator(school_sim)
+    #school_observer = SchoolObserver(school_sim)
     
     # run the population for a given time period
-    school_sim.run_population(num_time_steps=3)
+    school_sim.run_population(num_time_steps=10)
     
     # observe the statistics of the population
-    population_observer.display_observation(format="chart")
-    #population_animator.display_observation(format="chart")
-    school_observer.display_observation(format="chart")
+    #population_observer.display_observation(format="chart")
+    population_animator.display_observation(format="chart")
+    #school_observer.display_observation(format="chart")
 
 
 if __name__ == "__main__":

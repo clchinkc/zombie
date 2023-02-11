@@ -45,13 +45,102 @@ df.info()
 df.describe()
 
 # Data cleaning
+# Drop rows with missing values
 df.dropna(inplace=True)
+# Drop duplicate rows
+df.drop_duplicates(inplace=True)
+# Drop columns
+df.drop(['column1', 'column2'], axis=1, inplace=True)
+# Rename columns
+df.rename(columns={'old_name1': 'new_name1', 'old_name2': 'new_name2'}, inplace=True)
+# Change data types
+df['column'] = df['column'].astype('int')
+# Reset index
 df.reset_index(drop=True, inplace=True)
+# Convert date column to datetime
 df['date'] = pd.to_datetime(df['date'])
+# Convert datetime column to date
+df['date'] = df['date'].dt.date
+# Select specific rows using .iloc
+print(df.iloc[3:6])
+"""
+row index, column index
+"""
+# Select specific rows using .loc
+print(df.loc[df['column_name'] == value])
+"""
+row label, column label
+"""
+# Add a new column to the DataFrame
+df.assign(new_column=new_value)
+# Filter the DataFrame based on conditions
+df.query('column_name > value')
+# Sort values by a column
+df.sort_values(by='column_name', ascending=False, inplace=True)
+# Take a random sample from the DataFrame
+df.sample(frac=0.1)
 
 # Data Visualization
-sns.countplot(x='target', data=df)
+# Histogram
+df['column'].hist(bins=20)
+# Scatter plot
+df.plot.scatter(x='column1', y='column2')
+df.plot(x='column_name1', y='column_name2', kind='scatter')
+"""
+kind: specifies the type of plot you want to create. Available options are line, bar, barh, hist, box, kde, density, area, pie, scatter, and hexbin.
+title: is used to set the title of the plot.
+xlabel: is used to set the label of the x-axis.
+ylabel: is used to set the label of the y-axis.
+legend: is used to specify whether to show the legend or not.
+grid: is used to specify whether to show the grid in the plot or not.
+xlim: is used to set the limits of the x-axis.
+ylim: is used to set the limits of the y-axis.
+xticks: is used to set the ticks of the x-axis.
+yticks: is used to set the ticks of the y-axis.
+"""
+# Bar plot
+df['column'].value_counts().plot.bar()
+# Box plot
+df.boxplot(column='column')
+# Line plot
+df.plot.line(x='column1', y='column2')
+# Heatmap
+sns.heatmap(df.corr(), annot=True)
+# Pairplot
 sns.pairplot(df, x_vars=['feature1', 'feature2', 'feature3'], y_vars='target', height=7, aspect=0.7)
+# Countplot
+sns.countplot(x='target', data=df)
+# Violin plot
+sns.violinplot(x='target', y='feature1', data=df)
+# FacetGrid
+g = sns.FacetGrid(df, col='target')
+g.map(plt.hist, 'feature1', bins=20)
+# JointGrid
+g = sns.JointGrid(x='feature1', y='feature2', data=df)
+g.plot(sns.regplot, sns.distplot)
+# Boxen plot
+sns.boxenplot(x='target', y='feature1', data=df)
+# Swarm plot
+sns.swarmplot(x='target', y='feature1', data=df)
+# Catplot
+sns.catplot(x='target', y='feature1', data=df, kind='boxen')
+# Box plot
+sns.boxplot(x='target', y='feature1', data=df)
+# Bar plot
+sns.barplot(x='target', y='feature1', data=df)
+# Scatter plot
+sns.scatterplot(x='feature1', y='feature2', data=df)
+# Line plot
+sns.lineplot(x='feature1', y='feature2', data=df)
+# Histogram
+sns.distplot(df['feature1'], bins=20, kde=False)
+# KDE plot
+sns.kdeplot(df['feature1'], shade=True)
+# Create a pivot table
+pd.pivot_table(df, index='column_name1', values='column_name2', aggfunc='mean')
+
+# Group data by a column
+df.groupby('column_name').agg({'column_name': 'mean'})
 
 # Hypothesis Testing
 from scipy import stats
@@ -67,8 +156,25 @@ y = df['target']
 model.fit(X, y)
 
 # Time Series Analysis
-df_ts = df.set_index('date')
-df_ts.plot(y='feature1')
+from statsmodels.tsa.seasonal import seasonal_decompose
+
+decomposition = seasonal_decompose(df['column_name'], model='additive', freq=1)
+trend = decomposition.trend
+seasonal = decomposition.seasonal
+residual = decomposition.resid
+plt.subplot(411)
+plt.plot(df['column_name'], label='Original')
+plt.legend(loc='best')
+plt.subplot(412)
+plt.plot(trend, label='Trend')
+plt.legend(loc='best')
+plt.subplot(413)
+plt.plot(seasonal, label='Seasonality')
+plt.legend(loc='best')
+plt.subplot(414)
+plt.plot(residual, label='Residuals')
+plt.legend(loc='best')
+plt.tight_layout()
 
 # Cluster analysis
 from sklearn.cluster import KMeans
@@ -88,3 +194,6 @@ df['sentiment'] = df['text'].apply(lambda x: sentiment.polarity_scores(x)['compo
 
 # Insight generation
 # ...
+
+# Export the processed DataFrame to a CSV file
+df.to_csv('new_data.csv', index=False)

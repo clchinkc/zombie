@@ -334,6 +334,14 @@
         "documentation": {}
     },
     {
+        "label": "seasonal_decompose",
+        "importPath": "statsmodels.tsa.seasonal",
+        "description": "statsmodels.tsa.seasonal",
+        "isExtraImport": true,
+        "detail": "statsmodels.tsa.seasonal",
+        "documentation": {}
+    },
+    {
         "label": "KMeans",
         "importPath": "sklearn.cluster",
         "description": "sklearn.cluster",
@@ -488,6 +496,14 @@
         "importPath": "pickle",
         "description": "pickle",
         "detail": "pickle",
+        "documentation": {}
+    },
+    {
+        "label": "deepcopy",
+        "importPath": "copy",
+        "description": "copy",
+        "isExtraImport": true,
+        "detail": "copy",
         "documentation": {}
     },
     {
@@ -968,7 +984,16 @@
         "kind": 5,
         "importPath": "data_analysis_template",
         "description": "data_analysis_template",
-        "peekOfCode": "df = pd.read_csv('data.csv')\n# Exploratory Data Analysis (EDA)\ndf.info()\ndf.describe()\n# Data cleaning\ndf.dropna(inplace=True)\ndf.reset_index(drop=True, inplace=True)\ndf['date'] = pd.to_datetime(df['date'])\n# Data Visualization\nsns.countplot(x='target', data=df)",
+        "peekOfCode": "df = pd.read_csv('data.csv')\n# Exploratory Data Analysis (EDA)\ndf.info()\ndf.describe()\n# Data cleaning\n# Drop rows with missing values\ndf.dropna(inplace=True)\n# Drop duplicate rows\ndf.drop_duplicates(inplace=True)\n# Drop columns",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "df['column']",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "df['column'] = df['column'].astype('int')\n# Reset index\ndf.reset_index(drop=True, inplace=True)\n# Convert date column to datetime\ndf['date'] = pd.to_datetime(df['date'])\n# Convert datetime column to date\ndf['date'] = df['date'].dt.date\n# Select specific rows using .iloc\nprint(df.iloc[3:6])\n\"\"\"",
         "detail": "data_analysis_template",
         "documentation": {}
     },
@@ -977,7 +1002,34 @@
         "kind": 5,
         "importPath": "data_analysis_template",
         "description": "data_analysis_template",
-        "peekOfCode": "df['date'] = pd.to_datetime(df['date'])\n# Data Visualization\nsns.countplot(x='target', data=df)\nsns.pairplot(df, x_vars=['feature1', 'feature2', 'feature3'], y_vars='target', height=7, aspect=0.7)\n# Hypothesis Testing\nfrom scipy import stats\nstats.ttest_ind(df[df['target'] == 0]['feature1'], df[df['target'] == 1]['feature1'])\n# Predictive modeling\nfrom sklearn.linear_model import LinearRegression\nmodel = LinearRegression()",
+        "peekOfCode": "df['date'] = pd.to_datetime(df['date'])\n# Convert datetime column to date\ndf['date'] = df['date'].dt.date\n# Select specific rows using .iloc\nprint(df.iloc[3:6])\n\"\"\"\nrow index, column index\n\"\"\"\n# Select specific rows using .loc\nprint(df.loc[df['column_name'] == value])",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "df['date']",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "df['date'] = df['date'].dt.date\n# Select specific rows using .iloc\nprint(df.iloc[3:6])\n\"\"\"\nrow index, column index\n\"\"\"\n# Select specific rows using .loc\nprint(df.loc[df['column_name'] == value])\n\"\"\"\nrow label, column label",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "g",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "g = sns.FacetGrid(df, col='target')\ng.map(plt.hist, 'feature1', bins=20)\n# JointGrid\ng = sns.JointGrid(x='feature1', y='feature2', data=df)\ng.plot(sns.regplot, sns.distplot)\n# Boxen plot\nsns.boxenplot(x='target', y='feature1', data=df)\n# Swarm plot\nsns.swarmplot(x='target', y='feature1', data=df)\n# Catplot",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "g",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "g = sns.JointGrid(x='feature1', y='feature2', data=df)\ng.plot(sns.regplot, sns.distplot)\n# Boxen plot\nsns.boxenplot(x='target', y='feature1', data=df)\n# Swarm plot\nsns.swarmplot(x='target', y='feature1', data=df)\n# Catplot\nsns.catplot(x='target', y='feature1', data=df, kind='boxen')\n# Box plot\nsns.boxplot(x='target', y='feature1', data=df)",
         "detail": "data_analysis_template",
         "documentation": {}
     },
@@ -986,7 +1038,7 @@
         "kind": 5,
         "importPath": "data_analysis_template",
         "description": "data_analysis_template",
-        "peekOfCode": "model = LinearRegression()\nX = df[['feature1', 'feature2', 'feature3']]\ny = df['target']\nmodel.fit(X, y)\n# Time Series Analysis\ndf_ts = df.set_index('date')\ndf_ts.plot(y='feature1')\n# Cluster analysis\nfrom sklearn.cluster import KMeans\nkmeans = KMeans(n_clusters=3)",
+        "peekOfCode": "model = LinearRegression()\nX = df[['feature1', 'feature2', 'feature3']]\ny = df['target']\nmodel.fit(X, y)\n# Time Series Analysis\nfrom statsmodels.tsa.seasonal import seasonal_decompose\ndecomposition = seasonal_decompose(df['column_name'], model='additive', freq=1)\ntrend = decomposition.trend\nseasonal = decomposition.seasonal\nresidual = decomposition.resid",
         "detail": "data_analysis_template",
         "documentation": {}
     },
@@ -995,7 +1047,7 @@
         "kind": 5,
         "importPath": "data_analysis_template",
         "description": "data_analysis_template",
-        "peekOfCode": "X = df[['feature1', 'feature2', 'feature3']]\ny = df['target']\nmodel.fit(X, y)\n# Time Series Analysis\ndf_ts = df.set_index('date')\ndf_ts.plot(y='feature1')\n# Cluster analysis\nfrom sklearn.cluster import KMeans\nkmeans = KMeans(n_clusters=3)\nkmeans.fit(X)",
+        "peekOfCode": "X = df[['feature1', 'feature2', 'feature3']]\ny = df['target']\nmodel.fit(X, y)\n# Time Series Analysis\nfrom statsmodels.tsa.seasonal import seasonal_decompose\ndecomposition = seasonal_decompose(df['column_name'], model='additive', freq=1)\ntrend = decomposition.trend\nseasonal = decomposition.seasonal\nresidual = decomposition.resid\nplt.subplot(411)",
         "detail": "data_analysis_template",
         "documentation": {}
     },
@@ -1004,16 +1056,43 @@
         "kind": 5,
         "importPath": "data_analysis_template",
         "description": "data_analysis_template",
-        "peekOfCode": "y = df['target']\nmodel.fit(X, y)\n# Time Series Analysis\ndf_ts = df.set_index('date')\ndf_ts.plot(y='feature1')\n# Cluster analysis\nfrom sklearn.cluster import KMeans\nkmeans = KMeans(n_clusters=3)\nkmeans.fit(X)\ndf['segment'] = kmeans.predict(X)",
+        "peekOfCode": "y = df['target']\nmodel.fit(X, y)\n# Time Series Analysis\nfrom statsmodels.tsa.seasonal import seasonal_decompose\ndecomposition = seasonal_decompose(df['column_name'], model='additive', freq=1)\ntrend = decomposition.trend\nseasonal = decomposition.seasonal\nresidual = decomposition.resid\nplt.subplot(411)\nplt.plot(df['column_name'], label='Original')",
         "detail": "data_analysis_template",
         "documentation": {}
     },
     {
-        "label": "df_ts",
+        "label": "decomposition",
         "kind": 5,
         "importPath": "data_analysis_template",
         "description": "data_analysis_template",
-        "peekOfCode": "df_ts = df.set_index('date')\ndf_ts.plot(y='feature1')\n# Cluster analysis\nfrom sklearn.cluster import KMeans\nkmeans = KMeans(n_clusters=3)\nkmeans.fit(X)\ndf['segment'] = kmeans.predict(X)\n# Sentiment analysis\nfrom nltk.sentiment import SentimentIntensityAnalyzer\nsentiment = SentimentIntensityAnalyzer()",
+        "peekOfCode": "decomposition = seasonal_decompose(df['column_name'], model='additive', freq=1)\ntrend = decomposition.trend\nseasonal = decomposition.seasonal\nresidual = decomposition.resid\nplt.subplot(411)\nplt.plot(df['column_name'], label='Original')\nplt.legend(loc='best')\nplt.subplot(412)\nplt.plot(trend, label='Trend')\nplt.legend(loc='best')",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "trend",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "trend = decomposition.trend\nseasonal = decomposition.seasonal\nresidual = decomposition.resid\nplt.subplot(411)\nplt.plot(df['column_name'], label='Original')\nplt.legend(loc='best')\nplt.subplot(412)\nplt.plot(trend, label='Trend')\nplt.legend(loc='best')\nplt.subplot(413)",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "seasonal",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "seasonal = decomposition.seasonal\nresidual = decomposition.resid\nplt.subplot(411)\nplt.plot(df['column_name'], label='Original')\nplt.legend(loc='best')\nplt.subplot(412)\nplt.plot(trend, label='Trend')\nplt.legend(loc='best')\nplt.subplot(413)\nplt.plot(seasonal, label='Seasonality')",
+        "detail": "data_analysis_template",
+        "documentation": {}
+    },
+    {
+        "label": "residual",
+        "kind": 5,
+        "importPath": "data_analysis_template",
+        "description": "data_analysis_template",
+        "peekOfCode": "residual = decomposition.resid\nplt.subplot(411)\nplt.plot(df['column_name'], label='Original')\nplt.legend(loc='best')\nplt.subplot(412)\nplt.plot(trend, label='Trend')\nplt.legend(loc='best')\nplt.subplot(413)\nplt.plot(seasonal, label='Seasonality')\nplt.legend(loc='best')",
         "detail": "data_analysis_template",
         "documentation": {}
     },
@@ -1031,7 +1110,7 @@
         "kind": 5,
         "importPath": "data_analysis_template",
         "description": "data_analysis_template",
-        "peekOfCode": "df['segment'] = kmeans.predict(X)\n# Sentiment analysis\nfrom nltk.sentiment import SentimentIntensityAnalyzer\nsentiment = SentimentIntensityAnalyzer()\ndf['sentiment'] = df['text'].apply(lambda x: sentiment.polarity_scores(x)['compound'])\n# Machine learning\n# ...\n# Insight generation\n# ...",
+        "peekOfCode": "df['segment'] = kmeans.predict(X)\n# Sentiment analysis\nfrom nltk.sentiment import SentimentIntensityAnalyzer\nsentiment = SentimentIntensityAnalyzer()\ndf['sentiment'] = df['text'].apply(lambda x: sentiment.polarity_scores(x)['compound'])\n# Machine learning\n# ...\n# Insight generation\n# ...\n# Export the processed DataFrame to a CSV file",
         "detail": "data_analysis_template",
         "documentation": {}
     },
@@ -1040,7 +1119,7 @@
         "kind": 5,
         "importPath": "data_analysis_template",
         "description": "data_analysis_template",
-        "peekOfCode": "sentiment = SentimentIntensityAnalyzer()\ndf['sentiment'] = df['text'].apply(lambda x: sentiment.polarity_scores(x)['compound'])\n# Machine learning\n# ...\n# Insight generation\n# ...",
+        "peekOfCode": "sentiment = SentimentIntensityAnalyzer()\ndf['sentiment'] = df['text'].apply(lambda x: sentiment.polarity_scores(x)['compound'])\n# Machine learning\n# ...\n# Insight generation\n# ...\n# Export the processed DataFrame to a CSV file\ndf.to_csv('new_data.csv', index=False)",
         "detail": "data_analysis_template",
         "documentation": {}
     },
@@ -1049,7 +1128,7 @@
         "kind": 5,
         "importPath": "data_analysis_template",
         "description": "data_analysis_template",
-        "peekOfCode": "df['sentiment'] = df['text'].apply(lambda x: sentiment.polarity_scores(x)['compound'])\n# Machine learning\n# ...\n# Insight generation\n# ...",
+        "peekOfCode": "df['sentiment'] = df['text'].apply(lambda x: sentiment.polarity_scores(x)['compound'])\n# Machine learning\n# ...\n# Insight generation\n# ...\n# Export the processed DataFrame to a CSV file\ndf.to_csv('new_data.csv', index=False)",
         "detail": "data_analysis_template",
         "documentation": {}
     },
@@ -2336,7 +2415,7 @@
         "kind": 6,
         "importPath": "population",
         "description": "population",
-        "peekOfCode": "class MovementStrategyFactory:\n    def create_strategy(self, individual, school):\n        # get legal directions\n        legal_directions = school.get_legal_directions(individual)\n        # get neighbors\n        neighbors = school.get_neighbors(individual.location, individual.sight_range)\n        # early exit\n        # if no neighbors, random movement\n        if not neighbors:\n            return RandomMovementStrategy(individual, legal_directions, neighbors)",
+        "peekOfCode": "class MovementStrategyFactory:\n    def create_strategy(self, individual, school):\n        # get legal directions\n        legal_directions = school.get_legal_directions(individual)\n        # early exit\n        if not legal_directions:\n            return NoMovementStrategy(individual, legal_directions, [])\n        # get neighbors\n        neighbors = school.get_neighbors(individual.location, individual.sight_range)\n        # early exit",
         "detail": "population",
         "documentation": {}
     },
@@ -2373,6 +2452,15 @@
         "importPath": "population",
         "description": "population",
         "peekOfCode": "class PopulationObserver(Observer):\n    def __init__(self, population: Population) -> None:\n        self.subject = population\n        self.subject.attach_observer(self)\n        self.statistics = {}\n        self.agent_list = []\n    def update(self) -> None:\n        self.statistics = self.subject.get_population_statistics()\n        self.agent_list = self.subject.agent_list\n    def display_observation(self, format='text'):",
+        "detail": "population",
+        "documentation": {}
+    },
+    {
+        "label": "PopulationAnimator",
+        "kind": 6,
+        "importPath": "population",
+        "description": "population",
+        "peekOfCode": "class PopulationAnimator(Observer):\n    def __init__(self, population: Population) -> None:\n        self.subject = population\n        self.subject.attach_observer(self)\n        self.agent_history = []\n    def update(self) -> None:\n        agent_list = deepcopy(self.subject.agent_list)\n        self.agent_history.append(agent_list)\n    def display_observation(self, format='chart'):\n        if format == 'chart':",
         "detail": "population",
         "documentation": {}
     },
@@ -2669,7 +2757,7 @@
         "kind": 2,
         "importPath": "population",
         "description": "population",
-        "peekOfCode": "def main():\n    # create a SchoolZombieApocalypse object\n    school_sim = Population(school_size=10, population_size=5)\n    # create Observer objects\n    population_observer = PopulationObserver(school_sim)\n    #population_animator = PopulationAnimator(school_sim)\n    school_observer = SchoolObserver(school_sim)\n    # run the population for a given time period\n    school_sim.run_population(num_time_steps=3)\n    # observe the statistics of the population",
+        "peekOfCode": "def main():\n    # create a SchoolZombieApocalypse object\n    school_sim = Population(school_size=10, population_size=10)\n    # create Observer objects\n    #population_observer = PopulationObserver(school_sim)\n    population_animator = PopulationAnimator(school_sim)\n    #school_observer = SchoolObserver(school_sim)\n    # run the population for a given time period\n    school_sim.run_population(num_time_steps=10)\n    # observe the statistics of the population",
         "detail": "population",
         "documentation": {}
     },
