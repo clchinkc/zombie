@@ -43,67 +43,9 @@ In conclusion, the SIR model provides a useful framework for modeling the spread
 # with: people with disease, to decide the infection rate and kill rate
 # without: extreme case of disease, underutilize location info, natural death vs turned into zombie two rate, seir model, other epidemic model example
 
-# https://github.com/lukepolson/youtube_channel/blob/main/Python%20Metaphysics%20Series/vid2.ipynb
 # https://mysite.science.uottawa.ca/rsmith43/Zombies.pdf
 # https://www.youtube.com/watch?v=AvzQ-F3W708
 
-"""
-Let A = (S, I, R). Need to define function that takes in A and t and returns dA/dt = (dS/dt, dI/dt, dR/dt)
----
-N = total number of people
-beta = infection constant
-Infection rate (Interaction between S and I) = (beta/N) * SI
-dS/dt = -Infection rate = -(beta/N) * SI
----
-gamma = fraction of recovery
-Recovery rate(Interaction between I and R) = gamma * I
-dI/dt = Infection rate - Recovery rate = (beta/N) * SI - gamma * I
----
-dR/dt = Recovery rate = gamma * I
-"""
-
-import matplotlib.pyplot as plt
-import numpy as np
-from scipy.integrate import odeint
-
-
-def dAdt(A, t, beta, gamma, N):
-    S= A[0]
-    I = A[1]
-    R = A[2]
-    return [
-        -beta/N * S * I,
-        beta/N * S * I - gamma * I,
-        gamma*I
-    ]
-    
-# Solve the model equations for (S_0, I_0, R_0) = (N-I_0, 574,0)
-
-times = np.arange(0, 100, 1)
-gamma = 1/10
-N = 1.1e7
-beta = 0.39
-S0, I0, R0 = N-574, 574, 0
-sol = odeint(dAdt, y0=[S0, I0, R0], t=times, args=(beta, gamma, N))
-S = sol.T[0]
-I = sol.T[1]
-R = sol.T[2]
-plt.plot(times, S)
-plt.plot(times, I)
-plt.plot(times, R)
-plt.grid()
-
-# The rate of hospitalizations is 5% of  and people stay in the hospital for 3 days on average. Find the number of people in the hosptial as a function of time.
-
-ha = 0.05 * gamma * I
-h = ha
-for i in range(1, 5):
-    h += np.insert(ha, 0, np.zeros(i))[:-i]
-plt.plot(times, S)
-plt.plot(times, I)
-plt.plot(times, R)
-plt.plot(times, h)
-plt.grid()
 
 # https://github.com/gregwinther/youtube/tree/master/ODESolver
 # https://github.com/gregwinther/youtube/blob/master/disease_simulations/sizr.py

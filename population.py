@@ -773,6 +773,8 @@ class Population:
     def __str__(self) -> str:
         return f'Population with {self.num_healthy} healthy, {self.num_infected} infected, and {self.num_zombie} zombie individuals'
 
+    def __repr__(self) -> str:
+        return f'Population({self.school.school_size}, {self.population_size})'
 
 def main():
 
