@@ -1,13 +1,11 @@
 
-# Description: A predator-prey model of a zombie outbreak
+# Description: A Susceptible-Infected-Recovered model of a zombie outbreak
 
 import matplotlib.pyplot as plt
 
 # Import libraries
 import numpy as np
 from scipy.integrate import odeint
-
-# Susceptible-Infected-Recovered model
 
 # Initial conditions
 H0 = 100000  # Initial number of susceptible individuals

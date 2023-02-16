@@ -1274,3 +1274,114 @@ for element in elements:
 # In this example, the ConcreteElementA and ConcreteElementB classes define the objects that can be visited, and the ConcreteVisitor1 class defines the operations that can be performed on those objects. The accept method in the Element class allows the visitor to perform operations on the elements, and the visit method in the Visitor class is the entry point for the visitor to perform the operation.
 # By using the visitor pattern, we can separate the operations from the elements and add new operations or change existing ones without modifying the elements themselves.
 """
+"""
+Population-based models (PBM; i.e., models of N) are the main type of model we consider in this class: with all individuals in a [Stock] considered to be interchangeable, N (possibly age-structured) is our main variable of interest. N is in turn controlled by endogenous factors (forces coming from inside the population - e.g., density-dependence, demographic stochasticity) and exogenous factors (forces coming from outside the population - e.g., environmental stochasticity, harvest).
+
+Age/stage structured PBMs and sex structured PBMs (i.e., models of N, i.e., matrix population models) are types of PBM in which individuals are grouped together according to important traits like sex and age, with distinct population vital rates assigned to each group.
+
+Individual-based models (IBM; also known as “agent-based” models) is a way of modeling populations such that all individuals are considered explicitly! We no longer need to group individuals into [Stocks]- each individual can potentially have a different survival probability, or chance of breeding, or movement propensity! These differences can be a result of (e.g.) spatial context or among-individual genetic variation.
+
+In this case, we don't model N directly at all - in fact, N (in an IBM framework) is an emergent property of individual organisms interacting with each other, living or dying in the context of interactions with predators, competitors, and their abiotic environment.
+
+Which model structure should I use? IBM or PBM??
+In general, models are tools- you should use the model structure that best fits with the questions you are asking and your understanding of the study system!
+
+And also, if two different model structures are equally appropriate, you should usually use the simplest approach! This idea is often called the Principle of Parsimony (or, Occam's Razor).
+
+Both IBM and PBM can be used to address questions at the population or metapopulation level.
+
+Rules of thumb
+Q: All populations are composed of individuals. Why then don't we always model populations using individual-based models?
+
+In general, you should use IBM if your primary information sources (data) are at the individual level (e.g., telemetry data)- allowing you to build informed models of how individuals interact with members of their own species, other interacting species, and with their local environment - in which case the principle of parsimony dictates that you should build models at the individual level! That is, you make fewer assumptions if you model this system as an IBM.
+
+You should use PBM if your primary information is at the population level (e.g., the results of most mark-recapture analyses) - in which case the principle of parsimony dictates that you should build models at the population level!
+
+Individual-based models are powerful- but with power comes great responsibility!
+"""
+"""
+Demo: Individual-based models!
+
+The goal of this activity is to build a mechanistic, individual-based model (IBM) of a (entirely real, not made-up by my a postdoc in my lab I swear!) ecological system.
+
+The scenario
+The Laphlag island archipelago is famous for its dramatic slopes, lush green grass, and its native sheep, the laphlag island bighorn. About 50 years ago, the native island wolf population was hunted to extinction by ranchers to prevent livestock predation.
+
+However, without wolves, populations of the sheep population skyrocketed, and the famous laphlagian lush green grass is quickly being lost to overgrazing by the native sheep.
+
+The locals now realize: to restore ecological balance to the islands They must reintroduce wolves!
+
+The Laphlag natural resources management agency is about to start an experimental wolf reintroduction in a very small island in the archipelago (as a test), but they want to know how to proceed.
+
+You have been hired as a research ecologist to help address the following questions:
+
+How are reintroduced wolves likely to affect grass biomass and distribution?
+
+How many wolves should be introduced to produce the desired ecological effect (lush carpets of green grass)? How long will it take to achieve this desired effect?
+
+The agency biologists give you some information to get a first guess and they promise that you'll be able to come study this natural system once the reintroductions are underway.
+The details!
+The reintroduction is initiated right after the breeding season and the experiment is run for 365 days.
+
+Sheep
+
+There are a total of 50 sheep at the release location.
+
+Each sheep eats 0.5 “units” of grass per day (see section on grass, below)
+
+Each sheep gives birth to ca. 1-2 lambs approximately every 50-100 days of the experiment (very high fecundity!).
+
+Sheep tend to stay in place unless either they run out of food to eat or there is a wolf in the vicinity
+
+Wolves
+
+There are a total of 5 wolves released at the beginning of the “experiment”.
+
+Wolves are solitary hunters, at least on this (non-imaginary!) island!
+
+Wolves have a 50% probability of finding and killing any sheep within 500 m of its location in any given day.
+
+Each wolf can kill a maximum of one sheep per day.
+
+Wolves tend to move approximately 500 m per day on average.
+
+Wolves give birth with a probability of 2% per day.
+
+Grass
+
+The release site is essentially one large grassy pasture. For the purposes of this exercise, we will model this pastoral release site as a grid of 100 functionally equivalent plots. Each plot starts off with 10 “units”" of grass (each “unit” of grass can support exactly 1 sheep).
+
+Each grass plot can have a maximum of 50 units of grass.
+
+Each plot can grow approximately 0.7 units of grass per day.
+
+------------------------------------------------------------------------------------------------------------------------------
+
+To build an individual-based model (IBM) of the Laphlag island ecosystem, we need to represent each individual (sheep and wolves) as a separate object in the model, with its own attributes and behaviors. We also need to represent the grass as a resource that individuals consume and that grows over time.
+
+Here is an outline of the IBM for the Laphlag island ecosystem:
+
+Initialization
+Create 50 sheep objects, each with a unique ID, starting location, and initial energy level
+Create 5 wolf objects, each with a unique ID, starting location, and initial energy level
+Create 100 grass plots, each with an ID, initial grass units, and maximum grass capacity
+Simulation loop
+For each time step (day) of the simulation:
+For each sheep object:
+If the sheep has enough energy to move, choose a random adjacent plot to move to and update its location
+If the sheep is adjacent to a wolf, calculate the probability of being killed and update its energy level accordingly
+If the sheep has enough energy to reproduce, choose a random adjacent plot to give birth and create a new sheep object
+Consume 0.5 units of grass from its current plot and update its energy level
+For each wolf object:
+If the wolf has enough energy to move, choose a random adjacent plot to move to and update its location
+If the wolf is adjacent to a sheep, calculate the probability of successfully killing it and update its energy level accordingly
+If the wolf has enough energy to reproduce, choose a random adjacent plot to give birth and create a new wolf object
+Consume 1 unit of sheep per day from any adjacent plot with a sheep and update its energy level
+For each grass plot:
+Grow 0.7 units of grass per day, up to a maximum of 50 units
+Record the total grass biomass and distribution across the 100 plots
+Analysis
+Calculate the effect of wolf reintroduction on grass biomass and distribution by comparing the grass biomass and distribution before and after the reintroduction
+Experiment with different numbers of wolves and observe the effect on grass biomass and distribution to determine the optimal number of wolves for the desired ecological effect
+Repeat the simulation for multiple years to determine the length of time required to achieve the desired effect.
+"""
