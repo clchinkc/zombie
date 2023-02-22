@@ -79,6 +79,10 @@ def natural_rendering(size, maze, start, exit):
 # https://makeschool.org/mediabook/oa/tutorials/trees-and-mazes/generating-a-maze-with-dfs/
 # or wave function collapse
 # https://github.com/avihuxp/WaveFunctionCollapse
+# https://youtu.be/rI_y2GAlQFM
+# https://youtu.be/TlLIOgWYVpI
+# https://youtu.be/20KHNA9jTsE
+# https://youtu.be/TO0Tx3w5abQ
 
 def print_maze(maze):
     for row in maze:

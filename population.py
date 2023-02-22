@@ -538,6 +538,7 @@ class PopulationAnimator(Observer):
         ax.set_title('Bar Chart Animation')
         ax.set_xlabel('x')
         ax.set_ylabel('y')
+        ax.set_ylim(0, max([max(i) for i in y]))
 
         # create the bar chart
         bars = ax.bar(x, y[0], tick_label=ticks)
@@ -552,7 +553,7 @@ class PopulationAnimator(Observer):
             text_box.set_text(f'timestep = {i}')
 
         # create the animation
-        anim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000)
+        anim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000, repeat=False)
 
         # save the animation as an gif file
         anim.save('bar_chart_animation.gif', writer='pillow', fps=3)
@@ -560,32 +561,6 @@ class PopulationAnimator(Observer):
         # show the animation
         plt.show()
         
-        
-    # animation
-    def print_school_animation(self):
-        # Create a figure
-        fig = plt.figure()
-        # Create a subplot
-        ax = fig.add_subplot(1, 1, 1)
-        # Create a scatter plot
-        sc = ax.scatter([], [], s=10)
-        # Create a text label
-        label = ax.text(0.02, 0.95, "", transform=ax.transAxes)
-        # Create an animation
-        ani = animation.FuncAnimation(fig, self.animate, frames=len(
-            self.agent_history), interval=100, blit=True, repeat=False, fargs=(sc, label))
-        # Show the plot
-        plt.show()
-        
-    def animate(self, i, sc, label):
-        # Get the current state of the population
-        agent_list = self.agent_history[i]
-        # Update the scatter plot
-        sc.set_offsets(np.asarray([agent.position for agent in agent_list]))
-        sc.set_color([agent.color for agent in agent_list])
-        # Update the text label
-        label.set_text(f"Day {i}")
-        return sc, label
     
     def animation_scatter(self):
         # Create a figure
@@ -1384,4 +1359,17 @@ Analysis
 Calculate the effect of wolf reintroduction on grass biomass and distribution by comparing the grass biomass and distribution before and after the reintroduction
 Experiment with different numbers of wolves and observe the effect on grass biomass and distribution to determine the optimal number of wolves for the desired ecological effect
 Repeat the simulation for multiple years to determine the length of time required to achieve the desired effect.
+"""
+"""
+Mean, median, mode, and standard deviation are statistical measures that can be used to describe and analyze data in a zombie apocalypse simulation. Here are some examples:
+
+Mean: The mean can be used to calculate the average number of zombies that appear in a specific area over time. This can be useful for predicting the rate of zombie infection and determining the necessary resources needed to survive.
+
+Median: The median can be used to determine the middle value in a set of data. In a zombie apocalypse simulation, the median can be used to determine the number of days it takes for a specific area to become overrun with zombies.
+
+Mode: The mode can be used to determine the most common value in a set of data. In a zombie apocalypse simulation, the mode can be used to determine the most common type of zombie encountered or the most effective weapon to use against them.
+
+Standard deviation: The standard deviation can be used to determine how spread out a set of data is. In a zombie apocalypse simulation, the standard deviation can be used to determine the level of unpredictability in zombie behavior or the effectiveness of certain survival strategies.
+
+Overall, statistical measures such as mean, median, mode, and standard deviation can be useful tools in analyzing and predicting data in a zombie apocalypse simulation.
 """

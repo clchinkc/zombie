@@ -745,6 +745,7 @@ https://github.com/nedbat/coveragepy
 https://ithelp.ithome.com.tw/articles/10078821
 https://about.codecov.io/blog/writing-better-tests-with-ai-and-github-copilot/
 a debug mode that print all variables in each steps and allow user control of the agents in the map
+https://pythonforundergradengineers.com/writing-tests-for-scientific-code.html
 speed up
 https://mp.weixin.qq.com/s/M7DdUWLzqOLVR7qJFmvZdA
 threading
@@ -792,6 +793,8 @@ On the other hand, I have used pip-tools. If you aren’t ready to jump into a d
 
 # velocity and acceleration for human and zombie
 
+# static equilibrium
+# conservation of momentum
 
 # speed controls who attacks first, if dead can't attack back
 # or not in turn-based game, attack in interval of speed time after encountering (use threading)
