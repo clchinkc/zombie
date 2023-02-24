@@ -43,9 +43,11 @@ class State(Enum):
     def value_list(cls) -> list[int]:
         return [enm.value for enm in State]
 
+
 # state pattern
+
+
 class StateMachine(ABC):
-    
     def __init__(self, context: Individual) -> None:
         self.context = context
 
@@ -60,13 +62,13 @@ class StateMachine(ABC):
                 if random.random() < infection_probability:
                     return True
         return False
-    
+
     def is_turned(self, context: Individual, severity: float) -> bool:
         turning_probability = context.infection_severity
         if random.random() < turning_probability:
             return True
         return False
-    
+
     def is_died(self, context: Individual, severity: float) -> bool:
         death_probability = severity
         for other in context.connections:
@@ -74,18 +76,21 @@ class StateMachine(ABC):
                 if random.random() < death_probability:
                     return True
         return False
-    
+
+
 # can add methods that change behaviour based on the state
+
 
 class HealthyMachine(StateMachine):
     # cellular automaton
     def update_state(self, severity: float) -> None:
         if self.is_infected(self.context, severity):
             self.context.state = State.INFECTED
-    
+
     # probability = severity / school.max_severity
     # probability *= 1 - math.exp(-self.interaction_duration/average_interaction_duration_for_infection)
     # probability *= 1 - math.exp(-distance / average_distance_for_infection)
+
 
 class InfectedMachine(StateMachine):
     # cellular automaton
@@ -96,102 +101,143 @@ class InfectedMachine(StateMachine):
         elif self.is_died(self.context, severity):
             self.context.state = State.DEAD
 
+
 class ZombieMachine(StateMachine):
     # cellular automaton
     def update_state(self, severity: float) -> None:
         if self.is_died(self.context, severity):
             self.context.state = State.DEAD
 
+
 # Strategy pattern
+
+
 class MovementStrategy(ABC):
-    
+
     individual: Any[Individual]
     legal_directions: list[tuple[int, int]]
     neighbors: list[Individual]
-    
+
     @abstractmethod
     def choose_direction(self, individual, school):
         raise NotImplementedError
-    
+
+
 @dataclass
 # if no neighbors, choose random direction
 class RandomMovementStrategy(MovementStrategy):
-    
+
     individual: Any[Individual]
     legal_directions: list[tuple[int, int]]
     neighbors: list[Individual]
-    
+
     def choose_direction(self):
         return random.choice(self.legal_directions)
+
 
 @dataclass
 # if healthy or other having no alive neighbors
 class FleeZombiesStrategy(MovementStrategy):
-    
+
     individual: Any[Individual]
     legal_directions: list[tuple[int, int]]
     neighbors: list[Individual]
 
     def choose_direction(self):
-        zombies_locations = [zombies.location for zombies in self.neighbors if zombies.state == State.ZOMBIE]
-        return self.direction_against_closest(self.individual, self.legal_directions, zombies_locations)
+        zombies_locations = [
+            zombies.location
+            for zombies in self.neighbors
+            if zombies.state == State.ZOMBIE
+        ]
+        return self.direction_against_closest(
+            self.individual, self.legal_directions, zombies_locations
+        )
 
     # find the closest zombie and move away from it
-    def direction_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
-        new_locations = [tuple(np.add(individual.location, direction))
-                        for direction in legal_directions]
-        target_distances = [float(np.linalg.norm(np.subtract(individual.location, target_location)))
-                            for target_location in target_locations]
+    def direction_against_closest(
+        self,
+        individual: Individual,
+        legal_directions: list[tuple[int, int]],
+        target_locations: list[tuple[int, int]],
+    ) -> tuple[int, int]:
+        new_locations = [
+            tuple(np.add(individual.location, direction))
+            for direction in legal_directions
+        ]
+        target_distances = [
+            float(np.linalg.norm(np.subtract(individual.location, target_location)))
+            for target_location in target_locations
+        ]
         closest_target = target_locations[np.argmin(target_distances)]
-        distance_from_new_locations = [float(np.linalg.norm(np.subtract(closest_target, location)))
-                                        for location in new_locations]
+        distance_from_new_locations = [
+            float(np.linalg.norm(np.subtract(closest_target, location)))
+            for location in new_locations
+        ]
         max_distance = np.max(distance_from_new_locations)
-        max_distance_index = np.where(distance_from_new_locations == max_distance)[0]
+        max_distance_index = np.where(
+            distance_from_new_locations == max_distance)[0]
         return legal_directions[random.choice(max_distance_index)]
-        
+
+
 @dataclass
 # if zombie or other having no zombie neighbors
 class ChaseHumansStrategy(MovementStrategy):
-    
+
     individual: Any[Individual]
     legal_directions: list[tuple[int, int]]
     neighbors: list[Individual]
 
     def choose_direction(self):
-        alive_locations = [alive.location for alive in self.neighbors if alive.state == State.HEALTHY]
-        return self.direction_towards_closest(self.individual, self.legal_directions, alive_locations)
+        alive_locations = [
+            alive.location for alive in self.neighbors if alive.state == State.HEALTHY
+        ]
+        return self.direction_towards_closest(
+            self.individual, self.legal_directions, alive_locations
+        )
 
     # find the closest human and move towards it
-    def direction_towards_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
-        new_locations = [tuple(np.add(individual.location, direction))
-                        for direction in legal_directions]
+    def direction_towards_closest(
+        self,
+        individual: Individual,
+        legal_directions: list[tuple[int, int]],
+        target_locations: list[tuple[int, int]],
+    ) -> tuple[int, int]:
+        new_locations = [
+            tuple(np.add(individual.location, direction))
+            for direction in legal_directions
+        ]
         distance_matrix = np.zeros((len(new_locations), len(target_locations)))
         for i, direction in enumerate(new_locations):
             for j, target_location in enumerate(target_locations):
-                distance_matrix[i, j] = float(np.linalg.norm(np.subtract(direction, target_location)))
+                distance_matrix[i, j] = float(
+                    np.linalg.norm(np.subtract(direction, target_location))
+                )
         # consider case where all distances are 0
         min_distance = np.min(distance_matrix[distance_matrix != 0])
         min_distance_index = np.where(distance_matrix == min_distance)
         return legal_directions[random.choice(min_distance_index[0])]
-    
+
     # may use np.sign
 
     # If the closest person is closer than the closest zombie, move towards the person, otherwise move away from the zombie
     # or move away from zombie is the priority and move towards person is the secondary priority
 
+
 @dataclass
 class NoMovementStrategy(MovementStrategy):
-    
+
     individual: Any[Individual]
     legal_directions: list[tuple[int, int]]
     neighbors: list[Individual]
-    
+
     def choose_direction(self):
         return (0, 0)
-    
+
+
 # may use init to store individual and school
 # may use function, use closure to store individual and school
-    
+
+
 class MovementStrategyFactory:
     def create_strategy(self, individual, school):
         # get legal directions
@@ -200,14 +246,19 @@ class MovementStrategyFactory:
         if not legal_directions:
             return NoMovementStrategy(individual, legal_directions, [])
         # get neighbors
-        neighbors = school.get_neighbors(individual.location, individual.sight_range)
+        neighbors = school.get_neighbors(
+            individual.location, individual.sight_range)
         # early exit
         # if no neighbors, random movement
         if not neighbors:
             return RandomMovementStrategy(individual, legal_directions, neighbors)
         # get number of human and zombies neighbors
-        alive_number = sum(1 for neighbor in neighbors if neighbor.state == State.HEALTHY)
-        zombies_number = sum(1 for neighbor in neighbors if neighbor.state == State.ZOMBIE)
+        alive_number = sum(
+            1 for neighbor in neighbors if neighbor.state == State.HEALTHY
+        )
+        zombies_number = sum(
+            1 for neighbor in neighbors if neighbor.state == State.ZOMBIE
+        )
         # if no human neighbors, move away from the closest zombies
         if alive_number == 0 and zombies_number > 0:
             return FleeZombiesStrategy(individual, legal_directions, neighbors)
@@ -218,7 +269,9 @@ class MovementStrategyFactory:
         else:
             if individual.state == State.ZOMBIE and alive_number > 0:
                 return ChaseHumansStrategy(individual, legal_directions, neighbors)
-            elif (individual.state == State.HEALTHY or individual.state == State.INFECTED) and zombies_number > 0:
+            elif (
+                individual.state == State.HEALTHY or individual.state == State.INFECTED
+            ) and zombies_number > 0:
                 return FleeZombiesStrategy(individual, legal_directions, neighbors)
             elif individual.state == State.DEAD:
                 return NoMovementStrategy(individual, legal_directions, neighbors)
@@ -228,13 +281,27 @@ class MovementStrategyFactory:
     # may consider update the grid according to the individual's location
     # after assigning all new locations to the individuals
     # may add a extra attribute to store new location
-    
+
+
 class Individual:
 
-    __slots__ = "id", "state", "location", "connections", \
-        "infection_severity", "interact_range", "__dict__"
+    __slots__ = (
+        "id",
+        "state",
+        "location",
+        "connections",
+        "infection_severity",
+        "interact_range",
+        "__dict__",
+    )
 
-    def __init__(self, id: int, state: State, location: tuple[int, int], movement_strategy: Any[MovementStrategy] = RandomMovementStrategy) -> None:
+    def __init__(
+        self,
+        id: int,
+        state: State,
+        location: tuple[int, int],
+        movement_strategy: Any[MovementStrategy] = RandomMovementStrategy,
+    ) -> None:
         self.id: int = id
         self.state: State = state
         self.location: tuple[int, int] = location
@@ -259,7 +326,7 @@ class Individual:
         # self.location[0] += direction[0]
         # self.location[1] += direction[1]
         return self
-        
+
     def choose_direction(self, movement_strategy) -> tuple[int, int]:
         return movement_strategy.choose_direction()
 
@@ -283,7 +350,13 @@ class Individual:
         return f"Individual {self.id}"
 
     def __repr__(self) -> str:
-        return "%s(%d, %d, %s)" % (self.__class__.__name__, self.id, self.state.value, self.location)
+        return "%s(%d, %d, %s)" % (
+            self.__class__.__name__,
+            self.id,
+            self.state.value,
+            self.location,
+        )
+
 
 # separate inheritance for human and zombie class
 
@@ -295,9 +368,9 @@ class School:
     def __init__(self, school_size: int) -> None:
         self.school_size = school_size
         # Create a 2D grid representing the school with each cell can contain a Individual object
-        self.grid: list[list[Optional[Individual]]] \
-            = [[None for _ in range(school_size)]
-                for _ in range(school_size)]
+        self.grid: list[list[Optional[Individual]]] = [
+            [None for _ in range(school_size)] for _ in range(school_size)
+        ]
         self.strategy_factory = MovementStrategyFactory()
 
         # may turn to width and height
@@ -320,10 +393,11 @@ class School:
             for cell in row:
                 if cell is None:
                     continue
-                neighbors = self.get_neighbors((cell.location), cell.interact_range)
+                neighbors = self.get_neighbors(
+                    (cell.location), cell.interact_range)
                 for neighbor in neighbors:
                     cell.add_connection(neighbor)
-                    
+
     """
         for i, row in enumerate(self.grid):
             for j, cell in enumerate(row):
@@ -333,7 +407,9 @@ class School:
     """
 
     # update the grid in the population based on their interactions with other people
-    def update_grid(self, population: list[Individual], migration_probability: float) -> None:
+    def update_grid(
+        self, population: list[Individual], migration_probability: float
+    ) -> None:
         for individuals in population:
             i, j = individuals.location
             cell = self.get_individual((i, j))
@@ -342,7 +418,8 @@ class School:
                 continue
 
             if random.random() < migration_probability:
-                movement_strategy = self.strategy_factory.create_strategy(cell, self)
+                movement_strategy = self.strategy_factory.create_strategy(
+                    cell, self)
                 direction = cell.choose_direction(movement_strategy)
                 self.move_individual(cell, direction)
             else:
@@ -355,15 +432,27 @@ class School:
     def get_neighbors(self, location: tuple[int, int], interact_range: int = 2):
         x, y = location
         neighbors = []
-        for i in range(max(0, x-interact_range), min(self.school_size, x+interact_range+1)):
-            for j in range(max(0, y-interact_range), min(self.school_size, y+interact_range+1)):
+        for i in range(
+            max(0, x - interact_range), min(self.school_size, x + interact_range + 1)
+        ):
+            for j in range(
+                max(0, y - interact_range),
+                min(self.school_size, y + interact_range + 1),
+            ):
                 if i == x and j == y:
                     continue
-                if self.within_distance(self.grid[x][y], self.grid[i][j], interact_range):
+                if self.within_distance(
+                    self.grid[x][y], self.grid[i][j], interact_range
+                ):
                     neighbors.append(self.grid[i][j])
         return neighbors
 
-    def within_distance(self, individual1: Optional[Individual], individual2: Optional[Individual], interact_range: int):
+    def within_distance(
+        self,
+        individual1: Optional[Individual],
+        individual2: Optional[Individual],
+        interact_range: int,
+    ):
         if individual1 is None or individual2 is None:
             return False
         # check if the two individuals are within a certain distance of each other
@@ -377,8 +466,15 @@ class School:
 
     def get_legal_directions(self, individual: Individual) -> list[tuple[int, int]]:
         # get all possible legal moves for the individual
-        legal_directions = [(i, j) for i in range(-1, 2) for j in range(-1, 2)
-                            if (i == 0 and j == 0) or self.legal_location((individual.location[0] + i, individual.location[1] + j))]
+        legal_directions = [
+            (i, j)
+            for i in range(-1, 2)
+            for j in range(-1, 2)
+            if (i == 0 and j == 0)
+            or self.legal_location(
+                (individual.location[0] + i, individual.location[1] + j)
+            )
+        ]
         return legal_directions
 
     def legal_location(self, location: tuple[int, int]):
@@ -386,7 +482,9 @@ class School:
 
     def in_bounds(self, location: tuple[int, int]):
         # check if the location is in the grid
-        return 0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size
+        return (
+            0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size
+        )
 
     def is_occupied(self, location: tuple[int, int]):
         # check if the location is empty
@@ -418,67 +516,76 @@ class School:
     def __repr__(self) -> str:
         return "%s(%d,%d)" % (self.__class__.__name__, self.school_size)
 
+
 # Observer Pattern
+
+
 class Observer(ABC):
-    
     @abstractmethod
     def __init__(self) -> None:
         pass
-    
+
     @abstractmethod
     def update(self) -> None:
         pass
-    
+
     @abstractmethod
     def display_observation(self) -> None:
         pass
 
+
 class PopulationObserver(Observer):
-    
     def __init__(self, population: Population) -> None:
         self.subject = population
         self.subject.attach_observer(self)
         self.statistics = {}
         self.agent_list = []
-        
+
     def update(self) -> None:
         self.statistics = self.subject.get_population_statistics()
         self.agent_list = self.subject.agent_list
-        
-    def display_observation(self, format='text'):
-        if format == 'text':
+
+    def display_observation(self, format="text"):
+        if format == "text":
             self.print_text_statistics()
-        elif format == 'chart':
+        elif format == "chart":
             self.print_chart_statistics()
-        
+
     def print_text_statistics(self):
-        population_size = self.statistics['population_size']
-        num_healthy = self.statistics['num_healthy']
-        num_infected = self.statistics['num_infected']
-        num_zombie = self.statistics['num_zombie']
-        num_dead = self.statistics['num_dead']
-        healthy_percentage = num_healthy / (population_size+1e-10)
-        infected_percentage = num_infected / (population_size+1e-10)
-        zombie_percentage = num_zombie / (population_size+1e-10)
-        dead_percentage = num_dead / (population_size+1e-10)
-        infected_rate = num_infected / (num_healthy+1e-10)
-        turning_rate = num_zombie / (num_infected+1e-10)
-        death_rate = num_dead / (num_zombie+1e-10)
-        infection_probability = self.statistics['infection_probability']
-        turning_probability = self.statistics['turning_probability']
-        death_probability = self.statistics['death_probability']
-        migration_probability = self.statistics['migration_probability']
+        population_size = self.statistics["population_size"]
+        num_healthy = self.statistics["num_healthy"]
+        num_infected = self.statistics["num_infected"]
+        num_zombie = self.statistics["num_zombie"]
+        num_dead = self.statistics["num_dead"]
+        healthy_percentage = num_healthy / (population_size + 1e-10)
+        infected_percentage = num_infected / (population_size + 1e-10)
+        zombie_percentage = num_zombie / (population_size + 1e-10)
+        dead_percentage = num_dead / (population_size + 1e-10)
+        infected_rate = num_infected / (num_healthy + 1e-10)
+        turning_rate = num_zombie / (num_infected + 1e-10)
+        death_rate = num_dead / (num_zombie + 1e-10)
+        infection_probability = self.statistics["infection_probability"]
+        turning_probability = self.statistics["turning_probability"]
+        death_probability = self.statistics["death_probability"]
+        migration_probability = self.statistics["migration_probability"]
         print("Population Statistics:")
         print(f"Population Size: {population_size}")
         print(f"Healthy: {num_healthy} ({healthy_percentage:.2%})")
         print(f"Infected: {num_infected} ({infected_percentage:.2%})")
         print(f"Zombie: {num_zombie} ({zombie_percentage:.2%})")
         print(f"Dead: {num_dead} ({dead_percentage:.2%})")
-        print(f"Infection Probability: {infection_probability:.2%} -> Infected Rate: {infected_rate:.2%}")
-        print(f"Turning Probability: {turning_probability:.2%} -> Turning Rate: {turning_rate:.2%}")
-        print(f"Death Probability: {death_probability:.2%} -> Death Rate: {death_rate:.2%}")
+        print(
+            f"Infection Probability: {infection_probability:.2%} -> Infected Rate: {infected_rate:.2%}"
+        )
+        print(
+            f"Turning Probability: {turning_probability:.2%} -> Turning Rate: {turning_rate:.2%}"
+        )
+        print(
+            f"Death Probability: {death_probability:.2%} -> Death Rate: {death_rate:.2%}"
+        )
         print(f"Migration Probability: {migration_probability:.2%}")
         print()
+
     """
     # may format the output in the subject and print it directly here
     
@@ -492,122 +599,145 @@ class PopulationObserver(Observer):
     # or let observer pull info from subject using get method of subject
     # but observer need to get info from subject one by one
     """
-    
+
     def print_chart_statistics(self):
         # Analyze the results by observing the changes in the population over time
         cell_states = [individual.state for individual in self.agent_list]
         counts = {state: cell_states.count(state) for state in list(State)}
         # Add a bar chart to show the counts of each state in the population
-        plt.bar(np.asarray(State.value_list()), list(
-                counts.values()), tick_label=State.name_list())
+        plt.bar(
+            np.asarray(State.value_list()),
+            list(counts.values()),
+            tick_label=State.name_list(),
+        )
         # Show the plot
         plt.show()
-        
+
+
 class PopulationAnimator(Observer):
-        
     def __init__(self, population: Population) -> None:
         self.subject = population
         self.subject.attach_observer(self)
         self.agent_history = []
-        
+
     def update(self) -> None:
         agent_list = deepcopy(self.subject.agent_list)
         self.agent_history.append(agent_list)
-        
-    def display_observation(self, format='chart'):
-        if format == 'chart':
+
+    def display_observation(self, format="chart"):
+        if format == "chart":
             self.print_chart_animation()
-        
+        elif format == "scatter":
+            self.print_scatter_animation()
+
         # table
-    
+
     def print_chart_animation(self):
         counts = []
         for i in range(len(self.agent_history)):
-            cell_states = [individual.state for individual in self.agent_history[i]]
+            cell_states = [
+                individual.state for individual in self.agent_history[i]]
             counts.append([cell_states.count(state) for state in list(State)])
         self.bar_chart_animation(
-        np.array(State.value_list()), 
-                    counts, 
-                    State.name_list())
-    
+            np.array(State.value_list()), counts, State.name_list()
+        )
+
     def bar_chart_animation(self, x, y, ticks):
         # create a figure and axis
         fig, ax = plt.subplots()
 
         # set the title and labels
-        ax.set_title('Bar Chart Animation')
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
+        ax.set_title("Bar Chart Animation")
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
         ax.set_ylim(0, max([max(i) for i in y]))
 
         # create the bar chart
         bars = ax.bar(x, y[0], tick_label=ticks)
-        
+
         # create timestep labels
-        text_box = ax.text(0.05, 0.9, '', transform=ax.transAxes)
+        text_box = ax.text(0.05, 0.9, "", transform=ax.transAxes)
 
         # function to update the chart
         def update(i):
             for j in range(len(bars)):
                 bars[j].set_height(y[i][j])
-            text_box.set_text(f'timestep = {i}')
+            text_box.set_text(f"timestep = {i}")
 
         # create the animation
-        anim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000, repeat=False)
+        anim = animation.FuncAnimation(
+            fig, update, frames=len(y), interval=1000, repeat=False
+        )
 
         # save the animation as an gif file
-        anim.save('bar_chart_animation.gif', writer='pillow', fps=3)
+        anim.save("bar_chart_animation.gif", writer="pillow", fps=3, dpi=10)
 
         # show the animation
         plt.show()
-        
-    
-    def animation_scatter(self):
+
+    def print_scatter_animation(self):
+        cell_states_value = []
+        x = []
+        y = []
+        for i in range(len(self.agent_history)):
+            cell_states_value.append([individual.state.value for individual in self.agent_history[i]])
+            x.append([individual.location[0] for individual in self.agent_history[i]])
+            y.append([individual.location[1] for individual in self.agent_history[i]])
+        # tick label suitable for maps
+        self.scatter_chart_animation(x, y, cell_states_value)
+
+    def scatter_chart_animation(self, x, y, cmap):
         # Create a figure
-        fig = plt.figure()
-        # Create a subplot
-        ax = fig.add_subplot(1, 1, 1)
-        # Create a scatter plot
-        sc = ax.scatter([], [], s=100)
-        # Create a text label
-        text = ax.text(0.02, 0.95, "", transform=ax.transAxes)
-        # Create a function to update the scatter plot
-        def animate(i):
-            # Get the current state of the population
-            agent_list = self.agent_history[i]
+        fig, ax = plt.subplots(1, 1)
+        # Create an animation function
+
+        def animate(i, sc, label):
             # Update the scatter plot
-            sc.set_offsets(np.asarray([agent.location for agent in agent_list]))
-            # Update the text
-            text.set_text(f"Day {i}")
+            sc.set_offsets(np.c_[x[i], y[i]])
+            # Set the label
+            label.set_text("t = {}".format(i))
             # Return the artists set
-            return sc, text
-        # Create an animation
-        anim = animation.FuncAnimation(fig, animate, frames=len(self.agent_history), interval=100)
+            return sc, label
+
+        # Create a scatter plot
+        sc = ax.scatter(x, y, c=cmap)
+        # Create a label
+        label = ax.text(0.05, 0.9, "", transform=ax.transAxes)
+        # Create the animation object
+        anim = animation.FuncAnimation(
+            fig,
+            animate,
+            frames=len(x),
+            interval=100,
+            blit=True,
+            repeat=False,
+            fargs=(sc, label),
+        )
+        # Save the animation
+        anim.save("scatter_chart_animation.gif", writer="pillow", fps=3, dpi=10)
         # Show the plot
         plt.show()
 
 
-
 class SchoolObserver(Observer):
-    
     def __init__(self, population: Population) -> None:
         self.subject = population
         self.subject.attach_observer(self)
         self.agent_list = []
         self.grid = []
-        
+
     def update(self) -> None:
         self.agent_list = self.subject.agent_list
         self.grid = self.subject.school.grid
-        
-    def display_observation(self, format='text'):
-        if format == 'text':
+
+    def display_observation(self, format="text"):
+        if format == "text":
             self.print_text_statistics()
-        elif format == 'chart':
+        elif format == "chart":
             self.print_chart_statistics()
-        
+
         # animation, table
-        
+
     def print_text_statistics(self):
         print("Print School:")
         for row in self.grid:
@@ -626,7 +756,7 @@ class SchoolObserver(Observer):
                     raise ValueError("Invalid state")
             print()
         print()
-            
+
     def print_chart_statistics(self):
         # create a scatter plot of the population
         cell_states_value = [
@@ -636,12 +766,12 @@ class SchoolObserver(Observer):
         plt.scatter(x, y, c=cell_states_value)
         plt.show()
 
-class Population:
 
+class Population:
     def __init__(self, school_size: int, population_size: int) -> None:
         self.school: School = School(school_size)
         self.agent_list: list[Individual] = []
-        self.severity: float = 0.
+        self.severity: float = 0.0
         self.init_population(school_size, population_size)
         self.update_population_metrics()
         self.observers = []
@@ -659,8 +789,10 @@ class Population:
             State.value_list(), weights=[0.8, 0.1, 0.1, 0.0])
         state = State(state_index[0])
         while True:
-            location = (random.randint(0, school_size-1),
-                        random.randint(0, school_size-1))
+            location = (
+                random.randint(0, school_size - 1),
+                random.randint(0, school_size - 1),
+            )
             if self.school.legal_location(location):
                 break
         return Individual(id, state, location)
@@ -674,7 +806,7 @@ class Population:
 
     def run_population(self, num_time_steps: int) -> None:
         for time in range(num_time_steps):
-            print("Time step: ", time+1)
+            print("Time step: ", time + 1)
             self.severity = time / num_time_steps
             print("Severity: ", self.severity)
             self.update_grid()
@@ -691,10 +823,10 @@ class Population:
             print("Got School Info")
             self.notify_observers()
             print("Notified Observers")
-            #if self.num_healthy == 0:
+            # if self.num_healthy == 0:
             #    print("All individuals are infected")
             #    break
-            #elif self.num_infected == 0 and self.num_zombie == 0:
+            # elif self.num_infected == 0 and self.num_zombie == 0:
             #    print("All individuals are healthy")
             #    break
 
@@ -708,48 +840,61 @@ class Population:
                 self.school.remove_individual(individual.location)
 
     def update_population_metrics(self) -> None:
-        self.num_healthy = sum(1 for individual in self.agent_list if individual.state == State.HEALTHY)
-        self.num_infected = sum(1 for individual in self.agent_list if individual.state == State.INFECTED)
-        self.num_zombie = sum(1 for individual in self.agent_list if individual.state == State.ZOMBIE)
+        self.num_healthy = sum(
+            1 for individual in self.agent_list if individual.state == State.HEALTHY
+        )
+        self.num_infected = sum(
+            1 for individual in self.agent_list if individual.state == State.INFECTED
+        )
+        self.num_zombie = sum(
+            1 for individual in self.agent_list if individual.state == State.ZOMBIE
+        )
         self.population_size = self.num_healthy + self.num_infected + self.num_zombie
         self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity)))
         self.turning_probability = 1 - (1 / (1 + math.exp(-self.severity)))
         self.death_probability = self.severity
-        self.migration_probability = self.population_size / (self.population_size + 1)
+        self.migration_probability = self.population_size / \
+            (self.population_size + 1)
 
         # may use other metrics or functions to calculate the probability of infection, turning, death, migration
 
     def print_all_individual_info(self) -> None:
-        print(f'Population of size {self.population_size}' + '\n' +
-                '\n'.join([individual.get_info() for individual in self.agent_list]))
+        print(
+            f"Population of size {self.population_size}"
+            + "\n"
+            + "\n".join([individual.get_info()
+                        for individual in self.agent_list])
+        )
 
     def attach_observer(self, observer: Observer) -> None:
         self.observers.append(observer)
-        
+
     def detach_observer(self, observer: Observer) -> None:
         self.observers.remove(observer)
-        
+
     def notify_observers(self) -> None:
         for observer in self.observers:
             observer.update()
 
     def get_population_statistics(self) -> dict[str, float]:
         # returns a dictionary of population statistics
-        return {"num_healthy": self.num_healthy,
-                "num_infected": self.num_infected,
-                "num_zombie": self.num_zombie,
-                "population_size": self.population_size,
-                "infection_probability": self.infection_probability,
-                "turning_probability": self.turning_probability,
-                "death_probability": self.death_probability,
-                "migration_probability": self.migration_probability
-                }
+        return {
+            "num_healthy": self.num_healthy,
+            "num_infected": self.num_infected,
+            "num_zombie": self.num_zombie,
+            "population_size": self.population_size,
+            "infection_probability": self.infection_probability,
+            "turning_probability": self.turning_probability,
+            "death_probability": self.death_probability,
+            "migration_probability": self.migration_probability,
+        }
 
     def __str__(self) -> str:
-        return f'Population with {self.num_healthy} healthy, {self.num_infected} infected, and {self.num_zombie} zombie individuals'
+        return f"Population with {self.num_healthy} healthy, {self.num_infected} infected, and {self.num_zombie} zombie individuals"
 
     def __repr__(self) -> str:
-        return f'Population({self.school.school_size}, {self.population_size})'
+        return f"Population({self.school.school_size}, {self.population_size})"
+
 
 def main():
 
@@ -757,23 +902,22 @@ def main():
     school_sim = Population(school_size=10, population_size=10)
 
     # create Observer objects
-    #population_observer = PopulationObserver(school_sim)
+    # population_observer = PopulationObserver(school_sim)
     population_animator = PopulationAnimator(school_sim)
-    #school_observer = SchoolObserver(school_sim)
-    
+    # school_observer = SchoolObserver(school_sim)
+
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
-    
+
     # observe the statistics of the population
-    #population_observer.display_observation(format="chart")
-    population_animator.display_observation(format="chart")
-    #school_observer.display_observation(format="chart")
+    # population_observer.display_observation(format="chart")
+    population_animator.display_observation(format="scatter")
+    # school_observer.display_observation(format="chart")
 
 
 if __name__ == "__main__":
     main()
-    
-    
+
 
 """
 

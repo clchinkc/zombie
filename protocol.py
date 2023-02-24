@@ -4,8 +4,7 @@ protocol_classes.py: An example of using protocol classes.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
-from typing import Protocol
+from typing import Any, Protocol
 
 
 class Direction(Enum):
@@ -128,3 +127,5 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
+    
+# https://docs.gamecreator.io/gamecreator/characters/component/
