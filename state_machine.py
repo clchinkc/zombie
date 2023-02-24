@@ -14,7 +14,7 @@ and predict how they might act in different situations.
 
 Here is a possible python simulation of a person's behavior during a zombie apocalypse at school:
 """
-
+# Hinton diagrams
 """
 Use a reinforcement learning (RL) algorithm to train the person's behavior in the zombie apocalypse.
 

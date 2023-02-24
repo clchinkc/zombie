@@ -107,4 +107,5 @@ As always, I recommend you start simple and then add in additional communication
 """
 """
 https://gameprogrammingpatterns.com/component.html
+# https://docs.gamecreator.io/gamecreator/characters/component/
 """

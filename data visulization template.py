@@ -1,4 +1,3 @@
-
 """
 import matplotlib.pyplot as plt
 from matplotlib import markers
@@ -46,7 +45,7 @@ plt.show()
 """
 A live auto-updating plot of random numbers pulled from a web API
 """
-
+"""
 import datetime as dt
 import time
 
@@ -86,7 +85,7 @@ def animate(i, xs:list, ys:list):
     ax.clear()
     ax.plot(xs, ys)
     # Format plot
-    ax.set_ylim([0,255])
+    ax.set_ylim(0, 255)
     plt.xticks(rotation=45, ha='right')
     plt.subplots_adjust(bottom=0.20)
     ax.set_title('Plot of random numbers from https://qrng.anu.edu.au')
@@ -97,3 +96,7 @@ def animate(i, xs:list, ys:list):
 ani = animation.FuncAnimation(fig, animate, fargs=(xs,ys), interval=1000)
 
 plt.show()
+"""
+
+
+

@@ -128,4 +128,3 @@ def main() -> None:
 if __name__ == '__main__':
     main()
     
-# https://docs.gamecreator.io/gamecreator/characters/component/
