@@ -28,5 +28,11 @@
         "source.organizeImports": true
     },
   },
-  "isort.args":["--profile", "black"],
+"isort.args": [
+	"--profile",
+	"black"
+],
+"[json]": {
+	"editor.defaultFormatter": "esbenp.prettier-vscode"
+},
 }

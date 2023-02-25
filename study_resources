@@ -136,6 +136,7 @@ https://pythonforundergradengineers.com/flask-iot-server-web-API.html
 https://pythonforundergradengineers.com/flask-iot-server-validation-time-stamps.html
 https://pythonforundergradengineers.com/flask-iot-server-database.html
 https://pythonforundergradengineers.com/flask-iot-server-upload-code-to-esp8266.html
+https://www.freecodecamp.org/news/develop-database-driven-web-apps-with-python-flask-and-mysql/
 
 django
 https://www.djangoproject.com/
@@ -540,6 +541,7 @@ https://opensource.com/resources/python/gui-frameworks?intcmp=7016000000127cYAAQ
 
 Web scripting
 Urllib、Requests、BeautifulSoup、XPath、Selenium、Scrapy、分布式爬虫
+https://corporatefinanceinstitute.com/resources/data-science/how-to-scrape-stock-data-with-python/
 https://github.com/techwithtim/Beautiful-Soup-Tutorial
 https://docs.qq.com/doc/DTVJzZXh5TmJSR1V4
 https://cloud.tencent.com/developer/article/1932575
@@ -573,7 +575,7 @@ Streamlit
 https://pythonforundergradengineers.com/streamlit-app-with-bokeh.html
 
 Data analysis
-https://github.com/tinahuangyt/ETL_Project
+
 https://github.com/tinahuangyt/Pandas_Heroes-of-Pymoli/blob/master/Heroes%20of%20Pymoli%20Analysis.ipynb
 https://github.com/tinahuangyt/Python_PyBank-and-PyPoll
 https://www.youtube.com/watch?v=eMOA1pPVUc4
@@ -581,6 +583,7 @@ https://ithelp.ithome.com.tw/users/20107514/ironman/1399
 https://www.youtube.com/watch?v=__QUQg96SFs
 https://www.youtube.com/watch?v=xi0vhXFPegw
 https://www.youtube.com/watch?v=R67XuYc9NQ4
+https://skillsforall.com/course/introduction-data-science
 
 Data visualization
 https://github.com/tinahuangyt/Matplotlib_Pymaceuticals
@@ -704,7 +707,14 @@ https://github.com/Ceebox/cbLang
 https://www.youtube.com/watch?v=HuVg1trQC64
 
 data analysis
+https://www.kaggle.com/code/swatikhedekar/eda-on-netflix-dataset-using-pyhton
+https://github.com/tinahuangyt/ETL_Project
+https://github.com/praveen-266/Data-Analysis-work
+https://www.youtube.com/watch?v=C75TROiiEa0
 https://www.coursera.org/learn/introduction-to-data-analytics?specialization=ibm-data-analyst
+https://www.coursera.org/learn/data-analysis-with-python
+https://www.coursera.org/professional-certificates/google-data-analytics
+https://www.coursera.org/professional-certificates/ibm-data-analyst
 https://pll.harvard.edu/course/data-science-wrangling?delta=0
 https://pll.harvard.edu/course/data-science-linear-regression?delta=4
 https://pll.harvard.edu/course/data-science-machine-learning?delta=3
@@ -791,3 +801,14 @@ camelot - extract tables from PDF
 livepython - track variables in runtime
 ftfy - fix text encoding
 icecream - debug print
+
+Job oriented courses
+https://careerhackers.io/chp-landing/
+https://tecky.io/en/courses/SMA/
+https://www.dataquest.io/plans/
+https://www.domestika.org/en/courses/64-introduction-to-data-visualization
+https://mathematicbooks.com/product/python-for-programmers-with-big-data-and-artificial-intelligence-case-studies/
+https://www.bootcamp.lejhro.com/
+https://courses.earnandexcel.com/data-science-course-us
+https://courses.earnandexcel.com/5-web-developer-courses
+https://sparkaacademy.com/data-science-ml-immersive-quantum-bootcamp/

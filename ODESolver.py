@@ -172,3 +172,6 @@ if __name__ == '__main__':
 
     plt.legend()
     plt.show()
+
+# crank nicolson method
+# finite difference method
