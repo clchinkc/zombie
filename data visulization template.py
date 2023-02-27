@@ -1,4 +1,6 @@
+
 """
+# Plotting a line graph
 import matplotlib.pyplot as plt
 from matplotlib import markers
 
@@ -10,8 +12,8 @@ pops = [2.5,2.7,3,3.3,3.6,4.0,
 deaths = [1.2,1.7,1.8,2.2,2.5,
         2.7,2.9,3,3.1,3.2,3.5,3.6,4]
 
-pops_line = plt.plot(years,pops, color=(255/255,100/255,100/255))
-deaths_line = plt.plot(years,deaths, '--', color=(100/255,100/255,255/255))
+pops_line = plt.plot(years,pops, color=(255/255,100/255,100/255), alpha=0.5, linewidth=3)
+deaths_line = plt.plot(years,deaths, '--', color=(100/255,100/255,255/255), alpha=0.5, linewidth=2)
 
 plt.title("Population Growth") # title
 plt.ylabel("Population in billions") # y label
@@ -22,23 +24,36 @@ plt.setp(plt.gca().get_yticklabels(), horizontalalignment='right')
 plt.setp(pops_line, marker='o', markersize=5, markerfacecolor='red')
 plt.setp(deaths_line, marker='o', markersize=5, markerfacecolor='blue')
 
+plt.legend(['Population','Deaths'], loc='upper left')
 plt.grid(True)
 
+plt.tight_layout()
 plt.show()
 """
 
 """
+# Plotting a bar graph
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-x = np.arange(0, 1.0, 0.01)
-y1 = np.sin(4*np.pi*x)
-y2 = np.sin(2*np.pi*x)
-lines = plt.plot(x, y1, x, y2)
-l1, l2 = lines
-plt.setp(lines, linestyle='--')      
+categories =  ['A','B','C','D','E']
+sales = np.random.randint(1000,9000,5)
+
+# Plot the data
+plt.bar(categories, sales, edgecolor = 'black', linewidth = 2, color = ['red','blue','green','yellow','purple'], width = 0.5)
+plt.xlabel('Categories')
+plt.ylabel('Sales')
+plt.title("Column Chart Example")
+
+# Adding the data lables to the columns
+for i, v in enumerate(sales):
+    plt.text(i, v, str(v), color = 'red', ha = 'center', va = 'bottom')
+
+plt.tight_layout()
 plt.show()
 """
+
 
 
 # plot_web_api_realtime.py
@@ -98,5 +113,31 @@ ani = animation.FuncAnimation(fig, animate, fargs=(xs,ys), interval=1000)
 plt.show()
 """
 
+"""
+# seaborn
 
+import matplotlib.pyplot as plt
+import seaborn as sns
 
+sns.set(style="white", palette="muted", color_codes=True)
+
+# Load the example dataset
+iris = sns.load_dataset("iris")
+
+# Set up the matplotlib figure
+fig, axes = plt.subplots(2, 2)
+
+# Plot suitable plots
+sns.heatmap(iris.corr(numeric_only=True), annot=True, ax=axes[0, 0])
+sns.histplot(iris.sepal_length, kde=False, color="b", ax=axes[0, 1])
+sns.kdeplot(iris.sepal_width, fill=True, color="r", ax=axes[1, 0])
+sns.rugplot(iris.sepal_width, color="g", ax=axes[1, 1], height=0.2)
+
+plt.tight_layout()
+plt.show()
+
+# displot is a figure level function that combines histplot and kdeplot
+# jointplot is a figure level function that combines scatterplot and histplot
+# pairplot is a figure level function that combines scatterplot and histplot
+# facetgrid is a figure level function
+"""
