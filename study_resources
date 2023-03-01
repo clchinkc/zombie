@@ -57,6 +57,19 @@ https://www.thepythoncode.com/article/make-a-currency-converter-in-python
 https://github.com/gregwinther/Python-in-Finance-and-Economics
 https://github.com/AsmrProg-YT/100-days-of-javascript
 https://www.youtube.com/watch?v=54XyRw9y8oE
+https://www.projectpro.io/projects/data-science-projects
+https://builtin.com/data-science/data-science-projects
+https://data-flair.training/blogs/data-science-project-ideas/
+https://www.interviewbit.com/blog/data-science-projects/
+https://www.coursera.org/search?topic=Data%20Science&index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlA3hcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
+https://www.coursera.org/search?index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&topic=Computer%20Science&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlFRRcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
+https://www.coursera.org/search?index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&topic=Business&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlFRRcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
+
+Must read books
+https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
+https://pyda.apachecn.org/#/ # 利用 Python 进行数据分析 · 第 2 版
+machine learning for trading
+machine learning for algorithmic trading
 
 Web development
 https://www.coursera.org/programs/coursera-for-hkust-yetdg?collectionId=3Jzsr&currentTab=CATALOG&productId=Tn_VM61TEeaH0xIrfa92QA&productType=s12n&showMiniModal=true
@@ -91,6 +104,7 @@ https://pythonforundergradengineers.com/how-i-built-this-site-5.html
 https://pythonforundergradengineers.com/how-i-built-this-site-6.html
 https://pythonforundergradengineers.com/how-i-built-this-site-7.html
 https://lp.leadpages.com/ultimate-website-builder/
+https://tw.alphacamp.co/blog/slicing-interface-design
 
 Frontend + backend
 https://github.com/TheOdinProject
@@ -139,6 +153,15 @@ https://pythonforundergradengineers.com/flask-iot-server-validation-time-stamps.
 https://pythonforundergradengineers.com/flask-iot-server-database.html
 https://pythonforundergradengineers.com/flask-iot-server-upload-code-to-esp8266.html
 https://www.freecodecamp.org/news/develop-database-driven-web-apps-with-python-flask-and-mysql/
+https://pandeyshikha075.medium.com/a-step-by-step-guide-to-building-a-monitoring-system-with-flask-and-sqlalchemy-85e909bf75d9
+https://www.section.io/engineering-education/deploying-machine-learning-models-using-flask/
+https://www.datacamp.com/tutorial/machine-learning-models-api-python
+https://dev.to/atultyagi612/how-to-deploy-machine-learning-model-using-flask-392f
+https://github.com/Davisy/Model-Deployment-by-using-Flask
+https://towardsdatascience.com/deploy-a-machine-learning-model-using-flask-da580f84e60c
+https://towardsdatascience.com/how-to-easily-deploy-machine-learning-models-using-flask-b95af8fe34d4
+https://stackoverflow.com/questions/75571407/deploying-machine-learning-models-in-github-pages
+machine learning model deployment in flask
 
 django
 https://www.djangoproject.com/
@@ -150,7 +173,8 @@ https://www.freecodecamp.org/news/learn-django-by-building-a-marketplace/
 https://www.udemy.com/course/django-python-advanced/
 
 Chart animation
-https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247486653&idx=1&sn=92128455c20ada46b355f5166ba5d4b5&chksm=fdcb3b9bcabcb28de6cb8f5c08a557f5078aede86b21fc151babc29dde8451d0a3a60efd0a51&scene=21#wechat_redirect
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247486653&idx=1&sn=92128455c20ada46b355f5166ba5d4b5
+https://github.com/dexplo/bar_chart_race
 https://www.dunderdata.com/blog/create-a-bar-chart-race-animation-in-python-with-matplotlib
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247490218&idx=1&sn=19f061116f4939038b90aa18085505ad&chksm=fdcb2d8ccabca49ab88171cb16d641cc059506a5646766a5bc24ee0910140b92d4902aa8057c&scene=21#wechat_redirect
 https://igoamazing.com/python-plotly/
@@ -167,7 +191,25 @@ https://analyticsindiamag.com/top-reinforcement-learning-algorithms/
 https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
 https://pythonprogramming.net/deep-q-learning-dqn-reinforcement-learning-python-tutorial/
 https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
+https://simoninithomas.github.io/deep-rl-course/
+finrl
+gym
+stable baselines
+tensortrade
 
+financial analysis
+technical analysis python
+quantconnect
+https://youtu.be/joXDV5eqOoY
+backtrader
+zipline
+https://pyecontech.com/
+https://hk.jobsdb.com/en-hk/articles/%E5%85%A5%E8%A1%8Cquant-trader/
+stock prediction
+https://stylengineer.com/program/python-stock-stockcodelookup-guide/
+https://www.finlab.tw/%E7%94%A8%E7%88%AC%E8%9F%B2%E7%88%AC%E5%85%A8%E4%B8%96%E7%95%8C%E8%82%A1%E5%83%B9/
+https://www.finlab.tw/%E5%88%A9%E7%94%A8pandas%E8%BC%95%E9%AC%86%E5%8F%96%E5%BE%97%E6%AD%B7%E5%8F%B2%E8%82%A1%E5%83%B9/
+https://ithelp.ithome.com.tw/m/users/20103826/ironman/3032?sc=iThelpR
 
 Software Design
 https://www.cis.upenn.edu/~bcpierce/courses/670Fall04/GreatWorksInPL.shtml
@@ -226,6 +268,7 @@ Head First Design Patterns
 https://towardsdatascience.com/10-common-software-architectural-patterns-in-a-nutshell-a0b47a1e9013
 https://www.youtube.com/watch?v=tv-_1er1mWI&ab_channel=Fireship
 https://www.arjancodes.com/mindset
+https://www.udemy.com/course/object-oriented-programming-with-python-learn-to-code-faster/
 
 Code style
 https://en.wikipedia.org/wiki/Coding_best_practices
@@ -278,6 +321,9 @@ https://python.plainenglish.io/mastering-python-the-10-most-difficult-concepts-a
 https://github.com/lukepolson/youtube_channel/tree/main/Python%20Tutorial%20Series
 https://github.com/lukepolson/pydata-book
 https://github.com/lukepolson/Python-Self-Learning
+https://www.runoob.com/python3/python3-mysql.html
+https://www.udemy.com/course/the-python-programming-v39-comprehensive-bootcamp/
+https://www.udemy.com/course/the-intermediate-python-training-boost-your-python-skills/
 
 c++
 “The Most Important C++ Books...Ever”
@@ -496,6 +542,7 @@ https://welly.tw/digital-marketing/learn-google-lesson
 
 
 blockchain project
+https://buildspace.so/
 https://www.analyticsinsight.net/top-10-programming-languages-for-building-blockchain-applications/
 https://www.blocktempo.com/how-to-create-a-new-token-via-chatgpt/
 https://github.com/jamesbachini/MetaSignature
@@ -561,11 +608,10 @@ https://cloud.tencent.com/developer/article/1805616?from=article.detail.1933412&
 https://blog.csdn.net/VictoriaSue/article/details/107792075?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-1-107792075-blog-80965797.pc_relevant_3mothn_strategy_recovery&spm=1001.2101.3001.4242.2&utm_relevant_index=4
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247484076&idx=1&sn=fac8b75e2fbdb8eecff16b1faa4dc7f2&chksm=fdcb358acabcbc9c20769d3800f77f7cafb16844486e2c3fd35b0d567923eeac352189cc6285&scene=21#wechat_redirect
 
-stock
-https://stylengineer.com/program/python-stock-stockcodelookup-guide/
-https://www.finlab.tw/%E7%94%A8%E7%88%AC%E8%9F%B2%E7%88%AC%E5%85%A8%E4%B8%96%E7%95%8C%E8%82%A1%E5%83%B9/
-https://www.finlab.tw/%E5%88%A9%E7%94%A8pandas%E8%BC%95%E9%AC%86%E5%8F%96%E5%BE%97%E6%AD%B7%E5%8F%B2%E8%82%A1%E5%83%B9/
-https://ithelp.ithome.com.tw/m/users/20103826/ironman/3032?sc=iThelpR
+search
+https://pypi.org/project/LocalitySensitiveHashing/
+
+
 
 Web scripting + Data analysis
 https://cloud.tencent.com/developer/article/1757720
@@ -585,8 +631,46 @@ https://blog.boot.dev/backend/top-backend-technologies/
 Streamlit
 https://pythonforundergradengineers.com/streamlit-app-with-bokeh.html
 
-Data analysis
+Statistics
+Descriptive statistics
+Inferential statistics
+Mathematical statistics
 
+Exploratory analysis
+Data visualization
+
+Feature engineering
+Data cleaning
+Data wrangling
+
+Dimension reduction
+Feature selection
+Feature extraction
+
+Machine learning
+Regression
+Classification
+Clustering
+Recommendation system
+Association rule learning
+Time series analysis and forecasting
+Model selection
+ML pipeline
+ML model deployment in Flask
+
+Artificial intelligence
+Deep learning
+Natural language processing
+Computer vision
+
+SQL
+Tableau
+
+
+Data analysis
+https://www.linkedin.com/feed/update/urn:li:activity:7035686267220578304/?utm_source=share&utm_medium=member_android
+https://www.kaggle.com/competitions/playground-series-s3e8/discussion/389472
+https://github.com/flaviobrienza/Diamond_Gem_Price_Prediction/blob/main/Kaggle_Challenge_S3_E8_ChatGPT.ipynb
 https://github.com/tinahuangyt/Pandas_Heroes-of-Pymoli/blob/master/Heroes%20of%20Pymoli%20Analysis.ipynb
 https://github.com/tinahuangyt/Python_PyBank-and-PyPoll
 https://www.youtube.com/watch?v=eMOA1pPVUc4
@@ -594,12 +678,42 @@ https://ithelp.ithome.com.tw/users/20107514/ironman/1399
 https://www.youtube.com/watch?v=__QUQg96SFs
 https://www.youtube.com/watch?v=xi0vhXFPegw
 https://www.youtube.com/watch?v=R67XuYc9NQ4
+https://www.kaggle.com/datasets/hellbuoy/car-price-prediction?select=CarPrice_Assignment.csv
+https://github.com/quadrialli96/MachineLearningProjects
+https://www.kaggle.com/code/swatikhedekar/eda-on-netflix-dataset-using-pyhton
+https://github.com/tinahuangyt/ETL_Project
+https://github.com/praveen-266/Data-Analysis-work
+https://www.youtube.com/watch?v=C75TROiiEa0
+https://www.coursera.org/learn/introduction-to-data-analytics?specialization=ibm-data-analyst
+https://www.coursera.org/learn/data-analysis-with-python
+https://www.coursera.org/professional-certificates/google-data-analytics ****
+https://www.coursera.org/professional-certificates/ibm-data-analyst ****
+https://www.coursera.org/professional-certificates/ibm-data-science ****
+https://pll.harvard.edu/course/data-science-wrangling?delta=0
+https://pll.harvard.edu/course/data-science-linear-regression?delta=4
+https://pll.harvard.edu/course/data-science-machine-learning?delta=3
+https://careerfoundry.com/en/blog/data-analytics/data-analytics-portfolio-project-ideas/
+web scraping job postings from indeed
+datacamp tableau certification
 https://skillsforall.com/course/introduction-data-science
 https://www.linkedin.com/feed/update/urn:li:activity:7022221537374076928/
+https://www.linkedin.com/pulse/what-data-storytelling-ram-narayan/
+https://wesmckinney.com/book/
+https://www.youtube.com/live/DiXsZSFn4QY?feature=share
+https://www.youtube.com/live/eYOaVSB0hdE?feature=share
+https://www.youtube.com/live/QZTO3_Aw10s?feature=share
+https://github.com/salmankhaliq22/End-to-End-Machine-Learning-Course/blob/main/Notes/Handling-Missing-Data-Complete-Case-Analysis.pdf
+https://github.com/salmankhaliq22/End-to-End-Machine-Learning-Course/blob/main/Notes/Handling-Missing-Values-%20Mean-Median-Imputation.pdf
+https://www.kaggle.com/code/salmankhaliq22/uk-rtc-prediction-preprocessing/notebook
+https://www.kaggle.com/code/salmankhaliq22/mean-median-imputation-of-numerical-features
+
+polars vs pandas
 
 Data visualization
 https://github.com/tinahuangyt/Matplotlib_Pymaceuticals
 https://github.com/tinahuangyt/Matplotlib_Pyber
+https://towardsdatascience.com/simple-method-of-creating-animated-graphs-127c11f58cc5
+https://stackoverflow.com/questions/70472479/plotting-a-barchart-which-should-be-sorted-by-their-rank-using-particular-column
 
 API + Data analysis + Data visualization
 http://blog.itpub.net/69982434/viewspace-2738661
@@ -619,6 +733,10 @@ API + Data analysis + Data visualization
 https://github.com/tinahuangyt/Python-API_World-Weather
 
 Openai API project
+https://colab.research.google.com/drive/1CosxSNod48KrkyBn5_vkeleb7u0CrBa6#scrollTo=EiripIMAqGWf
+https://github.com/jerpint/buster/blob/main/buster/apps/gradio_app.ipynb
+https://huggingface.co/spaces/jerpint/buster
+https://www.youtube.com/playlist?list=PLvzuUVysUFOv4iwJE6p1TtuH_I4MFrK50
 https://colab.research.google.com/drive/1cVQNg2-zGQb7qZXFECG6kyq5yVIHyf5o?usp=sharing
 https://github.com/hackingthemarkets/semantic-search-frontend
 https://colab.research.google.com/drive/1tttDqgnWL9yJtmlOFXJqA-BjQ1Pyfpax?usp=sharing
@@ -626,6 +744,7 @@ https://github.com/openai/openai-cookbook
 
 NLP + machine learning
 https://github.com/tinahuangyt/Project-NatureGeneticsCitation
+https://course.spacy.io/en/p
 
 Machine learning
 https://github.com/tinahuangyt/MachineLearning-Expoplanet
@@ -638,6 +757,8 @@ https://www.youtube.com/watch?v=yD3BMT_cXew
 https://github.com/kyleskom/NBA-Machine-Learning-Sports-Betting
 https://github.com/llSourcell/ChatGPT_Trading_Bot/
 https://lifelib.io/about.html
+https://www.youtube.com/watch?v=8SF_h3xF3cE&list=PLfYUBJiXbdtSvpQjSnJJ_PmDQB_VyT5iU
+Feature Engineering and Selection: A Practical Approach for Predictive Models, by Kjell Johnson and Max Kuhn
 
 Visualizing map
 https://zhuanlan.zhihu.com/p/388573380
@@ -701,10 +822,17 @@ https://realpython.com/face-recognition-with-python/
 Tensorflow
 https://github.com/RichardFu123/tensorflow/tree/master/CNN
 
+GPT
+https://github.com/shyamsn97/mario-gpt
+
+MCMC
+pymc3
+
 text classification
 https://python-course.eu/machine-learning/introduction-text-classification.php
 https://python-course.eu/machine-learning/text-classification-in-python.php
 https://pycaret.gitbook.io/docs/get-started/tutorials
+https://www.sematic.dev/blog/getting-started-with-sematic-in-5-minutes
 Berkeley CS188
 https://thinkinfi.com/fasttext-for-text-classification-python/
 https://thinkinfi.com/accurate-language-detection-using-fasttext-python/
@@ -724,21 +852,7 @@ new programming language
 https://github.com/Ceebox/cbLang
 https://www.youtube.com/watch?v=HuVg1trQC64
 
-data analysis
-https://www.kaggle.com/code/swatikhedekar/eda-on-netflix-dataset-using-pyhton
-https://github.com/tinahuangyt/ETL_Project
-https://github.com/praveen-266/Data-Analysis-work
-https://www.youtube.com/watch?v=C75TROiiEa0
-https://www.coursera.org/learn/introduction-to-data-analytics?specialization=ibm-data-analyst
-https://www.coursera.org/learn/data-analysis-with-python
-https://www.coursera.org/professional-certificates/google-data-analytics
-https://www.coursera.org/professional-certificates/ibm-data-analyst
-https://pll.harvard.edu/course/data-science-wrangling?delta=0
-https://pll.harvard.edu/course/data-science-linear-regression?delta=4
-https://pll.harvard.edu/course/data-science-machine-learning?delta=3
-https://careerfoundry.com/en/blog/data-analytics/data-analytics-portfolio-project-ideas/
-web scraping job postings from indeed
-datacamp tableau certification
+
 
 Courses
 1. A JavaScript Course
@@ -794,6 +908,7 @@ https://www.coursera.org/specializations/statistics-with-python
 https://www.coursera.org/learn/python-for-data-visualization
 https://www.datacamp.com/tracks/data-visualization-with-python
 https://www.udacity.com/course/data-analysis-and-visualization--ud404
+https://www.udemy.com/course/mastering-python-data-handling-analysis-and-visualization/
 
 AI For Business
 https://www.coursera.org/specializations/ai-for-business-wharton?irclickid=0ocwtz0ecxyNWfrQtGQZjznDUkA3s9TTAXmm2k0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3568609&utm_content=b2c
@@ -807,6 +922,7 @@ AI for everyone
 https://www.coursera.org/learn/ai-for-everyone?action=enroll&irclickid=0ocwtz0ecxyNWfrQtGQZjznDUkA3s7XymSWswU0&irgwc=1&utm_campaign=1359989&utm_content=b2c&utm_medium=partners&utm_source=impact
 follow up course
 https://www.coursera.org/deeplearning-ai
+https://huggingface.co/course/chapter1/1
 
 
 Research interview process
@@ -830,4 +946,7 @@ https://www.bootcamp.lejhro.com/
 https://courses.earnandexcel.com/data-science-course-us
 https://courses.earnandexcel.com/5-web-developer-courses
 https://www.learnfly.com/the-complete-web-development-2023-bootcamp
+https://www.udemy.com/course/data-science-real-world-projects-in-python-x/
 https://sparkaacademy.com/data-science-ml-immersive-quantum-bootcamp/
+https://danger.education/targeted-training-for-data-analysis-tc/
+https://www.udemy.com/course/python-programming-beyond-the-basics-intermediate-training/?couponCode=ED44ACD62524527688A9

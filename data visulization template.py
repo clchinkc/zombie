@@ -1,4 +1,3 @@
-
 """
 # Plotting a line graph
 import matplotlib.pyplot as plt
@@ -38,22 +37,35 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 categories =  ['A','B','C','D','E']
-sales = np.random.randint(1000,9000,5)
+sales = np.random.randint(3000,9000,5)
+costs = np.random.randint(1000,7000,5)
+errors = np.random.randint(100,500,5)
+
+bar_width = 0.35
+index = np.arange(len(categories))
+
+plt.bar(index, sales, bar_width, yerr = errors, label='Sales', tick_label=categories, color = ['red','blue','green','yellow','purple'], edgecolor='black', linewidth=2)
+plt.bar(index + bar_width, costs, bar_width, yerr = errors, label='Cost', tick_label=categories, color = ['red','blue','green','yellow','purple'], edgecolor='black', linewidth=2)
+
+plt.xlim(-0.5, len(categories))
+plt.ylim(0, 10000)
 
 # Plot the data
-plt.bar(categories, sales, edgecolor = 'black', linewidth = 2, color = ['red','blue','green','yellow','purple'], width = 0.5)
 plt.xlabel('Categories')
-plt.ylabel('Sales')
-plt.title("Column Chart Example")
+plt.ylabel('Sales and Cost')
+plt.title('Sales and Cost by Category')
 
 # Adding the data lables to the columns
 for i, v in enumerate(sales):
-    plt.text(i, v, str(v), color = 'red', ha = 'center', va = 'bottom')
+    plt.text(i, v+errors[i], str(v), color = 'red', ha = 'center', va = 'bottom')
+for i, v in enumerate(costs):
+    plt.text(i + bar_width, v+errors[i], str(v), color = 'blue', ha = 'center', va = 'bottom')
+    
+plt.legend(ncol=2, loc='upper right', bbox_to_anchor=(1,1), columnspacing=1, labelspacing=0.5, handletextpad=0.5, handlelength=1.5, shadow=True)
 
 plt.tight_layout()
 plt.show()
 """
-
 
 
 # plot_web_api_realtime.py
@@ -141,3 +153,41 @@ plt.show()
 # pairplot is a figure level function that combines scatterplot and histplot
 # facetgrid is a figure level function
 """
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+
+sns.set(style="ticks", palette="muted", color_codes=True)
+
+plt.figure(figsize=(12, 6))
+
+# Load the example planets dataset
+planets = sns.load_dataset("planets")
+
+# Make a rank of distances
+ranks = planets.groupby("method")["distance"].mean().fillna(0).sort_values()[::-1].index
+
+# Plot the orbital period with horizontal boxes
+ax = sns.boxplot(x="distance", y="method", data=planets, whis=30, color="c", order=ranks)
+
+# Add in points to show each observation
+sns.stripplot(x="distance", y="method", data=planets, jitter=True, size=3, color=".3", linewidth=0, order=ranks)
+
+# Make the quantitative axis logarithmic
+ax.set_xscale("log")
+sns.despine(trim=True)
+
+plt.tight_layout()
+plt.show()
+
+# Probability plot
+# Spaghetti plot
+# Biplot
+# Residual plot
+# Pairplot
+# Violin plot
+# Boxen plot
+# Swarm plot
+# Catplot
+
