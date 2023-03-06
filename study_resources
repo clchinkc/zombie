@@ -45,6 +45,7 @@ https://zhuanlan.zhihu.com/p/95526617
 https://www.analyticsinsight.net/top-10-python-data-science-courses-and-boot-camps-to-know-in-2023/
 https://python-course.eu/oop/polynomial-class.php
 https://langchain.readthedocs.io/en/latest/getting_started/getting_started.html
+https://github.com/jerryjliu/gpt_index
 https://medium.com/pipeline-a-data-engineering-resource/creating-the-dashboard-that-got-me-a-data-analyst-job-offer-de3f0d6b1771
 https://www.youtube.com/watch?v=jl5yUEdekEM&ab_channel=TechWithTim
 Recommendation system
@@ -64,6 +65,8 @@ https://www.interviewbit.com/blog/data-science-projects/
 https://www.coursera.org/search?topic=Data%20Science&index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlA3hcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
 https://www.coursera.org/search?index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&topic=Computer%20Science&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlFRRcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
 https://www.coursera.org/search?index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&topic=Business&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlFRRcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
+https://github.com/kiteco/python-youtube-code
+https://www.programcreek.com/python/?action=search_project
 
 Must read books
 https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
@@ -196,6 +199,9 @@ finrl
 gym
 stable baselines
 tensortrade
+https://github.com/SparkShen02/MDP-with-Value-Iteration-and-Policy-Iteration
+https://towardsdatascience.com/implement-value-iteration-in-python-a-minimal-working-example-f638907f3437
+https://towardsdatascience.com/how-to-code-the-value-iteration-algorithm-for-reinforcement-learning-8fb806e117d1
 
 financial analysis
 technical analysis python
@@ -210,8 +216,18 @@ https://stylengineer.com/program/python-stock-stockcodelookup-guide/
 https://www.finlab.tw/%E7%94%A8%E7%88%AC%E8%9F%B2%E7%88%AC%E5%85%A8%E4%B8%96%E7%95%8C%E8%82%A1%E5%83%B9/
 https://www.finlab.tw/%E5%88%A9%E7%94%A8pandas%E8%BC%95%E9%AC%86%E5%8F%96%E5%BE%97%E6%AD%B7%E5%8F%B2%E8%82%A1%E5%83%B9/
 https://ithelp.ithome.com.tw/m/users/20103826/ironman/3032?sc=iThelpR
+https://corporatefinanceinstitute.com/resources/data-science/how-to-scrape-stock-data-with-python/
+https://freewechat.com/a/MzAwMjYxNjcwMw==/2456404246/1
+https://blog.51cto.com/u_15652786/5325345
+https://blog.51cto.com/u_15844361/5792521
+https://blog.51cto.com/phyger/5201970
+https://blog.51cto.com/u_15127492/2657080
+https://www.youtube.com/watch?v=Jb8l989IzTE
+https://youtu.be/H2OkrvSojOI
+https://youtu.be/B9rUPj7z9TA
 
 Software Design
+https://www.youtube.com/watch?v=tAuRQs_d9F8
 https://www.cis.upenn.edu/~bcpierce/courses/670Fall04/GreatWorksInPL.shtml
 https://zh.wikipedia.org/zh-tw/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E8%89%BA%E6%9C%AF
 https://zh.m.wikipedia.org/zh-tw/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%9E%84%E9%80%A0%E5%92%8C%E8%A7%A3%E9%87%8A
@@ -294,6 +310,7 @@ awesome github
 freecodecamp githubs
 
 Python
+https://www.coursera.org/specializations/python
 https://www.python.org/
 https://realpython.com/
 https://www.datacamp.com/
@@ -322,6 +339,7 @@ https://github.com/lukepolson/youtube_channel/tree/main/Python%20Tutorial%20Seri
 https://github.com/lukepolson/pydata-book
 https://github.com/lukepolson/Python-Self-Learning
 https://www.runoob.com/python3/python3-mysql.html
+https://www.tw511.com/3/39/1388.html
 https://www.udemy.com/course/the-python-programming-v39-comprehensive-bootcamp/
 https://www.udemy.com/course/the-intermediate-python-training-boost-your-python-skills/
 
@@ -569,9 +587,8 @@ https://realpython.com/api-integration-in-python/
 https://www.linode.com/docs/guides/create-restful-api-using-python-and-flask/
 python anywhere
 heroku
-Code for python flask api server that takes 'GET' request with url as string and convert it to qr code image and send it back as api response
-How to make response downloadable
 rapidapi
+https://www.linkedin.com/feed/update/urn:li:activity:7036284497520156672?utm_source=share&utm_medium=member_android
 
 Chatbot
 eliza
@@ -583,6 +600,9 @@ https://www.edureka.co/blog/how-to-make-a-chatbot-in-python/#chatterbot
 https://github.com/hackermondev/AllKnowledgeBob
 https://github.com/f/awesome-chatgpt-prompts
 https://island-stretch-3e4.notion.site/Best-Chat-GPT-Resources-b54f0284c7644583b59dd9a332f46af8
+https://pyoflife.com/building-chatbots-with-python-using-natural-language-processing-and-machine-learning/
+https://github.com/hwchase17/chat-your-data
+https://github.com/hwchase17/langchain-streamlit-template
 
 Command line application
 https://github.com/lxgr-linux/pokete
@@ -599,7 +619,6 @@ https://opensource.com/resources/python/gui-frameworks?intcmp=7016000000127cYAAQ
 
 Web scripting
 Urllib、Requests、BeautifulSoup、XPath、Selenium、Scrapy、分布式爬虫
-https://corporatefinanceinstitute.com/resources/data-science/how-to-scrape-stock-data-with-python/
 https://github.com/techwithtim/Beautiful-Soup-Tutorial
 https://docs.qq.com/doc/DTVJzZXh5TmJSR1V4
 https://cloud.tencent.com/developer/article/1932575
@@ -611,20 +630,38 @@ https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247484076&idx=1&sn=fac8b7
 search
 https://pypi.org/project/LocalitySensitiveHashing/
 
+weather
+https://copyassignment.com/get-weather-forecast-using-python/
+https://pypi.org/project/python-weather/
+https://blog.51cto.com/u_15333464/3655478
+https://blog.51cto.com/u_15467780/4853359
+https://blog.51cto.com/u_11949039/5787940
+https://blog.51cto.com/lanxf/5629262
+https://blog.51cto.com/u_11949039/5787940
+get weather python
 
+web scraping + visualization
+https://blog.51cto.com/u_15172991/5716498
+https://blog.51cto.com/u_15127679/4377481
+https://blog.51cto.com/u_15127664/4523335
+https://blog.51cto.com/u_15172991/5614722
 
-Web scripting + Data analysis
-https://cloud.tencent.com/developer/article/1757720
-https://cloud.tencent.com/developer/article/1652650?from=article.detail.1757720&areaSource=106000.4&traceId=oaKOSKjMncUTDrbTfPJDl
-https://blog.51cto.com/u_6315133/5015472
+Web scraping + Data processing + mysql
+https://blog.51cto.com/u_9399369/1953469
+https://blog.51cto.com/u_15366228/4713110
+https://blog.51cto.com/u_14232658/2513385
 
-Web scripting + Data processing + mysql
+web scraping + data processing + mysql + django
 https://blog.51cto.com/u_9399369/1953469
 
 database
 python mysql or other database project
 https://www.freecodecamp.org/news/how-to-build-a-backend-application/
 mysql
+https://www.learncodewithmike.com/2020/02/python-mysql.html
+https://www.maxlist.xyz/2018/09/23/python_mysql/
+https://learn.microsoft.com/zh-tw/sql/machine-learning/tutorials/python-clustering-model-prepare-data?view=sql-server-ver16
+https://note.charlestw.com/python-how-to-connect-sqlite/
 https://www.51cto.com/article/708748.html
 https://blog.boot.dev/backend/top-backend-technologies/
 
@@ -668,6 +705,8 @@ Tableau
 
 
 Data analysis
+https://www.youtube.com/watch?v=iNEwkaYmPqY
+https://cloud.tencent.com/developer/article/2166719
 https://www.linkedin.com/feed/update/urn:li:activity:7035686267220578304/?utm_source=share&utm_medium=member_android
 https://www.kaggle.com/competitions/playground-series-s3e8/discussion/389472
 https://github.com/flaviobrienza/Diamond_Gem_Price_Prediction/blob/main/Kaggle_Challenge_S3_E8_ChatGPT.ipynb
@@ -706,8 +745,14 @@ https://github.com/salmankhaliq22/End-to-End-Machine-Learning-Course/blob/main/N
 https://github.com/salmankhaliq22/End-to-End-Machine-Learning-Course/blob/main/Notes/Handling-Missing-Values-%20Mean-Median-Imputation.pdf
 https://www.kaggle.com/code/salmankhaliq22/uk-rtc-prediction-preprocessing/notebook
 https://www.kaggle.com/code/salmankhaliq22/mean-median-imputation-of-numerical-features
-
+https://datascience.fm/mega-guide-to-pandas-data-frame-for-data-scientists/
 polars vs pandas
+https://towardsdatascience.com/a-tutorial-of-what-kaggle-wont-teach-you-web-scraping-data-cleaning-and-more-16d402a206e8
+https://towardsdatascience.com/using-data-science-to-look-at-montreals-apartment-rental-crisis-cffea9ee6b00
+https://towardsdatascience.com/into-a-new-way-to-classify-nba-players-using-analytics-44e292526e47
+https://www.coursera.org/specializations/data-science-python
+https://www.youtube.com/watch?v=1pHYKdyRvrw
+https://www.youtube.com/watch?v=g6cjhUhrhY8&t=536s
 
 Data visualization
 https://github.com/tinahuangyt/Matplotlib_Pymaceuticals
@@ -745,8 +790,10 @@ https://github.com/openai/openai-cookbook
 NLP + machine learning
 https://github.com/tinahuangyt/Project-NatureGeneticsCitation
 https://course.spacy.io/en/p
+https://towardsdatascience.com/using-nlp-to-figure-out-what-people-really-think-e1d10d98e491
 
 Machine learning
+https://www.linkedin.com/feed/update/urn:li:activity:7037001701962215424/?utm_source=share&utm_medium=member_android
 https://github.com/tinahuangyt/MachineLearning-Expoplanet
 https://github.com/gregwinther/folk_transformer
 https://github.com/gregwinther/musicautobot
@@ -759,6 +806,9 @@ https://github.com/llSourcell/ChatGPT_Trading_Bot/
 https://lifelib.io/about.html
 https://www.youtube.com/watch?v=8SF_h3xF3cE&list=PLfYUBJiXbdtSvpQjSnJJ_PmDQB_VyT5iU
 Feature Engineering and Selection: A Practical Approach for Predictive Models, by Kjell Johnson and Max Kuhn
+https://medium.com/plain-simple-software/build-an-ai-text-summarizer-in-python-6209fb23875d
+https://python.plainenglish.io/how-machine-learning-can-help-you-purchase-your-next-home-89d9bf771f68
+https://towardsdatascience.com/how-to-use-monte-carlo-simulation-to-help-decision-making-a0a164bc8619
 
 Visualizing map
 https://zhuanlan.zhihu.com/p/388573380
@@ -793,13 +843,18 @@ python-graph gallery
 dashboards
 https://thinkinfi.com/make-interactive-dashboard-using-dash-with-python/
 
+Plotly + dash
+https://realpython.com/python-dash/
+https://medium.com/innovation-res/how-to-build-an-app-using-dash-plotly-and-python-and-deploy-it-to-aws-5d8d2c7bd652
+https://www.datacamp.com/tutorial/learn-build-dash-python
+https://www.justintodata.com/python-interactive-dashboard-with-plotly-dash-tutorial/
+https://towardsdatascience.com/web-development-with-python-dash-complete-tutorial-6716186e09b3
+https://towardsdatascience.com/how-to-build-a-web-based-app-in-50-lines-of-code-using-plotly-and-dash-3953f039b217
+
 Word cloud
 https://cloud.tencent.com/developer/article/1931771
 https://blog.csdn.net/yimixgg/article/details/80965797
 https://python-course.eu/applications-python/python-wordcloud-tutorial.php
-
-Stock + mysql
-https://freewechat.com/a/MzAwMjYxNjcwMw==/2456404246/1
 
 Python + excel
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500457&idx=1&sn=4f7a84d76129883a7ed94f16a43a8467&chksm=fdc8f58fcabf7c999724243d7955b6982164e9a310b75fa8df75e4965ace76394a83606fff02&scene=21#wechat_redirect
@@ -898,6 +953,7 @@ A+ Core 2 - https://geni.us/4dFqqmU
 Network+ - https://geni.us/4L1g
 Security+ - https://geni.us/KaWhOB
 
+cs50 and cs50p
 「CS106A 程式設計方法論」（Programming methodology）
 進階課程 CS106B
 電腦科學課程（CS107、CS110）
@@ -949,4 +1005,5 @@ https://www.learnfly.com/the-complete-web-development-2023-bootcamp
 https://www.udemy.com/course/data-science-real-world-projects-in-python-x/
 https://sparkaacademy.com/data-science-ml-immersive-quantum-bootcamp/
 https://danger.education/targeted-training-for-data-analysis-tc/
+https://fmlanding.kaplan.com.hk/courses/certificate-in-data-analysis-fundamentals-with-sql-python/
 https://www.udemy.com/course/python-programming-beyond-the-basics-intermediate-training/?couponCode=ED44ACD62524527688A9
