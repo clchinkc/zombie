@@ -1,7 +1,8 @@
+
+
 """
 # Plotting a line graph
 import matplotlib.pyplot as plt
-from matplotlib import markers
 
 years = [1950,1960,1965,1970,1975,1980,
         1985,1990,1995,2000,2005,
@@ -10,25 +11,50 @@ pops = [2.5,2.7,3,3.3,3.6,4.0,
         4.4,4.8,5.3,6.1,6.5,6.9,7.3]
 deaths = [1.2,1.7,1.8,2.2,2.5,
         2.7,2.9,3,3.1,3.2,3.5,3.6,4]
+birth = [4.5,4.7,4.8,5.0,5.2,
+        5.4,5.6,5.8,6.0,6.2,6.4,6.6,7]
 
-pops_line = plt.plot(years,pops, color=(255/255,100/255,100/255), alpha=0.5, linewidth=3)
-deaths_line = plt.plot(years,deaths, '--', color=(100/255,100/255,255/255), alpha=0.5, linewidth=2)
+fig, ax1 = plt.subplots()
 
-plt.title("Population Growth") # title
-plt.ylabel("Population in billions") # y label
-plt.xlabel("Population growth by year") # x label
+# Population plot
+pops_line = ax1.plot(years, pops, color=(255/255, 100/255, 100/255), alpha=0.5, linewidth=3)
+ax1.set_xlabel('Year')
+ax1.set_ylabel('Population in billions', color=(255/255, 100/255, 100/255))
+ax1.tick_params(axis='y', labelcolor=(255/255, 100/255, 100/255))
+ax1.legend(['Population'], loc='upper left')
 
+# Birth and death rate plot
+ax2 = ax1.twinx()
+birth_line = ax2.plot(years, birth, color='green', alpha=0.5, linewidth=3)
+death_line = ax2.plot(years, deaths, color='blue', alpha=0.5, linewidth=3)
+ax2.set_ylabel('Birth and Death Rates', color='black')
+ax2.tick_params(axis='y', labelcolor='black')
+ax2.legend(['Birth Rate', 'Death Rate'], loc='lower right')
+
+# Inset plot
+left, bottom, width, height = [0.12, 0.7, 0.2, 0.2]
+axins = ax2.inset_axes([left, bottom, width, height])
+diff = [birth[i]-deaths[i] for i in range(len(birth))]
+diff_line = axins.plot(years, diff, color='purple', alpha=0.5, linewidth=1)
+axins.set_ylabel('Birth - Death', color='black')
+axins.tick_params(axis='y', labelcolor='black')
+
+# Other settings
 plt.setp(plt.gca().get_xticklabels(), horizontalalignment='right')
 plt.setp(plt.gca().get_yticklabels(), horizontalalignment='right')
 plt.setp(pops_line, marker='o', markersize=5, markerfacecolor='red')
-plt.setp(deaths_line, marker='o', markersize=5, markerfacecolor='blue')
+plt.setp(birth_line, marker='o', markersize=5, markerfacecolor='green')
+plt.setp(death_line, marker='o', markersize=5, markerfacecolor='blue')
+plt.setp(diff_line, marker='o', markersize=1, markerfacecolor='purple')
 
-plt.legend(['Population','Deaths'], loc='upper left')
 plt.grid(True)
-
 plt.tight_layout()
 plt.show()
 """
+
+
+
+
 
 """
 # Plotting a bar graph
@@ -153,7 +179,7 @@ plt.show()
 # pairplot is a figure level function that combines scatterplot and histplot
 # facetgrid is a figure level function
 """
-
+"""
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -180,6 +206,7 @@ sns.despine(trim=True)
 
 plt.tight_layout()
 plt.show()
+"""
 
 # Probability plot
 # Spaghetti plot
