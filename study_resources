@@ -68,6 +68,8 @@ https://www.coursera.org/search?index=prod_all_launched_products_term_optimizati
 https://www.coursera.org/search?index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&topic=Business&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlFRRcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
 https://github.com/kiteco/python-youtube-code
 https://www.programcreek.com/python/?action=search_project
+tk text editor add textblob and pyspellchecker spellcheck, add autocomplete, add nltk sentiment analysis
+use fuzzywuzzy for searching
 
 Must read books
 https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
@@ -166,6 +168,7 @@ https://towardsdatascience.com/deploy-a-machine-learning-model-using-flask-da580
 https://towardsdatascience.com/how-to-easily-deploy-machine-learning-models-using-flask-b95af8fe34d4
 https://stackoverflow.com/questions/75571407/deploying-machine-learning-models-in-github-pages
 machine learning model deployment in flask
+https://medium.com/@connect.hashblock/creating-an-api-in-flask-with-mysql-a-step-by-step-guide-446f08722057
 
 django
 https://www.djangoproject.com/
@@ -176,6 +179,7 @@ https://realpython.com/django-social-network-1/
 https://www.freecodecamp.org/news/learn-django-by-building-a-marketplace/
 https://www.udemy.com/course/django-python-advanced/
 https://www.youtube.com/watch?v=llbtoQTt4qw
+https://codeculturepro.medium.com/difference-between-node-js-and-django-which-one-you-should-choose-b3e5ca5c44de
 
 Chart animation
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247486653&idx=1&sn=92128455c20ada46b355f5166ba5d4b5
@@ -185,6 +189,84 @@ https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247490218&idx=1&sn=19f061
 https://igoamazing.com/python-plotly/
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500033&idx=1&sn=79acaead7ea5106b9280ee7d65efc97a&chksm=fdc8f627cabf7f31e5aed380b11c535e3e54860e3800e341bb64099ad08828d3c16a859ced0a&scene=21#wechat_redirect
 https://www.linkedin.com/feed/update/urn:li:activity:7032712854961045504/?utm_source=share&utm_medium=member_android
+
+Data visualization
+https://zhuanlan.zhihu.com/p/148748125?utm_id=0
+Matplotlib
+https://zhuanlan.zhihu.com/p/388287863
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247488470&idx=1&sn=d54ae505d004e61a1de7d53fba67207a&chksm=fdcb24f0cabcade6e85db9065fc835be4bdf3fd98643b05072d1ad608972f472cc581cb2b342&scene=21#wechat_redirect
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247501498&idx=1&sn=626c5506b3df40d7d1aed491ae381129&chksm=fdc8f19ccabf788a435ebda1946d7dc3d8fdccb394b7a4c3efa61e0cc04deabf74c252b4cba7&scene=21#wechat_redirect
+Seaborn
+https://zhuanlan.zhihu.com/p/395103497
+https://blog.51cto.com/u_13389043/3155923
+pyecharts
+https://zhuanlan.zhihu.com/p/446927854
+https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/RZ0d9FWDJDPH2IqrIsThMw
+https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/FjNzAxkioePPG1a6vR0jTQ
+plotly
+https://zhuanlan.zhihu.com/p/387268377
+mapbox
+https://www.educative.io/collection/page/10370001/5993792801079296/5430842847657984/project
+R language
+https://mp.weixin.qq.com/s?__biz=MzkzMDE4NTc5NA==&mid=2247494348&idx=1&sn=d57f4ada61f32fd7d125a8e8d56188ae&chksm=c27cbde1f50b34f73615468d6f218b0e7a395d9981b911635b45319848d292a87d27fe7bf309&scene=132#wechat_redirect
+jupyter notebook only
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247491053&idx=1&sn=308114cc5de8b0ac4ee6f2d6e5ae13dd&chksm=fdcb2acbcabca3dd0c1559b37b4060b602a3a6f46a042541fcf553b40bf9959be8e1ea2b0762&scene=21#wechat_redirect
+PyG2Plot
+https://zhuanlan.zhihu.com/p/413293073
+python-graph gallery
+dashboards
+https://thinkinfi.com/make-interactive-dashboard-using-dash-with-python/
+https://github.com/3b1b/manim
+
+dashboard
+python dashboard
+https://learnpython.com/blog/first-python-dashboard/
+https://zhuanlan.zhihu.com/p/429709268?utm_id=0
+
+Plotly + dash
+https://realpython.com/python-dash/
+https://medium.com/innovation-res/how-to-build-an-app-using-dash-plotly-and-python-and-deploy-it-to-aws-5d8d2c7bd652
+https://www.datacamp.com/tutorial/learn-build-dash-python
+https://www.justintodata.com/python-interactive-dashboard-with-plotly-dash-tutorial/
+https://towardsdatascience.com/web-development-with-python-dash-complete-tutorial-6716186e09b3
+https://towardsdatascience.com/how-to-build-a-web-based-app-in-50-lines-of-code-using-plotly-and-dash-3953f039b217
+
+financial analysis
+financial analysis python
+fundamental analysis python
+technical analysis python
+https://jayantverma2809-stock-analysis-app-7xxxtz.streamlit.app/
+finnancial and valuation analysis/modeling
+financial dashboard
+quantconnect
+https://youtu.be/joXDV5eqOoY
+backtrader
+zipline
+https://pyecontech.com/
+https://hk.jobsdb.com/en-hk/articles/%E5%85%A5%E8%A1%8Cquant-trader/
+https://www.mtj-community.com/1-intraday-fundamentals-2-technical-analysis-3-reading-the-tape/
+https://www.mtj-community.com/tag/%e4%ba%a4%e6%98%93%e5%9f%ba%e6%9c%ac%e8%a6%81%e7%9f%a5%e7%9a%84%e4%ba%8b/
+stock prediction
+https://stylengineer.com/program/python-stock-stockcodelookup-guide/
+https://www.finlab.tw/%E7%94%A8%E7%88%AC%E8%9F%B2%E7%88%AC%E5%85%A8%E4%B8%96%E7%95%8C%E8%82%A1%E5%83%B9/
+https://www.finlab.tw/%E5%88%A9%E7%94%A8pandas%E8%BC%95%E9%AC%86%E5%8F%96%E5%BE%97%E6%AD%B7%E5%8F%B2%E8%82%A1%E5%83%B9/
+https://ithelp.ithome.com.tw/m/users/20103826/ironman/3032?sc=iThelpR
+https://corporatefinanceinstitute.com/resources/data-science/how-to-scrape-stock-data-with-python/
+https://freewechat.com/a/MzAwMjYxNjcwMw==/2456404246/1
+https://blog.51cto.com/u_15652786/5325345
+https://blog.51cto.com/u_15844361/5792521
+https://blog.51cto.com/phyger/5201970
+https://blog.51cto.com/u_15127492/2657080
+https://www.youtube.com/watch?v=Jb8l989IzTE
+https://youtu.be/H2OkrvSojOI
+https://youtu.be/B9rUPj7z9TA
+https://www.careerprinciples.com/courses/finance-valuation-course
+https://www.careerprinciples.com/courses/excel-for-business-finance
+https://mytradingjournalhk.com/
+https://www.linkedin.com/feed/update/urn:li:activity:7037616854219034624/
+https://github.com/MilianoJunior/Advance-in-Financial-ML/blob/main/dados/Date_main.py
+https://www.marketlifetrading.com/
+https://www.mkassistant.com/collections/all
 
 Reinforcement learning
 https://blog.csdn.net/abcdefg90876/article/details/108459475
@@ -204,31 +286,6 @@ tensortrade
 https://github.com/SparkShen02/MDP-with-Value-Iteration-and-Policy-Iteration
 https://towardsdatascience.com/implement-value-iteration-in-python-a-minimal-working-example-f638907f3437
 https://towardsdatascience.com/how-to-code-the-value-iteration-algorithm-for-reinforcement-learning-8fb806e117d1
-
-financial analysis
-technical analysis python
-quantconnect
-https://youtu.be/joXDV5eqOoY
-backtrader
-zipline
-https://pyecontech.com/
-https://hk.jobsdb.com/en-hk/articles/%E5%85%A5%E8%A1%8Cquant-trader/
-stock prediction
-https://stylengineer.com/program/python-stock-stockcodelookup-guide/
-https://www.finlab.tw/%E7%94%A8%E7%88%AC%E8%9F%B2%E7%88%AC%E5%85%A8%E4%B8%96%E7%95%8C%E8%82%A1%E5%83%B9/
-https://www.finlab.tw/%E5%88%A9%E7%94%A8pandas%E8%BC%95%E9%AC%86%E5%8F%96%E5%BE%97%E6%AD%B7%E5%8F%B2%E8%82%A1%E5%83%B9/
-https://ithelp.ithome.com.tw/m/users/20103826/ironman/3032?sc=iThelpR
-https://corporatefinanceinstitute.com/resources/data-science/how-to-scrape-stock-data-with-python/
-https://freewechat.com/a/MzAwMjYxNjcwMw==/2456404246/1
-https://blog.51cto.com/u_15652786/5325345
-https://blog.51cto.com/u_15844361/5792521
-https://blog.51cto.com/phyger/5201970
-https://blog.51cto.com/u_15127492/2657080
-https://www.youtube.com/watch?v=Jb8l989IzTE
-https://youtu.be/H2OkrvSojOI
-https://youtu.be/B9rUPj7z9TA
-https://www.careerprinciples.com/courses/finance-valuation-course
-https://www.careerprinciples.com/courses/excel-for-business-finance
 
 Software Design
 https://www.youtube.com/watch?v=tAuRQs_d9F8
@@ -518,6 +575,7 @@ https://ithelp.ithome.com.tw/users/20065859/ironman/1499
 evolution game
 https://replit.com/search?query=evolution
 https://www.youtube.com/watch?v=g0db5kA4BfQ
+https://lp.leadpages.com/ultimate-website-builder/
 
 Python game
 https://replit.com/@LMNtal/Star-Wars-A-New-Recruit#AGM/Templates/Actions/reactive_combat_action.py - using https://github.com/ljmanso/AGM
@@ -540,6 +598,7 @@ https://github.com/techwithtim/Pygame-Tutorials
 https://github.com/techwithtim/PygameForBeginners
 https://github.com/techwithtim/PyMunk-Physics-Simulation
 https://www.youtube.com/watch?v=0qYu66olR64&ab_channel=ScreWiew
+https://github.com/PaulleDemon/
 
 pyglet
 https://www.youtube.com/watch?v=KbiRYkoBV34&ab_channel=DreamsofCode
@@ -718,6 +777,9 @@ https://learn.microsoft.com/zh-tw/sql/machine-learning/tutorials/python-clusteri
 https://note.charlestw.com/python-how-to-connect-sqlite/
 https://www.51cto.com/article/708748.html
 https://blog.boot.dev/backend/top-backend-technologies/
+https://www.youtube.com/watch?v=7s_8f-h5boE
+https://www.coursera.org/specializations/learn-sql-basics-data-science
+https://www.linkedin.com/feed/update/urn:li:activity:7037617150181740546/
 
 Streamlit
 https://pythonforundergradengineers.com/streamlit-app-with-bokeh.html
@@ -812,12 +874,14 @@ https://www.youtube.com/watch?v=GPVsHOlRBBI
 https://www.youtube.com/watch?v=rGx1QNdYzvs&list=WL&index=41&t=14s
 https://www.youtube.com/watch?v=S2zBHmkRbhY
 https://www.youtube.com/watch?v=fkhkvJSHivE
+https://god-level-python.notion.site/god-level-python/Data-Analyst-Roadmap-Building-Profile-Portfolio-Projects-ec381aac7a9944e2a529e281c0d2aaf8
 
 Data visualization
 https://github.com/tinahuangyt/Matplotlib_Pymaceuticals
 https://github.com/tinahuangyt/Matplotlib_Pyber
 https://towardsdatascience.com/simple-method-of-creating-animated-graphs-127c11f58cc5
 https://stackoverflow.com/questions/70472479/plotting-a-barchart-which-should-be-sorted-by-their-rank-using-particular-column
+https://www.linkedin.com/pulse/what-data-visualization-datathick/
 
 excel
 https://www.youtube.com/watch?v=weTmydM3fIE
@@ -825,7 +889,7 @@ https://www.youtube.com/watch?v=5eLtjO2Hfs0
 https://www.youtube.com/watch?v=Q-zO7zetdX8
 https://www.youtube.com/watch?v=jV-6P9N4zIg
 https://www.youtube.com/watch?v=g4a9x021R9c
-
+https://www.youtube.com/watch?v=9uFKAwIa3V0
 
 API + Data analysis + Data visualization
 http://blog.itpub.net/69982434/viewspace-2738661
@@ -845,6 +909,7 @@ API + Data analysis + Data visualization
 https://github.com/tinahuangyt/Python-API_World-Weather
 
 Openai API project
+https://lwebapp.com/zh/post/python-chatgpt-api
 https://colab.research.google.com/drive/1CosxSNod48KrkyBn5_vkeleb7u0CrBa6#scrollTo=EiripIMAqGWf
 https://github.com/jerpint/buster/blob/main/buster/apps/gradio_app.ipynb
 https://huggingface.co/spaces/jerpint/buster
@@ -883,40 +948,6 @@ https://cloud.tencent.com/developer/article/1933412
 https://blog.51cto.com/u_14848199/3809668
 https://blog.51cto.com/u_13389043/5166211
 
-Data visualization
-https://zhuanlan.zhihu.com/p/148748125?utm_id=0
-Matplotlib
-https://zhuanlan.zhihu.com/p/388287863
-https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247488470&idx=1&sn=d54ae505d004e61a1de7d53fba67207a&chksm=fdcb24f0cabcade6e85db9065fc835be4bdf3fd98643b05072d1ad608972f472cc581cb2b342&scene=21#wechat_redirect
-https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247501498&idx=1&sn=626c5506b3df40d7d1aed491ae381129&chksm=fdc8f19ccabf788a435ebda1946d7dc3d8fdccb394b7a4c3efa61e0cc04deabf74c252b4cba7&scene=21#wechat_redirect
-Seaborn
-https://zhuanlan.zhihu.com/p/395103497
-https://blog.51cto.com/u_13389043/3155923
-pyecharts
-https://zhuanlan.zhihu.com/p/446927854
-https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/RZ0d9FWDJDPH2IqrIsThMw
-https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/FjNzAxkioePPG1a6vR0jTQ
-plotly
-https://zhuanlan.zhihu.com/p/387268377
-mapbox
-https://www.educative.io/collection/page/10370001/5993792801079296/5430842847657984/project
-R language
-https://mp.weixin.qq.com/s?__biz=MzkzMDE4NTc5NA==&mid=2247494348&idx=1&sn=d57f4ada61f32fd7d125a8e8d56188ae&chksm=c27cbde1f50b34f73615468d6f218b0e7a395d9981b911635b45319848d292a87d27fe7bf309&scene=132#wechat_redirect
-jupyter notebook only
-https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247491053&idx=1&sn=308114cc5de8b0ac4ee6f2d6e5ae13dd&chksm=fdcb2acbcabca3dd0c1559b37b4060b602a3a6f46a042541fcf553b40bf9959be8e1ea2b0762&scene=21#wechat_redirect
-PyG2Plot
-https://zhuanlan.zhihu.com/p/413293073
-python-graph gallery
-dashboards
-https://thinkinfi.com/make-interactive-dashboard-using-dash-with-python/
-
-Plotly + dash
-https://realpython.com/python-dash/
-https://medium.com/innovation-res/how-to-build-an-app-using-dash-plotly-and-python-and-deploy-it-to-aws-5d8d2c7bd652
-https://www.datacamp.com/tutorial/learn-build-dash-python
-https://www.justintodata.com/python-interactive-dashboard-with-plotly-dash-tutorial/
-https://towardsdatascience.com/web-development-with-python-dash-complete-tutorial-6716186e09b3
-https://towardsdatascience.com/how-to-build-a-web-based-app-in-50-lines-of-code-using-plotly-and-dash-3953f039b217
 
 Word cloud
 https://cloud.tencent.com/developer/article/1931771
@@ -944,6 +975,11 @@ https://realpython.com/face-recognition-with-python/
 Tensorflow
 https://github.com/RichardFu123/tensorflow/tree/master/CNN
 
+web scraping
+https://github.com/s0md3v/Photon
+https://github.com/s0md3v/XSStrike
+https://google-images-download.readthedocs.io/en/latest/examples.html#
+
 GPT
 https://github.com/shyamsn97/mario-gpt
 
@@ -970,11 +1006,37 @@ https://www.youtube.com/watch?v=zF34dRivLOw&ab_channel=TraversyMedia
 https://www.youtube.com/watch?v=T_KrYLW4jw8&list=PLzMcBGfZo4-nyLTlSRBvo0zjSnCnqjHYQ&ab_channel=TechWithTim
 https://www.youtube.com/playlist?list=PLlrxD0HtieHjbTjrchBwOVks_sr8EVW1x
 
+data structure
+https://www.udemy.com/course/datastructurescncpp/
+https://www.coursera.org/learn/algorithms-part1
+https://www.tutorialspoint.com/data_structures_algorithms/index.htm
+https://www.programiz.com/dsa
+https://www.geeksforgeeks.org/data-structures/
+https://www.geeksforgeeks.org/data-structures/
+https://www.scaler.com/topics/data-structures/
+https://www.udemy.com/course/data-structures-and-algorithms-the-complete-guide/
+https://www.udemy.com/course/master-the-coding-interview-data-structures-algorithms/
+https://www.studytonight.com/data-structures/
+https://www.codechef.com/certification/data-structures-and-algorithms/prepare
+https://www.journaldev.com/data-structure-algorithms
+https://www.guru99.com/design-analysis-algorithms-tutorial.html
+https://prepinsta.com/data-structures/
+https://www.w3schools.in/data-structures/intro
+https://www.javatpoint.com/data-structure-tutorial
+
 new programming language
 https://github.com/Ceebox/cbLang
 https://www.youtube.com/watch?v=HuVg1trQC64
 
+shell
+https://www.udacity.com/course/shell-workshop--ud206
+https://www.coursera.org/projects/introduction-to-bash-shell-scripting
 
+big data
+https://www.coursera.org/specializations/big-data
+https://www.udemy.com/course/hadoopinrealworld/
+https://www.udacity.com/course/intro-to-hadoop-and-mapreduce--ud617
+https://www.udacity.com/course/learn-spark-at-udacity--ud2002
 
 Courses
 1. A JavaScript Course
@@ -1064,11 +1126,11 @@ https://careerhackers.io/chp-landing/
 https://tecky.io/en/courses/SMA/
 https://www.dataquest.io/plans/
 https://www.domestika.org/en/courses/64-introduction-to-data-visualization
-https://mathematicbooks.com/product/python-for-programmers-with-big-data-and-artificial-intelligence-case-studies/
 https://www.bootcamp.lejhro.com/
 https://courses.earnandexcel.com/data-science-course-us
 https://courses.earnandexcel.com/5-web-developer-courses
 https://www.learnfly.com/the-complete-web-development-2023-bootcamp
+https://mathematicbooks.com/product/python-for-programmers-with-big-data-and-artificial-intelligence-case-studies
 https://www.udemy.com/course/data-science-real-world-projects-in-python-x/
 https://sparkaacademy.com/data-science-ml-immersive-quantum-bootcamp/
 https://danger.education/targeted-training-for-data-analysis-tc/
