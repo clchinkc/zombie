@@ -257,3 +257,66 @@ class maze:
 
 # master_maze a list of all the mazes in the game and some places storing special items
 """
+"""
+from heapq import heappop, heappush
+from math import sqrt
+
+def plan_route(start, end, prob_map):
+    # Initialize the open and closed sets
+    open_set = [(0, start)] # priority queue with the start node as the first element
+    closed_set = set()
+    
+    # Initialize the cost and parent dictionaries
+    cost = {start: 0}
+    parent = {start: None}
+    
+    # Define the heuristic function
+    def heuristic(node):
+        dx = end[0] - node[0]
+        dy = end[1] - node[1]
+        return sqrt(dx**2 + dy**2)
+    
+    # Define the edge cost function
+    def edge_cost(node1, node2):
+        prob = prob_map[node2] # probability of encountering zombies
+        if prob == 0:
+            return float('inf') # avoid impassable nodes
+        return 1/prob # inverse probability as edge cost
+    
+    # Start the search
+    while open_set:
+        # Get the node with the lowest cost from the priority queue
+        current_cost, current_node = heappop(open_set)
+        if current_node == end:
+            # Found the goal, reconstruct the path
+            path = [current_node]
+            while parent[current_node]:
+                path.append(parent[current_node])
+                current_node = parent[current_node]
+            path.reverse()
+            return path
+        
+        # Add the current node to the closed set
+        closed_set.add(current_node)
+        
+        # Expand the neighbors of the current node
+        for neighbor in get_neighbors(current_node):
+            if neighbor in closed_set:
+                continue
+            
+            # Calculate the tentative cost of reaching the neighbor
+            tentative_cost = cost[current_node] + edge_cost(current_node, neighbor)
+            
+            if neighbor not in cost or tentative_cost < cost[neighbor]:
+                # Update the cost and parent of the neighbor
+                cost[neighbor] = tentative_cost
+                parent[neighbor] = current_node
+                
+                # Add the neighbor to the priority queue with the new cost
+                priority = tentative_cost + heuristic(neighbor)
+                heappush(open_set, (priority, neighbor))
+    
+    # Goal not found, return None
+    return None
+
+"""

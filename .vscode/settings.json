@@ -1,18 +1,18 @@
 {
 	"editor.formatOnSave": false,
-	"editor.defaultFormatter": "ms-python.black-formatter",
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
 	"editor.formatOnSaveMode": "modificationsIfAvailable",
 	"editor.autoIndent": "keep",
 	"editor.detectIndentation": true,
 	"editor.stickyScroll.enabled": true,
 	"python.analysis.typeCheckingMode": "basic",
-	"python.linting.enabled": true,
-	"python.linting.pylintEnabled": false,
+	"python.linting.enabled": false,
+	"python.linting.pylintEnabled": true,
 	"python.linting.flake8Enabled": false,
-	"python.linting.mypyEnabled": false,
+	"python.linting.mypyEnabled": true,
 	"python.linting.pycodestyleEnabled": false,
-	"python.formatting.autopep8Path": "autopep8",
 	"python.formatting.blackPath": "black",
+	"python.formatting.autopep8Path": "autopep8",
 	"python.linting.pylintPath": "pylint",
 	"python.linting.flake8Path": "flake8",
 	"python.testing.pytestEnabled": true,
@@ -26,7 +26,8 @@
 	"[python]": {
     "editor.codeActionsOnSave": {
         "source.organizeImports": true
-    },
+	},
+	"editor.defaultFormatter": "ms-python.black-formatter",
   },
 "isort.args": [
 	"--profile",

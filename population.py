@@ -1508,6 +1508,14 @@ Experiment with different numbers of wolves and observe the effect on grass biom
 Repeat the simulation for multiple years to determine the length of time required to achieve the desired effect.
 """
 """
+https://github.com/MateusZitelli/PyPlanets
+http://plague-like.blogspot.com/
+https://github.com/FergusGriggs/fegaria-remastered
+https://www.pygame.org/tags/zombie
+http://nickandnicks.yolasite.com/villagersim.php
+civilization simulator python
+"""
+"""
 Mean, median, mode, and standard deviation are statistical measures that can be used to describe and analyze data in a zombie apocalypse simulation. Here are some examples:
 
 Mean: The mean can be used to calculate the average number of zombies that appear in a specific area over time. This can be useful for predicting the rate of zombie infection and determining the necessary resources needed to survive.
