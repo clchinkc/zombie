@@ -748,6 +748,7 @@ a debug mode that print all variables in each steps and allow user control of th
 https://pythonforundergradengineers.com/writing-tests-for-scientific-code.html
 speed up
 https://mp.weixin.qq.com/s/M7DdUWLzqOLVR7qJFmvZdA
+concurrent.futures module
 threading
 https://python-course.eu/applications-python/threads.php
 subprocessing
