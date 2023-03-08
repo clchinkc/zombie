@@ -70,6 +70,7 @@ https://github.com/kiteco/python-youtube-code
 https://www.programcreek.com/python/?action=search_project
 tk text editor add textblob and pyspellchecker spellcheck, add autocomplete, add nltk sentiment analysis
 use fuzzywuzzy for searching
+https://www.usandopy.com/en/artigo/how-to-build-a-pokedex-in-python-python-project-part-01/
 
 Must read books
 https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
@@ -222,6 +223,9 @@ dashboard
 python dashboard
 https://learnpython.com/blog/first-python-dashboard/
 https://zhuanlan.zhihu.com/p/429709268?utm_id=0
+https://www.youtube.com/watch?v=t3cAUt7sOQg
+https://youtu.be/0Smgm2UTUSo
+https://youtu.be/Lfzu74XDyco
 
 Plotly + dash
 https://realpython.com/python-dash/
@@ -233,6 +237,7 @@ https://towardsdatascience.com/how-to-build-a-web-based-app-in-50-lines-of-code-
 
 financial analysis
 financial analysis python
+python金融分析
 fundamental analysis python
 technical analysis python
 https://jayantverma2809-stock-analysis-app-7xxxtz.streamlit.app/
@@ -346,6 +351,33 @@ https://towardsdatascience.com/10-common-software-architectural-patterns-in-a-nu
 https://www.youtube.com/watch?v=tv-_1er1mWI&ab_channel=Fireship
 https://www.arjancodes.com/mindset
 https://www.udemy.com/course/object-oriented-programming-with-python-learn-to-code-faster/
+https://www.coursera.org/specializations/software-engineering
+https://www.coursera.org/specializations/software-design-architecture
+https://www.coursera.org/specializations/software-development-lifecycle
+https://www.coursera.org/specializations/object-oriented-programming
+https://www.coursera.org/specializations/java-object-oriented
+
+data structure
+https://www.udemy.com/course/datastructurescncpp/
+https://www.coursera.org/learn/algorithms-part1
+https://www.tutorialspoint.com/data_structures_algorithms/index.htm
+https://www.programiz.com/dsa
+https://www.geeksforgeeks.org/data-structures/
+https://www.scaler.com/topics/data-structures/
+https://www.udemy.com/course/data-structures-and-algorithms-the-complete-guide/
+https://www.udemy.com/course/master-the-coding-interview-data-structures-algorithms/
+https://www.studytonight.com/data-structures/
+https://www.codechef.com/certification/data-structures-and-algorithms/prepare
+https://www.journaldev.com/data-structure-algorithms
+https://www.guru99.com/design-analysis-algorithms-tutorial.html
+https://prepinsta.com/data-structures/
+https://www.w3schools.in/data-structures/intro
+https://www.javatpoint.com/data-structure-tutorial
+https://www.coursera.org/specializations/data-structures-algorithms
+https://www.coursera.org/specializations/algorithms
+https://www.udacity.com/course/data-structures-and-algorithms-in-swift--ud1011
+https://www.udacity.com/course/data-structures-and-algorithms-nanodegree--nd256
+https://www.coursera.org/learn/python-data
 
 Code style
 https://en.wikipedia.org/wiki/Coding_best_practices
@@ -403,6 +435,7 @@ https://www.runoob.com/python3/python3-mysql.html
 https://www.tw511.com/3/39/1388.html
 https://www.udemy.com/course/the-python-programming-v39-comprehensive-bootcamp/
 https://www.udemy.com/course/the-intermediate-python-training-boost-your-python-skills/
+https://www.coursera.org/specializations/python
 
 c++
 “The Most Important C++ Books...Ever”
@@ -599,6 +632,7 @@ https://github.com/techwithtim/PygameForBeginners
 https://github.com/techwithtim/PyMunk-Physics-Simulation
 https://www.youtube.com/watch?v=0qYu66olR64&ab_channel=ScreWiew
 https://github.com/PaulleDemon/
+https://github.com/PaulleDemon/TankGame
 
 pyglet
 https://www.youtube.com/watch?v=KbiRYkoBV34&ab_channel=DreamsofCode
@@ -672,6 +706,11 @@ https://welly.tw/digital-marketing/learn-google-lesson
 
 
 blockchain project
+https://www.coursera.org/specializations/decentralized-finance-duke
+https://www.udemy.com/course/build-your-blockchain-az/
+https://www.coursera.org/specializations/blockchain-revolution-enterprise
+https://www.coursera.org/specializations/blockchain
+https://www.udacity.com/course/blockchain-developer-nanodegree--nd1309
 https://buildspace.so/
 https://www.analyticsinsight.net/top-10-programming-languages-for-building-blockchain-applications/
 https://www.blocktempo.com/how-to-create-a-new-token-via-chatgpt/
@@ -1006,24 +1045,6 @@ https://www.youtube.com/watch?v=zF34dRivLOw&ab_channel=TraversyMedia
 https://www.youtube.com/watch?v=T_KrYLW4jw8&list=PLzMcBGfZo4-nyLTlSRBvo0zjSnCnqjHYQ&ab_channel=TechWithTim
 https://www.youtube.com/playlist?list=PLlrxD0HtieHjbTjrchBwOVks_sr8EVW1x
 
-data structure
-https://www.udemy.com/course/datastructurescncpp/
-https://www.coursera.org/learn/algorithms-part1
-https://www.tutorialspoint.com/data_structures_algorithms/index.htm
-https://www.programiz.com/dsa
-https://www.geeksforgeeks.org/data-structures/
-https://www.geeksforgeeks.org/data-structures/
-https://www.scaler.com/topics/data-structures/
-https://www.udemy.com/course/data-structures-and-algorithms-the-complete-guide/
-https://www.udemy.com/course/master-the-coding-interview-data-structures-algorithms/
-https://www.studytonight.com/data-structures/
-https://www.codechef.com/certification/data-structures-and-algorithms/prepare
-https://www.journaldev.com/data-structure-algorithms
-https://www.guru99.com/design-analysis-algorithms-tutorial.html
-https://prepinsta.com/data-structures/
-https://www.w3schools.in/data-structures/intro
-https://www.javatpoint.com/data-structure-tutorial
-
 new programming language
 https://github.com/Ceebox/cbLang
 https://www.youtube.com/watch?v=HuVg1trQC64
@@ -1044,6 +1065,7 @@ Course - https://geni.us/LZvS75
 
 2. A Cloud Certification Course
 AWS Cloud Practitioner - https://geni.us/X08kfh
+https://aws.amazon.com/tw/training/
 AWS Solutions Architect - https://geni.us/eZnE
 Azure AZ-900 - https://geni.us/ZHsiQq
 Azure AZ-104 - https://geni.us/BHx4wLW
@@ -1096,7 +1118,8 @@ https://www.udacity.com/course/data-analysis-and-visualization--ud404
 https://www.udemy.com/course/mastering-python-data-handling-analysis-and-visualization/
 
 AI For Business
-https://www.coursera.org/specializations/ai-for-business-wharton?irclickid=0ocwtz0ecxyNWfrQtGQZjznDUkA3s9TTAXmm2k0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3568609&utm_content=b2c
+https://www.coursera.org/specializations/ai-for-business-wharton
+https://www.coursera.org/professional-certificates/google-it-automation
 
 Azure for all
 https://learn.microsoft.com/zh-tw/training/browse/?roles=ai-engineer
@@ -1135,4 +1158,7 @@ https://www.udemy.com/course/data-science-real-world-projects-in-python-x/
 https://sparkaacademy.com/data-science-ml-immersive-quantum-bootcamp/
 https://danger.education/targeted-training-for-data-analysis-tc/
 https://fmlanding.kaplan.com.hk/courses/certificate-in-data-analysis-fundamentals-with-sql-python/
+https://www.coursera.org/professional-certificates/ibm-full-stack-cloud-developer
+https://www.coursera.org/professional-certificates/devops-and-software-engineering
+https://www.coursera.org/specializations/java-programming
 https://www.udemy.com/course/python-programming-beyond-the-basics-intermediate-training/?couponCode=ED44ACD62524527688A9
