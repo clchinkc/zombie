@@ -1,5 +1,20 @@
 
 """
+A genetic algorithm is a type of optimization algorithm inspired by the process of natural selection. It is used to solve complex problems by mimicking the process of evolution. Here is a general outline of a genetic algorithm:
+
+Initialization: The algorithm starts by creating an initial population of potential solutions to the problem. Each individual in the population is represented as a string of genes, which can be thought of as the parameters of the solution.
+
+Fitness evaluation: Each individual in the population is evaluated for its fitness based on some criteria. This could be a mathematical function, a simulation, or some other measure of performance.
+
+Selection: The most fit individuals are selected from the population to serve as parents for the next generation. The selection process can be done in many ways, but typically individuals with higher fitness have a greater chance of being selected.
+
+Reproduction: The selected individuals are used to create a new generation of individuals. This is done through crossover and mutation. Crossover involves exchanging genes between two parents to create a new individual. Mutation involves randomly changing a gene in an individual to create a new variation.
+
+Termination: The algorithm stops when a stopping criterion is met. This could be a maximum number of generations, a minimum fitness level, or some other criterion.
+
+Solution extraction: The final population contains the most fit individuals. The solution can be extracted by selecting the individual with the highest fitness or by combining the genes of multiple individuals to create a hybrid solution.
+"""
+"""
 To incorporate a genetic algorithm like the one shown in the previous example into a larger project to control the activity of NPC agents in a game or simulation, you would need to do the following:
 
 Define the NPC behavior parameters: These are the characteristics that determine the NPC's behavior. They could include things like movement patterns, decision-making rules, or responses to player actions.

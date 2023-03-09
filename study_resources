@@ -71,6 +71,8 @@ https://www.programcreek.com/python/?action=search_project
 tk text editor add textblob and pyspellchecker spellcheck, add autocomplete, add nltk sentiment analysis
 use fuzzywuzzy for searching
 https://www.usandopy.com/en/artigo/how-to-build-a-pokedex-in-python-python-project-part-01/
+https://www.pycob.com/gallery?tag=Featured
+https://github.com/pycob/sample-apps
 
 Must read books
 https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
@@ -152,6 +154,7 @@ https://github.com/ashutoshpipriye/Falsk-application-of-Iris-prediction-on-pytho
 https://github.com/ashutoshpipriye/Book_detail-API_in_Flask
 https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world
 https://thinkinfi.com/upload-and-display-image-in-flask-python/
+https://github.com/lucilaalonso/DTS05-Proyecto_individual
 https://pythonforundergradengineers.com/flask-app-on-digital-ocean.html
 https://pythonforundergradengineers.com/flask-iot-server-motivation.html
 https://pythonforundergradengineers.com/flask-iot-server-setup.html
@@ -218,9 +221,13 @@ python-graph gallery
 dashboards
 https://thinkinfi.com/make-interactive-dashboard-using-dash-with-python/
 https://github.com/3b1b/manim
+https://flowingdata.com/2023/02/27/100-visualizations-from-a-single-dataset-with-6-data-points/
 
 dashboard
 python dashboard
+Stock dashboard
+Market dashboard
+数据可视化模板
 https://learnpython.com/blog/first-python-dashboard/
 https://zhuanlan.zhihu.com/p/429709268?utm_id=0
 https://www.youtube.com/watch?v=t3cAUt7sOQg
@@ -239,6 +246,9 @@ financial analysis
 financial analysis python
 python金融分析
 fundamental analysis python
+fundamental analysis of stocks using python
+design a fundamental analysis that use python
+design a technical analysis that use python
 technical analysis python
 https://jayantverma2809-stock-analysis-app-7xxxtz.streamlit.app/
 finnancial and valuation analysis/modeling
@@ -251,6 +261,9 @@ https://pyecontech.com/
 https://hk.jobsdb.com/en-hk/articles/%E5%85%A5%E8%A1%8Cquant-trader/
 https://www.mtj-community.com/1-intraday-fundamentals-2-technical-analysis-3-reading-the-tape/
 https://www.mtj-community.com/tag/%e4%ba%a4%e6%98%93%e5%9f%ba%e6%9c%ac%e8%a6%81%e7%9f%a5%e7%9a%84%e4%ba%8b/
+Operational Research
+quant tutorial
+https://www.wallstreetprep.com/self-study-programs/premium-package/
 stock prediction
 https://stylengineer.com/program/python-stock-stockcodelookup-guide/
 https://www.finlab.tw/%E7%94%A8%E7%88%AC%E8%9F%B2%E7%88%AC%E5%85%A8%E4%B8%96%E7%95%8C%E8%82%A1%E5%83%B9/
@@ -633,6 +646,7 @@ https://github.com/techwithtim/PyMunk-Physics-Simulation
 https://www.youtube.com/watch?v=0qYu66olR64&ab_channel=ScreWiew
 https://github.com/PaulleDemon/
 https://github.com/PaulleDemon/TankGame
+https://www.youtube.com/watch?v=rvLfF9hciU8
 
 pyglet
 https://www.youtube.com/watch?v=KbiRYkoBV34&ab_channel=DreamsofCode
@@ -700,6 +714,9 @@ https://github.com/jwasham/coding-interview-university
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247497696&idx=1&sn=ea99acc80156b27049682d631aad3ff6&chksm=fdc8c0c6cabf49d093daa9e0ff60351389ccf9c8f3c56bdcb14cb7aa29d7c3523826a13ae871&scene=21#wechat_redirect
 https://github.com/girishgr8/Resume-Builder
 https://github.com/jwasham/coding-interview-university
+https://arxiv.org/abs/2201.00650
+Blind
+Glassdoor
 
 Digital marketing
 https://welly.tw/digital-marketing/learn-google-lesson
@@ -819,6 +836,7 @@ https://blog.boot.dev/backend/top-backend-technologies/
 https://www.youtube.com/watch?v=7s_8f-h5boE
 https://www.coursera.org/specializations/learn-sql-basics-data-science
 https://www.linkedin.com/feed/update/urn:li:activity:7037617150181740546/
+https://www.linkedin.com/feed/update/urn:li:activity:7038450957025734656/
 
 Streamlit
 https://pythonforundergradengineers.com/streamlit-app-with-bokeh.html
@@ -860,6 +878,7 @@ Tableau
 
 
 Data analysis
+https://dagshub.com/
 https://www.youtube.com/watch?v=iNEwkaYmPqY
 https://cloud.tencent.com/developer/article/2166719
 https://www.linkedin.com/feed/update/urn:li:activity:7035686267220578304/?utm_source=share&utm_medium=member_android
@@ -914,6 +933,7 @@ https://www.youtube.com/watch?v=rGx1QNdYzvs&list=WL&index=41&t=14s
 https://www.youtube.com/watch?v=S2zBHmkRbhY
 https://www.youtube.com/watch?v=fkhkvJSHivE
 https://god-level-python.notion.site/god-level-python/Data-Analyst-Roadmap-Building-Profile-Portfolio-Projects-ec381aac7a9944e2a529e281c0d2aaf8
+https://datascience.fm/mega-guide-to-pandas-data-frame-for-data-scientists/
 
 Data visualization
 https://github.com/tinahuangyt/Matplotlib_Pymaceuticals
@@ -1024,6 +1044,7 @@ https://github.com/shyamsn97/mario-gpt
 
 MCMC
 pymc3
+bayesian modeling and computation in python
 
 text classification
 https://python-course.eu/machine-learning/introduction-text-classification.php
@@ -1133,9 +1154,6 @@ https://www.coursera.org/deeplearning-ai
 https://huggingface.co/course/chapter1/1
 
 
-Research interview process
-Blind
-Glassdoor
 
 Useful python libraries
 PDFMiner - extract text from PDF

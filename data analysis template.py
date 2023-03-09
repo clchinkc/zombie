@@ -18,7 +18,7 @@ import pandas as pd
 import seaborn as sns
 from scipy import stats
 
-# Load the dataset
+# Load the dataset from an online source
 loc_file = "https://raw.githubusercontent.com/MuhammadAli437/ChatGPT/main/shootings.csv"
 data = pd.read_csv(loc_file)
 
@@ -224,10 +224,20 @@ plt.title('Trend of number of deaths over time')
 plt.show()
 # normal
 
-# Histogram of Age of Individuals Shot: shows a distribution of ages of individuals shot.
-sns.histplot(data=data, x='age', kde=True, bins=20).set(title="Histogram of Age of Individuals Shot")
+# count the number of deaths in each age
+death_counts = data['age'].value_counts(ascending=True, normalize=True)
+# plot the number of deaths in each age using jointplot
+sns.jointplot(x='age', y=death_counts, data=data, kind='reg')
+plt.title('Correlation between age and number of shootings')
 plt.show()
-# good
+# good, title not working
+
+# Create histplot of Number of Deaths by Race and Age
+sns.histplot(data=data, x='age', hue='race', bins=20, kde=True, kde_kws={'bw_adjust': 1.5}, multiple="stack", palette='muted')
+plt.title('Distribution of Age by Race')
+plt.xlabel('Age')
+plt.ylabel('Count')
+plt.show()
 
 # Count plot of Race of Individuals Shot: shows the number of deaths for each race over the years.
 data_race_year = data.groupby(['year', 'race'])['id'].count().unstack()
@@ -261,7 +271,21 @@ plt.yscale('log')
 plt.show()
 # good
 
-"""
+# Bar Plot of Number of Deaths by Mental Illness and Threat Level:
+ax = sns.countplot(data=data, x='mental_illness', hue='threat')
+plt.title('Bar Plot of Number of Deaths by Mental Illness and Threat Level')
+# add percentage values within each bar
+total = len(data['mental_illness'])
+for p in ax.patches:
+    height = p.get_height()
+    ax.text(p.get_x() + p.get_width() / 2.,
+            height + 3,
+            f'{height / total:.2%}',
+            ha="center")
+plt.show()
+# good
+
+
 # Pie chart of Number of Deaths by Threat Level: shows the percentage of deaths for each threat level.
 data_threat_count = data.groupby('threat')['id'].count().reset_index(name='count')
 plt.pie(x=data_threat_count['count'], labels=data_threat_count['threat'].tolist(), autopct='%1.1f%%', startangle=90, wedgeprops={'edgecolor': 'white'})
@@ -269,27 +293,55 @@ plt.title('Number of deaths by threat level')
 plt.show()
 # normal
 
-# Bar Plot of Number of Deaths by Mental Illness and Threat Level:
-sns.countplot(data=data, x='mental_illness', hue='threat')
-plt.title('Bar Plot of Number of Deaths by Mental Illness and Threat Level')
+
+# group the data by race and threat level and count the number of deaths in each group
+deaths_by_race_and_threat = data.groupby(["race", "threat"]).size().unstack(fill_value=0)
+# create the stacked bar chart
+deaths_by_race_and_threat.plot(kind="bar", stacked=True)
+plt.xlabel("Race")
+plt.ylabel("Number of Deaths")
+plt.title("Number of Deaths by Race and Threat Level")
+plt.legend(title="Threat Level")
 plt.show()
 # good
 
-# Heatmap of Gender and Weapon category:
-data_gender_weapon = data.groupby(['gender', 'weapon_category'])['id'].count().reset_index(name='count')
-pivot_data = data_gender_weapon.pivot(index='gender', columns='weapon_category', values='count')
-sns.heatmap(pivot_data, cmap='Blues', linewidth=0.5, annot=True, fmt=".0f")
-plt.title('Number of deaths by gender and weapon category')
+# create a scatter plot of age vs. id
+plt.scatter(data["id"], data["age"], hue='race', data=data, s=5)
+plt.xlabel("Id")
+plt.ylabel("Age")
+plt.title("Age vs. Id")
 plt.show()
-# replaced
+# normal
 
-# Boxplot of Age and Weapon category
-sns.boxplot(x='weapon_category', y='age', data=data)
-plt.xticks(rotation=90, fontsize=8)
-plt.title('Distribution of age and weapon category by race')
+# Create scatterplot of Age and Manner of Death with color representing Weapon Category
+sns.scatterplot(data=data, x='id', y='death_manner', hue='weapon_category', palette='muted', s=50, size='age', alpha=1000/len(data))
+plt.xlabel('Armed')
+plt.ylabel('Death Manner')
+plt.title('Age and Death Manner of Individuals Shot with Weapon Category')
 plt.show()
-# no meaning
-"""
+# good
+
+# Boxplot of Age by Gender and Race
+sns.set(style="whitegrid")
+sns.boxplot(x='gender', y='age', data=data, hue='race', palette='muted')
+plt.title('Age by Gender and Race')
+plt.xlabel('Gender')
+plt.xticks(rotation=0, fontsize=8)
+plt.ylabel('Age')
+plt.legend()
+plt.show()
+# good
+
+# Heatmap of Number of Deaths by Threat Level and Flee: shows the number of deaths for each threat level and flee.
+# group the data by threat level, flee and count the number of deaths in each group
+data_threat_flee = data.groupby(['threat', 'flee'])['id'].count().reset_index(name='count')
+# create a pivot table to show the number of deaths for each threat level and flee
+pivot_data = data_threat_flee.pivot(index='threat', columns='flee', values='count')
+# create a heatmap to show the number of deaths for each threat level and flee
+sns.heatmap(pivot_data, cmap='Blues', linewidth=0.5, annot=True, fmt=".0f")
+plt.title('Number of deaths by threat level and flee')
+plt.show()
+# good
 
 # Count plot of Weapon Category of Individuals Shot: shows the number of deaths for each weapon category.
 sns.countplot(data=data, x='weapon_category').set(title="Count plot of Weapon Category of Individuals Shot")
@@ -297,10 +349,6 @@ plt.xticks(rotation=90, fontsize=8)
 plt.show()
 # good
 
-# sns.jointplot(x='age', y=data['race'].value_counts(), data=data, kind='reg')
-# plt.title('Correlation between age and number of shootings by race')
-# plt.show()
-# not working
 
 # Compute correlation matrix and create heatmap
 corr = data.corr(numeric_only=True)
@@ -333,7 +381,6 @@ plt.title('Regression plot of age and number of deaths')
 plt.show()
 
 
-# sns.scatterplot(x='age', y='id', hue='race', data=data, s=5)
 # sns.countplot(data=data, x='gender', order=data['gender'].value_counts(ascending=False, normalize=True).index)
 # sns.kdeplot(df['feature1'], shade=True, multiple='stack')
 # sns.rugplot(x='age', data=data)
@@ -352,8 +399,8 @@ plt.show()
 # ylim: is used to set the limits of the y-axis.
 # xticks: is used to set the ticks of the x-axis.
 # yticks: is used to set the ticks of the y-axis.
-"""
 
+"""
 """
 
 # Data visualization
@@ -1081,5 +1128,6 @@ df['Label'].replace({'ham': 1, 'spam': 0}, inplace=True)
 
 from sklearn.model_selection import train_test_split
 from data analysis template import data_race_year
+from regression import alpha
 X_train, X_test, y_train, y_test = train_test_split(X, df['Label'], test_size=0.20, random_state=0)
 """
