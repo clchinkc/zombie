@@ -744,6 +744,7 @@ https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247494272&idx=1&sn=adbc97
 https://github.com/nedbat/coveragepy
 https://ithelp.ithome.com.tw/articles/10078821
 https://about.codecov.io/blog/writing-better-tests-with-ai-and-github-copilot/
+Hypothesis
 a debug mode that print all variables in each steps and allow user control of the agents in the map
 https://pythonforundergradengineers.com/writing-tests-for-scientific-code.html
 speed up
