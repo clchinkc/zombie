@@ -56,8 +56,28 @@ def subset_crossover(parent1, parent2):
     return child
 
 def random_crossover(parent1, parent2):
-    # use np.random.permutation
-    pass
+    child = [random.choice([x, y]) for x, y in zip(parent1, parent2)]
+    return child
+
+def blend_crossover(parent1, parent2):
+    alpha = 0.5
+    a = np.minimum(parent1, parent2)
+    b = np.maximum(parent1, parent2)
+    range_ = b - a
+    child = np.random.uniform(a - range_ * alpha, b + range_ * alpha)
+    return child
+
+def average_crossover(parent1, parent2):
+    child = (parent1 + parent2) / 2
+    return child
+
+def order_crossover(parent1, parent2):
+    start, end = sorted(random.sample(range(len(parent1)), 2))
+    child = [None] * len(parent1)
+    child[start:end] = parent1[start:end]
+    child = [x if x is not None else y for x, y in zip(child, parent2)]
+    return child
+
 
 def crossover(population_nextgen, crossover_md, offspring_size, crossover_rate):
     offspring = []
@@ -73,13 +93,24 @@ def crossover(population_nextgen, crossover_md, offspring_size, crossover_rate):
             offspring.append(random.choice([parent1, parent2]))
     return offspring
 
-def mutate(offspring_population, mutation_rate):
+def xor_mutation(offspring_population, mutation_mask):
+    return np.logical_xor(offspring_population, mutation_mask)
+    
+def gaussian_mutation(chromosome, mutation_mask):
+    mu = 0.5
+    sigma = 0.25
+    bounds = (0, 1)
+    mutation_array = np.random.normal(mu, sigma, np.array(chromosome).shape)
+    mutation_array = mutation_array * mutation_mask
+    return np.clip(chromosome + mutation_array, bounds[0], bounds[1])
+
+def mutate(offspring_population, mutate_md, mutation_rate):
     mutation_array = np.random.random(np.array(offspring_population).shape)
     mutation_mask = mutation_array < mutation_rate
-    offspring_population = np.logical_xor(offspring_population, mutation_mask)
+    offspring_population = mutate_md(offspring_population, mutation_mask)
     return offspring_population
 
-def genetic_algorithm(problem, keep_md, selection_md, crossover_md, pop_size, chrom_len, n_generations, mutation_rate, crossover_rate):
+def genetic_algorithm(problem, keep_md, selection_md, crossover_md, mutate_md, pop_size, chrom_len, n_generations, mutation_rate, crossover_rate):
     population_nextgen = problem.init_population(pop_size, chrom_len)
     best_chromosomes = []
     best_fitness = []
@@ -95,7 +126,7 @@ def genetic_algorithm(problem, keep_md, selection_md, crossover_md, pop_size, ch
         
         parents = selection_md(population_sorted, scores, parent_size)
         offspring_population = crossover(parents, crossover_md, offspring_size, crossover_rate)
-        offspring_population = mutate(offspring_population, mutation_rate)
+        offspring_population = mutate(offspring_population, mutate_md, mutation_rate)
         population_nextgen.extend(offspring_population)
         
         best_chromosomes.append(population_sorted[0])
@@ -108,9 +139,20 @@ class OneMaxProblem:
 
     @staticmethod
     def init_population(pop_size, n_feat):
-        # float number population
         population = np.random.randint(2, size=(pop_size, n_feat))
-        # population = np.random.random((size, n_feat))
+        return population
+    
+    @staticmethod
+    def fitness(chromosome):
+        return sum(chromosome)
+
+# Define fitness function for One Max problem, a continuous optimization problem
+class ContinuousOneMaxProblem:
+    
+    @staticmethod
+    def init_population(pop_size, n_feat):
+        # float number population
+        population = np.random.random((pop_size, n_feat))
         return population
     
     @staticmethod
@@ -139,7 +181,8 @@ class TravelingSalesmanProblem:
         return fitness
     
 # Define problem
-problem = OneMaxProblem()
+# problem = OneMaxProblem()
+problem = ContinuousOneMaxProblem()
 # problem = TravelingSalesmanProblem() # need other genetic operators
 
 # Define parameters
@@ -152,16 +195,16 @@ crossover_rate = 1.0
 
 def main():
     # Run genetic algorithm
-    best_chromosome, best_fitness = genetic_algorithm(problem, elitism_selection, roulette_selection, point_crossover,
+    best_chromosome, best_fitness = genetic_algorithm(problem, elitism_selection, roulette_selection, random_crossover, gaussian_mutation,
                                                     pop_size, chrom_len, n_generations, mutation_rate, crossover_rate)
     
-    best_chromosome_1, best_fitness_1 = genetic_algorithm(problem, elitism_selection, roulette_selection, subset_crossover,
+    best_chromosome_1, best_fitness_1 = genetic_algorithm(problem, elitism_selection, roulette_selection, blend_crossover, gaussian_mutation,
                                                     pop_size, chrom_len, n_generations, mutation_rate, crossover_rate)
 
     # Print results
     # print("Best chromosome:", '\n', '\n'.join(map(str, best_chromosome)))
     # print("Best fitness:", '\n', best_fitness)
-    # print("Final chromosome:", best_chromosome[-1])
+    print("Final chromosome:", best_chromosome[-1])
     print("Final fitness:", best_fitness[-1])
     print("Final fitness roulette:", best_fitness_1[-1])
 
@@ -177,3 +220,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
