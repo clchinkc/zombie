@@ -1,4 +1,9 @@
 
+"""
+There are several time series models that you can use to predict stock prices, 
+including ARIMA (Autoregressive Integrated Moving Average), SARIMA (Seasonal ARIMA), and Prophet. 
+Each model has its strengths and weaknesses, and you should choose the one that best fits your data.
+"""
 
 import matplotlib.pyplot as plt
 import numpy as np

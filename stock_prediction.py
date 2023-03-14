@@ -66,8 +66,6 @@ class StockPredictor:
         # Use yfinance API to fetch historical stock price data
         ticker = yf.Ticker(self.symbol)
         data = ticker.history(start=start_date, end=end_date)
-        # Set index to date
-        data = data.set_index("Date")
         # Store it in self.stock_data
         self.stock_data = data
         

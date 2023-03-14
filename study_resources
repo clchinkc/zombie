@@ -73,6 +73,10 @@ use fuzzywuzzy for searching
 https://www.usandopy.com/en/artigo/how-to-build-a-pokedex-in-python-python-project-part-01/
 https://www.pycob.com/gallery?tag=Featured
 https://github.com/pycob/sample-apps
+https://projectgurukul.org/python-to-do-list/
+https://pythongeeks.org/python-currency-converter/
+https://medium.datadriveninvestor.com/writing-a-chess-program-in-one-hour-with-chatgpt-67e7ec56ba5d
+https://andreasstckl.medium.com/writing-a-chess-program-in-one-day-30daff4610ec
 
 Must read books
 https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
@@ -114,6 +118,7 @@ https://pythonforundergradengineers.com/how-i-built-this-site-6.html
 https://pythonforundergradengineers.com/how-i-built-this-site-7.html
 https://lp.leadpages.com/ultimate-website-builder/
 https://tw.alphacamp.co/blog/slicing-interface-design
+https://dev.to/devland/5-real-world-projects-for-practicing-with-nextjs-55g7
 
 Frontend + backend
 https://github.com/TheOdinProject
@@ -163,6 +168,7 @@ https://pythonforundergradengineers.com/flask-iot-server-validation-time-stamps.
 https://pythonforundergradengineers.com/flask-iot-server-database.html
 https://pythonforundergradengineers.com/flask-iot-server-upload-code-to-esp8266.html
 https://www.freecodecamp.org/news/develop-database-driven-web-apps-with-python-flask-and-mysql/
+https://www.freecodecamp.org/news/machine-learning-with-python-and-sql/
 https://pandeyshikha075.medium.com/a-step-by-step-guide-to-building-a-monitoring-system-with-flask-and-sqlalchemy-85e909bf75d9
 https://www.section.io/engineering-education/deploying-machine-learning-models-using-flask/
 https://www.datacamp.com/tutorial/machine-learning-models-api-python
@@ -285,6 +291,11 @@ https://www.linkedin.com/feed/update/urn:li:activity:7037616854219034624/
 https://github.com/MilianoJunior/Advance-in-Financial-ML/blob/main/dados/Date_main.py
 https://www.marketlifetrading.com/
 https://www.mkassistant.com/collections/all
+https://maven.com/abdullah-karasan/finance-python
+1. yfinance: A popular library that provides a simple way to access financial data from Yahoo Finance. It offers real-time and historical stock price data, as well as options and dividends data, which can be used for a range of analysis and research.
+2. Quantstats: A wonderful library to analyze stocks and portfolios. It offers a suite of statistical and risk metrics, allowing users to compare their portfolios to a benchmark, as well as functions for backtesting and simulating returns.
+3. TA-Lib: A widely-used technical analysis library. It offers a wide range of technical indicators, such as moving averages, relative strength index (RSI), Bollinger Bands, ATR, and many others that can be used to analyze market trends and find buying and selling opportunities.
+4. PyPortfolioOpt: A great library for portfolio optimization that offers a range of asset allocation techniques, such as the mean-variance optimization model and the Black-Litterman allocation model.
 
 Reinforcement learning
 https://blog.csdn.net/abcdefg90876/article/details/108459475
@@ -370,6 +381,7 @@ https://www.coursera.org/specializations/software-design-architecture
 https://www.coursera.org/specializations/software-development-lifecycle
 https://www.coursera.org/specializations/object-oriented-programming
 https://www.coursera.org/specializations/java-object-oriented
+https://python.plainenglish.io/7-levels-of-creating-python-classes-fc440dc96a19
 
 data structure
 https://www.udemy.com/course/datastructurescncpp/
@@ -450,6 +462,8 @@ https://www.tw511.com/3/39/1388.html
 https://www.udemy.com/course/the-python-programming-v39-comprehensive-bootcamp/
 https://www.udemy.com/course/the-intermediate-python-training-boost-your-python-skills/
 https://www.coursera.org/specializations/python
+https://python.plainenglish.io/10-surprising-ways-to-use-python-dictionaries-5bbce1ba4d26
+https://www.humblebundle.com/software/complete-python-programming-mega-bundle-zenva-software
 
 c++
 “The Most Important C++ Books...Ever”
@@ -789,7 +803,7 @@ https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/zPpn56Yf3JFuxkXyuLqM
 https://opensource.com/resources/python/gui-frameworks?intcmp=7016000000127cYAAQ
 https://www.youtube.com/watch?v=iM3kjbbKHQU
 
-Web scripting
+Web scraping
 Urllib、Requests、BeautifulSoup、XPath、Selenium、Scrapy、分布式爬虫
 https://github.com/techwithtim/Beautiful-Soup-Tutorial
 https://docs.qq.com/doc/DTVJzZXh5TmJSR1V4
@@ -798,6 +812,7 @@ https://cloud.tencent.com/developer/article/1711098
 https://cloud.tencent.com/developer/article/1805616?from=article.detail.1933412&areaSource=106000.12&traceId=UFNK0ysEGqXdJ11eHR4vk
 https://blog.csdn.net/VictoriaSue/article/details/107792075?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-1-107792075-blog-80965797.pc_relevant_3mothn_strategy_recovery&spm=1001.2101.3001.4242.2&utm_relevant_index=4
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247484076&idx=1&sn=fac8b75e2fbdb8eecff16b1faa4dc7f2&chksm=fdcb358acabcbc9c20769d3800f77f7cafb16844486e2c3fd35b0d567923eeac352189cc6285&scene=21#wechat_redirect
+https://python.plainenglish.io/5000-per-hour-web-scraping-legal-site-db4bf949360e
 
 search
 https://pypi.org/project/LocalitySensitiveHashing/
@@ -879,12 +894,13 @@ Computer vision
 SQL
 Tableau
 
-
 Data analysis
 https://dagshub.com/
 https://www.youtube.com/watch?v=iNEwkaYmPqY
+https://www.linkedin.com/feed/update/urn:li:activity:7038180582824042497/
 https://cloud.tencent.com/developer/article/2166719
-https://www.linkedin.com/feed/update/urn:li:activity:7035686267220578304/?utm_source=share&utm_medium=member_android
+https://www.linkedin.com/feed/update/urn:li:activity:7035686267220578304/
+https://github.com/sayeemukund/Sayee-Mukund/blob/main/Final%20Project%20Notebook.ipynb
 https://www.kaggle.com/competitions/playground-series-s3e8/discussion/389472
 https://github.com/flaviobrienza/Diamond_Gem_Price_Prediction/blob/main/Kaggle_Challenge_S3_E8_ChatGPT.ipynb
 https://github.com/tinahuangyt/Pandas_Heroes-of-Pymoli/blob/master/Heroes%20of%20Pymoli%20Analysis.ipynb
@@ -1050,6 +1066,9 @@ https://github.com/shyamsn97/mario-gpt
 MCMC
 pymc3
 bayesian modeling and computation in python
+
+money
+Stripe API
 
 text classification
 https://python-course.eu/machine-learning/introduction-text-classification.php
