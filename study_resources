@@ -249,6 +249,9 @@ https://towardsdatascience.com/web-development-with-python-dash-complete-tutoria
 https://towardsdatascience.com/how-to-build-a-web-based-app-in-50-lines-of-code-using-plotly-and-dash-3953f039b217
 
 financial analysis
+https://github.com/harryworlds/FinancialAnalysisMachineLearningAlgortihmsByHemantThapa
+https://github.com/sayeemukund/Stock-Market-Prediction
+https://share.streamlit.io/-/auth/app?redirect_uri=https%3A%2F%2Fsayeemukund-stock-market-predict-stock-market-prediction-6ti1m4.streamlit.app%2F
 financial analysis python
 python金融分析
 fundamental analysis python
@@ -970,6 +973,18 @@ https://www.youtube.com/watch?v=Q-zO7zetdX8
 https://www.youtube.com/watch?v=jV-6P9N4zIg
 https://www.youtube.com/watch?v=g4a9x021R9c
 https://www.youtube.com/watch?v=9uFKAwIa3V0
+Excel is not just about functions; you are missing these 5 essential elements of excel.
+The idea behind this post? Recently, one of my readers asked me how to convey a story through a spreadsheet as she was working on some financial model and had 30+ worksheets. Connecting all sheets and conveying a story was a tedious task. Excel is not just about functions and data. You have to present your story meaningfully so that users can link worksheets easily and get the idea behind presenting it.
+There are 3 types of excel files
+1] Database excel - To store data; generally, banks manage database excel for their business and share them with their managers to present a more holistic picture of the business
+2] Dashboard excel - If you visit Miniso next time, ask the store manager to show his store dashboard. That excel tells everything about his store, from stock, sales, and employee's salary, to expenses.
+3] Calculative excel - For example, financial model, analysis of research survey excel, etc.
+These are the 5 critical elements of excel that one should not miss:
+1] Linking Principle - An excel file with 100 worksheets is more complex than just one with single one. In this case, you must manage every worksheet individually and set smooth navigation from one sheet to another. The bonus point, create an index worksheet and show how all sheets are linked with each other if possible.
+2] Visual Principle - It is not a reader's fault if you are not getting your message across. Without highlighting and using colour code, a worksheet with 1000 cells filled with data will not tell a story itself. Simplicity is key; use visuals but not at the cost of burying the purpose of a spreadsheet.
+3] Technical Principle - It is unnecessary to solve everything in excel with a complex function because users may not be aware of that function and how to deal with it whenever he/she needs some changes. Hence, you use a simple function or put a note on how to deal with it for the users.
+4] Printing Principle - Imagine you spent an entire day preparing an excel model, and when you print it, it is not fitting an A4 size page. How frustrating is it? Before starting the excel model, note the worksheet you need to get print copy and design it accordingly. It is not necessary to fit everything on one page. 
+5] Message Principle - Going through each worksheet is tiring for the user. Even he/she does not have time to review each sheet and learn how you reached your final result. So, what is the solution? Give a proper headline, summary and notes to each worksheet.
 
 API + Data analysis + Data visualization
 http://blog.itpub.net/69982434/viewspace-2738661

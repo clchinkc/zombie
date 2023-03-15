@@ -125,7 +125,7 @@ data = load_stock_data("apple_stock_data.csv")
 mu, sigma, theta = calculate_daily_returns(data)
 
 # Generate a large number of possible future price trajectories using the MCMC simulation
-days = 30
+days = 365
 num_simulations = 1000
 last_price = data['Close'][-1]
 
@@ -148,17 +148,18 @@ plt.show()
 # Calculate the median price from all the simulated trajectories
 median_price, lower_price, upper_price = calculate_median_price(price_matrix)
 
-# Plot all the simulated price trajectories using a line plot
-plt.figure(figsize=(10, 6))
-plt.plot(price_matrix, color='gray', alpha=0.25)
-plt.plot(median_price, color='blue', linewidth=2)
-plt.plot(lower_price, color='red', linewidth=1)
-plt.plot(upper_price, color='green', linewidth=1)
+# Plot historical data and all the simulated price trajectories using a line plot
+plt.plot(data.index, data['Close'].values, label='Historical Data')
+plt.plot(pd.date_range(start=data.index[-1], periods=days, freq='D'), price_matrix, color='gray', alpha=0.25)
+plt.plot(pd.date_range(start=data.index[-1], periods=days, freq='D'), median_price, color='blue', linewidth=2)
+plt.plot(pd.date_range(start=data.index[-1], periods=days, freq='D'), lower_price, color='red', linewidth=1)
+plt.plot(pd.date_range(start=data.index[-1], periods=days, freq='D'), upper_price, color='green', linewidth=1)
 # fill the area between the 25th and 75th percentiles
 plt.title("MCMC Simulation: AAPL")
 plt.xlabel("Days")
 plt.ylabel("Price")
 plt.show()
+
 
 
 """
