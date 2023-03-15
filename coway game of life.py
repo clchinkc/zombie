@@ -108,8 +108,6 @@ def stop():
 
     return "Stop"
 
-
-
 # timer, control frame rate
 clock_start = 0
 
@@ -143,16 +141,17 @@ def move():
                 world[sp_row][sp_col] = 0
             draw(screen)
         
-        if (time.process_time() - clock_start > 0.02):  # use process_time instead of clock
-            next_generation()
-            draw(screen)
-            clock_start = time.process_time()
+    if time.time() - clock_start > 0.1: # control frame rate
+        clock_start = time.time()
+        next_generation()
+        draw(screen)
 
     return "Move"
 
 
 if __name__ == "__main__":
-    # 状态机对应三种状态，初始化，停止，进行
+
+    # state machine corresponds to three states, initialization, stop, and proceed
     state_actions = {"Reset": init, "Stop": stop, "Move": move}
     state = "Reset"
 
@@ -160,8 +159,11 @@ if __name__ == "__main__":
     pygame.display.set_caption("Conway's Game of Life")
 
     screen = pygame.display.set_mode((WIDTH * Cell.size, HEIGHT * Cell.size))
+    clock = pygame.time.Clock()
+    fps = 30  # set desired frame rate
 
-    while True:  # 游戏主循环
+    while True:  # main loop
 
         state = state_actions[state]()
         pygame.display.update()
+        clock.tick(fps)  # control frame rate
