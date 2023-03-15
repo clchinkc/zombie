@@ -519,7 +519,6 @@ class School:
 
 # Observer Pattern
 
-
 class Observer(ABC):
     @abstractmethod
     def __init__(self) -> None:
@@ -853,9 +852,9 @@ class Population:
             1 for individual in self.agent_list if individual.state == State.ZOMBIE
         )
         self.population_size = self.num_healthy + self.num_infected + self.num_zombie
-        self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity)))
-        self.turning_probability = 1 - (1 / (1 + math.exp(-self.severity)))
-        self.death_probability = self.severity
+        self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity))) # logistic function
+        self.turning_probability = self.severity / (1 + self.severity) # softplus function
+        self.death_probability = self.severity  # linear function
         self.migration_probability = self.population_size / \
             (self.population_size + 1)
 
@@ -1527,4 +1526,9 @@ Mode: The mode can be used to determine the most common value in a set of data. 
 Standard deviation: The standard deviation can be used to determine how spread out a set of data is. In a zombie apocalypse simulation, the standard deviation can be used to determine the level of unpredictability in zombie behavior or the effectiveness of certain survival strategies.
 
 Overall, statistical measures such as mean, median, mode, and standard deviation can be useful tools in analyzing and predicting data in a zombie apocalypse simulation.
+"""
+"""
+Gompertz curve
+Population biology is especially concerned with the Gompertz function. This function is especially useful in describing the rapid growth of a certain population of organisms while also being able to account for the eventual horizontal asymptote, once the carrying capacity is determined (plateau cell/population number).
+This function consideration of the plateau cell number makes it useful in accurately mimicking real-life population dynamics. The function also adheres to the sigmoid function, which is the most widely accepted convention of generally detailing a population's growth. Moreover, the function makes use of initial growth rate, which is commonly seen in populations of bacterial and cancer cells, which undergo the log phase and grow rapidly in numbers. Despite its popularity, the function initial rate of tumor growth is difficult to predetermine given the varying microcosms present with a patient, or varying environmental factors in the case of population biology. In cancer patients, factors such as age, diet, ethnicity, genetic pre-dispositions, metabolism, lifestyle and origin of metastasis play a role in determining the tumor growth rate. The carrying capacity is also expected to change based on these factors, and so describing such phenomena is difficult.
 """
