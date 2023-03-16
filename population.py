@@ -542,7 +542,7 @@ class PopulationObserver(Observer):
 
     def update(self) -> None:
         self.statistics = self.subject.get_population_statistics()
-        self.agent_list = self.subject.agent_list
+        self.agent_list = deepcopy(self.subject.agent_list)
 
     def display_observation(self, format="text"):
         if format == "text":
@@ -614,54 +614,6 @@ class PopulationObserver(Observer):
         plt.show()
 
 
-class SchoolObserver(Observer):
-    def __init__(self, population: Population) -> None:
-        self.subject = population
-        self.subject.attach_observer(self)
-        self.agent_list = []
-        self.grid = []
-
-    def update(self) -> None:
-        self.agent_list = self.subject.agent_list
-        self.grid = self.subject.school.grid
-
-    def display_observation(self, format="text"):
-        if format == "text":
-            self.print_text_statistics()
-        elif format == "chart":
-            self.print_chart_statistics()
-
-        # animation, table
-
-    def print_text_statistics(self):
-        print("Print School:")
-        for row in self.grid:
-            for cell in row:
-                if cell is None:
-                    print(" ", end=" ")
-                elif cell.state == State.HEALTHY:
-                    print("H", end=" ")
-                elif cell.state == State.INFECTED:
-                    print("I", end=" ")
-                elif cell.state == State.ZOMBIE:
-                    print("Z", end=" ")
-                elif cell.state == State.DEAD:
-                    print("D", end=" ")
-                else:
-                    raise ValueError("Invalid state")
-            print()
-        print()
-
-    def print_chart_statistics(self):
-        # create a scatter plot of the population
-        cell_states_value = [
-            individual.state.value for individual in self.agent_list]
-        x = [individual.location[0] for individual in self.agent_list]
-        y = [individual.location[1] for individual in self.agent_list]
-        plt.scatter(x, y, c=cell_states_value)
-        plt.tight_layout()
-        plt.show()
-
 class PopulationAnimator(Observer):
     def __init__(self, population: Population) -> None:
         self.subject = population
@@ -675,8 +627,6 @@ class PopulationAnimator(Observer):
     def display_observation(self, format="chart"):
         if format == "chart":
             self.print_chart_animation()
-        elif format == "scatter":
-            self.print_scatter_animation()
 
         # table
 
@@ -724,6 +674,72 @@ class PopulationAnimator(Observer):
         plt.tight_layout()
         plt.show()
 
+
+class SchoolObserver(Observer):
+    def __init__(self, population: Population) -> None:
+        self.subject = population
+        self.subject.attach_observer(self)
+        self.agent_list = []
+        self.grid = []
+
+    def update(self) -> None:
+        self.agent_list = deepcopy(self.subject.agent_list)
+        self.grid = deepcopy(self.subject.school.grid)
+
+    def display_observation(self, format="text"):
+        if format == "text":
+            self.print_text_statistics()
+        elif format == "scatter":
+            self.print_scatter_statistics()
+
+        # animation, table
+
+    def print_text_statistics(self):
+        print("Print School:")
+        for row in self.grid:
+            for cell in row:
+                if cell is None:
+                    print(" ", end=" ")
+                elif cell.state == State.HEALTHY:
+                    print("H", end=" ")
+                elif cell.state == State.INFECTED:
+                    print("I", end=" ")
+                elif cell.state == State.ZOMBIE:
+                    print("Z", end=" ")
+                elif cell.state == State.DEAD:
+                    print("D", end=" ")
+                else:
+                    raise ValueError("Invalid state")
+            print()
+        print()
+
+    def print_scatter_statistics(self):
+        # create a scatter plot of the population
+        cell_states_value = [
+            individual.state.value for individual in self.agent_list]
+        x = [individual.location[0] for individual in self.agent_list]
+        y = [individual.location[1] for individual in self.agent_list]
+        plt.scatter(x, y, c=cell_states_value)
+        plt.tight_layout()
+        plt.show()
+
+
+class SchoolAnimator(Observer):
+    def __init__(self, population: Population) -> None:
+        self.subject = population
+        self.subject.attach_observer(self)
+        self.agent_history = []
+
+    def update(self) -> None:
+        agent_list = deepcopy(self.subject.agent_list)
+        self.agent_history.append(agent_list)
+
+    def display_observation(self, format="scatter"):
+        if format == "scatter":
+            self.print_scatter_animation()
+
+        # table
+
     def print_scatter_animation(self):
         cell_states_value = []
         x = []
@@ -767,7 +783,7 @@ class PopulationAnimator(Observer):
         # Show the plot
         plt.tight_layout()
         plt.show()
-        
+
 
 class Population:
     def __init__(self, school_size: int, population_size: int) -> None:
@@ -904,17 +920,19 @@ def main():
     school_sim = Population(school_size=10, population_size=10)
 
     # create Observer objects
-    # population_observer = PopulationObserver(school_sim)
+    population_observer = PopulationObserver(school_sim)
     population_animator = PopulationAnimator(school_sim)
-    # school_observer = SchoolObserver(school_sim)
+    school_observer = SchoolObserver(school_sim)
+    school_animator = SchoolAnimator(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
 
     # observe the statistics of the population
-    # population_observer.display_observation(format="chart")
-    population_animator.display_observation(format="scatter")
-    # school_observer.display_observation(format="chart")
+    population_observer.display_observation(format="chart")
+    population_animator.display_observation(format="chart")
+    school_observer.display_observation(format="scatter")
+    school_animator.display_observation(format="scatter")
 
 
 if __name__ == "__main__":

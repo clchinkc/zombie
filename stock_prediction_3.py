@@ -31,8 +31,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.svm import SVC
 
 
 # Step 1: Data Preprocessing
@@ -82,6 +84,32 @@ def mlp_prediction(stock_data, states):
     estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
     return estimated_future_price_2d
 
+def forest_prediction(stock_data, states):
+    # Step 4: Train a random forest classifier
+    clf = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=0)
+    clf.fit(stock_data[:-1].reshape(-1, 1), states[1:])
+
+    # Step 5: Predict the future states of the last data point
+    proba = clf.predict_proba(stock_data[-1].reshape(-1, 1))
+    # weighted average of the median prices of all the future states
+    future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
+    estimated_future_price = np.dot(proba[-1], future_prices)
+    estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
+    return estimated_future_price_2d
+
+def svm_prediction(stock_data, states):
+    # Step 4: Train a SVM classifier
+    clf = SVC(gamma='auto', probability=True)
+    clf.fit(stock_data[:-1].reshape(-1, 1), states[1:])
+
+    # Step 5: Predict the future states of the last data point
+    proba = clf.predict_proba(stock_data[-1].reshape(-1, 1))
+    # weighted average of the median prices of all the future states
+    future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
+    estimated_future_price = np.dot(proba[-1], future_prices)
+    estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
+    return estimated_future_price_2d
+
 def get_predictions(prediction_method, stock_data, states, days=30):
     # Predict the next 30 days using the Markov chain model
     stock_prices = stock_data
@@ -114,8 +142,12 @@ def main():
     # Predict the next days using the Markov chain model and the MLP model
     predictions_markov = get_predictions(markov_chain_prediction, stock_data, states, days=30)
     predictions_mlp = get_predictions(mlp_prediction, stock_data, states, days=30)
+    predictions_forest = get_predictions(forest_prediction, stock_data, states, days=30)
+    predictions_svm = get_predictions(svm_prediction, stock_data, states, days=30)
+    
     # get the average of the two predictions
-    predictions = (np.array(predictions_markov) + np.array(predictions_mlp)) / 2
+    predictions = (np.array(predictions_markov) + np.array(predictions_mlp) + np.array(predictions_forest) + np.array(predictions_svm)) / 4
+    # predictions = predictions_svm
     
     # Plot the predicted prices along with the historical data
     plot_predictions(scaler, stock_data, predictions)

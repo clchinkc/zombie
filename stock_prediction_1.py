@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score, f1_score
+from sklearn.metrics import f1_score, mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 
 

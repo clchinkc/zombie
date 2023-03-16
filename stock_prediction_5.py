@@ -98,3 +98,7 @@ plt.show()
 
 
 # Step 10: Invert the differencing to get the forecasted stock prices
+
+
+# https://www.ichdata.com/use-python-to-do-time-series.html
+
