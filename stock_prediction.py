@@ -18,7 +18,7 @@ Data Preparation:
 We will clean and preprocess the data by removing any missing values, calculating returns, and calculating moving averages. We will also normalize the data to compare it across different time periods.
 
 Data Analysis:
-We will use the prepared data to calculate various metrics, such as daily and annualized returns, volatility, and risk using numpy, and compare them to the broader market using benchmarks such as the Hang Seng Index.
+We will use the prepared data to calculate various metrics, such as daily and annualized returns, volatility, and risk using numpy or scipy, and compare them to the broader market using benchmarks such as the Hang Seng Index.
 
 Data Visualization:
 We will visualize the results using Matplotlib and create charts to gain insights into the stock's performance over time and various technical indicators, such as moving averages or Bollinger Bands, to help identify potential trading opportunities.
