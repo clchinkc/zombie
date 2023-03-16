@@ -2,6 +2,8 @@
 
 # US Police Shootings Dataset
 
+# What demographic is the most sceptical at police shooting
+
 # https://colab.research.google.com/drive/10pcm9FA6uuboKCPNjlk4HHKX0_MnpfTZ?usp=sharing
 # write me python code for basic data exploration and visualization of the dataset
 # date column in my dataset is in object datatype, convert it to datetime format column
@@ -386,6 +388,7 @@ plt.show()
 # sns.rugplot(x='age', data=data)
 # using built-in trend function like pct_change, rolling, and diff
 # use value_counts() to count the number of occurrences of each value in a column and show in sorted order
+# sns.relplot
 
 
 # df.plot(x='column_name1', y='column_name2', kind='line')
@@ -1130,4 +1133,41 @@ from sklearn.model_selection import train_test_split
 from data analysis template import data_race_year
 from regression import alpha
 X_train, X_test, y_train, y_test = train_test_split(X, df['Label'], test_size=0.20, random_state=0)
+"""
+
+"""
+Choose the best data visualization.
+
+Charts are an essential tool for visualizing data, making it easier to understand complex information and identify trends. Choosing the right chart for your data is critical to effectively communicating your message and helping your audience make informed decisions.
+
+Bar Charts
+Bar charts are one of the most common and straightforward types of charts. They are used to display categorical data and compare the size or value of different categories. Bar charts are best suited for data sets with a small number of categories.
+
+Line Charts
+Line charts are used to display data that changes over time, such as stock prices or sales figures. They are ideal for showing trends or patterns in data and are useful for highlighting changes in data over time.
+
+Pie Charts
+Pie charts are used to display the composition of data into different parts. They are best suited for displaying data with a small number of categories or when you want to show the proportion of each category in the data set.
+
+Area Charts
+Area charts are similar to line charts but are filled with color to indicate the area below the line. They are used to display data that changes over time and can be useful for comparing the values of different data sets.
+
+Scatter Plots
+Scatter plots are used to display the relationship between two variables. They are used to identify correlations or patterns between two variables, such as age and income, and are useful for identifying outliers.
+
+Heat Maps
+Heat maps are used to display data in a grid format, with each cell representing a value. They are useful for displaying large data sets and can highlight patterns and trends in the data.
+When choosing a chart for your data, consider the following:
+
+The type of data you have
+Consider the type of data you have and what you want to show with your chart. If you have categorical data, use a bar chart or pie chart. If you have data that changes over time, use a line chart or area
+chart.
+
+The message you want to convey
+Consider the message you want to convey and how you want to communicate it. If you want to show a comparison between different categories, use a bar chart.
+
+The audience
+Consider your audience and what type of chart will be easiest for them to understand. If you are presenting to a non-technical audience, use a simple chart such as a bar chart or pie chart. If you are presenting to a technical audience, use a more complex chart such as a heat map.
+
+In conclusion, choosing the right chart for your data is essential to effectively communicate your message and help your audience make informed decisions. Consider the type of data you have, the message you want to convey, and your audience when selecting the appropriate chart.
 """
