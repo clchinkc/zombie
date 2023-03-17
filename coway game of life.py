@@ -1,3 +1,4 @@
+
 import sys
 import time
 
@@ -167,3 +168,114 @@ if __name__ == "__main__":
         state = state_actions[state]()
         pygame.display.update()
         clock.tick(fps)  # control frame rate
+
+"""
+The provided code snippet is for a function called "move" that is handling user input and updating the game world. Here are some possible adjustments to the code:
+
+Import the necessary modules at the beginning of the file:
+python
+Copy code
+import pygame
+import sys
+import time
+from pygame.locals import *
+Modify the function signature to take the world and screen variables as parameters:
+python
+Copy code
+def move(world, screen):
+Initialize the button_down, button_type, and clock_start variables before the for loop:
+python
+Copy code
+button_down = False
+button_type = None
+clock_start = time.process_time()
+Remove the global statements for button_down, button_type, and clock_start, since they are not needed.
+
+Replace QUIT with pygame.QUIT and KEYDOWN with pygame.KEYDOWN.
+
+Instead of returning a string to indicate whether to stop or reset the game, raise a custom exception and handle it outside the function:
+
+python
+Copy code
+class GameStop(Exception):
+    pass
+
+class GameReset(Exception):
+    pass
+Raise the GameStop or GameReset exception instead of returning a string:
+python
+Copy code
+if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+    raise GameStop()
+if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+    raise GameReset()
+Instead of using MOUSEBUTTONDOWN and MOUSEBUTTONUP events, use pygame.mouse.get_pressed() to check if the mouse button is pressed:
+python
+Copy code
+mouse_buttons = pygame.mouse.get_pressed()
+if mouse_buttons[0]:
+    button_type = 1
+    button_down = True
+elif mouse_buttons[2]:
+    button_type = 3
+    button_down = True
+else:
+    button_down = False
+Remove the mouse_x and mouse_y variables and use pygame.mouse.get_pos() directly:
+python
+Copy code
+mouse_pos = pygame.mouse.get_pos()
+sp_col = mouse_pos[0] // Cell.size
+sp_row = mouse_pos[1] // Cell.size
+Add error checking to ensure that sp_row and sp_col are within the bounds of the world:
+python
+Copy code
+if 0 <= sp_row < len(world) and 0 <= sp_col < len(world[0]):
+    if button_type == 1:
+        world[sp_row][sp_col] = 1
+    elif button_type == 3:
+        world[sp_row][sp_col] = 0
+    draw(screen)
+Change time.process_time() to pygame.time.get_ticks() to use the Pygame clock instead of the system clock.
+
+Replace the if (time.process_time() - clock_start > 0.02): condition with if pygame.time.get_ticks() - clock_start >= 20: to wait for 20 milliseconds between updates.
+
+Move the call to draw(screen) outside of the if statement for updating the game world, so that it is always called after handling user input:
+
+python
+Copy code
+draw(screen)
+The final code should look something like this:
+
+python
+Copy code
+import pygame
+import sys
+import time
+from pygame.locals import *
+
+class GameStop(Exception):
+    pass
+
+class GameReset(Exception):
+    pass
+
+def move(world, screen):
+    button_down = False
+    button_type = None
+    clock_start = pygame.time.get_ticks()
+
+    try:
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT
+
+
+# https://blog.csdn.net/qq_44793283/article/details/114886537
+# https://bbs.huaweicloud.com/blogs/138603
+# https://cloud.tencent.com/developer/article/1552874
+# https://www.lanqiao.cn/courses/769
+# https://fireholder.github.io/posts/lifeGame
+# https://www.codercto.com/a/57167.html
+# https://jakevdp.github.io/blog/2013/08/07/conways-game-of-life/
+"""

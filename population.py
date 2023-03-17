@@ -19,12 +19,12 @@ from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cached_property
-from itertools import count
 from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import animation
+import seaborn as sns
+from matplotlib import animation, colors, patches
 
 
 # Define the states and transitions for the state machine model
@@ -608,7 +608,11 @@ class PopulationObserver(Observer):
             np.asarray(State.value_list()),
             list(counts.values()),
             tick_label=State.name_list(),
+            label=State.name_list(),
+            color=sns.color_palette("deep")
         )
+        # Put a legend to the right of the current axis
+        plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         # Show the plot
         plt.tight_layout()
         plt.show()
@@ -651,7 +655,7 @@ class PopulationAnimator(Observer):
         ax.set_ylim(0, max([max(i) for i in y]))
 
         # create the bar chart
-        bars = ax.bar(x, y[0], tick_label=ticks)
+        bars = ax.bar(x, y[0], tick_label=ticks, label=State.name_list(), color=sns.color_palette("deep"))
 
         # create timestep labels
         text_box = ax.text(0.05, 0.9, "", transform=ax.transAxes)
@@ -660,12 +664,13 @@ class PopulationAnimator(Observer):
         def update(i):
             for j in range(len(bars)):
                 bars[j].set_height(y[i][j])
-            text_box.set_text(f"timestep = {i}")
+            text_box.set_text(f"t = {i}")
 
         # create the animation
-        anim = animation.FuncAnimation(
-            fig, update, frames=len(y), interval=1000, repeat=False
-        )
+        anim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000, repeat=False)
+        
+        # Put a legend to the right of the current axis
+        plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
         # save the animation as an gif file
         anim.save("bar_chart_animation.gif", writer="pillow", fps=3, dpi=10)
@@ -719,7 +724,17 @@ class SchoolObserver(Observer):
             individual.state.value for individual in self.agent_list]
         x = [individual.location[0] for individual in self.agent_list]
         y = [individual.location[1] for individual in self.agent_list]
-        plt.scatter(x, y, c=cell_states_value)
+        
+        # create a colormap from the seaborn palette and the number of colors equal to the number of members in the State enum
+        cmap = colors.ListedColormap(sns.color_palette("deep", n_colors=len(State)))
+        
+        # create a list of legend labels and colors for each state in the State enum
+        handles = [patches.Patch(color=cmap(i), label=state.name) for i, state in enumerate(State)]
+        
+        plt.scatter(x, y, c=cell_states_value, cmap=cmap)
+
+        # Put a legend to the right of the current axis
+        plt.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=State.name_list())
         plt.tight_layout()
         plt.show()
 
@@ -751,7 +766,7 @@ class SchoolAnimator(Observer):
         # tick label suitable for maps
         self.scatter_chart_animation(x, y, cell_states_value)
 
-    def scatter_chart_animation(self, x, y, cmap):
+    def scatter_chart_animation(self, x, y, cell_states_value):
         # Create a figure
         fig, ax = plt.subplots(1, 1)
         # Create an animation function
@@ -764,20 +779,20 @@ class SchoolAnimator(Observer):
             # Return the artists set
             return sc, label
 
+        # create a colormap from the seaborn palette and the number of colors equal to the number of members in the State enum
+        cmap = colors.ListedColormap(sns.color_palette("deep", n_colors=len(State)))
+        
+        # create a list of legend labels and colors for each state in the State enum
+        handles = [patches.Patch(color=cmap(i), label=state.name) for i, state in enumerate(State)]
+
         # Create a scatter plot
-        sc = ax.scatter(x, y, c=cmap)
+        sc = ax.scatter(x, y, c=cell_states_value, cmap=cmap)
         # Create a label
         label = ax.text(0.05, 0.9, "", transform=ax.transAxes)
         # Create the animation object
-        anim = animation.FuncAnimation(
-            fig,
-            animate,
-            frames=len(x),
-            interval=100,
-            blit=True,
-            repeat=False,
-            fargs=(sc, label),
-        )
+        anim = animation.FuncAnimation(fig,animate,frames=len(x),interval=100,blit=True,repeat=False,fargs=(sc, label))
+        # Put a legend to the right of the current axis
+        plt.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5))
         # Save the animation
         anim.save("scatter_chart_animation.gif", writer="pillow", fps=3, dpi=10)
         # Show the plot
