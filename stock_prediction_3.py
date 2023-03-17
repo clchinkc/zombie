@@ -32,6 +32,8 @@ import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import mean_squared_error
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import SVC
@@ -51,7 +53,7 @@ def preprocess_data(filepath):
 # Step 2: Defining the States
 def get_states(stock_data, num_states):
     # Use KMeans clustering to group the scaled Close prices into the specified number of clusters (i.e., states)
-    kmeans = KMeans(n_clusters=num_states, init='k-means++', n_init=1, max_iter=300).fit(stock_data)
+    kmeans = KMeans(n_clusters=num_states, init='k-means++', n_init="auto", max_iter=300).fit(stock_data)
     states = kmeans.labels_
     return states
 
@@ -110,6 +112,19 @@ def svm_prediction(stock_data, states):
     estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
     return estimated_future_price_2d
 
+def logistic_regression_prediction(stock_data, states):
+    # Step 4: Train a logistic regression classifier
+    clf = LogisticRegression(random_state=0, solver='lbfgs', multi_class='multinomial')
+    clf.fit(stock_data[:-1].reshape(-1, 1), states[1:])
+
+    # Step 5: Predict the future states of the last data point
+    proba = clf.predict_proba(stock_data[-1].reshape(-1, 1))
+    # weighted average of the median prices of all the future states
+    future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
+    estimated_future_price = np.dot(proba[-1], future_prices)
+    estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
+    return estimated_future_price_2d
+
 def get_predictions(prediction_method, stock_data, states, days=30):
     # Predict the next 30 days using the Markov chain model
     stock_prices = stock_data
@@ -121,16 +136,23 @@ def get_predictions(prediction_method, stock_data, states, days=30):
         predictions.append(last_price)
     return predictions
 
-def plot_predictions(scaler, stock_data, predictions):
-    # Plot the predicted prices along with the historical data
-    historical_prices = scaler.inverse_transform(stock_data)
-    predicted_price = scaler.inverse_transform(np.array(predictions).reshape(-1, 1))
-    dates = pd.read_csv('apple_stock_data.csv')['Date'].values[-len(historical_prices):]
-    dates = [datetime.strptime(date, '%Y-%m-%d %H:%M:%S%z').replace(tzinfo=None) for date in dates]
-    future_dates = pd.date_range(start=dates[-1], periods=30, freq='D')
+def evaluate_predictions(predictions, actual_prices):
+    # Calculate the mean squared error
+    mse = mean_squared_error(actual_prices, predictions)
+    return mse
 
-    plt.plot(dates, historical_prices, label='Historical Prices')
-    plt.plot(future_dates, predicted_price, label='Predicted Prices')
+
+def plot_predictions(scaler, historical_prices, actual_prices, predicted_price):
+    # Plot the predicted prices along with the historical data
+    historical_dates = pd.read_csv('apple_stock_data.csv')['Date'].values[-len(historical_prices):]
+    dates = [datetime.strptime(date, '%Y-%m-%d %H:%M:%S%z').replace(tzinfo=None) for date in historical_dates]
+    future_dates = pd.date_range(start=dates[-len(actual_prices)+5], periods=len(predicted_price), freq='D')
+
+    plt.plot(dates[:-len(actual_prices)], historical_prices[:-len(actual_prices)], label='Historical Prices')
+    actual_prices = np.insert(actual_prices, 0, historical_prices[-len(actual_prices)], axis=0)
+    plt.plot(dates[-len(actual_prices):], actual_prices, label='Actual Prices')
+    predicted_price = np.insert(predicted_price, 0, historical_prices[-len(predicted_price)], axis=0)
+    plt.plot(dates[-len(predicted_price):], predicted_price, label='Predicted Prices')
     plt.xticks(rotation=45)
     plt.legend()
     plt.show()
@@ -140,17 +162,27 @@ def main():
     states = get_states(stock_data, 5)
     
     # Predict the next days using the Markov chain model and the MLP model
-    predictions_markov = get_predictions(markov_chain_prediction, stock_data, states, days=30)
-    predictions_mlp = get_predictions(mlp_prediction, stock_data, states, days=30)
-    predictions_forest = get_predictions(forest_prediction, stock_data, states, days=30)
-    predictions_svm = get_predictions(svm_prediction, stock_data, states, days=30)
+    # predictions_markov = get_predictions(markov_chain_prediction, stock_data[:-30], states[:-30], days=30) # 572.041799970989
+    # predictions_mlp = get_predictions(mlp_prediction, stock_data[:-30], states[:-30], days=30) # 119.90550509711301
+    # predictions_forest = get_predictions(forest_prediction, stock_data[:-30], states[:-30], days=30) # 64.45639583172992
+    # predictions_svm = get_predictions(svm_prediction, stock_data[:-30], states[:-30], days=30) # 101.9820807198693
+    predictions_logistic = get_predictions(logistic_regression_prediction, stock_data[:-30], states[:-30], days=30) # 65.59631951065353
     
-    # get the average of the two predictions
-    predictions = (np.array(predictions_markov) + np.array(predictions_mlp) + np.array(predictions_forest) + np.array(predictions_svm)) / 4
-    # predictions = predictions_svm
+    # get the average of the two predictions # 50.5075708206808
+    # predictions = (np.array(predictions_markov) + np.array(predictions_mlp) + np.array(predictions_forest) + np.array(predictions_svm) + np.array(predictions_logistic)) / 5
+    predictions = predictions_logistic
+    
+    # Reverse the scaling to get the actual prices
+    historical_prices = scaler.inverse_transform(stock_data)
+    predicted_price = scaler.inverse_transform(np.array(predictions).reshape(-1, 1))
+    
+    # Evaluate the performance of the model
+    actual_prices = historical_prices[-30:]
+    mse = evaluate_predictions(predicted_price, actual_prices)
+    print("Mean Squared Error: {}".format(mse))
     
     # Plot the predicted prices along with the historical data
-    plot_predictions(scaler, stock_data, predictions)
+    plot_predictions(scaler, historical_prices, actual_prices, predicted_price)
 
 if __name__ == "__main__":
     main()
