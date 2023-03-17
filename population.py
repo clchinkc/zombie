@@ -672,8 +672,8 @@ class PopulationAnimator(Observer):
         # Put a legend to the right of the current axis
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
 
-        # save the animation as an gif file
-        anim.save("bar_chart_animation.gif", writer="pillow", fps=3, dpi=10)
+        # save the animation
+        #anim.save("bar_chart_animation.gif", writer="pillow", fps=3, dpi=10)
 
         # show the animation
         plt.tight_layout()
@@ -794,7 +794,7 @@ class SchoolAnimator(Observer):
         # Put a legend to the right of the current axis
         plt.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5))
         # Save the animation
-        anim.save("scatter_chart_animation.gif", writer="pillow", fps=3, dpi=10)
+        #anim.save("scatter_chart_animation.gif", writer="pillow", fps=3, dpi=10)
         # Show the plot
         plt.tight_layout()
         plt.show()

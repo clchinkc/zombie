@@ -1026,7 +1026,7 @@ na_rep: is used to specify the string to be used for missing values in the CSV f
 # data.to_pickle('data.pkl')
 # data.to_html('data.html', index=False)
 
-# TODO: Relationship between variables
+# Relationship between variables
 # Median polish
 # Statistical model
 # Data analysis
