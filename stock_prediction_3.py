@@ -125,6 +125,18 @@ def logistic_regression_prediction(stock_data, states):
     estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
     return estimated_future_price_2d
 
+def logistic_regression_prediction2(stock_data, states):
+    # Step 4: Train a logistic regression classifier
+    clf = LogisticRegression(random_state=0, solver='lbfgs', multi_class='multinomial')
+    clf.fit(stock_data[:-1].reshape(-1, 1), states[1:])
+
+    # Step 5: Predict the future states of the last data point
+    proba = clf.predict_proba(stock_data[-1].reshape(-1, 1))
+    # Use the average of predicted probability to calculate the predicted return
+    estimated_future_price = np.average(proba[-1], axis=1)
+    estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
+    return estimated_future_price_2d
+
 def get_predictions(prediction_method, stock_data, states, days=30):
     # Predict the next 30 days using the Markov chain model
     stock_prices = stock_data
@@ -166,7 +178,7 @@ def main():
     # predictions_mlp = get_predictions(mlp_prediction, stock_data[:-30], states[:-30], days=30) # 119.90550509711301
     # predictions_forest = get_predictions(forest_prediction, stock_data[:-30], states[:-30], days=30) # 64.45639583172992
     # predictions_svm = get_predictions(svm_prediction, stock_data[:-30], states[:-30], days=30) # 101.9820807198693
-    predictions_logistic = get_predictions(logistic_regression_prediction, stock_data[:-30], states[:-30], days=30) # 65.59631951065353
+    predictions_logistic = get_predictions(logistic_regression_prediction2, stock_data[:-30], states[:-30], days=30) # 65.59631951065353
     
     # get the average of the two predictions # 50.5075708206808
     # predictions = (np.array(predictions_markov) + np.array(predictions_mlp) + np.array(predictions_forest) + np.array(predictions_svm) + np.array(predictions_logistic)) / 5

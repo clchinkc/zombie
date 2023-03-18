@@ -19,6 +19,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cached_property
+from types import new_class
 from typing import Any, Optional
 
 import matplotlib.pyplot as plt
@@ -133,7 +134,27 @@ class RandomMovementStrategy(MovementStrategy):
 
     def choose_direction(self):
         return random.choice(self.legal_directions)
+    
+@dataclass
+# simulate Brownian motion
+class BrownianMovementStrategy(MovementStrategy):
 
+    individual: Any[Individual]
+    legal_directions: list[tuple[int, int]]
+    neighbors: list[Individual]
+    
+    def __post_init__(self):
+        self.damping_coefficient = 0.5
+        self.std_dev = 1
+        self.scale_factor = math.sqrt(2 * self.damping_coefficient)*self.std_dev
+
+    def choose_direction(self):
+        direction = np.rint(np.random.normal(loc=0, scale=self.scale_factor, size=2)).astype(int)
+        print(direction)
+        while not np.all(np.isin(direction, self.legal_directions)):
+            print(direction)
+            direction = np.rint(np.random.normal(loc=0, scale=self.scale_factor, size=2)).astype(int)
+        return direction
 
 @dataclass
 # if healthy or other having no alive neighbors
@@ -276,7 +297,7 @@ class MovementStrategyFactory:
             elif individual.state == State.DEAD:
                 return NoMovementStrategy(individual, legal_directions, neighbors)
             else:
-                return RandomMovementStrategy(individual, legal_directions, neighbors)
+                return BrownianMovementStrategy(individual, legal_directions, neighbors)
 
     # may consider update the grid according to the individual's location
     # after assigning all new locations to the individuals
@@ -611,6 +632,8 @@ class PopulationObserver(Observer):
             label=State.name_list(),
             color=sns.color_palette("deep")
         )
+        # Set axis range as maximum count states
+        plt.ylim(0, max(counts.values())+1)
         # Put a legend to the right of the current axis
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         # Show the plot
@@ -652,7 +675,8 @@ class PopulationAnimator(Observer):
         ax.set_title("Bar Chart Animation")
         ax.set_xlabel("x")
         ax.set_ylabel("y")
-        ax.set_ylim(0, max([max(i) for i in y]))
+        # Set axis range
+        ax.set_ylim(0, max([max(i) for i in y])+1)
 
         # create the bar chart
         bars = ax.bar(x, y[0], tick_label=ticks, label=State.name_list(), color=sns.color_palette("deep"))

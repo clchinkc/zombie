@@ -23,11 +23,11 @@ def load_stock_data(file_name):
     data = pd.read_csv(file_name, index_col="Date", parse_dates=True)
     return data
 
-def calculate_daily_returns(data):
-    returns = data['Close'].pct_change().dropna()
+def calculate_daily_returns(prices):
+    returns = prices.pct_change().dropna()
     mu = np.mean(returns)
     sigma = np.std(returns)
-    theta = sigma**2 / mu
+    theta = mu - 0.5 * sigma ** 2
     return mu, sigma, theta
 
 # Define the Metropolis-Hastings algorithm for the MCMC simulation
@@ -60,18 +60,20 @@ def metropolis_hastings(likelihood_func, proposal_sampler, last_price, num_itera
 
 # Define the likelihood function for the MCMC simulation
 
-# random walk model
+# geometric Brownian motion model (random walk model)
 # def likelihood(final_price, previous_price, mu, sigma, theta):
-#     # Calculate the daily returns or shock for the proposed parameter value
-#     returns = np.random.normal(mu, sigma)
-#     # Calculate the price trajectory for the proposed parameter value
-#     price_trajectory = previous_price * np.cumprod(1 + returns)
-#     # Calculate the likelihood of the proposed parameter value
-#     likelihood = 1 / (np.sqrt(2 * np.pi) * sigma) * np.exp(-0.5 * (final_price - price_trajectory[-1]) ** 2 / sigma ** 2)
-#     log_likelihood = -0.5 * ((np.log(previous_price) - np.log(price_trajectory[-1])) / sigma)**2 - np.log(sigma) - 0.5 * np.log(2 * np.pi)
+#     # Calculate the parameters of the geometric Brownian motion model
+#     alpha = theta / sigma
+#     beta = mu - 0.5 * sigma ** 2 / theta
+#     # Calculate the expected log price and log volatility at the final time point
+#     time = 1
+#     log_mean = np.log(previous_price) + (beta - 0.5 * alpha ** 2) * time
+#     log_var = (alpha ** 2) * time
+#     # Calculate the log-likelihood of the final price
+#     log_likelihood = norm.logpdf(np.log(final_price), loc=log_mean, scale=np.sqrt(log_var + sigma ** 2))
 #     return np.exp(log_likelihood)
 
-# exponential Brownian motion model
+# exponential Brownian motion model (Black-Scholes model)
 def likelihood(final_price, previous_price, mu, sigma, theta):
     # Calculate the parameters of the exponential Brownian motion model
     alpha = theta / sigma
@@ -122,10 +124,10 @@ def calculate_median_price(price_matrix):
 data = load_stock_data("apple_stock_data.csv")
 
 # Calculate the mean and standard deviation of the daily returns for the historical data
-mu, sigma, theta = calculate_daily_returns(data)
+mu, sigma, theta = calculate_daily_returns(data['Close'])
 
 # Generate a large number of possible future price trajectories using the MCMC simulation
-days = 365
+days = 30
 num_simulations = 1000
 last_price = data['Close'][-1]
 
@@ -147,6 +149,16 @@ plt.show()
 
 # Calculate the median price from all the simulated trajectories
 median_price, lower_price, upper_price = calculate_median_price(price_matrix)
+
+# Plot the price trajectories using a line plot
+plt.plot(price_matrix, color='gray', alpha=0.25)
+plt.plot(median_price, color='blue', linewidth=2)
+plt.plot(lower_price, color='red', linewidth=1)
+plt.plot(upper_price, color='green', linewidth=1)
+plt.title("MCMC Simulation: AAPL")
+plt.xlabel("Days")
+plt.ylabel("Price")
+plt.show()
 
 # Plot historical data and all the simulated price trajectories using a line plot
 plt.plot(data.index, data['Close'].values, label='Historical Data')

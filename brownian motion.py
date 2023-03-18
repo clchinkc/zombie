@@ -14,43 +14,10 @@ The solution of the Langevin equation gives the probability distribution of the 
 
 """
 
-# with: differentiable move
-
-# https://github.com/DelSquared/Brownian-Motion
-
 
 """
-import matplotlib.pyplot as plt
-import numpy as np
-
-# Parameters
-gamma = 0.1  # friction coefficient
-dt = 0.01  # time step
-T = 10  # total time
-n_steps = int(T / dt)  # number of steps
-x0 = 0  # initial position
-v0 = 1  # initial velocity
-
-# Initialize arrays to store position and velocity
-x = np.zeros(n_steps)
-v = np.zeros(n_steps)
-x[0] = x0
-v[0] = v0
-
-# Simulate Brownian motion using the Langevin equation
-for i in range(1, n_steps):
-    v[i] = v[i-1] - gamma * v[i-1] * dt + np.sqrt(2 * gamma * dt) * np.random.normal()
-    x[i] = x[i-1] + v[i] * dt
-
-# Plot the results
-plt.plot(x, label='position')
-plt.plot(v, label='velocity')
-plt.xlabel('Time step')
-plt.legend()
-plt.show()
+This code simulates Brownian motion of a particle in a viscous fluid, where the particle is subject to a random force modeled by white noise, and experiences a viscous drag force proportional to its velocity. The code uses the Langevin equation to model the particle's dynamics and integrates it numerically using the Euler-Maruyama method. The resulting plot shows the trajectory of the particle's position and velocity over time.
 """
-
-
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -88,6 +55,10 @@ plt.plot(xv[0, :], xv[1, :], label='position', color='blue')
 plt.plot(xv[2, :], xv[3, :], label='velocity', color='red')
 plt.title("Brownian motion")
 plt.show()
+"""
+
+"""
+This code simulates an oscillator coupled to a heat bath, where the oscillator is also subject to a random force modeled by Gaussian white noise. The oscillator experiences a restoring force proportional to its displacement, as well as a damping force proportional to its velocity. The code uses the Langevin equation with an additional oscillator term to model the oscillator's dynamics, and integrates it numerically using the Euler-Maruyama method. The resulting plot shows the trajectory of the oscillator's position, velocity, and complex amplitude over time.
 """
 """
 import matplotlib.pyplot as plt
@@ -135,13 +106,14 @@ plt.title("Brownian motion")
 plt.show()
 """
 
+
 import numpy as np
 from matplotlib import pyplot as plt
 
 # The intention of this solver is to eliminate the use of Scipy's odeint from this project. While it is a phenomenal tool
 # its design makes it less than ideal for dealing with noisy/stochastic ODEs.
 
-k = 5  # Set to 0 to disable noise for example
+k = 10  # Set to 0 to disable noise for example
 
 
 def ODE(x, t, noisemap):  # example ODE
@@ -223,3 +195,4 @@ plt.plot(t, np.squeeze(np.real(x5)), label="real amplitude(5)")
 plt.ylim(-10, 10)
 plt.legend()
 plt.show()
+
