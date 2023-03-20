@@ -61,6 +61,27 @@ The Model class can represent different types of models and have methods for tra
 It’s important to note that this is just one way of structuring your code and you may choose to design it differently based on your specific needs.
 """
 
+"""
+One data processing function with load data, preprocess data and create features function
+preprocess data: clean and split data
+create features: financial calculation, like rolling mean and std, RSI, Bollinger Bands, return, volatility
+One trainer passing the trained model to one future predictor
+Both trainer and predictor get dataset from data processing function
+Predictor create another df to store new predicted data and another df with only predicted data
+Predictor can evaluate the performance of both regression and classification model
+One visualizing function to plot the prediction and actual price alongside with the historical price
+Note the possibility of using different models and different data so make sure the design is modular and flexible
+
+"""
+
+"""
+net present value
+internal rate of return
+Correlation and Covariance of two stocks
+Hypothesis testing
+Financial Modeling in python
+"""
+
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -300,3 +321,8 @@ plt.show()
 print(stock_data["Close"][len(X_train):])
 # print predictions
 print(predictions)
+
+
+"""
+Reinforcement learning can be used in stock price prediction and portfolio optimization by training an agent to make optimal trading decisions and asset allocations based on historical market data. This involves defining a state space, an action space, and a reward function, and using algorithms such as Q-learning, value networks, and policy networks to learn how to make profitable buy/sell decisions and asset allocations. Monte Carlo tree search can also be used to evaluate the outcomes of different trading sequences and refine the algorithm's performance.
+"""

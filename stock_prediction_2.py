@@ -1,15 +1,12 @@
 
-"""
-Markov Chain Monte Carlo methods can be applied to stock price prediction by generate future price trajectories using Metropolis-Hastings algorithm depending on the historical price data. The basic idea is to generate a large number of possible future price trajectories and use the average or expected value of these trajectories as the predicted stock price.
 
-Here is a possible approach using Markov Chain Monte Carlo (MCMC) simulation for stock price prediction:
-"""
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import yfinance as yf
+from numba import jit
 from scipy.stats import norm
 
 
@@ -25,9 +22,9 @@ def load_stock_data(file_name):
 
 def calculate_daily_returns(prices):
     returns = prices.pct_change().dropna()
-    mu = np.mean(returns)
-    sigma = np.std(returns)
-    theta = mu - 0.5 * sigma ** 2
+    mu = np.mean(returns) # expected return
+    sigma = np.std(returns) # volatility
+    theta = mu - 0.5 * sigma ** 2 # mean reversion level
     return mu, sigma, theta
 
 # Define the Metropolis-Hastings algorithm for the MCMC simulation
@@ -43,7 +40,7 @@ def metropolis_hastings(likelihood_func, proposal_sampler, last_price, num_itera
     # Run the chain
     for i in range(1, num_iterations):
         # Sample a new parameter from the proposal distribution
-        proposal = proposal_sampler(previous_price, sigma)
+        proposal = proposal_sampler(previous_price, mu, sigma)
         # Calculate the likelihood of the proposed parameter value
         proposal_likelihood = likelihood_func(proposal, previous_price, mu, sigma, theta)
         # Calculate the acceptance ratio
@@ -60,7 +57,7 @@ def metropolis_hastings(likelihood_func, proposal_sampler, last_price, num_itera
 
 # Define the likelihood function for the MCMC simulation
 
-# geometric Brownian motion model (random walk model)
+# geometric Brownian motion model modelled with a Wiener process
 # def likelihood(final_price, previous_price, mu, sigma, theta):
 #     # Calculate the parameters of the geometric Brownian motion model
 #     alpha = theta / sigma
@@ -73,20 +70,39 @@ def metropolis_hastings(likelihood_func, proposal_sampler, last_price, num_itera
 #     log_likelihood = norm.logpdf(np.log(final_price), loc=log_mean, scale=np.sqrt(log_var + sigma ** 2))
 #     return np.exp(log_likelihood)
 
-# exponential Brownian motion model (Black-Scholes model)
-def likelihood(final_price, previous_price, mu, sigma, theta):
-    # Calculate the parameters of the exponential Brownian motion model
-    alpha = theta / sigma
-    beta = mu - 0.5 * sigma**2 / theta
-    # Calculate the price trajectory for the proposed parameter value
-    price_trajectory = beta + (previous_price - beta) * np.exp(-alpha) + sigma / alpha * np.sqrt(1 - np.exp(-2 * alpha)) * np.random.normal()
+@jit(nopython=True)
+def pdf(x, loc, scale):
+    return np.exp(-0.5 * ((x - loc) / scale) ** 2) / np.sqrt(2 * np.pi) / scale
+
+# mean-reverting model with Ornstein-Uhlenbeck process
+# @jit(nopython=True)
+# def likelihood(final_price, previous_price, mu, sigma, theta):
+#     alpha = theta / sigma # mean reversion speed
+#     beta = mu - 0.5 * sigma**2 / theta # mean reversion level
+#     delta_t = 1 # time interval
+#     # Calculate the price trajectory for the proposed parameter value
+#     price_trajectory = beta + (previous_price - beta) * np.exp(-alpha * delta_t) + sigma * np.sqrt((1 - np.exp(-2 * alpha * delta_t)) / (2 * alpha))
+#     # Calculate the likelihood of the final price
+#     likelihood = pdf(final_price, loc=price_trajectory, scale=sigma) + 1e-10
+#     return likelihood
+
+# mean-reverting model with exponential Brownian motion process
+@jit(nopython=True)
+def likelihood(final_price, previous_price, mu, sigma, theta, randomness = np.random.normal()):
+    delta_t = 1 # time interval
+    drift = mu * previous_price * delta_t
+    diffusion = sigma * previous_price * np.sqrt(delta_t) * randomness
+    price_trajectory = previous_price + drift + diffusion
     # Calculate the likelihood of the final price
-    likelihood = norm.pdf(final_price, loc=price_trajectory, scale=sigma) + 1e-10
+    likelihood = pdf(final_price, loc=price_trajectory, scale=sigma) + 1e-10
     return likelihood
 
 # Define the proposal sampler for the MCMC simulation
-def proposal_sampler(param, sigma):
-    return np.random.normal(param, sigma)
+
+# random normal proposal sampler
+@jit(nopython=True)
+def proposal_sampler(previous_price, mu, sigma):
+    return np.random.normal(previous_price, sigma)
 
 # Define the function to generate a large number of possible future price trajectories using the MCMC simulation
 def price_prediction(last_price, days, num_simulations):
@@ -127,7 +143,7 @@ data = load_stock_data("apple_stock_data.csv")
 mu, sigma, theta = calculate_daily_returns(data['Close'])
 
 # Generate a large number of possible future price trajectories using the MCMC simulation
-days = 30
+days = 365
 num_simulations = 1000
 last_price = data['Close'][-1]
 

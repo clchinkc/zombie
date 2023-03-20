@@ -25,6 +25,7 @@ Inversely scales the estimated future price to get the final prediction.
 """
 
 
+from abc import ABC
 from datetime import datetime
 
 import matplotlib.pyplot as plt
@@ -33,171 +34,205 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, silhouette_score
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import SVC
 
 
-# Step 1: Data Preprocessing
-def preprocess_data(filepath):
-    # Read data from CSV file
-    stock_data = pd.read_csv(filepath)
-    # Drop any missing values
-    stock_data = stock_data.dropna()
-    # stock_data = stock_data[['Close']]
-    scaler = MinMaxScaler()
-    stock_data = scaler.fit_transform(stock_data[['Close']])
-    return stock_data, scaler
+class StockDataPreprocessor:
+    def __init__(self, filepath):
+        self.filepath = filepath
+        self.scaler = None
+        self.stock_data = None
 
-# Step 2: Defining the States
-def get_states(stock_data, num_states):
-    # Use KMeans clustering to group the scaled Close prices into the specified number of clusters (i.e., states)
-    kmeans = KMeans(n_clusters=num_states, init='k-means++', n_init="auto", max_iter=300).fit(stock_data)
-    states = kmeans.labels_
-    return states
-
-def markov_chain_prediction(stock_data, states):
-    # Step 3: Transition Probability Matrix
-    hist = np.histogram2d(states[:-1], states[1:], bins=len(set(states)))[0]
-    transition_prob_matrix = hist / hist.sum(axis=1, keepdims=True)
-
-    # Step 4: Future State Probabilities
-    current_state_prob = np.array([1/len(set(states))]*len(set(states)))
-    future_state_prob = np.dot(current_state_prob, transition_prob_matrix)
-
-    # Step 5: Predicting the Future Prices
-    # weighted average of the median prices of all the future states
-    future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
-    estimated_future_price = np.dot(future_state_prob, future_prices)
-    estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
-    return estimated_future_price_2d
-
-def mlp_prediction(stock_data, states):
-    # Step 4: Train a neural network classifier
-    clf = MLPClassifier(hidden_layer_sizes=(100, 100), max_iter=1000, solver='adam', random_state=42, early_stopping=True)
-    clf.fit(stock_data[:-1].reshape(-1, 1), states[1:])
-
-    # Step 5: Predict the future states of the last data point
-    proba = clf.predict_proba(stock_data[-1].reshape(-1, 1))
-    # weighted average of the median prices of all the future states
-    future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
-    estimated_future_price = np.dot(proba[-1], future_prices)
-    estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
-    return estimated_future_price_2d
-
-def forest_prediction(stock_data, states):
-    # Step 4: Train a random forest classifier
-    clf = RandomForestClassifier(n_estimators=100, max_depth=5, random_state=0)
-    clf.fit(stock_data[:-1].reshape(-1, 1), states[1:])
-
-    # Step 5: Predict the future states of the last data point
-    proba = clf.predict_proba(stock_data[-1].reshape(-1, 1))
-    # weighted average of the median prices of all the future states
-    future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
-    estimated_future_price = np.dot(proba[-1], future_prices)
-    estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
-    return estimated_future_price_2d
-
-def svm_prediction(stock_data, states):
-    # Step 4: Train a SVM classifier
-    clf = SVC(gamma='auto', probability=True)
-    clf.fit(stock_data[:-1].reshape(-1, 1), states[1:])
-
-    # Step 5: Predict the future states of the last data point
-    proba = clf.predict_proba(stock_data[-1].reshape(-1, 1))
-    # weighted average of the median prices of all the future states
-    future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
-    estimated_future_price = np.dot(proba[-1], future_prices)
-    estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
-    return estimated_future_price_2d
-
-def logistic_regression_prediction(stock_data, states):
-    # Step 4: Train a logistic regression classifier
-    clf = LogisticRegression(random_state=0, solver='lbfgs', multi_class='multinomial')
-    clf.fit(stock_data[:-1].reshape(-1, 1), states[1:])
-
-    # Step 5: Predict the future states of the last data point
-    proba = clf.predict_proba(stock_data[-1].reshape(-1, 1))
-    # weighted average of the median prices of all the future states
-    future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
-    estimated_future_price = np.dot(proba[-1], future_prices)
-    estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
-    return estimated_future_price_2d
-
-def logistic_regression_prediction2(stock_data, states):
-    # Step 4: Train a logistic regression classifier
-    clf = LogisticRegression(random_state=0, solver='lbfgs', multi_class='multinomial')
-    clf.fit(stock_data[:-1].reshape(-1, 1), states[1:])
-
-    # Step 5: Predict the future states of the last data point
-    proba = clf.predict_proba(stock_data[-1].reshape(-1, 1))
-    # Use the average of predicted probability to calculate the predicted return
-    estimated_future_price = np.average(proba[-1], axis=1)
-    estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
-    return estimated_future_price_2d
-
-def get_predictions(prediction_method, stock_data, states, days=30):
-    # Predict the next 30 days using the Markov chain model
-    stock_prices = stock_data
-    predictions = []
-    for i in range(days):
-        # Make a new prediction for the next day
-        last_price = prediction_method(stock_prices, states)
-        stock_prices = np.append(stock_prices, last_price)[1:]
-        predictions.append(last_price)
-    return predictions
-
-def evaluate_predictions(predictions, actual_prices):
-    # Calculate the mean squared error
-    mse = mean_squared_error(actual_prices, predictions)
-    return mse
+    def preprocess_data(self):
+        # Read data from CSV file
+        stock_data = pd.read_csv(self.filepath)
+        # Drop any missing values
+        stock_data = stock_data.dropna()
+        self.scaler = MinMaxScaler()
+        self.stock_data = self.scaler.fit_transform(stock_data[['Close']])
+        return self.stock_data, self.scaler
 
 
-def plot_predictions(scaler, historical_prices, actual_prices, predicted_price):
-    # Plot the predicted prices along with the historical data
-    historical_dates = pd.read_csv('apple_stock_data.csv')['Date'].values[-len(historical_prices):]
-    dates = [datetime.strptime(date, '%Y-%m-%d %H:%M:%S%z').replace(tzinfo=None) for date in historical_dates]
-    future_dates = pd.date_range(start=dates[-len(actual_prices)+5], periods=len(predicted_price), freq='D')
+class StatesGetter:
+    def __init__(self, stock_data, num_states):
+        self.stock_data = stock_data
+        self.num_states = num_states
+        self.kmeans = None
+        self.states = None
 
-    plt.plot(dates[:-len(actual_prices)], historical_prices[:-len(actual_prices)], label='Historical Prices')
-    actual_prices = np.insert(actual_prices, 0, historical_prices[-len(actual_prices)], axis=0)
-    plt.plot(dates[-len(actual_prices):], actual_prices, label='Actual Prices')
-    predicted_price = np.insert(predicted_price, 0, historical_prices[-len(predicted_price)], axis=0)
-    plt.plot(dates[-len(predicted_price):], predicted_price, label='Predicted Prices')
-    plt.xticks(rotation=45)
-    plt.legend()
-    plt.show()
+    def get_states(self):
+        # Use KMeans clustering to group the scaled Close prices into the specified number of clusters (i.e., states)
+        self.kmeans = KMeans(n_clusters=self.num_states, init='k-means++', n_init="auto", max_iter=1000, random_state=42)
+        self.kmeans.fit(self.stock_data)
+        self.states = self.kmeans.labels_
+        return self.states
+
+class Model(ABC):
+    def train(self, stock_data, states):
+        pass
     
-def main():
-    stock_data, scaler = preprocess_data('apple_stock_data.csv')
-    states = get_states(stock_data, 5)
-    
-    # Predict the next days using the Markov chain model and the MLP model
-    # predictions_markov = get_predictions(markov_chain_prediction, stock_data[:-30], states[:-30], days=30) # 572.041799970989
-    # predictions_mlp = get_predictions(mlp_prediction, stock_data[:-30], states[:-30], days=30) # 119.90550509711301
-    # predictions_forest = get_predictions(forest_prediction, stock_data[:-30], states[:-30], days=30) # 64.45639583172992
-    # predictions_svm = get_predictions(svm_prediction, stock_data[:-30], states[:-30], days=30) # 101.9820807198693
-    predictions_logistic = get_predictions(logistic_regression_prediction2, stock_data[:-30], states[:-30], days=30) # 65.59631951065353
-    
-    # get the average of the two predictions # 50.5075708206808
-    # predictions = (np.array(predictions_markov) + np.array(predictions_mlp) + np.array(predictions_forest) + np.array(predictions_svm) + np.array(predictions_logistic)) / 5
-    predictions = predictions_logistic
-    
-    # Reverse the scaling to get the actual prices
-    historical_prices = scaler.inverse_transform(stock_data)
-    predicted_price = scaler.inverse_transform(np.array(predictions).reshape(-1, 1))
-    
-    # Evaluate the performance of the model
-    actual_prices = historical_prices[-30:]
-    mse = evaluate_predictions(predicted_price, actual_prices)
-    print("Mean Squared Error: {}".format(mse))
-    
-    # Plot the predicted prices along with the historical data
-    plot_predictions(scaler, historical_prices, actual_prices, predicted_price)
+    def predict(self, stock_data, states):
+        pass
 
-if __name__ == "__main__":
-    main()
+
+class MarkovChain(Model):
+    def __init__(self):
+        self.transition_prob_matrix = None
+
+    def train(self, stock_data, states):
+        hist = np.histogram2d(states[:-1], states[1:], bins=len(set(states)))[0]
+        self.transition_prob_matrix = hist / hist.sum(axis=1, keepdims=True)
+        
+    def predict(self, stock_data, states):
+        current_state_prob = np.array([1/len(set(states))]*len(set(states)))
+        future_state_prob = np.dot(current_state_prob, self.transition_prob_matrix)
+        future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
+        estimated_future_price = np.dot(future_state_prob, future_prices)
+        estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
+        return estimated_future_price_2d
+
+class MLP(Model):
+    def __init__(self):
+        self.model = MLPClassifier(hidden_layer_sizes=(100, 100), max_iter=1000, solver='adam', random_state=42)
+
+    def train(self, stock_data, states):
+        self.model.fit(stock_data[:-1].reshape(-1, 1), states[1:])
+
+    def predict(self, stock_data, states):
+        proba = self.model.predict_proba(stock_data[-1].reshape(-1, 1))
+        future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
+        estimated_future_price = np.dot(proba[-1], future_prices)
+        estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
+        return estimated_future_price_2d
+
+class Forest(Model):
+    def __init__(self):
+        self.model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42)
+
+    def train(self, stock_data, states):
+        self.model.fit(stock_data[:-1].reshape(-1, 1), states[1:])
+
+    def predict(self, stock_data, states):
+        proba = self.model.predict_proba(stock_data[-1].reshape(-1, 1))
+        future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
+        estimated_future_price = np.dot(proba[-1], future_prices)
+        estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
+        return estimated_future_price_2d
+
+class SVM(Model):
+    def __init__(self):
+        self.model = SVC(gamma="auto", kernel='rbf', probability=True, random_state=42)
+
+    def train(self, stock_data, states):
+        self.model.fit(stock_data[:-1].reshape(-1, 1), states[1:])
+
+    def predict(self, stock_data, states):
+        proba = self.model.predict_proba(stock_data[-1].reshape(-1, 1))
+        future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
+        estimated_future_price = np.dot(proba[-1], future_prices)
+        estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
+        return estimated_future_price_2d
+
+class Logistic(Model):
+    def __init__(self):
+        self.model = LogisticRegression(solver='lbfgs', multi_class='multinomial', random_state=42)
+
+    def train(self, stock_data, states):
+        self.model.fit(stock_data[:-1].reshape(-1, 1), states[1:])
+
+    def predict(self, stock_data, states):
+        proba = self.model.predict_proba(stock_data[-1].reshape(-1, 1))
+        future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
+        estimated_future_price = np.dot(proba[-1], future_prices)
+        estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
+        return estimated_future_price_2d
+
+class KNN(Model):
+    def __init__(self):
+        self.model = KNeighborsClassifier(n_neighbors=3)
+
+    def train(self, stock_data, states):
+        self.model.fit(stock_data[:-1].reshape(-1, 1), states[1:])
+
+    def predict(self, stock_data, states):
+        proba = self.model.predict_proba(stock_data[-1].reshape(-1, 1))
+        future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
+        estimated_future_price = np.dot(proba[-1], future_prices)
+        estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
+        return estimated_future_price_2d
+
+class StockPredictor:
+    def __init__(self, model, filepath, num_states, days):
+        self.model = model
+        self.filepath = filepath
+        self.num_states = num_states
+        self.days = days
+
+    def preprocess_data(self):
+        stock_data_preprocessor = StockDataPreprocessor(self.filepath)
+        self.stock_data, self.scaler = stock_data_preprocessor.preprocess_data()
+
+    def get_states(self):
+        states_getter = StatesGetter(self.stock_data, self.num_states)
+        self.states = states_getter.get_states()
+
+    def train(self):
+        self.model.train(self.stock_data, self.states)
+
+    def predict(self):
+        stock_prices = self.stock_data
+        self.predicted_prices = []
+        for _ in range(self.days):
+            last_price = self.model.predict(stock_prices, self.states)
+            stock_prices = np.append(stock_prices, last_price, axis=0)[1:]
+            self.predicted_prices.append(last_price)
+
+    def evaluate(self):
+        predicted_prices = self.scaler.inverse_transform(np.array(self.predicted_prices).reshape(-1, 1))
+        actual_prices = self.scaler.inverse_transform(self.stock_data)[-self.days:]
+        print("RMSE:", np.sqrt(mean_squared_error(actual_prices, predicted_prices)))
+
+    def plot_prediction(self):
+        predicted_prices = self.scaler.inverse_transform(np.array(self.predicted_prices).reshape(-1, 1))
+        historical_prices = self.scaler.inverse_transform(np.array(self.stock_data).reshape(-1, 1))
+        actual_prices = historical_prices[-self.days:]
+        
+        # Plot the predicted prices along with the historical data
+        historical_dates = pd.read_csv(self.filepath)['Date'].values[-len(historical_prices):]
+        dates = [datetime.strptime(date, '%Y-%m-%d %H:%M:%S%z').replace(tzinfo=None) for date in historical_dates]
+
+        plt.plot(dates[:-len(actual_prices)], historical_prices[:-len(actual_prices)], label='Historical Prices')
+        actual_prices = np.insert(actual_prices, 0, historical_prices[-len(actual_prices)], axis=0)
+        plt.plot(dates[-len(actual_prices):], actual_prices, label='Actual Prices')
+        predicted_prices = np.insert(predicted_prices, 0, historical_prices[-len(predicted_prices)], axis=0)
+        plt.plot(dates[-len(predicted_prices):], predicted_prices, label='Predicted Prices')
+        plt.xticks(rotation=45)
+        plt.legend()
+        plt.show()
+
+
+if __name__ == '__main__':
+    filepath = 'apple_stock_data.csv'
+    num_states = 4
+    days = 30
+    # markov_chain = MarkovChain()
+    # mlp = MLP()
+    # forest = Forest()
+    # svm = SVM()
+    # logistic = Logistic()
+    knn = KNN()
+    stock_predictor = StockPredictor(knn, filepath, num_states, days)
+    stock_predictor.preprocess_data()
+    stock_predictor.get_states()
+    stock_predictor.train()
+    stock_predictor.predict()
+    stock_predictor.evaluate()
+    stock_predictor.plot_prediction()
+
 
 
 """
