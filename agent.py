@@ -816,6 +816,7 @@ On the other hand, I have used pip-tools. If you aren’t ready to jump into a d
 # add barricade class, human may place barricade which has health and can be destroyed by huamn and zombie
 
 # show time step and health bar for human and zombie
+# Hinton diagrams to visualize the health of the agent
 
 # agents form a group and move together and attack, defend together
 

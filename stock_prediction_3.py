@@ -242,8 +242,15 @@ To add volatility term, you can use the volatility of the stock price to adjust 
 Use a more sophisticated clustering algorithm:
 To use a more sophisticated clustering algorithm, you can try hierarchical clustering, density-based clustering, or model-based clustering algorithms and evaluate their performance.
 
-Use more advanced machine learning models:
-To use more advanced machine learning models, you can try neural networks, support vector machines, decision trees, and random forests and evaluate their performance. You can also use ensemble methods such as stacking or boosting to combine the predictions of multiple models.
+Cluster based on the price change (returns):
+data['Return'] = np.log(data['Close'] / data['Close'].shift(1)).fillna(np.mean(np.log(data['Close'] / data['Close'].shift(1))))
+km = KMeans(n_clusters=2, random_state=0).fit(returns_scaled)
+data['Cluster'] = km.labels_
+Then the the returns, volatility, and Sharpe ratio of the stocks in each cluster can be calculated as follows:
+The "Annualized Return" is the average return of the stocks in each cluster over the period of time in the dataset, scaled up to a one-year period. A positive value means that the stocks in that cluster on average had a positive return, while a negative value means they had a negative return. In this case, cluster 0 had an annualized return of 4.45, while cluster 1 had an annualized return of -3.93.
+The "Annualized Volatility" is a measure of the variability of the returns of the stocks in each cluster over the period of time in the dataset, scaled up to a one-year period. A higher value means that the stocks in that cluster had more volatile returns, while a lower value means they had less volatile returns. In this case, cluster 0 had an annualized volatility of 3.99, while cluster 1 had an annualized volatility of 4.19.
+The "Sharpe Ratio" is a measure of risk-adjusted performance that takes into account both the return and volatility of the stocks in each cluster. A higher value means that the stocks in that cluster had a better risk-adjusted performance, while a lower value means they had a worse risk-adjusted performance. In this case, cluster 0 had a Sharpe Ratio of -12.39, while cluster 1 had a Sharpe Ratio of -43.58.
+
 
 Consider more features:
 To consider more features, you can collect and preprocess additional data such as volume, news sentiment, technical indicators, and economic indicators. You can then use feature selection methods such as correlation analysis, mutual information, or LASSO regression to select the most relevant features for the model.

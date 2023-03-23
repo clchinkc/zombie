@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import yfinance as yf
-from numba import jit
-from scipy.stats import norm
+from numba import jit, njit
+from scipy.stats import truncnorm
 
 
 # Collect historical price data for the stock
@@ -99,10 +99,24 @@ def likelihood(final_price, previous_price, mu, sigma, theta, randomness = np.ra
 
 # Define the proposal sampler for the MCMC simulation
 
-# random normal proposal sampler
-@jit(nopython=True)
-def proposal_sampler(previous_price, mu, sigma):
-    return np.random.normal(previous_price, sigma)
+# Random walk proposal sampler
+# @jit(nopython=True)
+# def proposal_sampler(previous_price, mu, sigma):
+#     return np.random.normal(previous_price, sigma)
+
+# Student's t-distribution proposal sampler
+# def proposal_sampler(previous_price, mu, sigma, df=3):
+#     return np.random.standard_t(df, size=None) * sigma + previous_price
+
+@njit(fastmath=True)
+def proposal_sampler_(previous_price, mu, sigma, df=3):
+    # generate a random sample from the Student's t-distribution
+    x = np.random.normal(0, 1)
+    y = np.random.chisquare(df)
+    t = x / np.sqrt(y / df)
+    
+    # calculate the new proposal
+    return previous_price + sigma * t
 
 # Define the function to generate a large number of possible future price trajectories using the MCMC simulation
 def price_prediction(last_price, days, num_simulations):
@@ -195,4 +209,13 @@ The implementation assumes that the daily returns are normally distributed, whic
 The implementation does not take into account any external factors or events that may affect the stock price, such as news or market trends. Incorporating such information may improve the accuracy of the predictions.
 The implementation uses the same proposal distribution for all the iterations of the MCMC simulation, which may not be optimal. Tuning the proposal distribution or using adaptive MCMC methods may improve the efficiency and convergence of the simulation.
 The implementation uses a single value for the standard deviation of the daily returns, which may not capture the full range of variability in the data. Using a more robust estimator or considering different levels of volatility may improve the accuracy of the predictions.
+"""
+"""
+To use probability distributions to model stock returns, we can fit different distributions to historical stock returns data and then use those distributions to make predictions about future returns. Three common distributions used for modeling stock returns are the normal distribution, Student's t-distribution, and the lognormal distribution.
+
+Normal distribution: The normal distribution is a commonly used distribution for modeling stock returns. It is a bell-shaped curve that is symmetric around the mean. We can estimate the mean and standard deviation of stock returns using historical data and then fit a normal distribution to these values. We can then use this distribution to make predictions about future stock returns.
+
+Student's t-distribution: The Student's t-distribution is a more flexible distribution than the normal distribution because it allows for more extreme events. This can be useful when modeling stock returns because stock returns can be quite volatile and can have fat tails. To use the Student's t-distribution to model stock returns, we first estimate the degrees of freedom parameter based on historical data. We can then fit a t-distribution to the mean and standard deviation of the stock returns.
+
+Lognormal distribution: The lognormal distribution is another commonly used distribution for modeling stock returns. This distribution is often used when modeling returns on individual stocks or portfolios because it allows for returns to be negative. To use the lognormal distribution to model stock returns, we first take the natural logarithm of the historical stock returns to make them normally distributed. We can then estimate the mean and standard deviation of the log returns and fit a lognormal distribution to these values.
 """

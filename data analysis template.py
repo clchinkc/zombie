@@ -1171,3 +1171,19 @@ Consider your audience and what type of chart will be easiest for them to unders
 
 In conclusion, choosing the right chart for your data is essential to effectively communicate your message and help your audience make informed decisions. Consider the type of data you have, the message you want to convey, and your audience when selecting the appropriate chart.
 """
+
+"""
+https://www.kaggle.com/c/titanic/overview
+https://www.kaggle.com/stefanschulmeister87/titanic-with-eda-and-seaborn-visuals
+https://www.kaggle.com/arunsajisamuel/titanic-eda-and-predictions-top-13
+https://www.kaggle.com/imoore/titanic-the-only-notebook-you-need-to-see
+https://www.kaggle.com/imoore/multiple-classification-models-work-in-progress
+https://www.kaggle.com/boss0ayush/extensive-eda-plus-top2/data
+https://www.kaggle.com/niteshranjansingh/titanic-top-solution-which-leads-you-into-top-2
+https://www.kaggle.com/bennheinz/be-in-top-10-submissions
+https://www.kaggle.com/ismikhail/titanic-top-solution
+https://www.kaggle.com/ahmedmurad1990/titanic-competition-how-to-get-top-score-100
+https://www.kaggle.com/soham1024/titanic-data-science-eda-with-meme-solution
+https://www.kaggle.com/brendan45774/titanic-top-solution
+https://www.kaggle.com/tarunpaparaju/titanic-competition-how-top-lb-got-their-score
+"""

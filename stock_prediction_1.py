@@ -12,8 +12,8 @@ def load_data(ticker):
     """Loads historical data for the given stock ticker."""
     # ticker_data = yf.Ticker(ticker)
     # data = ticker_data.history(period='max')
-    data = pd.read_csv('apple_stock_data.csv', index_col=0, parse_dates=True)
-    return data
+    stock_data = pd.read_csv('apple_stock_data.csv', index_col=0, parse_dates=True)
+    return stock_data
 
 def create_features(df):
     """Creates new features from the historical data."""
