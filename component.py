@@ -78,12 +78,12 @@ def createBjorn():
                         BjornGraphicsComponent())
 
 """
-User inputcomponent that has method using Character as input to update the Character
-Update the inputcomponent inside the Character update method
-The Character own the inputcomponent that control the Character velocity by a specific acceleration stored inside inputcomponent
-The character also own a physicscomponent that change the Character position according to its velocity and world.resolve collision function with the character and world as input
-The character also own a graphicscomponent that points to left if velocity lower than 0 else right and graphic.draw function with character and graphics as input
-So the character has position, velocity, inputcomponent, physicscomponent, graphicscomponent and update function that call input.update, physics.update, graphics.update
+User input component that has method using Character as input to update the Character
+Update the input component inside the Character update method
+The Character own the input component that control the Character velocity by a specific acceleration stored inside input component
+The character also own a physics component that change the Character position according to its velocity and world.resolve collision function with the character and world as input
+The character also own a graphics component that points to left if velocity lower than 0 else right and graphic.draw function with character and graphics as input
+So the character has position, velocity, input component, physics component, graphics component and update function that call input.update, physics.update, graphics.update
 It holds components and state shared among components
 """
 

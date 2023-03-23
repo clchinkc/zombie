@@ -7,7 +7,6 @@ import pandas as pd
 import seaborn as sns
 import yfinance as yf
 from numba import jit, njit
-from scipy.stats import truncnorm
 
 
 # Collect historical price data for the stock
@@ -109,7 +108,7 @@ def likelihood(final_price, previous_price, mu, sigma, theta, randomness = np.ra
 #     return np.random.standard_t(df, size=None) * sigma + previous_price
 
 @njit(fastmath=True)
-def proposal_sampler_(previous_price, mu, sigma, df=3):
+def proposal_sampler(previous_price, mu, sigma, df=3):
     # generate a random sample from the Student's t-distribution
     x = np.random.normal(0, 1)
     y = np.random.chisquare(df)
