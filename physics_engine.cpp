@@ -9,6 +9,7 @@
 // https://github.com/codingthunder/CSE310-FALL-2022/tree/master/CPlusPlusProject
 // https://www.youtube.com/watch?v=eNSkYAzC_ew
 // https://github.com/St0wy/GPR4400-PhysicsEngine
+// https://github.com/MateusZitelli/PyPlanets
 
 // Falling sand
 // https://blog.winter.dev/2020/falling-sand-games/

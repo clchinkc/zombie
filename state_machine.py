@@ -67,6 +67,14 @@ ZOMBIE = "zombie"
 WEAPON = "weapon"
 events = [NOISE, ZOMBIE, WEAPON]
 
+# define the possible rewards
+# determined by states, actions, and events
+SURVIVE = 1
+FIND_RESOURCES = 5
+KILL_ZOMBIE = 10
+DIE_BY_ZOMBIE = -100
+rewards = [SURVIVE, FIND_RESOURCES, KILL_ZOMBIE, DIE_BY_ZOMBIE]
+
 # define the school class to store states and produce events
 class School(object):
     def __init__(self):
@@ -90,161 +98,38 @@ class School(object):
             },
         }
         self.event = NOISE
-        self.produce_event_globals = partial(self.produce_event, SURVIVE=1, FIND_RESOURCES=5, KILL_ZOMBIE=10, DIE_BY_ZOMBIE=-100)
-        update_wrapper(self.produce_event_globals, self.produce_event)
-        
-        # may use probability to define the rules or events that trigger transitions between states
-        
+        # define the matrix of events for each state and action
+        self.event_reward_rules = {
+        HIDING: {
+            HIDE: lambda: (np.random.choice(events), SURVIVE),
+            SEARCH: lambda: (NOISE if np.random.random() < 0.5 else ZOMBIE, SURVIVE),
+            FIGHT: lambda: (ZOMBIE, SURVIVE),
+        },
+        SEARCHING: {
+            HIDE: lambda: (np.random.choice(events), SURVIVE),
+            SEARCH: lambda: (WEAPON if np.random.random() < 0.5 else NOISE, SURVIVE if np.random.random() < 0.5 else FIND_RESOURCES),
+            FIGHT: lambda: (np.random.choice(events), SURVIVE),
+        },
+        FIGHTING: {
+            HIDE: lambda: (NOISE if np.random.random() < 0.5 else ZOMBIE, SURVIVE if np.random.random() < 0.5 else DIE_BY_ZOMBIE),
+            SEARCH: lambda: (WEAPON if np.random.random() < 0.3 else (ZOMBIE if np.random.random() < 0.5 else ZOMBIE), SURVIVE if np.random.random() < 0.3 else DIE_BY_ZOMBIE),
+            FIGHT: lambda: (WEAPON if np.random.random() < 0.45 else ZOMBIE, KILL_ZOMBIE if np.random.random() < 0.9 else DIE_BY_ZOMBIE),
+        },
+        }
+
     def update_state(self, state, event):
+        print("state: ", state)
+        print("event: ", event)
         # select the next state based on the current state and event
         return self.state_transitions[state][event]
-        
-    def produce_event(self, state, action, SURVIVE, FIND_RESOURCES, KILL_ZOMBIE, DIE_BY_ZOMBIE):
-        if state == HIDING:
-            if action == HIDE:
-                event = np.random.choice(events)
-                reward = SURVIVE
-            elif action == SEARCH:
-                if np.random.random() < 0.5:
-                    event = NOISE
-                    reward = SURVIVE
-                else:
-                    event = ZOMBIE
-                    reward = SURVIVE
-            elif action == FIGHT:
-                event = ZOMBIE
-                reward = SURVIVE
-            else:
-                raise ValueError("Invalid action")
-        elif state == SEARCHING:
-            if action == HIDE:
-                event = np.random.choice(events)
-                reward = SURVIVE
-            elif action == SEARCH:
-                if np.random.random() < 0.5:
-                    event = WEAPON
-                    reward = FIND_RESOURCES
-                else:
-                    event = NOISE
-                    reward = SURVIVE
-            elif action == FIGHT:
-                event = np.random.choice(events)
-                reward = SURVIVE
-            else:
-                raise ValueError("Invalid action")
-        elif state == FIGHTING:
-            if action == HIDE:
-                if np.random.random() < 0.5:
-                    event = NOISE
-                    reward = SURVIVE
-                else:
-                    event = ZOMBIE
-                    reward = DIE_BY_ZOMBIE
-            elif action == SEARCH:
-                if np.random.random() < 0.3:
-                    event = WEAPON
-                    reward = SURVIVE
-                elif np.random.random() < 0.5:
-                    event = ZOMBIE
-                    reward = SURVIVE
-                else:
-                    event = ZOMBIE
-                    reward = DIE_BY_ZOMBIE
-            elif action == FIGHT:
-                if np.random.random() < 0.9:
-                    if np.random.random() < 0.5:
-                        event = WEAPON
-                    else:
-                        event = ZOMBIE
-                    reward = KILL_ZOMBIE
-                else:
-                    event = ZOMBIE
-                    reward = DIE_BY_ZOMBIE
-            else:
-                raise ValueError("Invalid action")
-        else:
-            raise ValueError("Invalid state")
-        return event, reward
 
-    """
-    # execute action function with match case statement
-    def execute_action(state, action):
-        match state, action:
-            case HIDING, HIDE:
-                event = np.random.choice(events)
-                reward = SURVIVE
-            case HIDING, SEARCH:
-                if np.random.random() < 0.5:
-                    event = NOISE
-                    reward = SURVIVE
-                else:
-                    event = ZOMBIE
-                    reward = SURVIVE
-            case HIDING, FIGHT:
-                event = ZOMBIE
-                reward = SURVIVE
-            case SEARCHING, HIDE:
-                event = np.random.choice(events)
-                reward = SURVIVE
-            case SEARCHING, SEARCH:
-                if np.random.random() < 0.5:
-                    event = WEAPON
-                    reward = FIND_RESOURCES
-                else:
-                    event = NOISE
-                    reward = SURVIVE
-            case SEARCHING, FIGHT:
-                event = np.random.choice(events)
-                reward = SURVIVE
-            case FIGHTING, HIDE:
-                if np.random.random() < 0.5:
-                    event = NOISE
-                    reward = SURVIVE
-                else:
-                    event = ZOMBIE
-                    reward = DIE_BY_ZOMBIE
-            case FIGHTING, SEARCH:
-                if np.random.random() < 0.3:
-                    event = WEAPON
-                    reward = SURVIVE
-                elif np.random.random() < 0.5:
-                    event = ZOMBIE
-                    reward = SURVIVE
-                else:
-                    event = ZOMBIE
-                    reward = DIE_BY_ZOMBIE
-            case FIGHTING, FIGHT:
-                if np.random.random() < 0.9:
-                    if np.random.random() < 0.5:
-                        event = WEAPON
-                    else:
-                        event = ZOMBIE
-                    reward = KILL_ZOMBIE
-                else:
-                    event = ZOMBIE
-                    reward = DIE_BY_ZOMBIE
-            case _, _:
-                raise ValueError("Invalid state or action")
-    """
-    """
-        # define the matrix of events for each state and action
-        self.event_probabilities = [
-        # NOISE, ZOMBIE, WEAPON
-        [[0.11, 0.12, 0.77],    # HIDE, HIDING
-        [0.13, 0.14, 0.73],    # SEARCH, HIDING
-        [0.15, 0.16, 0.69]],   # FIGHT, HIDING
-        [[0.17, 0.18, 0.65],    # HIDE, SEARCHING
-        [0.19, 0.20, 0.61],    # SEARCH, SEARCHING
-        [0.21, 0.22, 0.57]],   # FIGHT, SEARCHING
-        [[0.23, 0.24, 0.53],    # HIDE, FIGHTING
-        [0.25, 0.26, 0.49],    # SEARCH, FIGHTING
-        [0.27, 0.28, 0.45]]   # FIGHT, FIGHTING
-        ]
     def produce_event(self, state, action):
-        # determine the event based on the state, action, and the event probabilities
-        event_probabilities = self.event_probabilities[states.index(self.state)][actions.index(action)]
-        return np.random.choice(events, p=event_probabilities)
-    """
+        if state in self.event_reward_rules and action in self.event_reward_rules[state]:
+            event_and_reward = self.event_reward_rules[state][action]()
+            return event_and_reward
+        else:
+            raise ValueError("Invalid state or action")
+
 
 # define the person class to hold the state machine and determine the action
 class Person(object):
@@ -261,7 +146,7 @@ class Person(object):
         # select the next action
         self.action = self.select_action(self.state_machine.state, 0)
         # select the next event
-        self.state_machine.event, reward = self.state_machine.produce_event_globals(self.state_machine.state, self.action)
+        self.state_machine.event, reward = self.state_machine.produce_event(self.state_machine.state, self.action)
         # select the next state
         self.state_machine.state = self.state_machine.update_state(self.state_machine.state, self.state_machine.event)
         return reward
@@ -307,7 +192,7 @@ class Person(object):
             print()
 
     # define the training function to train the person
-    def train(self, num_episodes, epsilon, survive, find_resources, kill_zombie, die_by_zombie, learning_rate, discount_rate):
+    def train(self, num_episodes, epsilon, learning_rate, discount_rate):
         # Loop through the episodes
         for episode in range(num_episodes):
             # print the current episode
@@ -322,8 +207,7 @@ class Person(object):
                 # select the next action
                 self.action = self.select_action(self.state_machine.state, epsilon)
                 # determine the event and reward
-                self.state_machine.produce_event_globals = partial(self.state_machine.produce_event, SURVIVE=survive, FIND_RESOURCES=find_resources, KILL_ZOMBIE=kill_zombie, DIE_BY_ZOMBIE=die_by_zombie)
-                self.event, self.reward = self.state_machine.produce_event_globals(self.state_machine.state, self.action)
+                self.event, self.reward = self.state_machine.produce_event(self.state_machine.state, self.action)
                 # determine the next state
                 next_state = self.state_machine.update_state(self.state_machine.state, self.event)
                 
@@ -337,7 +221,7 @@ class Person(object):
                 self.state_machine.state = next_state
                 
                 # determine if the episode is done
-                if self.end_condition(self.reward, die_by_zombie):
+                if self.end_condition(self.reward, DIE_BY_ZOMBIE):
                     break
                 
         self.print_q_table()
@@ -353,7 +237,7 @@ def simulation():
     
     for person in people:
         # train the person
-        person.train(num_episodes=100, epsilon=0.25, survive=1, find_resources=5, kill_zombie=10, die_by_zombie=-100, learning_rate=0.001, discount_rate=0.999)
+        person.train(num_episodes=100, epsilon=0.25, learning_rate=0.001, discount_rate=0.999)
     
     for step in range(num_steps):
         # run the simulation
@@ -382,49 +266,11 @@ simulation()
 The code is implementing a reinforcement learning algorithm to teach a person to survive in a zombie apocalypse. It is using a Q-learning algorithm to determine the best actions to take in different states (such as "safe_house", "fighting", or "resources"). The person can either stay, move, or fight in each state. The rewards for these actions are defined as KILL_ZOMBIE, DIE_BY_ZOMBIE, SURVIVE, and FIND_RESOURCES. The Q-table is initialized with all zeros and is updated using the Q-learning formula, which takes into account the current reward and the expected maximum reward for the next state. The person's actions are selected using an epsilon-greedy policy, which sometimes chooses a random action and other times chooses the action with the highest Q-value. The training function loops through a specified number of episodes and performs the Q-learning update and action selection for each step until the end condition is reached (the person is killed by a zombie).
 """
 
-"""
-may try different values for learning rate, discount rate, and epsilon
-"""
+
 
 """
-# use neural network in the action selection process
-def select_action(person, event):
-    # Create a list of the current state and event
-    state_event = [person.state.is_hiding, person.state.is_fighting, person.state.is_running, event == "Safe", event == "Overrun", event == "Noise"]
-
-    # Create a list of the probabilities of selecting each action
-    probabilities = nn.predict(state_event)
-
-    # Select the next action based on the probabilities
-    action = np.random.choice(actions, p=probabilities)
-
-    # Return the next action
-    return action
-
-# training of the neural network using the simulation function
-def train_nn(nn, steps, epochs):
-    # Iterate over the number of epochs
-    for _ in range(epochs):
-        # Generate a person
-        person = Person()
-
-        # Simulate the person's behavior
-        actions_taken = simulate(person, steps)
-
-        # Create a list of the current states and events
-        state_events = []
-        for i in range(len(actions_taken)):
-            state_events.append([person.state.is_hiding, person.state.is_fighting, person.state.is_running, actions_taken[i] == "Safe", actions_taken[i] == "Overrun", actions_taken[i] == "Noise"])
-
-        # Create a list of the next states and events
-        next_state_events = []
-        for i in range(len(actions_taken)):
-            next_state_events.append([person.state.is_hiding, person.state.is_fighting, person.state.is_running, actions_taken[i] == "Safe", actions_taken[i] == "Overrun", actions_taken[i] == "Noise"])
-
-        # Train the neural network
-        nn.train(state_events, next_state_events)
-
-    return True
+# use neural network in the action selection process, correct the select action function and the train function
+# implement a multi-agent approach
 """
 
 """

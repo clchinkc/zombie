@@ -160,3 +160,7 @@ These components interact with each other in various ways. For example, the perc
 
 In addition to these components, an agent class may also interact with extra libraries or tools such as databases, APIs, or external hardware devices. For example, an agent designed to control a robot may need to interact with sensors and actuators connected to the robot hardware. This interaction can be achieved using libraries or APIs that provide a standardized interface for the agent to communicate with the hardware. Similarly, an agent that needs to store and retrieve large amounts of data may need to interact with a database system to efficiently manage the data.
 """
+
+"""
+A player class can be inherited from the agent class and override the control component to be controlled by the user input.
+"""

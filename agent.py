@@ -10,7 +10,7 @@ from typing import Any, Callable, Union
 class Agent(ABC):
     
     @abstractmethod
-    def __init__(self, id: int, position: tuple[int, int], health: int=100, strength: int=10, armour: int=5, speed: int=1):
+    def __init__(self, id: int, position: tuple[int, int], health: int, strength: int, armour: int, speed: int):
         self.id = id
         self.position = position
         self.health = health
@@ -21,7 +21,7 @@ class Agent(ABC):
         # 0's and 1's to represent the agent's genome
         # the genome can be used to determine the agent's behavior
         # state, health and size can be used to determine the agent's fitness
-        # location, direction, speed, energy, infection, infection time, death
+        # position, direction, speed, energy, infection, infection time, death
         # can be used to determine the agent's state
 
     def move(self, direction):
@@ -179,9 +179,9 @@ class Human(Agent):
                 The human uses an item from the inventory
         If the action is "move":
             The human chooses a direction to move in
-            Remove the human from the current location
-            The human moves to the new location
-            Add the human to the new location in the list of humans.
+            Remove the human from the current position
+            The human moves to the new position
+            Add the human to the new position in the list of humans.
     
     # choosing direction can go to a separate self.choose_direction(agent) method
     # attack can go to a separate self.attack_neighbors(agent) method
@@ -384,9 +384,9 @@ class Zombie(Agent):
                     Add the new zombie to the list of zombies
         If the action is "move":
             The zombie chooses a direction to move in
-            Remove the zombie from the current location
-            The zombie moves to the new location
-            Add the zombie to the new location in the list of zombies.
+            Remove the zombie from the current position
+            The zombie moves to the new position
+            Add the zombie to the new position in the list of zombies.
     """
     
     def random_move(self):
@@ -456,7 +456,7 @@ class Weapon:
 @dataclass(order=True, frozen=True) # slots=True
 class PowerUp:
     
-    location: tuple[int, int]
+    position: tuple[int, int]
     health: int
     strength: int
     armour: int
@@ -464,21 +464,31 @@ class PowerUp:
     intelligence: int
     
     def __str__(self):
-        return f"PowerUp at {self.location}: health={self.health}, strength={self.strength}, armour={self.armour}, speed={self.speed}, intelligence={self.intelligence}"
+        return f"PowerUp at {self.position}: health={self.health}, strength={self.strength}, armour={self.armour}, speed={self.speed}, intelligence={self.intelligence}"
 
 # Abstract Factory Pattern
 class AbstractAgentFactory(ABC):
     @abstractmethod
-    def create_agent(self, **kwargs) -> Agent:
+    def create_agent(**kwargs) -> Agent:
         raise NotImplementedError()
 
+# Builder Pattern
 class HumanFactory(AbstractAgentFactory):
-    def create_agent(self, **kwargs) -> Agent:
-        return Human(**kwargs)
+    def create_agent(**kwargs) -> Agent:
+        health = kwargs.get("health", 100)
+        strength = kwargs.get("strength", 10)
+        armour = kwargs.get("armour", 5)
+        speed = kwargs.get("speed", 1)
+        intelligence = kwargs.get("intelligence", 10)
+        return Human(health=health, strength=strength, armour=armour, speed=speed, intelligence=intelligence, **kwargs)
 
 class ZombieFactory(AbstractAgentFactory):
-    def create_agent(self, **kwargs) -> Agent:
-        return Zombie(**kwargs)
+    def create_agent(**kwargs) -> Agent:
+        health = kwargs.get("health", 100)
+        strength = kwargs.get("strength", 10)
+        armour = kwargs.get("armour", 5)
+        speed = kwargs.get("speed", 1)
+        return Zombie(health=health, strength=strength, armour=armour, speed=speed, **kwargs)
 
 # Factory method Pattern
 class AgentFactory:
@@ -516,29 +526,29 @@ class Grid:
     def __str__(self):
         return "\n".join(["".join([str(cell) for cell in row]) for row in self.grid])
     
-    def __getitem__(self, location):
-        return self.grid[location[0]][location[1]]
+    def __getitem__(self, position):
+        return self.grid[position[0]][position[1]]
     
-    def __setitem__(self, location, value):
-        self.grid[location[0]][location[1]] = value
+    def __setitem__(self, position, value):
+        self.grid[position[0]][position[1]] = value
         
-    def get_human(self, location) -> Human:
-        if isinstance(self.grid[location], Human):
-            return self.grid[location[0]][location[1]]
+    def get_human(self, position) -> Human:
+        if isinstance(self.grid[position], Human):
+            return self.grid[position[0]][position[1]]
         else:
-            raise Exception('No human at this location')
+            raise Exception('No human at this position')
         
-    def get_zombie(self, location) -> Zombie:
-        if isinstance(self.grid[location], Zombie):
-            return self.grid[location[0]][location[1]]
+    def get_zombie(self, position) -> Zombie:
+        if isinstance(self.grid[position], Zombie):
+            return self.grid[position[0]][position[1]]
         else:
-            raise Exception('No zombie at this location')
+            raise Exception('No zombie at this position')
         
-    def get_item(self, location) -> Union[Weapon, PowerUp]:
-        if isinstance(self.grid[location], Weapon) or isinstance(self.grid[location], PowerUp):
-            return self.grid[location]
+    def get_item(self, position) -> Union[Weapon, PowerUp]:
+        if isinstance(self.grid[position], Weapon) or isinstance(self.grid[position], PowerUp):
+            return self.grid[position]
         else:
-            raise Exception('No item at this location')
+            raise Exception('No item at this position')
 
     def print_map(self):
         # Print the map in a readable format.
@@ -638,19 +648,19 @@ class ZombieApocalypse(Game):
         arguments = {
             "type": type,
             "id": id,
-            "location": (random.randint(0, school_size-1),
+            "position": (random.randint(0, school_size-1),
                         random.randint(0, school_size-1))
         }
         return self.factory.produce(arguments)
         
-    # ensure legal location
+    # ensure legal position
     # factory pattern for weapons
     # factory pattern for map
         
     def initialize(self, num_zombies, num_humans, school_size):
         # a 2D list representing the map, with None representing a empty cell and a human or zombie representing a cell occupied by human or zombie
         self.grid = Grid(school_size, school_size)
-        # Initializes the humans and zombies in the map.
+        # Initializes the humans and zombies in the map
         self.factory.register_character("human", HumanFactory)
         self.factory.register_character("zombie", ZombieFactory)
         for i in range(num_humans):
@@ -686,10 +696,10 @@ class ZombieApocalypse(Game):
             if self.end_condition():
                 break
 
-    # move agent to a new location only if the new location is empty
+    # move agent to a new position only if the new position is empty
     
     def escape(self, agent):
-        # define a escape location for the humans to win
+        # define a escape position for the humans to win
         pass
     
     def end_condition(self):

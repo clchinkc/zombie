@@ -9,7 +9,7 @@ w = np.zeros(3)
 b = 0
 
 # Set the learning rate
-alpha = 0.0001
+alpha = 0.001
 
 # Define the mean squared error loss function
 def mse(y, y_pred):
