@@ -19,13 +19,13 @@ from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cached_property
-from types import new_class
 from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from matplotlib import animation, colors, patches
+from scipy import stats
 
 
 # Define the states and transitions for the state machine model
@@ -56,25 +56,25 @@ class StateMachine(ABC):
     def update_state(self, severity: float) -> None:
         pass
 
-    def is_infected(self, context: Individual, severity: float) -> bool:
+    def is_infected(self, context: Individual, severity: float, randomness=random.random()) -> bool:
         infection_probability = 1 / (1 + math.exp(-severity))
         for other in context.connections:
             if other.state == State.ZOMBIE:
-                if random.random() < infection_probability:
+                if randomness < infection_probability:
                     return True
         return False
 
-    def is_turned(self, context: Individual, severity: float) -> bool:
+    def is_turned(self, context: Individual, severity: float, randomness=random.random()) -> bool:
         turning_probability = context.infection_severity
-        if random.random() < turning_probability:
+        if randomness < turning_probability:
             return True
         return False
 
-    def is_died(self, context: Individual, severity: float) -> bool:
+    def is_died(self, context: Individual, severity: float, randomness=random.random()) -> bool:
         death_probability = severity
         for other in context.connections:
             if other.state == State.HEALTHY or other.state == State.INFECTED:
-                if random.random() < death_probability:
+                if randomness < death_probability:
                     return True
         return False
 
@@ -149,12 +149,10 @@ class BrownianMovementStrategy(MovementStrategy):
         self.scale_factor = math.sqrt(2 * self.damping_coefficient)*self.std_dev
 
     def choose_direction(self):
-        direction = np.rint(np.random.normal(loc=0, scale=self.scale_factor, size=2)).astype(int)
-        print(direction)
-        while not np.all(np.isin(direction, self.legal_directions)):
-            print(direction)
+        while True:
             direction = np.rint(np.random.normal(loc=0, scale=self.scale_factor, size=2)).astype(int)
-        return direction
+            if tuple(direction) in self.legal_directions:
+                return direction
 
 @dataclass
 # if healthy or other having no alive neighbors
@@ -165,38 +163,17 @@ class FleeZombiesStrategy(MovementStrategy):
     neighbors: list[Individual]
 
     def choose_direction(self):
-        zombies_locations = [
-            zombies.location
-            for zombies in self.neighbors
-            if zombies.state == State.ZOMBIE
-        ]
-        return self.direction_against_closest(
-            self.individual, self.legal_directions, zombies_locations
-        )
+        zombies_locations = [zombies.location for zombies in self.neighbors if zombies.state == State.ZOMBIE]
+        return self.direction_against_closest(self.individual, self.legal_directions, zombies_locations)
 
     # find the closest zombie and move away from it
-    def direction_against_closest(
-        self,
-        individual: Individual,
-        legal_directions: list[tuple[int, int]],
-        target_locations: list[tuple[int, int]],
-    ) -> tuple[int, int]:
-        new_locations = [
-            tuple(np.add(individual.location, direction))
-            for direction in legal_directions
-        ]
-        target_distances = [
-            float(np.linalg.norm(np.subtract(individual.location, target_location)))
-            for target_location in target_locations
-        ]
+    def direction_against_closest(self,individual: Individual,legal_directions: list[tuple[int, int]],target_locations: list[tuple[int, int]],) -> tuple[int, int]:
+        new_locations = [tuple(np.add(individual.location, direction)) for direction in legal_directions]
+        target_distances = [float(np.linalg.norm(np.subtract(individual.location, target_location))) for target_location in target_locations]
         closest_target = target_locations[np.argmin(target_distances)]
-        distance_from_new_locations = [
-            float(np.linalg.norm(np.subtract(closest_target, location)))
-            for location in new_locations
-        ]
+        distance_from_new_locations = [float(np.linalg.norm(np.subtract(closest_target, location))) for location in new_locations]
         max_distance = np.max(distance_from_new_locations)
-        max_distance_index = np.where(
-            distance_from_new_locations == max_distance)[0]
+        max_distance_index = np.where(distance_from_new_locations == max_distance)[0]
         return legal_directions[random.choice(max_distance_index)]
 
 
@@ -209,30 +186,16 @@ class ChaseHumansStrategy(MovementStrategy):
     neighbors: list[Individual]
 
     def choose_direction(self):
-        alive_locations = [
-            alive.location for alive in self.neighbors if alive.state == State.HEALTHY
-        ]
-        return self.direction_towards_closest(
-            self.individual, self.legal_directions, alive_locations
-        )
+        alive_locations = [alive.location for alive in self.neighbors if alive.state == State.HEALTHY]
+        return self.direction_towards_closest(self.individual, self.legal_directions, alive_locations)
 
     # find the closest human and move towards it
-    def direction_towards_closest(
-        self,
-        individual: Individual,
-        legal_directions: list[tuple[int, int]],
-        target_locations: list[tuple[int, int]],
-    ) -> tuple[int, int]:
-        new_locations = [
-            tuple(np.add(individual.location, direction))
-            for direction in legal_directions
-        ]
+    def direction_towards_closest(self,individual: Individual,legal_directions: list[tuple[int, int]],target_locations: list[tuple[int, int]],) -> tuple[int, int]:
+        new_locations = [tuple(np.add(individual.location, direction)) for direction in legal_directions]
         distance_matrix = np.zeros((len(new_locations), len(target_locations)))
         for i, direction in enumerate(new_locations):
             for j, target_location in enumerate(target_locations):
-                distance_matrix[i, j] = float(
-                    np.linalg.norm(np.subtract(direction, target_location))
-                )
+                distance_matrix[i, j] = float(np.linalg.norm(np.subtract(direction, target_location)))
         # consider case where all distances are 0
         min_distance = np.min(distance_matrix[distance_matrix != 0])
         min_distance_index = np.where(distance_matrix == min_distance)
@@ -267,19 +230,14 @@ class MovementStrategyFactory:
         if not legal_directions:
             return NoMovementStrategy(individual, legal_directions, [])
         # get neighbors
-        neighbors = school.get_neighbors(
-            individual.location, individual.sight_range)
+        neighbors = school.get_neighbors(individual.location, individual.sight_range)
         # early exit
         # if no neighbors, random movement
         if not neighbors:
             return RandomMovementStrategy(individual, legal_directions, neighbors)
         # get number of human and zombies neighbors
-        alive_number = sum(
-            1 for neighbor in neighbors if neighbor.state == State.HEALTHY
-        )
-        zombies_number = sum(
-            1 for neighbor in neighbors if neighbor.state == State.ZOMBIE
-        )
+        alive_number = sum(1 for neighbor in neighbors if neighbor.state == State.HEALTHY)
+        zombies_number = sum(1 for neighbor in neighbors if neighbor.state == State.ZOMBIE)
         # if no human neighbors, move away from the closest zombies
         if alive_number == 0 and zombies_number > 0:
             return FleeZombiesStrategy(individual, legal_directions, neighbors)
@@ -290,9 +248,7 @@ class MovementStrategyFactory:
         else:
             if individual.state == State.ZOMBIE and alive_number > 0:
                 return ChaseHumansStrategy(individual, legal_directions, neighbors)
-            elif (
-                individual.state == State.HEALTHY or individual.state == State.INFECTED
-            ) and zombies_number > 0:
+            elif (individual.state == State.HEALTHY or individual.state == State.INFECTED) and zombies_number > 0:
                 return FleeZombiesStrategy(individual, legal_directions, neighbors)
             elif individual.state == State.DEAD:
                 return NoMovementStrategy(individual, legal_directions, neighbors)
@@ -306,23 +262,9 @@ class MovementStrategyFactory:
 
 class Individual:
 
-    __slots__ = (
-        "id",
-        "state",
-        "location",
-        "connections",
-        "infection_severity",
-        "interact_range",
-        "__dict__",
-    )
+    __slots__ = ("id","state","location","connections","infection_severity","interact_range","__dict__",)
 
-    def __init__(
-        self,
-        id: int,
-        state: State,
-        location: tuple[int, int],
-        movement_strategy: Any[MovementStrategy] = RandomMovementStrategy,
-    ) -> None:
+    def __init__(self,id: int,state: State,location: tuple[int, int],movement_strategy: Any[MovementStrategy] = RandomMovementStrategy,) -> None:
         self.id: int = id
         self.state: State = state
         self.location: tuple[int, int] = location
@@ -428,9 +370,7 @@ class School:
     """
 
     # update the grid in the population based on their interactions with other people
-    def update_grid(
-        self, population: list[Individual], migration_probability: float
-    ) -> None:
+    def update_grid(self, population: list[Individual], migration_probability: float, randomness=random.random()) -> None:
         for individuals in population:
             i, j = individuals.location
             cell = self.get_individual((i, j))
@@ -438,9 +378,8 @@ class School:
             if cell is None:
                 continue
 
-            if random.random() < migration_probability:
-                movement_strategy = self.strategy_factory.create_strategy(
-                    cell, self)
+            if randomness < migration_probability:
+                movement_strategy = self.strategy_factory.create_strategy(cell, self)
                 direction = cell.choose_direction(movement_strategy)
                 self.move_individual(cell, direction)
             else:
@@ -558,25 +497,33 @@ class PopulationObserver(Observer):
     def __init__(self, population: Population) -> None:
         self.subject = population
         self.subject.attach_observer(self)
-        self.statistics = {}
+        self.statistics = []
+        self.grid = []
         self.agent_list = []
 
     def update(self) -> None:
-        self.statistics = self.subject.get_population_statistics()
+        statistics = self.subject.get_population_statistics()
+        self.statistics.append(statistics)
+        self.grid = self.subject.school.grid
         self.agent_list = deepcopy(self.subject.agent_list)
+        
 
     def display_observation(self, format="text"):
-        if format == "text":
-            self.print_text_statistics()
+        if format == "statistics":
+            self.print_statistics_text()
+        elif format == "grid":
+            self.print_grid_text()
         elif format == "chart":
-            self.print_chart_statistics()
+            self.print_chart_graph()
+        elif format == "scatter":
+            self.print_scatter_graph()
 
-    def print_text_statistics(self):
-        population_size = self.statistics["population_size"]
-        num_healthy = self.statistics["num_healthy"]
-        num_infected = self.statistics["num_infected"]
-        num_zombie = self.statistics["num_zombie"]
-        num_dead = self.statistics["num_dead"]
+    def print_statistics_text(self):
+        population_size = self.statistics[-1]["population_size"]
+        num_healthy = self.statistics[-1]["num_healthy"]
+        num_infected = self.statistics[-1]["num_infected"]
+        num_zombie = self.statistics[-1]["num_zombie"]
+        num_dead = self.statistics[-1]["num_dead"]
         healthy_percentage = num_healthy / (population_size + 1e-10)
         infected_percentage = num_infected / (population_size + 1e-10)
         zombie_percentage = num_zombie / (population_size + 1e-10)
@@ -584,26 +531,34 @@ class PopulationObserver(Observer):
         infected_rate = num_infected / (num_healthy + 1e-10)
         turning_rate = num_zombie / (num_infected + 1e-10)
         death_rate = num_dead / (num_zombie + 1e-10)
-        infection_probability = self.statistics["infection_probability"]
-        turning_probability = self.statistics["turning_probability"]
-        death_probability = self.statistics["death_probability"]
-        migration_probability = self.statistics["migration_probability"]
+        infection_probability = self.statistics[-1]["infection_probability"]
+        turning_probability = self.statistics[-1]["turning_probability"]
+        death_probability = self.statistics[-1]["death_probability"]
+        migration_probability = self.statistics[-1]["migration_probability"]
         print("Population Statistics:")
         print(f"Population Size: {population_size}")
         print(f"Healthy: {num_healthy} ({healthy_percentage:.2%})")
         print(f"Infected: {num_infected} ({infected_percentage:.2%})")
         print(f"Zombie: {num_zombie} ({zombie_percentage:.2%})")
         print(f"Dead: {num_dead} ({dead_percentage:.2%})")
-        print(
-            f"Infection Probability: {infection_probability:.2%} -> Infected Rate: {infected_rate:.2%}"
-        )
-        print(
-            f"Turning Probability: {turning_probability:.2%} -> Turning Rate: {turning_rate:.2%}"
-        )
-        print(
-            f"Death Probability: {death_probability:.2%} -> Death Rate: {death_rate:.2%}"
-        )
+        print(f"Infection Probability: {infection_probability:.2%} -> Infected Rate: {infected_rate:.2%}")
+        print(f"Turning Probability: {turning_probability:.2%} -> Turning Rate: {turning_rate:.2%}")
+        print(f"Death Probability: {death_probability:.2%} -> Death Rate: {death_rate:.2%}")
         print(f"Migration Probability: {migration_probability:.2%}")
+        print()
+        
+        # The mean can be used to calculate the average number of zombies that appear in a specific area over time. This can be useful for predicting the rate of zombie infection and determining the necessary resources needed to survive.
+        mean = np.mean([d["num_zombie"] for d in self.statistics])
+        # The median can be used to determine the middle value in a set of data. In a zombie apocalypse simulation, the median can be used to determine the number of days it takes for a specific area to become overrun with zombies.
+        median = np.median([d["num_zombie"] for d in self.statistics])
+        # The mode can be used to determine the most common value in a set of data. In a zombie apocalypse simulation, the mode can be used to determine the most common type of zombie encountered or the most effective weapon to use against them.
+        mode = stats.mode([d["num_zombie"] for d in self.statistics])[0][0]
+        # The standard deviation can be used to determine how spread out a set of data is. In a zombie apocalypse simulation, the standard deviation can be used to determine the level of unpredictability in zombie behavior or the effectiveness of certain survival strategies.
+        std = np.std([d["num_zombie"] for d in self.statistics])
+        print(f"Mean of Number of Zombie: {mean}")
+        print(f"Median of Number of Zombie: {median}")
+        print(f"Mode of Number of Zombie: {mode}")
+        print(f"Standard Deviation of Number of Zombie: {std}")
         print()
 
     """
@@ -619,8 +574,27 @@ class PopulationObserver(Observer):
     # or let observer pull info from subject using get method of subject
     # but observer need to get info from subject one by one
     """
+    
+    def print_grid_text(self):
+        print("Print School:")
+        for row in self.grid:
+            for cell in row:
+                if cell is None:
+                    print(" ", end=" ")
+                elif cell.state == State.HEALTHY:
+                    print("H", end=" ")
+                elif cell.state == State.INFECTED:
+                    print("I", end=" ")
+                elif cell.state == State.ZOMBIE:
+                    print("Z", end=" ")
+                elif cell.state == State.DEAD:
+                    print("D", end=" ")
+                else:
+                    raise ValueError("Invalid state")
+            print()
+        print()
 
-    def print_chart_statistics(self):
+    def print_chart_graph(self):
         # Analyze the results by observing the changes in the population over time
         cell_states = [individual.state for individual in self.agent_list]
         counts = {state: cell_states.count(state) for state in list(State)}
@@ -640,6 +614,25 @@ class PopulationObserver(Observer):
         plt.tight_layout()
         plt.show()
 
+    def print_scatter_graph(self):
+        # create a scatter plot of the population
+        cell_states_value = [
+            individual.state.value for individual in self.agent_list]
+        x = [individual.location[0] for individual in self.agent_list]
+        y = [individual.location[1] for individual in self.agent_list]
+        
+        # create a colormap from the seaborn palette and the number of colors equal to the number of members in the State enum
+        cmap = colors.ListedColormap(sns.color_palette("deep", n_colors=len(State)))
+        
+        # create a list of legend labels and colors for each state in the State enum
+        handles = [patches.Patch(color=cmap(i), label=state.name) for i, state in enumerate(State)]
+        
+        plt.scatter(x, y, c=cell_states_value, cmap=cmap)
+
+        # Put a legend to the right of the current axis
+        plt.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=State.name_list())
+        plt.tight_layout()
+        plt.show()
 
 class PopulationAnimator(Observer):
     def __init__(self, population: Population) -> None:
@@ -654,18 +647,17 @@ class PopulationAnimator(Observer):
     def display_observation(self, format="chart"):
         if format == "chart":
             self.print_chart_animation()
+        elif format == "scatter":
+            self.print_scatter_animation()
 
         # table
 
     def print_chart_animation(self):
         counts = []
         for i in range(len(self.agent_history)):
-            cell_states = [
-                individual.state for individual in self.agent_history[i]]
+            cell_states = [individual.state for individual in self.agent_history[i]]
             counts.append([cell_states.count(state) for state in list(State)])
-        self.bar_chart_animation(
-            np.array(State.value_list()), counts, State.name_list()
-        )
+        self.bar_chart_animation(np.array(State.value_list()), counts, State.name_list())
 
     def bar_chart_animation(self, x, y, ticks):
         # create a figure and axis
@@ -702,82 +694,6 @@ class PopulationAnimator(Observer):
         # show the animation
         plt.tight_layout()
         plt.show()
-
-
-class SchoolObserver(Observer):
-    def __init__(self, population: Population) -> None:
-        self.subject = population
-        self.subject.attach_observer(self)
-        self.agent_list = []
-        self.grid = []
-
-    def update(self) -> None:
-        self.agent_list = deepcopy(self.subject.agent_list)
-        self.grid = deepcopy(self.subject.school.grid)
-
-    def display_observation(self, format="text"):
-        if format == "text":
-            self.print_text_statistics()
-        elif format == "scatter":
-            self.print_scatter_statistics()
-
-        # animation, table
-
-    def print_text_statistics(self):
-        print("Print School:")
-        for row in self.grid:
-            for cell in row:
-                if cell is None:
-                    print(" ", end=" ")
-                elif cell.state == State.HEALTHY:
-                    print("H", end=" ")
-                elif cell.state == State.INFECTED:
-                    print("I", end=" ")
-                elif cell.state == State.ZOMBIE:
-                    print("Z", end=" ")
-                elif cell.state == State.DEAD:
-                    print("D", end=" ")
-                else:
-                    raise ValueError("Invalid state")
-            print()
-        print()
-
-    def print_scatter_statistics(self):
-        # create a scatter plot of the population
-        cell_states_value = [
-            individual.state.value for individual in self.agent_list]
-        x = [individual.location[0] for individual in self.agent_list]
-        y = [individual.location[1] for individual in self.agent_list]
-        
-        # create a colormap from the seaborn palette and the number of colors equal to the number of members in the State enum
-        cmap = colors.ListedColormap(sns.color_palette("deep", n_colors=len(State)))
-        
-        # create a list of legend labels and colors for each state in the State enum
-        handles = [patches.Patch(color=cmap(i), label=state.name) for i, state in enumerate(State)]
-        
-        plt.scatter(x, y, c=cell_states_value, cmap=cmap)
-
-        # Put a legend to the right of the current axis
-        plt.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=State.name_list())
-        plt.tight_layout()
-        plt.show()
-
-
-class SchoolAnimator(Observer):
-    def __init__(self, population: Population) -> None:
-        self.subject = population
-        self.subject.attach_observer(self)
-        self.agent_history = []
-
-    def update(self) -> None:
-        agent_list = deepcopy(self.subject.agent_list)
-        self.agent_history.append(agent_list)
-
-    def display_observation(self, format="scatter"):
-        if format == "scatter":
-            self.print_scatter_animation()
-
-        # table
 
     def print_scatter_animation(self):
         cell_states_value = []
@@ -897,31 +813,21 @@ class Population:
                 self.school.remove_individual(individual.location)
 
     def update_population_metrics(self) -> None:
-        self.num_healthy = sum(
-            1 for individual in self.agent_list if individual.state == State.HEALTHY
-        )
-        self.num_infected = sum(
-            1 for individual in self.agent_list if individual.state == State.INFECTED
-        )
-        self.num_zombie = sum(
-            1 for individual in self.agent_list if individual.state == State.ZOMBIE
-        )
+        self.num_healthy = sum(1 for individual in self.agent_list if individual.state == State.HEALTHY)
+        self.num_infected = sum(1 for individual in self.agent_list if individual.state == State.INFECTED)
+        self.num_zombie = sum(1 for individual in self.agent_list if individual.state == State.ZOMBIE)
+        self.num_dead = sum(1 for individual in self.agent_list if individual.state == State.DEAD)
         self.population_size = self.num_healthy + self.num_infected + self.num_zombie
         self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity))) # logistic function
         self.turning_probability = self.severity / (1 + self.severity) # softplus function
         self.death_probability = self.severity  # linear function
-        self.migration_probability = self.population_size / \
-            (self.population_size + 1)
+        self.migration_probability = self.population_size / (self.population_size + 1)
 
         # may use other metrics or functions to calculate the probability of infection, turning, death, migration
 
     def print_all_individual_info(self) -> None:
-        print(
-            f"Population of size {self.population_size}"
-            + "\n"
-            + "\n".join([individual.get_info()
-                        for individual in self.agent_list])
-        )
+        print(f"Population of size {self.population_size}"+ "\n" + 
+                "\n".join([individual.get_info() for individual in self.agent_list]))
 
     def attach_observer(self, observer: Observer) -> None:
         self.observers.append(observer)
@@ -939,6 +845,7 @@ class Population:
             "num_healthy": self.num_healthy,
             "num_infected": self.num_infected,
             "num_zombie": self.num_zombie,
+            "num_dead": self.num_dead,
             "population_size": self.population_size,
             "infection_probability": self.infection_probability,
             "turning_probability": self.turning_probability,
@@ -961,17 +868,17 @@ def main():
     # create Observer objects
     population_observer = PopulationObserver(school_sim)
     population_animator = PopulationAnimator(school_sim)
-    school_observer = SchoolObserver(school_sim)
-    school_animator = SchoolAnimator(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
 
     # observe the statistics of the population
+    population_observer.display_observation(format="statistics")
+    population_observer.display_observation(format="grid")
     population_observer.display_observation(format="chart")
+    population_observer.display_observation(format="scatter")
     population_animator.display_observation(format="chart")
-    school_observer.display_observation(format="scatter")
-    school_animator.display_observation(format="scatter")
+    population_animator.display_observation(format="scatter")
 
 
 if __name__ == "__main__":
@@ -979,16 +886,6 @@ if __name__ == "__main__":
 
 
 """
-
-To use the variance of the binomial distribution to model the spread of a disease in a population, you would need to follow these steps:
-Collect data on the number of individuals who have been infected with the disease and the number who have become zombies (the number of successes in each experiment). This data can be used to estimate the probability of success (i.e., the probability of an individual becoming a zombie after being infected with the disease).
-Calculate the variance of the binomial distribution using the formula: variance = p * (1 - p), where p is the probability of success in each experiment.
-Track the variance of the binomial distribution over time to see how it changes as the disease spreads through the population.
-Use the variance of the binomial distribution to make predictions about the likely outcome of the zombie apocalypse. For example, if the variance is high, it might indicate that the disease is spreading quickly and unpredictably, which could lead to a worse outcome. On the other hand, if the variance is low, it might indicate that the disease is spreading more slowly and predictably, which could lead to a better outcome.
-This formula for the variance of a binomial distribution assumes that the number of experiments is fixed. If the number of experiments is not fixed, the variance of the binomial distribution is given by the formula:
-variance = n * p * (1 - p)
-Where n is the number of experiments.
-
 # defense that will decrease the probability of infection and death
 
 Define the rules of the simulation
@@ -999,11 +896,52 @@ Survivor movement - each survivor moves one unit away from the nearest zombie
 
 a: individual: zombie and survivor, cell: position, grid: zombie_positions and survivor_positions, simulation: update_simulation()
 
-Move random probability to be param
 
 Q learning as one strategy
 state machine should be a part of population and input individual as argument to process
 game world and q-table singleton
+
+class QLearningMovementStrategy(MovementStrategy):
+
+    individual: Any[Individual]
+    legal_directions: list[tuple[int, int]]
+    neighbors: list[Individual]
+    q_table: Dict[Tuple[int, int], Dict[Tuple[int, int], float]]
+    learning_rate: float
+    discount_factor: float
+    exploration_rate: float
+
+    def __init__(self, learning_rate=0.1, discount_factor=0.9, exploration_rate=0.1):
+        self.q_table = {}
+        self.learning_rate = learning_rate
+        self.discount_factor = discount_factor
+        self.exploration_rate = exploration_rate
+
+    def choose_direction(self):
+        state = self.get_state()
+        if random.uniform(0, 1) < self.exploration_rate:
+            # Exploration: choose a random action
+            action = random.choice(self.legal_directions)
+        else:
+            # Exploitation: choose the action with highest Q-value
+            q_values = self.q_table.get(state, {a: 0.0 for a in self.legal_directions})
+            action = max(q_values, key=q_values.get)
+        return action
+
+    def update_q_table(self, state, action, next_state, reward):
+        current_q = self.q_table.get(state, {a: 0.0 for a in self.legal_directions})[action]
+        next_q = max(self.q_table.get(next_state, {a: 0.0 for a in self.legal_directions}).values())
+        new_q = current_q + self.learning_rate * (reward + self.discount_factor * next_q - current_q)
+        self.q_table.setdefault(state, {})[action] = new_q
+
+    def get_state(self):
+        # Define the state as the current position of the individual
+        return self.individual.position
+
+    def get_reward(self):
+        # Define the reward as the number of neighbors of the individual
+        return len(self.neighbors)
+
 
 functional programming
 save_data() save the necessary data in a save order
@@ -1032,20 +970,6 @@ This could allow for more accurate simulations of the movement
 and interactions of students, teachers, and zombies within the school environment.
 """
 
-"""
-The code defines a class called "River" which is used to represent a river that contains various animals. The class has the following methods and attributes:
-init: This method is used to initialize the River object and it takes the length of the river as an input. It creates an array of length equal to the length of the river and stores it in the "_contents" attribute.
-add_random: This method is used to add an animal to a random cell in the river. It takes an animal as an input and adds it to a random cell in the "_contents" array.
-update: This method updates the river according to certain rules. It iterates through each cell in the "_contents" array and updates it using the "_update_cell" method.
-_update_cell: This method updates a single cell in the "_contents" array. It takes two inputs: "cell" and "index". It determines if the cell is None, and if it is not None, it checks if there is another animal in an adjacent cell. If there is another animal, it will either fight or mate with the other animal, depending on their species and gender.
-_eat: This method is used when a fish cell encounters another animal. The fish cell always gets eaten in this scenario.
-_fight: This method is used when two animals of the same species encounter each other. The weaker animal gets killed in this scenario.
-_move: This method is used when an animal moves from one cell to another. It takes two inputs: "old_index" and "new_index".
-_spawn: This method is used when two animals of the same species encounter each other and mate. It creates a new instance of the animal in a free cell in the "_contents" array.
-str: This method returns a string representation of the river, with each cell separated by a "|".
-Finally, the code includes a "main" section that creates a River object of length 10, and it updates and prints the river for 10 years.
-In summary, the River class is used to simulate a river that contains various animals and it updates the river based on certain rules such as fighting, mating, moving, and eating.
-"""
 
 """
 use random walk algorithm to simulate movement based on probability adjusted by cell's infection status and location
@@ -1093,106 +1017,66 @@ https://www.youtube.com/watch?v=4B24vYj_vaI
 """
 Plugin Pattern
 """
-"""
-Builder Pattern
-# Product class that we want to build
-class Pizza:
-    def __init__(self):
-        self.dough = ""
-        self.sauce = ""
-        self.topping = []
-
-    def set_dough(self, dough):
-        self.dough = dough
-
-    def set_sauce(self, sauce):
-        self.sauce = sauce
-
-    def add_topping(self, topping):
-        self.topping.append(topping)
-
-    def __str__(self):
-        return f"Dough: {self.dough}, Sauce: {self.sauce}, Topping: {self.topping}"
-
-# Abstract Builder class
-class PizzaBuilder(ABC):
-    def __init__(self):
-        self.pizza = Pizza()
-
-    def create_new_pizza_product(self):
-        self.pizza = Pizza()
-
-    def get_pizza(self):
-        return self.pizza
-
-    @abstractmethod
-    def build_dough(self):
-        pass
-
-    @abstractmethod
-    def build_sauce(self):
-        pass
-
-    @abstractmethod
-    def build_topping(self):
-        pass
-
-
-# Concrete Builder
-class HawaiianPizzaBuilder(PizzaBuilder):
-    def build_dough(self):
-        self.pizza.set_dough("cross")
-
-    def build_sauce(self):
-        self.pizza.set_sauce("mild")
-
-    def build_topping(self):
-        self.pizza.add_topping("ham")
-        self.pizza.add_topping("pineapple")
-
-
-# Concrete Builder
-class SpicyPizzaBuilder(PizzaBuilder):
-    def build_dough(self):
-        self.pizza.set_dough("pan baked")
-
-    def build_sauce(self):
-        self.pizza.set_sauce("hot")
-
-    def build_topping(self):
-        self.pizza.set_topping("pepperoni")
-        self.pizza.set_topping("salami")
-
-# Director
-class Waiter:
-    def __init__(self):
-        self.pizza_builder = None
-
-    def set_pizza_builder(self, pb):
-        self.pizza_builder = pb
-
-    def get_pizza(self):
-        return self.pizza_builder.get_pizza()
-
-    def construct_pizza(self):
-        self.pizza_builder.create_new_pizza_product()
-        self.pizza_builder.build_dough()
-        self.pizza_builder.build_sauce()
-        self.pizza_builder.build_topping()
-
-# A customer ordering a pizza
-if __name__ == "__main__":
-    waiter = Waiter()
-    hawaiian_pizza_builder = HawaiianPizzaBuilder()
-    spicy_pizza_builder = SpicyPizzaBuilder()
-
-    waiter.set_pizza_builder(hawaiian_pizza_builder)
-    waiter.construct_pizza()
-
-    pizza = waiter.get_pizza()
-    print(pizza)
 
 """
+# Builder Pattern (should do in agent.py)
+
+class AgentBuilder:
+    def __init__(self):
+        self.agent = None
+
+    def create_agent(self):
+        self.agent = Agent()
+
+    def set_position(self, position):
+        self.agent.position = position
+
+    def set_health(self, health):
+        self.agent.health = health
+
+    def set_speed(self, speed):
+        self.agent.speed = speed
+
+    def set_strength(self, strength):
+        self.agent.strength = strength
+
+    def get_agent(self):
+        return self.agent
+        
+class AbstractAgentFactory(ABC):
+    @abstractmethod
+    def create_agent(self, builder: AgentBuilder, **kwargs) -> Agent:
+        raise NotImplementedError()
+
+class HumanFactory(AbstractAgentFactory):
+    def create_agent(self, builder: AgentBuilder, **kwargs) -> Agent:
+        builder.create_agent()
+        builder.set_position(kwargs.get("position"))
+        builder.set_health(kwargs.get("health"))
+        builder.set_speed(kwargs.get("speed"))
+        builder.set_strength(kwargs.get("strength"))
+        return builder.get_agent()
+
+class ZombieFactory(AbstractAgentFactory):
+    def create_agent(self, builder: AgentBuilder, **kwargs) -> Agent:
+        builder.create_agent()
+        builder.set_position(kwargs.get("position"))
+        builder.set_health(kwargs.get("health"))
+        builder.set_speed(kwargs.get("speed"))
+        builder.set_strength(kwargs.get("strength"))
+        return builder.get_agent()
+
+In the context of a zombie apocalypse simulation, the Builder Pattern can be used to create different types of zombie objects with various attributes and behaviors.
+Here are the steps to utilize the Builder Pattern in the simulation of a zombie apocalypse:
+Define a Zombie class: The Zombie class should have basic attributes like health, speed, and strength.
+Create an abstract ZombieBuilder class: The ZombieBuilder class should have methods for setting the various attributes of the Zombie object. These methods can include setHealth(), setSpeed(), and setStrength().
+Create concrete ZombieBuilder classes: Concrete ZombieBuilder classes should extend the ZombieBuilder class and provide implementations for the set methods. For example, a FastZombieBuilder could provide a high value for the speed attribute and a low value for the health attribute.
+Create a ZombieDirector class: The ZombieDirector class should have a method that takes a ZombieBuilder object as a parameter and uses it to build a Zombie object.
+Use the ZombieDirector to build different types of zombies: Using the ZombieDirector, you can create different types of zombies by using different ZombieBuilder objects. For example, you could create a SlowZombieBuilder and a StrongZombieBuilder to create different types of zombies.
+
+
+"""
+
 """
 Bridge Pattern
 1. Without Bridge
@@ -1452,140 +1336,74 @@ for element in elements:
 # In this example, the ConcreteElementA and ConcreteElementB classes define the objects that can be visited, and the ConcreteVisitor1 class defines the operations that can be performed on those objects. The accept method in the Element class allows the visitor to perform operations on the elements, and the visit method in the Visitor class is the entry point for the visitor to perform the operation.
 # By using the visitor pattern, we can separate the operations from the elements and add new operations or change existing ones without modifying the elements themselves.
 """
+
 """
-Population-based models (PBM; i.e., models of N) are the main type of model we consider in this class: with all individuals in a [Stock] considered to be interchangeable, N (possibly age-structured) is our main variable of interest. N is in turn controlled by endogenous factors (forces coming from inside the population - e.g., density-dependence, demographic stochasticity) and exogenous factors (forces coming from outside the population - e.g., environmental stochasticity, harvest).
-
-Age/stage structured PBMs and sex structured PBMs (i.e., models of N, i.e., matrix population models) are types of PBM in which individuals are grouped together according to important traits like sex and age, with distinct population vital rates assigned to each group.
-
-Individual-based models (IBM; also known as “agent-based” models) is a way of modeling populations such that all individuals are considered explicitly! We no longer need to group individuals into [Stocks]- each individual can potentially have a different survival probability, or chance of breeding, or movement propensity! These differences can be a result of (e.g.) spatial context or among-individual genetic variation.
-
-In this case, we don't model N directly at all - in fact, N (in an IBM framework) is an emergent property of individual organisms interacting with each other, living or dying in the context of interactions with predators, competitors, and their abiotic environment.
-
-Which model structure should I use? IBM or PBM??
-In general, models are tools- you should use the model structure that best fits with the questions you are asking and your understanding of the study system!
-
-And also, if two different model structures are equally appropriate, you should usually use the simplest approach! This idea is often called the Principle of Parsimony (or, Occam's Razor).
-
-Both IBM and PBM can be used to address questions at the population or metapopulation level.
-
-Rules of thumb
-Q: All populations are composed of individuals. Why then don't we always model populations using individual-based models?
-
-In general, you should use IBM if your primary information sources (data) are at the individual level (e.g., telemetry data)- allowing you to build informed models of how individuals interact with members of their own species, other interacting species, and with their local environment - in which case the principle of parsimony dictates that you should build models at the individual level! That is, you make fewer assumptions if you model this system as an IBM.
-
-You should use PBM if your primary information is at the population level (e.g., the results of most mark-recapture analyses) - in which case the principle of parsimony dictates that you should build models at the population level!
-
-Individual-based models are powerful- but with power comes great responsibility!
-"""
-"""
-Demo: Individual-based models!
-
-The goal of this activity is to build a mechanistic, individual-based model (IBM) of a (entirely real, not made-up by my a postdoc in my lab I swear!) ecological system.
-
-The scenario
-The Laphlag island archipelago is famous for its dramatic slopes, lush green grass, and its native sheep, the laphlag island bighorn. About 50 years ago, the native island wolf population was hunted to extinction by ranchers to prevent livestock predation.
-
-However, without wolves, populations of the sheep population skyrocketed, and the famous laphlagian lush green grass is quickly being lost to overgrazing by the native sheep.
-
-The locals now realize: to restore ecological balance to the islands They must reintroduce wolves!
-
-The Laphlag natural resources management agency is about to start an experimental wolf reintroduction in a very small island in the archipelago (as a test), but they want to know how to proceed.
-
-You have been hired as a research ecologist to help address the following questions:
-
-How are reintroduced wolves likely to affect grass biomass and distribution?
-
-How many wolves should be introduced to produce the desired ecological effect (lush carpets of green grass)? How long will it take to achieve this desired effect?
-
-The agency biologists give you some information to get a first guess and they promise that you'll be able to come study this natural system once the reintroductions are underway.
-The details!
-The reintroduction is initiated right after the breeding season and the experiment is run for 365 days.
-
-Sheep
-
-There are a total of 50 sheep at the release location.
-
-Each sheep eats 0.5 “units” of grass per day (see section on grass, below)
-
-Each sheep gives birth to ca. 1-2 lambs approximately every 50-100 days of the experiment (very high fecundity!).
-
-Sheep tend to stay in place unless either they run out of food to eat or there is a wolf in the vicinity
-
-Wolves
-
-There are a total of 5 wolves released at the beginning of the “experiment”.
-
-Wolves are solitary hunters, at least on this (non-imaginary!) island!
-
-Wolves have a 50% probability of finding and killing any sheep within 500 m of its location in any given day.
-
-Each wolf can kill a maximum of one sheep per day.
-
-Wolves tend to move approximately 500 m per day on average.
-
-Wolves give birth with a probability of 2% per day.
-
-Grass
-
-The release site is essentially one large grassy pasture. For the purposes of this exercise, we will model this pastoral release site as a grid of 100 functionally equivalent plots. Each plot starts off with 10 “units”" of grass (each “unit” of grass can support exactly 1 sheep).
-
-Each grass plot can have a maximum of 50 units of grass.
-
-Each plot can grow approximately 0.7 units of grass per day.
-
-------------------------------------------------------------------------------------------------------------------------------
-
-To build an individual-based model (IBM) of the Laphlag island ecosystem, we need to represent each individual (sheep and wolves) as a separate object in the model, with its own attributes and behaviors. We also need to represent the grass as a resource that individuals consume and that grows over time.
-
-Here is an outline of the IBM for the Laphlag island ecosystem:
-
-Initialization
-Create 50 sheep objects, each with a unique ID, starting location, and initial energy level
-Create 5 wolf objects, each with a unique ID, starting location, and initial energy level
-Create 100 grass plots, each with an ID, initial grass units, and maximum grass capacity
-Simulation loop
-For each time step (day) of the simulation:
-For each sheep object:
-If the sheep has enough energy to move, choose a random adjacent plot to move to and update its location
-If the sheep is adjacent to a wolf, calculate the probability of being killed and update its energy level accordingly
-If the sheep has enough energy to reproduce, choose a random adjacent plot to give birth and create a new sheep object
-Consume 0.5 units of grass from its current plot and update its energy level
-For each wolf object:
-If the wolf has enough energy to move, choose a random adjacent plot to move to and update its location
-If the wolf is adjacent to a sheep, calculate the probability of successfully killing it and update its energy level accordingly
-If the wolf has enough energy to reproduce, choose a random adjacent plot to give birth and create a new wolf object
-Consume 1 unit of sheep per day from any adjacent plot with a sheep and update its energy level
-For each grass plot:
-Grow 0.7 units of grass per day, up to a maximum of 50 units
-Record the total grass biomass and distribution across the 100 plots
-Analysis
-Calculate the effect of wolf reintroduction on grass biomass and distribution by comparing the grass biomass and distribution before and after the reintroduction
-Experiment with different numbers of wolves and observe the effect on grass biomass and distribution to determine the optimal number of wolves for the desired ecological effect
-Repeat the simulation for multiple years to determine the length of time required to achieve the desired effect.
-"""
-"""
-https://github.com/MateusZitelli/PyPlanets
 http://plague-like.blogspot.com/
-https://github.com/FergusGriggs/fegaria-remastered
 https://www.pygame.org/tags/zombie
-http://nickandnicks.yolasite.com/villagersim.php
+https://github.com/JarvistheJellyFish/AICivGame/blob/master/Villager.py
+https://github.com/najarvis/villager-sim
+https://zhuanlan.zhihu.com/p/138003795
 civilization simulator python
 """
+
+
 """
-Mean, median, mode, and standard deviation are statistical measures that can be used to describe and analyze data in a zombie apocalypse simulation. Here are some examples:
+https://github.com/djeada/Proste-Projekty
+https://github.com/neo-mashiro/GameStore
+https://github.com/HumanRickshaw/Python_Games
+https://github.com/JrTai/Python-projects
+https://github.com/CleverProgrammer/coursera
+https://github.com/brunoratkaj/coursera-POO
+https://github.com/xkal36/principles_of_computing
+https://github.com/seschwartz8/intermediate-python-programs
+https://github.com/yudong-94/Fundamentals-of-Computing-in-Python
+https://github.com/Sakib37/Python_Games
+https://github.com/chrisnatali/zombie
+https://github.com/ITLabProject2016/internet_technology_lab_project
+https://github.com/GoogleCloudPlatform/appengine-scipy-zombie-apocalypse-python
+https://github.com/radical-cybertools/radical.saga
 
-Mean: The mean can be used to calculate the average number of zombies that appear in a specific area over time. This can be useful for predicting the rate of zombie infection and determining the necessary resources needed to survive.
-
-Median: The median can be used to determine the middle value in a set of data. In a zombie apocalypse simulation, the median can be used to determine the number of days it takes for a specific area to become overrun with zombies.
-
-Mode: The mode can be used to determine the most common value in a set of data. In a zombie apocalypse simulation, the mode can be used to determine the most common type of zombie encountered or the most effective weapon to use against them.
-
-Standard deviation: The standard deviation can be used to determine how spread out a set of data is. In a zombie apocalypse simulation, the standard deviation can be used to determine the level of unpredictability in zombie behavior or the effectiveness of certain survival strategies.
-
-Overall, statistical measures such as mean, median, mode, and standard deviation can be useful tools in analyzing and predicting data in a zombie apocalypse simulation.
 """
+
 """
-Gompertz curve
-Population biology is especially concerned with the Gompertz function. This function is especially useful in describing the rapid growth of a certain population of organisms while also being able to account for the eventual horizontal asymptote, once the carrying capacity is determined (plateau cell/population number).
-This function consideration of the plateau cell number makes it useful in accurately mimicking real-life population dynamics. The function also adheres to the sigmoid function, which is the most widely accepted convention of generally detailing a population's growth. Moreover, the function makes use of initial growth rate, which is commonly seen in populations of bacterial and cancer cells, which undergo the log phase and grow rapidly in numbers. Despite its popularity, the function initial rate of tumor growth is difficult to predetermine given the varying microcosms present with a patient, or varying environmental factors in the case of population biology. In cancer patients, factors such as age, diet, ethnicity, genetic pre-dispositions, metabolism, lifestyle and origin of metastasis play a role in determining the tumor growth rate. The carrying capacity is also expected to change based on these factors, and so describing such phenomena is difficult.
+Population-based models (PBM) and individual-based models (IBM) are two types of models that can be used to study populations.
+
+Population-based models (PBM) consider all individuals in a population to be interchangeable, and the main variable of interest is N, the population size. N is controlled by endogenous factors, such as density-dependence and demographic stochasticity, and exogenous factors, such as environmental stochasticity and harvest.
+
+Individual-based models (IBM), also known as agent-based models, consider each individual explicitly. In IBM, each individual may have different survival probabilities, breeding chances, and movement propensities. Differences may be due to spatial context or genetic variation. In IBM models, N is an emergent property of individual organisms interacting with each other, with predators, competitors, and their environment.
+
+The choice of model structure depends on the research question and understanding of the study system. If the primary data source is at the individual level, such as telemetry data, IBM is preferred. If the primary data is at the population level, such as mark-recapture analyses, PBM is preferred.
+
+Both IBM and PBM can be used to address questions at the population or metapopulation level. The Principle of Parsimony suggests using the simplest approach when two different model structures are equally appropriate.
+"""
+
+"""
+To provide analysis and prediction for the zombie apocalypse simulation, you can update the PopulationObserver class in the following ways:
+
+Implement methods for calculating statistical measures: You can implement methods for calculating statistical measures such as mean, median, mode, and standard deviation based on the data collected by the observer. These methods can be used to provide insights into the behavior of zombies and the survival strategies that are most effective.
+
+Use machine learning algorithms to predict zombie behavior: You can use machine learning algorithms such as decision trees, random forests, and neural networks to predict zombie behavior based on the data collected by the observer. For example, you can use these algorithms to predict the likelihood of a zombie outbreak occurring in a specific area or the rate of infection in a population.
+
+Integrate real-world data into the simulation: You can integrate real-world data such as population demographics, climate data, and disease transmission models into the simulation to provide more accurate predictions of zombie behavior. For example, you can use population demographics to predict the rate of zombie infection in a specific area or climate data to predict the spread of the zombie virus.
+
+Implement scenario analysis: You can implement scenario analysis to explore the impact of different variables on the outcome of the simulation. For example, you can explore the impact of different survival strategies on the rate of infection or the impact of different zombie types on the survival of the population.
+
+Overall, updating the PopulationObserver class to provide analysis and prediction for the zombie apocalypse simulation can provide valuable insights into the behavior of zombies and the most effective survival strategies.
+
+"""
+
+"""
+There are several data structures and algorithms that can be used for modeling agent interactions, depending on the specific needs of your application. Here are a few examples:
+
+Graphs: A graph data structure can be used to represent agents as nodes and interactions between them as edges. This can be useful for modeling networks of agents, such as social networks or communication networks.
+
+Queues: A queue data structure can be used to represent a message queue between agents. This can be useful for modeling asynchronous communication between agents, where messages are sent and received in a first-in, first-out (FIFO) order.
+
+Decision trees: A decision tree algorithm can be used to model the decision-making process of agents. This can be useful for modeling agents that make decisions based on a set of rules or conditions.
+
+Game theory: Game theory algorithms can be used to model interactions between agents in a strategic context, where each agent's actions affect the outcomes of other agents. This can be useful for modeling competitive or cooperative interactions between agents.
+
+Reinforcement learning: Reinforcement learning algorithms can be used to model agents that learn from their interactions with the environment. This can be useful for modeling agents that adapt to changing circumstances and learn from experience.
+
+Ultimately, the choice of data structure and algorithm will depend on the specific requirements of your application and the characteristics of the agent interactions you are modeling.
 """
