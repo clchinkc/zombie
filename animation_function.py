@@ -53,7 +53,7 @@ y = np.sin(x)
 # scatter_anim(x, y, title='Animation Example', xlabel='x', ylabel='y', save=True, filename='animation_example')
 
 # a general function to animate a matplotlib plot of any type, e.g. line, scatter, etc.
-def anim(x, y, func, mode, interval=100, title='Plot Animation', xlabel='x', ylabel='y', save=False, filename='animation', fps=3, dpi=10, **kwargs):
+def animation_function(x, y, func, mode, interval=100, title='Plot Animation', xlabel='x', ylabel='y', save=False, filename='animation', fps=3, dpi=10, **kwargs):
     '''
     Function to animate a plot in 3D.
     Inputs:
@@ -104,6 +104,6 @@ def anim(x, y, func, mode, interval=100, title='Plot Animation', xlabel='x', yla
 # scatter plot
 # anim(x, y, plt.scatter, mode="step", title='Animation Example', xlabel='x', ylabel='y', save=True, filename='scatter_animation')
 # line plot
-anim(x, y, plt.plot, mode="progress", title='Animation Example', xlabel='x', ylabel='y', save=True, filename='line_animation')
+animation_function(x, y, plt.plot, mode="progress", title='Animation Example', xlabel='x', ylabel='y', save=True, filename='line_animation')
 # bar plot
 # anim(x, y, plt.bar, mode="progress", title='Animation Example', xlabel='x', ylabel='y', save=True, filename='bar_animation')

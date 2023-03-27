@@ -6,7 +6,7 @@ Modeling the spread of the zombie virus: Monte Carlo simulation can be used to m
 Modeling the decision-making of survivors: Monte Carlo simulation can also be used to model the decision-making of survivors as they try to evade zombies and find safety. For example, it can simulate the probability of a survivor successfully reaching a safe haven given various factors such as their starting location, the number of zombies in the area, and their supplies.
 Modeling the impact of interventions: Monte Carlo simulation can be used to model the impact of various interventions on the spread of the zombie virus and the survival of the human population. For example, it can simulate the effect of a quarantine on the number of new zombie infections or the impact of a vaccine on the number of survivors.
 Generating scenarios: Monte Carlo simulation can be used to generate a range of possible scenarios for a zombie apocalypse, taking into account the uncertainty and randomness inherent in such a situation. This can provide valuable insights into the range of possible outcomes and help decision-makers prepare for a wide range of contingencies.
-In all these cases, Monte Carlo simulation can provide valuable insights into the dynamics of a zombie apocalypse and help decision-makers prepare for such a scenario. However, it's important to note that the results of a Monte Carlo simulation are only as good as the model used, and it's crucial to carefully validate the assumptions and inputs used in the simulation.
+However, it's important to note that the results of a Monte Carlo simulation are only as good as the model used, and it's crucial to carefully validate the assumptions and inputs used in the simulation.
 """
 """
 Here's an example of how you could design a Monte Carlo simulation of a zombie apocalypse:
@@ -17,7 +17,6 @@ Simulate the movement of the population: Next, you'll simulate the movement of t
 Keep track of the state of the population: Keep track of the state of the population, including the number of healthy individuals, the number of infected individuals, and the number of fatalities. You could also keep track of other relevant metrics, such as the number of safe havens, the amount of supplies, and the distribution of the population over the landscape.
 Run the simulation multiple times: Finally, you'll want to run the simulation multiple times, perhaps hundreds or thousands of times, to generate a range of possible scenarios. This will provide valuable insights into the range of possible outcomes and help you prepare for a wide range of contingencies.
 Analyze the results: Once you have run the simulation multiple times, you can analyze the results to get a better understanding of the dynamics of the zombie apocalypse. For example, you could calculate statistics such as the average number of fatalities, the average number of survivors, and the average time to reach a safe haven. You could also generate graphs and visualizations to help you understand the results and identify any patterns or trends.
-This is just one example of how you could design a Monte Carlo simulation of a zombie apocalypse. Of course, the specific details will depend on the goals of your simulation and the assumptions you make about the underlying processes. However, by using a Monte Carlo simulation, you can gain valuable insights into the dynamics of a zombie apocalypse and help prepare for such a scenario.
 """
 """
 Here's a more specific example of how you could use Monte Carlo simulation to model a zombie apocalypse:
@@ -28,140 +27,67 @@ Repeat the simulation: Repeat the simulation multiple times, each time using dif
 Analyze the results: After running the simulation multiple times, analyze the results to get a better understanding of the dynamics of the zombie apocalypse. For example, you could calculate the average number of fatalities, the average number of survivors, and the time it takes for the zombie virus to spread through the population. You could also create visualizations to help you understand the results and identify any patterns or trends.
 This is a simple example of how you could use Monte Carlo simulation to model a zombie apocalypse. In practice, you could include additional variables and make more complex models to better reflect the underlying processes. The key idea is to use random numbers and simulation to model the uncertainty and randomness inherent in the spread of the zombie virus and the decisions made by survivors. By using Monte Carlo simulation, you can gain valuable insights into the dynamics of a zombie apocalypse and help prepare for such a scenario.
 """
+"""
+The Monte Carlo method is a model-free reinforcement learning algorithm that estimates the value of a state by averaging the returns observed after visiting the state. It learns by simulating many episodes and updating the value of states based on the observed rewards. In this specific code, the Monte Carlo e-soft method can be used to find an optimal policy for the specific environment. The algorithm first creates a random policy and a state-action dictionary. Then, for a given number of episodes, it runs a game using the current policy and records the states, actions, and rewards obtained. It then updates the state-action values using the observed returns and uses epsilon-greedy exploration to update the policy. The test_policy function is used to evaluate the performance of the learned policy by running a given number of games and returning the fraction of wins.
+"""
 
 # without: Markov chain Monte Carlo, Markov Decision Processes, https://pojenlai.wordpress.com/2018/11/14/paper-reading-the-naive-utility-calculus-joint-inferences-about-the-costs-and-rewards-of-actions/
 
 # https://github.com/lukepolson/youtube_channel/blob/main/Python%20Tutorial%20Series/montecarlo1.ipynb
-# https://franklin.dyer.me/post/119
 
 
-"""
-import itertools
-import operator
-import random
-from time import sleep
 
-# Import the necessary packages and modules
-import gym
+import matplotlib.pyplot as plt
 import numpy as np
-import tqdm
 
-tqdm.monitor_interval = 0
+# Parameters
+num_simulations = 1000
+time_steps = 500
+initial_healthy = 1000
+initial_infected = 10
+infection_rate = 0.1
+killing_rate = 0.05
 
-# Random Policy
-def create_random_policy(env):
-    policy = {}
-    for key in range(0, env.observation_space.n):
-        current_end = 0
-        p = {}
-    for action in range(0, env.action_space.n):
-        p[action] = 1 / env.action_space.n
-        policy[key] = p
-        return policy
+# Function to run one simulation
+def run_simulation():
+    healthy_population = [initial_healthy]
+    infected_population = [initial_infected]
+    total_population = initial_healthy + initial_infected
 
+    for _ in range(time_steps):
+        # Calculate the number of infections
+        new_infections = np.random.binomial(healthy_population[-1], infection_rate * infected_population[-1] / total_population)
 
-# Create a state-action dictionary
-def create_state_action_dictionary(env, policy):
-    Q = {}
-    for key in policy.keys():
-        Q[key] = {a: 0.0 for a in range(0, env.action_space.n)}
-        return Q
+        # Calculate the number of killed zombies
+        killed_zombies = np.random.binomial(infected_population[-1], killing_rate)
 
+        # Update the healthy and infected populations
+        healthy_population.append(healthy_population[-1] - new_infections)
+        infected_population.append(infected_population[-1] + new_infections - killed_zombies)
 
-# Create run_game function
-def run_game(env, policy, display=True):
-    env.reset()
-    episode = []
-    finished = False
-    while not finished:
-        s = env.env.s
-        if display:
-            clear_output(True)
-            env.render()
-            sleep(1)
-            timestep = []
-            timestep.append(s)
-            n = random.uniform(0, sum(policy[s].values()))
-            top_range = 0
-    for prob in policy[s].items():
-        top_range += prob[1]
-        if n < top_range:
-            action = prob[0]
-        break
-    state, reward, finished, info = env.step(action)
-    timestep.append(action)
-    timestep.append(reward)
-    episode.append(timestep)
-    if display:
-        clear_output(True)
-        env.render()
-        sleep(1)
-    return episode
+    return healthy_population, infected_population
 
+# Run simulations
+healthy_results = []
+infected_results = []
 
-# Create test_policy function
-def test_policy(policy, env):
-    wins = 0
-    r = 100
-    for i in range(r):
-        w = run_game(env, policy, display=False)[-1][-1]
-    if w == 1:
-        wins += 1
-    return wins / r
+for _ in range(num_simulations):
+    healthy_population, infected_population = run_simulation()
+    healthy_results.append(healthy_population)
+    infected_results.append(infected_population)
 
+# Calculate averages
+average_healthy = np.mean(healthy_results, axis=0)
+average_infected = np.mean(infected_results, axis=0)
 
-import sys
+# Plot the results
+plt.figure(figsize=(12, 6))
+plt.plot(average_healthy, label="Healthy Population")
+plt.plot(average_infected, label="Infected Population")
+plt.xlabel("Time steps")
+plt.ylabel("Number of Individuals")
+plt.legend()
+plt.title("Monte Carlo Simulation of a Zombie Apocalypse")
+plt.show()
 
-epsilon = sys.float_info.epsilon
-epsilon = 0.1
-
-# Create Monte Carlo e-soft function
-def monte_carlo_e_soft(env, episodes=100, policy=None, epsilon=0.01):
-    if not policy:
-        policy = create_random_policy(
-            env
-        )  # Create an empty dictionary to store state action values
-    Q = create_state_action_dictionary(
-        env, policy
-    )  # Empty dictionary for storing rewards for each state-action pair
-    returns = {}  # 3.
-    for _ in range(episodes):  # Looping through episodes
-        G = 0  # Store cumulative reward in G (initialized at 0)
-        episode = run_game(
-            env=env, policy=policy, display=False
-        )  # Store state, action and value respectively
-    # for loop through reversed indices of episode array.
-    # The logic behind it being reversed is that the eventual reward would be at the end.
-    # So we have to go back from the last timestep to the first one propagating result from the future.
-    for i in reversed(range(0, len(episode))):
-        s_t, a_t, r_t = episode[i]
-        state_action = (s_t, a_t)
-        G += r_t  # Increment total reward by reward on current timestep
-    if not state_action in [(x[0], x[1]) for x in episode[0:i]]:  #
-        if returns.get(state_action):
-            returns[state_action].append(G)
-        else:
-            returns[state_action] = [G]
-        Q[s_t][a_t] = sum(returns[state_action]) / len(
-            returns[state_action]
-        )  # Average reward across episodes
-        Q_list = list(
-            map(lambda x: x[1], Q[s_t].items())
-        )  # Finding the action with maximum value
-        indices = [i for i, x in enumerate(Q_list) if x == max(Q_list)]
-        max_Q = random.choice(indices)
-        A_star = max_Q  # 14.
-        for a in policy[s_t].items():  # Update action probability for s_t in policy
-            if a[0] == A_star:
-                policy[s_t][a[0]] = (
-                    1 - epsilon + (epsilon / abs(sum(policy[s_t].values())))
-                )
-            else:
-                policy[s_t][a[0]] = epsilon / abs(sum(policy[s_t].values()))
-
-
-env = gym.make("FrozenLake8x8-v0")
-policy = monte_carlo_e_soft(env, episodes=5)
-test_policy(policy, env)
-"""
 

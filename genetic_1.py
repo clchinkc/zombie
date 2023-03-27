@@ -28,6 +28,8 @@ Integrate the genetic algorithm into the game or simulation: Once you have imple
 It's also a good idea to design your NPC behavior parameters and fitness function in a way that is flexible and easy to modify, so you can experiment with different configurations and see how they affect the NPC behavior.
 """
 
+# https://franklin.dyer.me/post/119
+
 import random
 
 """
