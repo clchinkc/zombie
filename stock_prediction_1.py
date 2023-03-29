@@ -6,6 +6,8 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
 
 
 def load_data(ticker):
@@ -14,6 +16,16 @@ def load_data(ticker):
     # data = ticker_data.history(period='max')
     stock_data = pd.read_csv('apple_stock_data.csv', index_col=0, parse_dates=True)
     return stock_data
+
+def standardize_data(df):
+    """Standardizes historical data by using StandardScaler."""
+    scaler = StandardScaler()
+    df['Close'] = scaler.fit_transform(df['Close'].values.reshape(-1, 1))
+    df['Open'] = scaler.fit_transform(df['Open'].values.reshape(-1, 1))
+    df['High'] = scaler.fit_transform(df['High'].values.reshape(-1, 1))
+    df['Low'] = scaler.fit_transform(df['Low'].values.reshape(-1, 1))
+    df['Volume'] = scaler.fit_transform(df['Volume'].values.reshape(-1, 1))
+    return df
 
 def create_features(df):
     """Creates new features from the historical data."""
@@ -46,11 +58,19 @@ def split_data(X, y, test_size=0.2, random_state=42):
     """Splits data into train and test sets."""
     return train_test_split(X, y, test_size=test_size, random_state=random_state)
 
+
 def train_model(X_train, y_train):
     """Trains a linear regression model on the training set."""
     model = LinearRegression()
     model.fit(X_train, y_train)
     return model
+
+def train_model(X_train, y_train):
+    """Trains a linear regression model on the training set."""
+    PolyRegression = Pipeline([('poly', PolynomialFeatures(degree=3)),
+                                ('linear', LinearRegression(fit_intercept=False))])
+    PolyRegression.fit(X_train, y_train)
+    return PolyRegression
 
 def evaluate_model(model, X_test, y_test):
     """Evaluates the performance of the model on the test set."""
@@ -82,22 +102,29 @@ def make_prediction(model, last_7_days, days_to_predict):
         last_7_days = new_features.tail(7)
     return np.array(predictions)
 
+def destandardize_data(df, predictions):
+    """De-standardizes the predicted closing prices."""
+    scaler = StandardScaler()
+    scaler.fit(df['Close'].values.reshape(-1, 1))
+    return scaler.inverse_transform(predictions.reshape(-1, 1)).flatten()
 
 if __name__ == '__main__':
     # Load data
     ticker = 'AAPL'
     # df = load_data(ticker)
     df = pd.read_csv('apple_stock_data.csv', index_col='Date', parse_dates=True)
+    
+    standardized_data = standardize_data(df)
 
     # Create features
-    df = create_features(df)
+    featured_data = create_features(standardized_data)
 
     # Clean data
-    df = clean_data(df)
+    clean_data = clean_data(featured_data)
     
     # Create X and y
-    X = df[['prev_close', 'prev_open', 'prev_high', 'prev_low', 'prev_volume', 'ma7', 'std7', 'rsi']]
-    y = df['Close']
+    X = clean_data[['prev_close', 'prev_open', 'prev_high', 'prev_low', 'prev_volume', 'ma7', 'std7', 'rsi']]
+    y = clean_data['Close']
 
     # Split data into train and test set
     X_train, X_test, y_train, y_test = split_data(X, y)
@@ -112,13 +139,14 @@ if __name__ == '__main__':
     # Make prediction for next 30 days' closing prices
     last_7_days = X.tail(7)
     predictions = make_prediction(model, last_7_days, days_to_predict=30)
+    destandardized_predictions = destandardize_data(df, predictions)
     dates = pd.date_range(start=df.index[-1], periods=31, freq='D')
 
     # Plot the predicted prices
     import matplotlib.dates as mdates
     import matplotlib.pyplot as plt
     plt.plot(df.index, df['Close'], label='Actual')
-    plt.plot(dates, np.concatenate([[df['Close'][-1]], predictions]), label='Predicted')
+    plt.plot(dates, np.concatenate([[df['Close'][-1]], destandardized_predictions]), label='Predicted')
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
     plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2))
     plt.gcf().autofmt_xdate()
