@@ -1,6 +1,7 @@
 
 """Projectiles
 https://github.com/lukepolson/youtube_channel/blob/main/Python%20Tutorial%20Series/object_oriented.ipynb
+Uses the VPython library to create a physics simulation, and how to use numerical methods to solve differential equations.
 """
 
 """

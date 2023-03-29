@@ -13,30 +13,27 @@ NUM_ZOMBIES = 10 # Number of zombies in the city
 NUM_HUMANS = 100 # Number of humans in the city
 
 class Person:
-    def __init__(self, speed_mean, speed_std):
+    def __init__(self, speed_mean, speed_std, position=None):
         self.speed_mean = speed_mean
         self.speed_std = speed_std
         self.speed = np.random.normal(self.speed_mean, self.speed_std)
-        self.position = np.random.uniform(0, CITY_SIZE)
+        self.position = position if position is not None else np.random.uniform(0, CITY_SIZE)
 
     def update_position(self):
         self.position += self.speed
-        if self.position < 0:
-            self.position = 0
-        elif self.position > CITY_SIZE:
-            self.position = CITY_SIZE
+        self.position = np.clip(self.position, 0, CITY_SIZE)
 
 class Zombie(Person):
-    def __init__(self, speed_mean, speed_std):
-        super().__init__(speed_mean, speed_std)
+    def __init__(self, speed_mean, speed_std, position=None):
+        super().__init__(speed_mean, speed_std, position)
         self.color = 'red'
         self.speed = np.random.normal(self.speed_mean, self.speed_std) * 0.8 # Zombies are slower than humans
         self.infected = True
 
 class Human(Person):
-    def __init__(self, speed_mean, speed_std):
-        super().__init__(speed_mean, speed_std)
-        self.color = 'blue'
+    def __init__(self, speed_mean, speed_std, position=None):
+        super().__init__(speed_mean, speed_std, position)
+        self.color = 'green'
         self.infected = False
 
 def catch_probability(zombie, human):
@@ -46,12 +43,15 @@ def catch_probability(zombie, human):
 
 def simulate_outbreak(num_steps):
     # Create zombies and humans
-    zombies = [Zombie(3.0, 1.0) for _ in range(NUM_ZOMBIES)]
+    zombies = [Zombie(1.0, 1.0) for _ in range(NUM_ZOMBIES)]
     humans = [Human(5.0, 1.5) for _ in range(NUM_HUMANS)]
     
     # Store the speeds of zombies and humans at each step
     zombie_speeds = np.zeros((num_steps, NUM_ZOMBIES))
     human_speeds = np.zeros((num_steps, NUM_HUMANS))
+    
+    # Store infected humans at each step
+    infected = np.zeros((num_steps, NUM_HUMANS))
 
     # Simulate the positions of zombies and humans in the city through time
     for step in range(num_steps):
@@ -66,28 +66,25 @@ def simulate_outbreak(num_steps):
         # Check if any zombies have caught any humans
         for zombie in zombies:
             for human in humans:
-                if abs(zombie.position - human.position) < 10:
+                if abs(zombie.position - human.position) < 10 and np.random.binomial(1, catch_probability(zombie, human)):
                     human.infected = True
-                        
-    # Calculate the number of infected humans
-    num_infected = 0
-    for human in humans:
-        if human.infected:
-            num_infected += 1
+        
+        # store the infected status of humans at each step
+        infected[step] = np.array([human.infected for human in humans])
             
-    return num_infected, zombie_speeds, human_speeds
+    return infected, zombie_speeds, human_speeds
 
 def main():
     # Simulate the outbreak 1000 times
     num_steps = 100
     num_trials = 100
-    infected = []
+    infected = np.zeros((num_trials, num_steps, NUM_HUMANS))
     zombie_speeds_all = []
     human_speeds_all = []
     catch_probs = []
     for trial in range(num_trials):
         inf, zombie_speeds, human_speeds = simulate_outbreak(num_steps)
-        infected.append(inf)
+        infected[trial] = inf
         zombie_speeds_all.append(zombie_speeds)
         human_speeds_all.append(human_speeds)
         catch_probs.append(catch_probs[-1] if trial > 0 else 0)  # append last catch probability or 0 if first trial
@@ -107,9 +104,10 @@ def main():
     plt.legend()
     plt.show()
 
-        
-    # Plot the histogram of the number of infected humans
-    plt.hist(infected, bins=range(0, NUM_HUMANS + 1), density=True)
+    # Plot the histogram of the number of infected humans at the end of the outbreak across trials
+    # infected.shape = (num_trials, num_steps, NUM_HUMANS)
+    num_infected = np.sum(infected[:, -1, :], axis=1)
+    plt.hist(num_infected, bins=range(0, NUM_HUMANS + 1), density=True)
     # Plot the theoretical probability of catching a human
     x = np.linspace(0, NUM_HUMANS, 1000)
     y = norm.cdf(x, loc=NUM_ZOMBIES, scale=sqrt(NUM_ZOMBIES * (1 - catch_probs[-1]) + NUM_HUMANS * catch_probs[-1]))
@@ -118,6 +116,13 @@ def main():
     plt.ylabel('Probability')
     plt.show()
     
+    # Plot the number of infected humans at each step across trials
+    infected = np.sum(infected, axis=2)
+    plt.plot(infected.T, color='grey', alpha=0.1)
+    plt.plot(np.mean(infected, axis=0), color='black', linewidth=3)
+    plt.xlabel('Step')
+    plt.ylabel('Number of infected humans')
+    plt.show()
     
 if __name__ == '__main__':
     main()

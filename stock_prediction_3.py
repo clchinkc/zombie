@@ -35,6 +35,7 @@ from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_squared_error, silhouette_score
+from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import MinMaxScaler
@@ -45,17 +46,21 @@ class StockDataPreprocessor:
     def __init__(self, filepath):
         self.filepath = filepath
         self.scaler = None
-        self.stock_data = None
+        self.train_data = None
+        self.test_data = None
 
-    def preprocess_data(self):
+    def preprocess_data(self, days):
         # Read data from CSV file
-        stock_data = pd.read_csv(self.filepath)
+        stock_data = pd.read_csv(self.filepath, index_col='Date', parse_dates=True)[['Close']]
         # Drop any missing values
         stock_data = stock_data.dropna()
+        # Divide the data into training and testing sets
+        self.train_data = stock_data.iloc[:-days]
+        self.test_data = stock_data.iloc[-days:]
         self.scaler = MinMaxScaler()
-        self.stock_data = self.scaler.fit_transform(stock_data[['Close']])
-        return self.stock_data, self.scaler
-
+        self.train_data = self.scaler.fit_transform(self.train_data)
+        self.test_data = self.scaler.transform(self.test_data)
+        return self.train_data, self.test_data, self.scaler
 
 class StatesGetter:
     def __init__(self, stock_data, num_states):
@@ -165,6 +170,20 @@ class KNN(Model):
         estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
         return estimated_future_price_2d
 
+class Gaussian(Model):
+    def __init__(self):
+        self.model = GaussianNB()
+
+    def train(self, stock_data, states):
+        self.model.fit(stock_data[:-1].reshape(-1, 1), states[1:])
+
+    def predict(self, stock_data, states):
+        proba = self.model.predict_proba(stock_data[-1].reshape(-1, 1))
+        future_prices = [np.median(stock_data[states == i]) for i in range(len(set(states)))]
+        estimated_future_price = np.dot(proba[-1], future_prices)
+        estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
+        return estimated_future_price_2d
+
 class StockPredictor:
     def __init__(self, model, filepath, num_states, days):
         self.model = model
@@ -174,17 +193,17 @@ class StockPredictor:
 
     def preprocess_data(self):
         stock_data_preprocessor = StockDataPreprocessor(self.filepath)
-        self.stock_data, self.scaler = stock_data_preprocessor.preprocess_data()
+        self.train_data, self.test_data, self.scaler = stock_data_preprocessor.preprocess_data(self.days)
 
     def get_states(self):
-        states_getter = StatesGetter(self.stock_data, self.num_states)
+        states_getter = StatesGetter(self.train_data, self.num_states)
         self.states = states_getter.get_states()
 
     def train(self):
-        self.model.train(self.stock_data, self.states)
+        self.model.train(self.train_data, self.states)
 
     def predict(self):
-        stock_prices = self.stock_data
+        stock_prices = self.train_data
         self.predicted_prices = []
         for _ in range(self.days):
             last_price = self.model.predict(stock_prices, self.states)
@@ -193,13 +212,13 @@ class StockPredictor:
 
     def evaluate(self):
         predicted_prices = self.scaler.inverse_transform(np.array(self.predicted_prices).reshape(-1, 1))
-        actual_prices = self.scaler.inverse_transform(self.stock_data)[-self.days:]
+        actual_prices = self.scaler.inverse_transform(self.test_data)[-self.days:]
         print("RMSE:", np.sqrt(mean_squared_error(actual_prices, predicted_prices)))
 
     def plot_prediction(self):
         predicted_prices = self.scaler.inverse_transform(np.array(self.predicted_prices).reshape(-1, 1))
-        historical_prices = self.scaler.inverse_transform(np.array(self.stock_data).reshape(-1, 1))
-        actual_prices = historical_prices[-self.days:]
+        historical_prices = self.scaler.inverse_transform(np.array(self.train_data).reshape(-1, 1))
+        actual_prices = self.scaler.inverse_transform(np.array(self.test_data).reshape(-1, 1))
         
         # Plot the predicted prices along with the historical data
         historical_dates = pd.read_csv(self.filepath)['Date'].values[-len(historical_prices):]
@@ -224,8 +243,9 @@ if __name__ == '__main__':
     # forest = Forest()
     # svm = SVM()
     # logistic = Logistic()
-    knn = KNN()
-    stock_predictor = StockPredictor(knn, filepath, num_states, days)
+    # knn = KNN()
+    gaussian = Gaussian()
+    stock_predictor = StockPredictor(gaussian, filepath, num_states, days)
     stock_predictor.preprocess_data()
     stock_predictor.get_states()
     stock_predictor.train()

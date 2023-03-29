@@ -80,9 +80,14 @@ for _ in range(num_simulations):
 average_healthy = np.mean(healthy_results, axis=0)
 average_infected = np.mean(infected_results, axis=0)
 
+healthy_results = np.array(healthy_results).T
+infected_results = np.array(infected_results).T
+
 # Plot the results
 plt.figure(figsize=(12, 6))
+plt.plot(healthy_results, color="blue", alpha=0.01)
 plt.plot(average_healthy, label="Healthy Population")
+plt.plot(infected_results, color="red", alpha=0.01)
 plt.plot(average_infected, label="Infected Population")
 plt.xlabel("Time steps")
 plt.ylabel("Number of Individuals")
