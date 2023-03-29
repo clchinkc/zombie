@@ -31,15 +31,19 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import scipy
+import statsmodels.tsa.api
 from sklearn.cluster import KMeans
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import mean_squared_error, silhouette_score
+from sklearn.linear_model import LinearRegression, LogisticRegression
+from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import MinMaxScaler, PolynomialFeatures
 from sklearn.svm import SVC
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
 
 class StockDataPreprocessor:
@@ -49,9 +53,20 @@ class StockDataPreprocessor:
         self.train_data = None
         self.test_data = None
 
-    def preprocess_data(self, days):
-        # Read data from CSV file
+    def get_stock_data(self, symbol, start_date, end_date):
+        # Use yfinance API to fetch historical stock price data
+        ticker = yf.Ticker(symbol)
+        stock_data = ticker.history(start=start_date, end=end_date)
+        # Store it in a CSV file
+        stock_data.to_csv(self.filepath)
+        return stock_data
+
+    def load_stock_data(self):
+        # Load historical stock data from CSV file
         stock_data = pd.read_csv(self.filepath, index_col='Date', parse_dates=True)[['Close']]
+        return stock_data
+
+    def preprocess_data(self, stock_data, days):
         # Drop any missing values
         stock_data = stock_data.dropna()
         # Divide the data into training and testing sets
@@ -184,6 +199,21 @@ class Gaussian(Model):
         estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
         return estimated_future_price_2d
 
+class Exponential(Model):
+    def __init__(self):
+        self.model = None
+        self.days = 0
+
+    def train(self, stock_data, states):
+        self.model = ExponentialSmoothing(stock_data, trend='add', seasonal='add', seasonal_periods=30)
+        self.model_fit = self.model.fit()
+
+    def predict(self, stock_data, states):
+        # it will be called iteratively with the last predicted value
+        predictions = self.model_fit.predict(start=len(stock_data) + self.days, end=len(stock_data) + self.days)
+        self.days += 1
+        return np.array([predictions]).reshape(-1, 1)
+
 class StockPredictor:
     def __init__(self, model, filepath, num_states, days):
         self.model = model
@@ -193,7 +223,8 @@ class StockPredictor:
 
     def preprocess_data(self):
         stock_data_preprocessor = StockDataPreprocessor(self.filepath)
-        self.train_data, self.test_data, self.scaler = stock_data_preprocessor.preprocess_data(self.days)
+        stock_data = stock_data_preprocessor.load_stock_data()
+        self.train_data, self.test_data, self.scaler = stock_data_preprocessor.preprocess_data(stock_data, self.days)
 
     def get_states(self):
         states_getter = StatesGetter(self.train_data, self.num_states)
@@ -213,7 +244,19 @@ class StockPredictor:
     def evaluate(self):
         predicted_prices = self.scaler.inverse_transform(np.array(self.predicted_prices).reshape(-1, 1))
         actual_prices = self.scaler.inverse_transform(self.test_data)[-self.days:]
-        print("RMSE:", np.sqrt(mean_squared_error(actual_prices, predicted_prices)))
+        residuals = actual_prices - predicted_prices
+        rmse = np.sqrt(mean_squared_error(actual_prices, predicted_prices))
+        r2 = r2_score(actual_prices, predicted_prices)
+        print("RMSE:", rmse)
+        print("R2:", r2)
+
+        # plot the residuals in a scatter plot
+        plt.scatter(range(len(residuals)), residuals)
+        plt.axhline(y=0, color='r', linestyle='-')
+        plt.xlabel('Time')
+        plt.ylabel('Residuals')
+        plt.title('Residual Plot')
+        plt.show()
 
     def plot_prediction(self):
         predicted_prices = self.scaler.inverse_transform(np.array(self.predicted_prices).reshape(-1, 1))
@@ -244,8 +287,9 @@ if __name__ == '__main__':
     # svm = SVM()
     # logistic = Logistic()
     # knn = KNN()
-    gaussian = Gaussian()
-    stock_predictor = StockPredictor(gaussian, filepath, num_states, days)
+    # gaussian = Gaussian()
+    exponential = Exponential()
+    stock_predictor = StockPredictor(exponential, filepath, num_states, days)
     stock_predictor.preprocess_data()
     stock_predictor.get_states()
     stock_predictor.train()
@@ -254,6 +298,14 @@ if __name__ == '__main__':
     stock_predictor.plot_prediction()
 
 
+# Linear Regression
+# Gradient Boosting Regressor
+# Random Forest Regressor
+# Support Vector Regressor
+# K-Nearest Neighbors Regressor
+
+# Grid Search
+# K-Fold Cross Validation
 
 """
 Add volatility term:
