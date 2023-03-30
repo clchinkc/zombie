@@ -41,6 +41,8 @@ merged_df = merged_df.loc[:, ~df_double.columns.duplicated()].copy() # remove du
 """
 
 """
+# Descriptive analysis
+
 # Get summary statistics of the data
 print("Summary statistics of the data:")
 print(data.describe())
@@ -71,24 +73,6 @@ print(data.select_dtypes(include='number').apply(lambda x: np.abs(stats.zscore(x
 # Check for correlations
 print("Correlations:")
 print(data.corr(numeric_only=True))
-# Check for all class imbalance
-print("Class imbalance:")
-# Create a pivot table that shows the mean, median, standard deviation, minimum, maximum, sum of age of individuals shot, grouped by race and gender
-print("Pivot table that shows statistics of age grouped by age and gender:")
-pivot_table = pd.pivot_table(data, values='age', index=['race', 'gender'], aggfunc=[np.mean, np.median, np.std, np.min, np.max, np.sum])
-print(pivot_table)
-data_grouped = [data.groupby(classes).size() for classes in data.columns]
-# plot the class imbalance in subplot
-plt.figure(figsize=(16, 16))
-for i in range(len(data_grouped)):
-    plt.subplot(math.ceil(len(data_grouped)/4), 4, i+1)
-    plt.bar(data_grouped[i].index, data_grouped[i].values)
-    plt.title(str(data.columns[i]))
-# hide all the x labels and y labels
-plt.setp(plt.gcf().get_axes(), xticks=[], yticks=[])
-# show the plot
-plt.tight_layout()
-plt.show()
 """
 
 
@@ -107,32 +91,20 @@ plt.show()
 # Sample 5 rows without replacement with specific column to be chosen
 # df_sample = data.sample(n=5, replace=False, random_state=1, axis=1).copy() # axis=0 for rows, axis=1 for columns, frac=0.1 for fraction of the whole dataset
 # Drop rows with na values
-print("Drop rows with missing values:")
 data = data.dropna(axis=0)
-print("Number of rows after dropping rows with missing values:", data.shape[0])
 # Drop columns that are not useful for the analysis
-print("Drop columns that are not useful for the analysis:")
 data = data.drop(["name"], axis=1)
-print("Number of columns after dropping columns that are not useful for the analysis:", data.shape[1])
 # Drop duplicate rows
-print("Drop duplicate rows:")
 data = data.drop_duplicates()
-print("Number of rows after dropping duplicate rows:", data.shape[0])
 # Fill missing value in numerical column with the mean value
-print("Fill missing value in numerical column with the mean value:")
 numeric_cols = data.select_dtypes(include="number").columns
 data[numeric_cols] = data[numeric_cols].fillna(data[numeric_cols].mean())
-print("Number of rows after filling missing value in numerical column with the mean value:", data.shape[0])
 # Fill missing value in categorical column with the mode value
-print("Fill missing value in categorical column with the mode value:")
 categorical_cols = data.select_dtypes(include="object").columns
 data[categorical_cols] = data[categorical_cols].fillna(data[categorical_cols].mode().iloc[0])
-print("Number of rows after filling missing value in categorical column with the mode value:", data.shape[0])
 # Drop rows with outliers using z-score
 # data[numeric_cols] = data[numeric_cols and (np.abs(stats.zscore(data)) < 5).all(axis=1)]
-print("Drop rows with outliers using z-score:")
 data.loc[(np.abs(stats.zscore(data[numeric_cols])) < 5).all(axis=1), numeric_cols] = data[numeric_cols]
-print("Number of rows after dropping rows with outliers using z-score:", data.shape[0])
 
 # Data wrangling
 
@@ -196,9 +168,31 @@ Instead of using query() function to filter the data based on certain conditions
 Instead of using simple statistical methods such as mean, median, or correlation to analyze the data, we can use more advanced machine learning models such as decision trees, random forests, or neural networks to analyze the data. This can provide more accurate and reliable predictions and insights.
 """
 
+
 """
-descriptive analysis
-univariate analysis
+# Univariate analysis
+
+# Create a pivot table that shows the mean, median, standard deviation, minimum, maximum, sum of age of individuals shot, grouped by race and gender
+print("Pivot table that shows statistics of age grouped by age and gender:")
+pivot_table = pd.pivot_table(data, values='age', index=['race', 'gender'], aggfunc=[np.mean, np.median, np.std, np.min, np.max, np.sum])
+print(pivot_table)
+data_grouped = [data.groupby(classes).size() for classes in data.columns]
+# plot the class imbalance in subplot
+plt.figure(figsize=(16, 16))
+for i in range(len(data_grouped)):
+    plt.subplot(math.ceil(len(data_grouped)/4), 4, i+1)
+    plt.bar(data_grouped[i].index, data_grouped[i].values)
+    plt.title(str(data.columns[i]))
+# hide all the x labels and y labels
+plt.setp(plt.gcf().get_axes(), xticks=[], yticks=[])
+# show the plot
+plt.tight_layout()
+plt.show()
+
+"""
+
+
+"""
 bivariate analysis
 multivariate analysis
 variable transformation
@@ -215,41 +209,40 @@ time series model
 
 
 """
-# Line chart of Number of Deaths by Year and Month: shows the number of deaths over the years and months.
+
+# Set the style for all plots
+sns.set(style="white")
+
+# 1. Line chart of Number of Deaths by Year and Month
 sns.lineplot(data=deaths_by_year, x='month', y='age', hue='year').set(title="Line chart of Number of Deaths by Year and Month")
 plt.show()
-# good
 
-# Create a line chart that shows the trend of number of deaths over time
+# 2. Trend of number of deaths over time
 sns.lineplot(x='year', y='id', data=data, estimator=np.mean)
 plt.title('Trend of number of deaths over time')
 plt.show()
-# normal
 
-# count the number of deaths in each age
-death_counts = data['age'].value_counts(ascending=True, normalize=True)
-# plot the number of deaths in each age using jointplot
-sns.jointplot(x='age', y=death_counts, data=data, kind='reg')
-plt.title('Correlation between age and number of shootings')
+# 3. Correlation between age and number of deaths
+sns.jointplot(x='age', y=data['age'].value_counts(ascending=True, normalize=True), data=data, kind='reg')
+plt.subplots_adjust(top=0.9)
+plt.suptitle('Correlation between age and number of deaths')
+plt.xlabel('Age')
+plt.ylabel('Number of deaths')
 plt.show()
-# good, title not working
 
-# Create histplot of Number of Deaths by Race and Age
+# 4. Distribution of Age by Race
 sns.histplot(data=data, x='age', hue='race', bins=20, kde=True, kde_kws={'bw_adjust': 1.5}, multiple="stack", palette='muted')
 plt.title('Distribution of Age by Race')
 plt.xlabel('Age')
 plt.ylabel('Count')
 plt.show()
 
-# Count plot of Race of Individuals Shot: shows the number of deaths for each race over the years.
-data_race_year = data.groupby(['year', 'race'])['id'].count().unstack()
-sns.barplot(x='year', y='total', hue='race', data=data_race_year.reset_index().melt(id_vars=['year'], var_name='race', value_name='total'), palette='muted').set(title="Count plot of Race of Individuals Shot")
-# data_race_year = data.groupby(['year', 'race'])['id'].count().reset_index(name='count')
-# sns.barplot(x='year', y='count', hue='race', data=data_race_year, palette='muted')
+# 5. Count plot of Race of Individuals Shot
+sns.countplot(data=data, x='race')
+plt.title("Count plot of Race of Individuals Shot")
 plt.show()
-# can be done on other columns other than race
 
-# Create JointGrid object and plot a scatterplot and histogram
+# 6. Distribution of age and race of deaths
 grid = sns.JointGrid(data=data, x="age", y="race")
 grid.plot_joint(sns.histplot, bins=20, cbar=True, cmap='Blues')
 grid.plot_marginals(sns.histplot, kde=True, kde_kws={'bw_adjust': 1.5}, palette='muted')
@@ -257,23 +250,25 @@ plt.subplots_adjust(top=0.9)
 grid.fig.suptitle("Distribution of age and race of deaths")
 grid.set_axis_labels(xlabel="Age", ylabel="Race")
 plt.show()
-# good
 
-# Histogram of Age of Different Race of Individuals Shot: shows a distribution of ages of different race of individuals shot.
-sns.histplot(x='age', hue='race', data=data, kde=True, kde_kws={'bw_adjust': 1.5}, palette='muted')
-plt.title('Age Distribution by Race')
-plt.show()
-# replaced but good
-
-# Group the data by year, race, and gender and show the total number of deaths of each group over years
+# 7. Number of deaths by race and gender over time
 data_race_gender = data.groupby(['year', 'race', 'gender'])['id'].count().reset_index(name='count')
 sns.lineplot(x='year', y='count', hue='race', style='gender', data=data_race_gender)
 plt.title('Number of deaths by race and gender over time')
 plt.yscale('log')
 plt.show()
-# good
 
-# Bar Plot of Number of Deaths by Mental Illness and Threat Level:
+# 8. Age by gender and race
+sns.set(style="whitegrid")
+sns.boxplot(x='gender', y='age', data=data, hue='race', palette='muted')
+plt.title('Age by Gender and Race')
+plt.xlabel('Gender')
+plt.xticks(rotation=0, fontsize=8)
+plt.ylabel('Age')
+plt.legend()
+plt.show()
+
+# 9. Bar Plot of Number of Deaths by Mental Illness and Threat Level
 ax = sns.countplot(data=data, x='mental_illness', hue='threat')
 plt.title('Bar Plot of Number of Deaths by Mental Illness and Threat Level')
 # add percentage values within each bar
@@ -285,103 +280,36 @@ for p in ax.patches:
             f'{height / total:.2%}',
             ha="center")
 plt.show()
-# good
 
-
-# Pie chart of Number of Deaths by Threat Level: shows the percentage of deaths for each threat level.
+# 10. Number of deaths by threat level
 data_threat_count = data.groupby('threat')['id'].count().reset_index(name='count')
 plt.pie(x=data_threat_count['count'], labels=data_threat_count['threat'].tolist(), autopct='%1.1f%%', startangle=90, wedgeprops={'edgecolor': 'white'})
-plt.title('Number of deaths by threat level')
+plt.title('Number of deaths bythreat level')
 plt.show()
-# normal
 
-
-# group the data by race and threat level and count the number of deaths in each group
+# 11. Number of Deaths by Race and Threat Level
 deaths_by_race_and_threat = data.groupby(["race", "threat"]).size().unstack(fill_value=0)
-# create the stacked bar chart
 deaths_by_race_and_threat.plot(kind="bar", stacked=True)
 plt.xlabel("Race")
 plt.ylabel("Number of Deaths")
 plt.title("Number of Deaths by Race and Threat Level")
 plt.legend(title="Threat Level")
 plt.show()
-# good
 
-# create a scatter plot of age vs. id
-plt.scatter(data["id"], data["age"], hue='race', data=data, s=5)
-plt.xlabel("Id")
-plt.ylabel("Age")
-plt.title("Age vs. Id")
-plt.show()
-# normal
-
-# Create scatterplot of Age and Manner of Death with color representing Weapon Category
-sns.scatterplot(data=data, x='id', y='death_manner', hue='weapon_category', palette='muted', s=50, size='age', alpha=1000/len(data))
-plt.xlabel('Armed')
-plt.ylabel('Death Manner')
-plt.title('Age and Death Manner of Individuals Shot with Weapon Category')
-plt.show()
-# good
-
-# Boxplot of Age by Gender and Race
-sns.set(style="whitegrid")
-sns.boxplot(x='gender', y='age', data=data, hue='race', palette='muted')
-plt.title('Age by Gender and Race')
-plt.xlabel('Gender')
-plt.xticks(rotation=0, fontsize=8)
-plt.ylabel('Age')
-plt.legend()
-plt.show()
-# good
-
-# Heatmap of Number of Deaths by Threat Level and Flee: shows the number of deaths for each threat level and flee.
-# group the data by threat level, flee and count the number of deaths in each group
+# 12. Bar plot of Number of Deaths by Threat Level and Flee
 data_threat_flee = data.groupby(['threat', 'flee'])['id'].count().reset_index(name='count')
-# create a pivot table to show the number of deaths for each threat level and flee
 pivot_data = data_threat_flee.pivot(index='threat', columns='flee', values='count')
-# create a heatmap to show the number of deaths for each threat level and flee
-sns.heatmap(pivot_data, cmap='Blues', linewidth=0.5, annot=True, fmt=".0f")
+pivot_data.plot(kind='bar', stacked=True)
 plt.title('Number of deaths by threat level and flee')
 plt.show()
-# good
 
-# Count plot of Weapon Category of Individuals Shot: shows the number of deaths for each weapon category.
+# 13. Count plot of Weapon Category of Individuals Shot
 sns.countplot(data=data, x='weapon_category').set(title="Count plot of Weapon Category of Individuals Shot")
 plt.xticks(rotation=90, fontsize=8)
 plt.show()
-# good
 
 
-# Compute correlation matrix and create heatmap
-corr = data.corr(numeric_only=True)
-sns.heatmap(corr, cmap='coolwarm', annot=True, fmt='.2f')
-plt.title('Correlation Matrix')
-plt.show()
-# good
-
-# Create scatterplot matrix
-# sns.pairplot(data, hue='race', palette='muted')
-# plt.title('Pairwise Scatterplot Matrix')
-# plt.show()
-# too crowded, should choose some features
-
-# Create a FacetGrid and map a histplot to the grid
-grid = sns.FacetGrid(data, row='death_manner', col='race', margin_titles=True, palette='muted')
-grid.map(sns.histplot, 'age', bins=20)
-plt.show()
-# replaced
-
-# Create a lmplot of age and number of deaths
-sns.regplot(x='age', y='id', data=data, scatter=True, fit_reg=True) # fit_reg: whether to fit a regression line
-plt.title('Trend of age and number of deaths')
-plt.show()
-# use lmplot to plot trend line across a FacetGrid
-
-# Regression plot of age and number of deaths
-sns.lmplot(x='age', y='id', data=data, x_estimator=np.mean) # x_bins: number of bins to use when computing the estimate
-plt.title('Regression plot of age and number of deaths')
-plt.show()
-
+"""
 
 # sns.countplot(data=data, x='gender', order=data['gender'].value_counts(ascending=False, normalize=True).index)
 # sns.kdeplot(df['feature1'], shade=True, multiple='stack')
@@ -389,7 +317,10 @@ plt.show()
 # using built-in trend function like pct_change, rolling, and diff
 # use value_counts() to count the number of occurrences of each value in a column and show in sorted order
 # sns.relplot
-
+# sns.pairplot
+# sns.FacetGrid
+# sns.regplot
+# use lmplot to plot trend line across a FacetGrid
 
 # df.plot(x='column_name1', y='column_name2', kind='line')
 # kind: specifies the type of plot you want to create. Available options are line, bar, barh, hist, box, kde, density, area, pie, scatter, and hexbin.
@@ -403,7 +334,7 @@ plt.show()
 # xticks: is used to set the ticks of the x-axis.
 # yticks: is used to set the ticks of the y-axis.
 
-"""
+
 """
 
 # Data visualization
