@@ -37,6 +37,7 @@
 	"editor.defaultFormatter": "esbenp.prettier-vscode"
 },
 "python.analysis.extraPaths": [
-	"./zombie_simulation"
+	"./zombie_simulation",
+	"./tools"
 ],
 }
