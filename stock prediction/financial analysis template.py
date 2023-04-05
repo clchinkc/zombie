@@ -676,3 +676,105 @@ Theory of Speculation
 美國科學家奧斯本 (Matthew Maury Osborne, 1916-2003) 修正了巴楔利耶的模型，他提出投資報酬率 (rate of return) 才會呈現常態分佈 (normal distribution)（圖一）。投資報酬率的意思是說，假設在時間等於t時股價為p(t)，經過 時間後的投資報 ，另外股價則應該是呈現對數常態分佈 (log-normal distribution)，而非常態分佈，但事實上，不管是巴楔利耶或是奧斯本都離真實事實有一點距離，投資報酬率的分布其實不是常態分佈而是厚尾分佈 (fat-tailed distribution)，如圖二，圖中數據取自1984年到1985年美國S&P500指數，以 作投資報酬率分佈圖，橫軸為經過數學處理的投資報酬率，縱軸表示發生次數的比重，圖中虛線部分則是取和數據相同標準差所得到的常態分佈，很明顯可以看到從實際數據得到的分佈出現價格大幅變動的機率遠大於常態分佈，所以圖中左右兩端的這種現象就被稱為厚尾分佈。基本上金融市場中各商品所得到的報酬率分佈都是會呈現厚尾分佈，這事實提供給科學家們一個很值得去探討的議題。
 在現代的金融市場中，買賣雙方的交易撮合採取的是連續雙向報價拍賣制 (continuous double auction)，股價就是在這機制下產生的。投資人可針對自己的買賣意願和想要成交的價位下單。記錄投資人買賣單的系統叫作order book system，如圖三，圖中橫軸由左到右代表由小到大的價位，紅色的圓球為買單 (bid) 的示意，在所有買單中會有處於買單中最高價位的買單 (best bid)，綠色的則是賣單 (ask)，當然也會有最低價位的賣單 (best ask)。另外下單的種類分成兩種，比較沒有耐心等待想馬上成交的投資人就必須下市價單 (market order)如圖四。不管下的是市價買單還是市價賣單都會馬上成交，圖四中可見有假設四筆市價賣單和兩筆市價買單的指令各在不同時間被送入order book中，市價賣單會先和order book上最高價的買單開始依序成交，反之市價買單就會和order book上最低價的賣單開始依序成交。另外，較有耐心的投資人會下限價單 (limit order)如圖五，圖五的初始狀態為圖三，接著陸續有四筆限價買單和兩筆限價賣單下到order book上，單子會依指定價位分配，若該價位原本已經有等待的單子時，新進的限價單則會排在這些單子後面等待成交，以上就是現代金融市場的交易規則，不少利用代理人模型進行投資人實驗行為是以此為基礎，再將模擬實驗所產生的數據如價格走勢等加以分析，接著再和真實市場上的諸多現象比對看能否解釋其可能之成因，所以有志往此領域發展的朋友，這會是您切入的選擇之一。
 """
+
+"""
+value-at-risk (VaR) and expected shortfall (ES)
+
+Value-at-Risk (VaR) and Expected Shortfall (ES) are two widely used risk management measures in finance.
+
+VaR is a statistical measure that estimates the maximum potential loss of an investment portfolio over a given time horizon, with a given level of confidence. For example, a VaR of 5% for a portfolio of $1 million means that there is a 5% chance of losing more than $50,000 in the next day or week.
+
+VaR is calculated by first selecting a confidence level (e.g., 95%, 99%, etc.) and then estimating the portfolio's volatility and correlation with other assets in the portfolio. VaR is then calculated as the product of the portfolio's volatility, the inverse of the cumulative distribution function of the confidence level, and the portfolio's value.
+
+Expected Shortfall (ES), also known as Conditional VaR (CVaR), is a measure of the average loss of a portfolio beyond the VaR level. In other words, it measures the expected loss that may occur if the VaR level is breached. ES is usually expressed as a percentage of the portfolio's value.
+
+ES is calculated by taking the average of all losses beyond the VaR level, weighted by their probabilities. This means that ES takes into account the tail risk of a portfolio, which VaR does not capture.
+
+Both VaR and ES are used by financial institutions and investors to manage and mitigate risk in their portfolios. While VaR is a widely used risk measure, it has limitations and does not fully capture the potential tail risk of a portfolio. ES is a more comprehensive risk measure that takes into account the tail risk, but it requires more data and computational resources to calculate.
+"""
+
+"""
+credit risk modeling and analysis
+
+Credit risk modeling and analysis refer to the process of assessing the likelihood of a borrower defaulting on a loan or credit obligation. The goal of credit risk modeling is to estimate the probability of default and the expected loss associated with a credit portfolio, which can help lenders and financial institutions to manage their credit risk exposure.
+
+Credit risk modeling typically involves collecting and analyzing data on a borrower's credit history, financial statements, and other relevant factors, such as economic conditions and industry trends. This information is then used to develop statistical models that can predict the likelihood of default and estimate the expected loss in the event of default.
+
+There are several types of credit risk models, including statistical models, machine learning models, and simulation models. Statistical models typically use historical data to estimate default probabilities and expected losses, while machine learning models can learn from new data to improve their predictions over time. Simulation models use complex algorithms to simulate different scenarios and assess the impact of various factors on credit risk.
+
+Credit risk modeling and analysis are critical components of risk management for lenders and financial institutions. By accurately assessing credit risk, these organizations can make informed decisions about lending and pricing, which can help to minimize losses and maximize profits.
+"""
+
+"""
+financial statement analysis
+
+Financial statement analysis involves reviewing and evaluating a company's financial statements, such as the income statement, balance sheet, and cash flow statement, to gain insights into its financial health, performance, and potential for growth.
+
+There are various tools and techniques used in financial statement analysis, including ratio analysis, trend analysis, and common-size analysis. Ratio analysis involves calculating financial ratios, such as liquidity ratios, profitability ratios, and debt ratios, to assess a company's financial position and performance. Trend analysis involves examining financial data over multiple periods to identify trends and patterns. Common-size analysis involves expressing financial data as a percentage of a common base, such as total assets or sales, to make comparisons across different companies or time periods.
+
+Financial statement analysis can provide valuable information for investors, creditors, and other stakeholders in making decisions about investing, lending, or doing business with a company. It can also help management identify areas for improvement and make strategic decisions to improve the company's financial performance.
+"""
+
+
+"""
+econometrics
+
+Econometrics is the application of statistical and mathematical methods to economic data in order to test and quantify economic theories and hypotheses. It combines the disciplines of economics, mathematics, and statistics to analyze economic phenomena, such as consumer behavior, market demand, and economic growth.
+
+Econometric models are used to estimate relationships between economic variables, such as how changes in one variable affect another variable, while holding all other variables constant. This allows economists to test economic theories, make predictions, and evaluate the effectiveness of policies.
+
+Some common econometric techniques include regression analysis, time-series analysis, panel data analysis, and instrumental variables analysis. Econometricians use these methods to build models that can help them to understand and predict economic behavior, and to make informed policy decisions.
+"""
+
+
+"""
+time series analysis
+
+Time series analysis is a statistical technique used to analyze time series data, which is a sequence of measurements or observations taken at regular intervals over time. This type of data can be found in various fields such as finance, economics, engineering, and environmental science.
+
+The goal of time series analysis is to identify patterns, trends, and relationships in the data, and to make predictions about future values. Some of the techniques used in time series analysis include:
+
+Descriptive statistics: These are used to summarize the main characteristics of the time series data, such as the mean, median, standard deviation, and range.
+
+Visualization: Graphical representations such as line charts, scatter plots, and histograms can help to identify patterns and trends in the data.
+
+Time domain analysis: This involves analyzing the data in the time domain, including autocorrelation and cross-correlation functions, to identify relationships between past and future values.
+
+Frequency domain analysis: This involves analyzing the data in the frequency domain, including Fourier analysis and wavelet analysis, to identify cyclic patterns and periodicities in the data.
+
+Modeling and forecasting: Various models can be used to describe the underlying process generating the time series data, such as autoregressive integrated moving average (ARIMA) models, exponential smoothing models, and state space models. These models can then be used to make predictions about future values of the time series.
+
+Overall, time series analysis is a powerful tool for understanding and predicting time-dependent phenomena in a wide range of fields.
+"""
+
+
+"""
+nonstationarity, time-varying Volatility
+
+Nonstationarity refers to a statistical property where the statistical properties of a time series, such as its mean, variance, or autocorrelation, change over time. In other words, the data generating process is not constant over time. This can pose a challenge in modeling and forecasting as traditional time series techniques assume stationarity.
+
+Time-varying volatility refers to the situation where the variability or volatility of a time series changes over time. This can be caused by a variety of factors such as changes in market conditions, changes in regulations, or changes in economic policies. Time-varying volatility is often modeled using a class of models called autoregressive conditional heteroskedasticity (ARCH) models, which allow for the volatility to change over time.
+
+Nonstationarity and time-varying volatility are often related as changes in volatility can lead to changes in the statistical properties of a time series, making it nonstationary. It is important to account for both nonstationarity and time-varying volatility when modeling and forecasting time series data.
+"""
+
+"""
+Cointegration, introduced by Clive Granger in 1981, refers to the concept of two time series having a long-run equilibrium relationship, even if individually they may be non-stationary. This means that when two non-stationary time series are combined in a certain linear combination, the resulting series may be stationary and tend towards a constant or a linear function in the long run.
+
+For example, while a single time series may be non-stationary, its differenced series may be stationary. Similarly, a linear combination of two non-stationary time series may be stationary.
+
+By analyzing the structure relationship between non-stationary time series and finding common trends, cointegration can be used to transform non-stationary time series into stationary ones.
+
+Granger and Weiss (1983) developed the Granger Representation Theorem, which shows that a set of specific dynamic equations can be used to re-express the dynamic relationship between cointegrated variables. This set of equations has economic significance and helps to make time series analysis more effective.
+"""
+"""
+The concept of cointegration can be useful in predicting stock prices because it allows for the analysis of the long-term equilibrium relationship between two or more non-stationary time series. This means that even if the individual time series appear to be unpredictable or volatile, their combined behavior may be more stable and predictable.
+
+By identifying cointegrated pairs of stocks, it is possible to create a trading strategy based on the divergence and convergence of their prices. For example, if two cointegrated stocks become temporarily misaligned in their prices, one could sell the overpriced stock and buy the underpriced stock, expecting their prices to converge again in the long run.
+
+The Granger Representation Theorem can also be used to develop statistical models that incorporate cointegration relationships into the analysis of stock prices. These models can help to identify trends and patterns that may be missed by traditional time series analysis techniques and improve the accuracy of stock price forecasts.
+
+However, it's important to note that cointegration is not a foolproof method for predicting stock prices, and other factors such as economic conditions, news events, and investor sentiment can also have a significant impact on stock prices.
+"""
+
+
