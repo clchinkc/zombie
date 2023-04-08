@@ -1105,6 +1105,16 @@ In conclusion, choosing the right chart for your data is essential to effectivel
 """
 
 """
+data analytic approach
+objective
+feature engineering: data seleection, data cleansing
+data processing: data transformation
+data visualization
+model development: machine learning algorithm + expert rules
+deployment
+"""
+
+"""
 https://towardsdatascience.com/7-of-the-most-used-feature-engineering-techniques-bcc50f48474d
 https://www.kaggle.com/c/titanic/overview
 https://www.kaggle.com/stefanschulmeister87/titanic-with-eda-and-seaborn-visuals
