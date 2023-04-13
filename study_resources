@@ -29,7 +29,7 @@ Social media clones, like twitter, discord, reddit, etc.
 Ecommerce store and website
 
 Project suggestions
-
+hardcore basic apps or useful apps
 https://github.com/vicky002/1000_Projects
 https://www.upgrad.com/blog/python-projects-ideas-topics-beginners/
 https://www.crio.do/blog/python-projects-for-developers/
@@ -105,6 +105,7 @@ https://github.com/topics/website-development
 https://github.com/topics/webdevelopment
 https://github.com/markodenic/web-development-resources
 https://github.com/topics/full-stack-web-development
+https://www.udacity.com/course/full-stack-web-developer-nanodegree--nd0044
 https://github.com/topics/web-development-tools
 https://education.github.com/experiences/intro_to_web_dev
 https://pythonforundergradengineers.com/how-i-built-this-site-1.html
@@ -180,6 +181,7 @@ https://towardsdatascience.com/how-to-easily-deploy-machine-learning-models-usin
 https://stackoverflow.com/questions/75571407/deploying-machine-learning-models-in-github-pages
 machine learning model deployment in flask
 https://medium.com/@connect.hashblock/creating-an-api-in-flask-with-mysql-a-step-by-step-guide-446f08722057
+https://www.udacity.com/course/ai-artificial-intelligence-nanodegree--nd898
 
 django
 https://www.djangoproject.com/
@@ -191,6 +193,7 @@ https://www.freecodecamp.org/news/learn-django-by-building-a-marketplace/
 https://www.udemy.com/course/django-python-advanced/
 https://www.youtube.com/watch?v=llbtoQTt4qw
 https://codeculturepro.medium.com/difference-between-node-js-and-django-which-one-you-should-choose-b3e5ca5c44de
+https://www.youtube.com/watch?v=t10QcFx7d5k
 
 Chart animation
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247486653&idx=1&sn=92128455c20ada46b355f5166ba5d4b5
@@ -324,6 +327,7 @@ https://www.bitdegree.org/tutorials/python-for-finance/
 https://maven.com/fpaprep/fpa-bootcamp
 https://www.datacamp.com/tracks/finance-fundamentals-in-python
 https://blog.csdn.net/csdn_sweetcoder/article/details/109089634
+https://www.udacity.com/course/ai-for-trading--nd880
 
 Reinforcement learning
 https://blog.csdn.net/abcdefg90876/article/details/108459475
@@ -497,6 +501,8 @@ https://www.humblebundle.com/software/complete-python-programming-mega-bundle-ze
 https://youtu.be/udP4cD2JAFM
 https://medium.com/techtofreedom/10-remarkable-python-oop-tips-that-will-optimize-your-code-significantly-a47e4103b44d
 https://learnku.com/python
+https://www.udacity.com/course/intro-to-programming-nanodegree--nd000
+
 
 c++
 “The Most Important C++ Books...Ever”
@@ -517,6 +523,7 @@ GCC by the GNU Project
 Visual C++ by Microsoft
 The Standard Template Library, originally by HP
 The Libraries at Boost
+https://www.udacity.com/course/c-plus-plus-nanodegree--nd213
 
 All language
 https://github.com/8483/notes
@@ -603,6 +610,8 @@ https://youtu.be/SQhabdckbu8
 https://youtu.be/E3XxeE7NF30
 https://www.youtube.com/watch?v=cYNVVspXUdA&list=WL&index=449
 https://www.youtube.com/watch?v=ec8vSKJuZTk&list=WL&index=450&t=2741s
+https://www.udacity.com/course/full-stack-javascript-developer-nanodegree--nd0067
+https://www.udacity.com/course/front-end-web-developer-nanodegree--nd0011
 
 CSS
 https://www.udemy.com/course/infinity-creative-css-animation-course/
@@ -724,6 +733,9 @@ https://replit.com/@MonsusBattlebus/Five-Nights-At-Freddys-Python-Edition
 https://www.analyticsinsight.net/top-5-programming-languages-you-should-know-as-a-game-developer/
 https://youtu.be/RevQv_v_Fhc
 https://www.youtube.com/watch?v=rPJfadFSCyQ&list=PLEMXAbCVnmY6v0eFYcyiH7twEh1UF2Lxw
+https://github.blog/2022-05-05-ludum-dare-50/
+https://github.blog/2023-01-13-game-off-2022-winners/
+https://github.com/jeremycryan/LD50
 
 Pygame
 https://opensource.com/article/17/12/game-framework-python
@@ -825,6 +837,9 @@ https://welly.tw/digital-marketing/learn-google-lesson
 
 
 blockchain project
+https://www.youtube.com/watch?v=M576WGiDBdQ
+https://ithelp.ithome.com.tw/users/20092025/ironman/2109
+https://learnku.com/python/t/22970/build-your-own-block-chain-step-by-step-with-python
 https://www.coursera.org/specializations/decentralized-finance-duke
 https://www.udemy.com/course/build-your-blockchain-az/
 https://www.coursera.org/specializations/blockchain-revolution-enterprise
@@ -1114,6 +1129,7 @@ https://colab.research.google.com/drive/1cVQNg2-zGQb7qZXFECG6kyq5yVIHyf5o?usp=sh
 https://github.com/hackingthemarkets/semantic-search-frontend
 https://colab.research.google.com/drive/1tttDqgnWL9yJtmlOFXJqA-BjQ1Pyfpax?usp=sharing
 https://github.com/openai/openai-cookbook
+https://github.com/Torantulino/Auto-GPT
 
 NLP + machine learning
 https://github.com/tinahuangyt/Project-NatureGeneticsCitation
@@ -1144,6 +1160,10 @@ https://cloud.tencent.com/developer/article/1933412
 https://blog.51cto.com/u_14848199/3809668
 https://blog.51cto.com/u_13389043/5166211
 
+system design
+https://bytebytego.com/
+https://www.algoexpert.io/product
+https://www.tryexponent.com/coaching?category=mock_interviews&role=swe
 
 Word cloud
 https://cloud.tencent.com/developer/article/1931771
@@ -1280,6 +1300,7 @@ https://www.coursera.org/learn/python-for-data-visualization
 https://www.datacamp.com/tracks/data-visualization-with-python
 https://www.udacity.com/course/data-analysis-and-visualization--ud404
 https://www.udemy.com/course/mastering-python-data-handling-analysis-and-visualization/
+https://www.udacity.com/course/programming-for-data-science-nanodegree--nd104
 
 AI For Business
 https://www.coursera.org/specializations/ai-for-business-wharton
