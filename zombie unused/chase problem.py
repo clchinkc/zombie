@@ -162,8 +162,8 @@ def create_ppo_agent(learning_rate, train_env):
     actor_net = actor_distribution_network.ActorDistributionNetwork(
         train_env.observation_spec(),
         train_env.action_spec(),
-        fc_layer_params=(256, 256),
-        continuous_projection_net=(normal_projection_network.NormalProjectionNetwork,)
+        fc_layer_params=(256,),
+        #continuous_projection_net=(normal_projection_network.NormalProjectionNetwork,)
     )
 
     value_net = value_network.ValueNetwork(
@@ -182,12 +182,12 @@ def create_ppo_agent(learning_rate, train_env):
         actor_net=actor_net,
         value_net=value_net,
         entropy_regularization=0.001,
-        importance_ratio_clipping=0.2,
-        lambda_value=0.95,
-        discount_factor=0.99,
+        #importance_ratio_clipping=0.2,
+        #lambda_value=0.95,
+        #discount_factor=0.99,
         num_epochs=5,
         debug_summaries=False,
-        summarize_grads_and_vars=False,
+        #summarize_grads_and_vars=False,
         train_step_counter=train_step_counter,
     )
 
@@ -195,8 +195,8 @@ def create_ppo_agent(learning_rate, train_env):
     return train_step_counter, tf_agent
 
 
-train_step_counter, tf_agent = create_dqn_agent(learning_rate, train_env)
-# train_step_counter, tf_agent = create_ppo_agent(learning_rate, train_env)
+# train_step_counter, tf_agent = create_dqn_agent(learning_rate, train_env)
+train_step_counter, tf_agent = create_ppo_agent(learning_rate, train_env)
 
 def create_replay_buffer(replay_buffer_max_length, train_env, tf_agent):
     replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
@@ -339,3 +339,4 @@ if __name__ == '__main__':
 # https://www.tensorflow.org/agents/tutorials/6_reinforce_tutorial
 # each object has a draw method, call all draw method in the environment
 # update update part of the environment and flip update the whole screen
+# dqn agent change to reinforce agent and ppo agent
