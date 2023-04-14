@@ -15,10 +15,8 @@ from tensorflow.keras.layers import (
     Add,
     Attention,
     AveragePooling1D,
-    Bidirectional,
     Concatenate,
     Conv1D,
-    ConvLSTM1D,
     Dense,
     Dropout,
     Flatten,
@@ -26,10 +24,12 @@ from tensorflow.keras.layers import (
     Input,
     Lambda,
     LayerNormalization,
+    MaxPooling1D,
     MultiHeadAttention,
     Multiply,
     Reshape,
 )
+from torch import layer_norm
 
 # Load data
 prices_df = pd.read_csv('apple_stock_data.csv', index_col='Date', parse_dates=True)
@@ -90,34 +90,10 @@ def cnn_lstm_model():
     return model
 
 
-def cnn_model():
-    inputs = Input(shape=(time_step, 1))
-
-    conv1 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(inputs)
-    layer_norm1 = LayerNormalization()(conv1)
-    conv2 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(layer_norm1)
-    layer_norm2 = LayerNormalization()(conv2)
-    conv3 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(layer_norm2)
-    layer_norm3 = LayerNormalization()(conv3)
-    conv4 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(layer_norm3)
-    layer_norm4 = LayerNormalization()(conv4)
-    conv5 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(layer_norm4)
-    layer_norm5 = LayerNormalization()(conv5)
-    conv6 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(layer_norm5)
-    layer_norm6 = LayerNormalization()(conv6)
-    conv7 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(layer_norm6)
-    layer_norm7 = LayerNormalization()(conv7)
-    conv8 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(layer_norm7)
-    layer_norm8 = LayerNormalization()(conv8)
-    
-    flatten = Flatten()(layer_norm8)
-    outputs = Dense(1)(flatten)
-    
-    model = Model(inputs=inputs, outputs=outputs)
-    return model
 
 
-def multifilter_cnn_model(kernel_sizes=[3, 7, 14, 30, 60, 120]):
+
+def cnn_model(kernel_sizes=[3, 7, 14, 30, 60, 120]):
     inputs = Input(shape=(time_step, 1))
 
     # First set of convolutional layers
@@ -142,15 +118,27 @@ def multifilter_cnn_model(kernel_sizes=[3, 7, 14, 30, 60, 120]):
     layer_norm3 = LayerNormalization()(conv3)
     conv4 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_norm3)
     layer_norm4 = LayerNormalization()(conv4)
+    conv5 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_norm4)
+    layer_norm5 = LayerNormalization()(conv5)
+    conv6 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_norm5)
+    layer_norm6 = LayerNormalization()(conv6)
+    conv7 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_norm6)
+    layer_norm7 = LayerNormalization()(conv7)
+    conv8 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_norm7)
+    layer_norm8 = LayerNormalization()(conv8)
     
     # Add scaled residual connections
-    res1 = Lambda(lambda x: x * 0.25)(layer_norm1)
-    res2 = Lambda(lambda x: x * 0.25)(layer_norm2)
-    res3 = Lambda(lambda x: x * 0.25)(layer_norm3)
-    res4 = Lambda(lambda x: x * 0.25)(layer_norm4)
+    res1 = Lambda(lambda x: x * 0.125)(layer_norm1)
+    res2 = Lambda(lambda x: x * 0.125)(layer_norm2)
+    res3 = Lambda(lambda x: x * 0.125)(layer_norm3)
+    res4 = Lambda(lambda x: x * 0.125)(layer_norm4)
+    res5 = Lambda(lambda x: x * 0.125)(layer_norm5)
+    res6 = Lambda(lambda x: x * 0.125)(layer_norm6)
+    res7 = Lambda(lambda x: x * 0.125)(layer_norm7)
+    res8 = Lambda(lambda x: x * 0.125)(layer_norm8)
     
     # Add full residual connection
-    add = Add()([res1, res2, res3, res4])
+    add = Add()([res1, res2, res3, res4, res5, res6, res7, res8])
     
     flatten = Flatten()(add)
     outputs = Dense(1)(flatten)
@@ -209,7 +197,7 @@ def nas_rnn_model():
     inputs = tf.keras.Input(shape=(time_step, 1))
     noise = tf.keras.layers.GaussianNoise(0.01)(inputs)
     
-    LSTMCell1 = tfa.rnn.NASCell(32)
+    LSTMCell1 = tfa.rnn.NASCell(64)
     rnn1 = tf.keras.layers.RNN(LSTMCell1, return_sequences=True)
     lstm1 = rnn1(noise)
 
@@ -220,8 +208,22 @@ def nas_rnn_model():
     lstm2 = rnn2(layer_norm1)
 
     layer_norm2 = tf.keras.layers.LayerNormalization()(lstm2)
+    
+    LSTMCell3 = tfa.rnn.NASCell(64)
+    rnn3 = tf.keras.layers.RNN(LSTMCell3, return_sequences=True)
+    lstm3 = rnn3(layer_norm2)
+    
+    layer_norm3 = tf.keras.layers.LayerNormalization()(lstm3)
+    
+    LSTMCell4 = tfa.rnn.NASCell(64)
+    rnn4 = tf.keras.layers.RNN(LSTMCell4, return_sequences=True)
+    lstm4 = rnn4(layer_norm3)
+    
+    layer_norm4 = tf.keras.layers.LayerNormalization()(lstm4)
+    
+    add = tf.keras.layers.Add()([layer_norm1, layer_norm2, layer_norm3, layer_norm4])
 
-    flatten = tf.keras.layers.Flatten()(layer_norm2)
+    flatten = tf.keras.layers.Flatten()(add)
     outputs = tf.keras.layers.Dense(1)(flatten)
 
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
@@ -245,11 +247,13 @@ def lstm_multihead_attention_model():
     # Attention mechanism
     attention1 = MultiHeadAttention(num_heads=1, key_dim=64, dropout=0.25)(add1, add1)
     layer_norm5 = LayerNormalization()(attention1)
-    add2 = Add()([add1, layer_norm5])
+    multiply1 = Multiply()([add1, layer_norm5])
+    add2 = Add()([add1, multiply1])
     
     attention2 = MultiHeadAttention(num_heads=1, key_dim=64, dropout=0.25)(add2, add2)
     layer_norm6 = LayerNormalization()(attention2)
-    add3 = Add()([add2, layer_norm6])
+    multiply2 = Multiply()([add2, layer_norm6])
+    add3 = Add()([add2, multiply2])
     
     # Flatten and output
     flatten = Flatten()(add3)
@@ -279,34 +283,72 @@ class TPALayer(tf.keras.layers.Layer):
         tpa = tf.multiply(conv, x_transposed)
         tpa_transposed = tf.transpose(tpa, [0, 2, 1])
         return tpa_transposed
+    
+    def get_config(self):
+        config = super(TPALayer, self).get_config()
+        config.update({
+            'conv': self.conv,
+        })
+        return config
 
-def tpa_lstm_model():
+class MultiHeadAttentionLayer(tf.keras.layers.Layer):
+    def __init__(self, num_heads, key_dim, dropout_rate, **kwargs):
+        super(MultiHeadAttentionLayer, self).__init__(**kwargs)
+        self.num_heads = num_heads
+        self.key_dim = key_dim
+        self.dropout_rate = dropout_rate
+
+    def build(self, input_shape):
+        self.multi_head_attention = MultiHeadAttention(num_heads=self.num_heads, key_dim=self.key_dim, dropout=self.dropout_rate)
+        self.layer_norm = LayerNormalization()
+        self.multiply = Multiply()
+        self.add = Add()
+        super(MultiHeadAttentionLayer, self).build(input_shape)
+
+    def call(self, inputs):
+        attention = self.multi_head_attention(inputs, inputs)
+        layer_norm = self.layer_norm(attention)
+        multiply = self.multiply([inputs, layer_norm])
+        add = self.add([inputs, multiply])
+        return add
+
+    def get_config(self):
+        config = super(MultiHeadAttentionLayer, self).get_config()
+        config.update({
+            'num_heads': self.num_heads,
+            'key_dim': self.key_dim,
+            'dropout_rate': self.dropout_rate,
+        })
+        return config
+
+def lstm_multihead_attention_model():
     inputs = Input(shape=(time_step, 1))
     noise = GaussianNoise(0.01)(inputs)
-
     lstm1 = LSTM(64, return_sequences=True, dropout=0.25)(noise)
-    tpa1 = TPALayer()(lstm1)
-    layer_norm1 = LayerNormalization()(tpa1)
-    
+    layer_norm1 = LayerNormalization()(lstm1)
     lstm2 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm1)
-    tpa2 = TPALayer()(lstm2)
-    layer_norm2 = LayerNormalization()(tpa2)
-    
+    layer_norm2 = LayerNormalization()(lstm2)
     lstm3 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm2)
-    tpa3 = TPALayer()(lstm3)
-    layer_norm3 = LayerNormalization()(tpa3)
-    
+    layer_norm3 = LayerNormalization()(lstm3)
     lstm4 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm3)
-    tpa4 = TPALayer()(lstm4)
-    layer_norm4 = LayerNormalization()(tpa4)
+    layer_norm4 = LayerNormalization()(lstm4)
     
-    add = Add()([layer_norm1, layer_norm2, layer_norm3, layer_norm4])
+    add1 = Add()([layer_norm1, layer_norm2, layer_norm3, layer_norm4])
 
-    flatten = Flatten()(add)
+    # Temporal pooling attention
+    tpa1 = TPALayer()(add1)
+    
+    # Multi-head attention
+    multihead1 = MultiHeadAttentionLayer(num_heads=1, key_dim=64, dropout_rate=0.25)(tpa1)
+    
+    # Flatten and output
+    flatten = Flatten()(multihead1)
     outputs = Dense(1)(flatten)
-
+    
     model = Model(inputs=inputs, outputs=outputs)
     return model
+
+
 
 
 import tensorflow_wavelets.Layers.DWT as DWT
@@ -524,21 +566,17 @@ def var_lstm_model():
 
 
 # model = cnn_lstm_model() # 146.95755226890842 0.006202755495905876 21592.046875
-# model = cnn_model() # 143.72160422567842 0.004457548726350069 20649.455078125
-# model = multifilter_cnn_model() # 140.725326545822 0.005043825600296259 19806.326171875
+# model = cnn_model() # 140.725326545822 0.005043825600296259 19806.326171875
 # model = lstm_model() # 160.23631797823094 0.012350289151072502 25647.783203125
 # model = gru_model() # 150.34692755795803 0.005442610941827297 22595.126953125
-# model = nas_rnn_model() # 155.13566803010383 0.001908295089378953 24062.21484375
+model = nas_rnn_model() # 155.13566803010383 0.001908295089378953 24062.21484375
 # model = lstm_multihead_attention_model() # 156.0758334958998 0.00855713989585638 24340.04296875
-# model = tpa_lstm_model() # 166.1903753813964 0.013172786682844162 26162.51171875
 # model = wavelet_model() # 140.8948050487553 0.0010008609388023615 19850.70703125
 # model = resnet_model() # 115.80924303888958 0.004751001019030809 26970.88671875
 # model = densenet_model() # 165.03632384569838 0.001491556758992374 38292.29296875
 # model = tcn_model() # 167.78402637485027 0.014250650070607662 27262.623046875
 # model = build_transformer_model(time_step, d_model=64, num_heads=4, num_layers=2, dropout_rate=0.25) # 83.796415175186 0.022571461275219917 6581.54248046875
 # model, prediction_model = var_lstm_model() # 128.90182741723712 0.01319837011396885 16638.669921875
-
-
 
 
 model.summary()

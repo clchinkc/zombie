@@ -23,6 +23,8 @@
 
 // dynamic
 
+// Spatial hash grids vs Quadtrees vs Boids algorithm
+
 // https://github.com/Gonkee/Gepe3D
 
 
