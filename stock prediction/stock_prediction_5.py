@@ -368,6 +368,7 @@ def wavelet_model():
     return model
 
 
+
 def resnet_block(inputs, filters, kernel_size, padding='causal'):
     x = Conv1D(filters=filters, kernel_size=kernel_size, padding=padding)(inputs)
     x = LayerNormalization()(x)
@@ -381,77 +382,43 @@ def resnet_block(inputs, filters, kernel_size, padding='causal'):
     x = Activation('relu')(x)
     return x
 
-def resnet_model():
+def dense_block(inputs, num_layers, growth_rate, kernel_size, padding='causal'):
+    x = inputs
+    for i in range(num_layers):
+        # Convolutional layer
+        x = Conv1D(filters=growth_rate, kernel_size=kernel_size, padding=padding)(x)
+        # Layer normalization
+        x = LayerNormalization()(x)
+        # ReLU activation
+        x = Activation('relu')(x)
+        # Convolutional layer
+        x = Conv1D(filters=growth_rate, kernel_size=kernel_size, padding=padding)(x)
+        # Layer normalization
+        x = LayerNormalization()(x)
+        # Concatenate with previous layers
+        inputs = Concatenate()([inputs, x])
+    return inputs
+
+def densenet_resnet_model():
     inputs = Input(shape=(time_step, 1))
 
     conv1 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(inputs)
-    
-    res_block1 = resnet_block(conv1, filters=64, kernel_size=3)
-    res_block2 = resnet_block(res_block1, filters=128, kernel_size=3)
-    
+
+    # First dense block
+    dense1 = dense_block(conv1, num_layers=4, growth_rate=32, kernel_size=3, padding='causal')
+
+    # First residual block
+    res_block1 = resnet_block(dense1, filters=64, kernel_size=3)
+
+    # Second dense block
+    dense2 = dense_block(res_block1, num_layers=4, growth_rate=32, kernel_size=3, padding='causal')
+
+    # Second residual block
+    res_block2 = resnet_block(dense2, filters=128, kernel_size=3)
+
     flatten = Flatten()(res_block2)
     outputs = Dense(1)(flatten)
-    
-    model = Model(inputs=inputs, outputs=outputs)
-    return model
 
-
-def densenet_model():
-    inputs = Input(shape=(time_step, 1))
-
-    # Initial convolutional layer
-    conv0 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(inputs)
-
-    # Dense blocks
-    concat = conv0
-    for i in range(4):
-        # Convolutional layers within the block
-        conv1 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(concat)
-        conv2 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(conv1)
-        # Concatenate the input with the output of the convolutional layers
-        concat = Concatenate()([concat, conv2])
-
-    # Final convolutional layer
-    conv3 = Conv1D(filters=256, kernel_size=3, activation='relu', padding='causal')(concat)
-
-    flatten = Flatten()(conv3)
-    outputs = Dense(1)(flatten)
-
-    model = Model(inputs=inputs, outputs=outputs)
-    return model
-
-
-def tcn_block(inputs, filters, kernel_size, dilation_rate, padding='causal'):
-    x = Conv1D(filters=filters, kernel_size=kernel_size, dilation_rate=dilation_rate, padding=padding)(inputs)
-    x = LayerNormalization()(x)
-    x = Activation('relu')(x)
-    x = Conv1D(filters=filters, kernel_size=kernel_size, dilation_rate=dilation_rate, padding=padding)(x)
-    x = LayerNormalization()(x)
-    
-    shortcut = inputs if dilation_rate == 1 else None
-    
-    if shortcut is not None:
-        shortcut = Conv1D(filters=filters, kernel_size=1, padding=padding)(shortcut)
-    
-    x = Add()([x, shortcut]) if shortcut is not None else x
-    x = Activation('relu')(x)
-    return x
-
-def tcn_model():
-    inputs = Input(shape=(time_step, 1))
-
-    conv1 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(inputs)
-    
-    tcn_block1 = tcn_block(conv1, filters=32, kernel_size=3, dilation_rate=1)
-    tcn_block2 = tcn_block(tcn_block1, filters=64, kernel_size=3, dilation_rate=2)
-    tcn_block3 = tcn_block(tcn_block2, filters=128, kernel_size=3, dilation_rate=4)
-    
-    concat = Concatenate()([tcn_block1, tcn_block2, tcn_block3])
-    
-    flatten = Flatten()(tcn_block3)
-    
-    outputs = Dense(1)(flatten)
-    
     model = Model(inputs=inputs, outputs=outputs)
     return model
 
@@ -569,12 +536,10 @@ def var_lstm_model():
 # model = cnn_model() # 140.725326545822 0.005043825600296259 19806.326171875
 # model = lstm_model() # 160.23631797823094 0.012350289151072502 25647.783203125
 # model = gru_model() # 150.34692755795803 0.005442610941827297 22595.126953125
-model = nas_rnn_model() # 155.13566803010383 0.001908295089378953 24062.21484375
+# model = nas_rnn_model() # 155.13566803010383 0.001908295089378953 24062.21484375
 # model = lstm_multihead_attention_model() # 156.0758334958998 0.00855713989585638 24340.04296875
 # model = wavelet_model() # 140.8948050487553 0.0010008609388023615 19850.70703125
-# model = resnet_model() # 115.80924303888958 0.004751001019030809 26970.88671875
-# model = densenet_model() # 165.03632384569838 0.001491556758992374 38292.29296875
-# model = tcn_model() # 167.78402637485027 0.014250650070607662 27262.623046875
+# model = densenet_resnet_model() # 155.51024688443073 0.012486668303608894 24160.541015625
 # model = build_transformer_model(time_step, d_model=64, num_heads=4, num_layers=2, dropout_rate=0.25) # 83.796415175186 0.022571461275219917 6581.54248046875
 # model, prediction_model = var_lstm_model() # 128.90182741723712 0.01319837011396885 16638.669921875
 
