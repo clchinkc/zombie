@@ -152,3 +152,8 @@ if __name__ == '__main__':
     plt.gcf().autofmt_xdate()
     plt.legend()
     plt.show()
+
+
+# SMA = Simple Moving Average
+# EMA = Exponential Moving Average
+# HMA = Hull Moving Average

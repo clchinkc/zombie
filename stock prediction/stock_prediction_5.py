@@ -72,14 +72,14 @@ def cnn_lstm_model():
     layer_norm1 = LayerNormalization()(conv1)
     conv2 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_norm1)
     layer_norm2 = LayerNormalization()(conv2)
-    conv3 = Conv1D(filters=128, kernel_size=3, activation='relu', padding='causal')(layer_norm2)
+    conv3 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_norm2)
     layer_norm3a = LayerNormalization()(conv3)
 
     lstm1 = LSTM(32, return_sequences=True, dropout=0.25)(inputs)
     layer_norm1 = LayerNormalization()(lstm1)
     lstm2 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm1)
     layer_norm2 = LayerNormalization()(lstm2)
-    lstm3 = LSTM(128, return_sequences=True, dropout=0.25)(layer_norm2)
+    lstm3 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm2)
     layer_norm3b = LayerNormalization()(lstm3)
 
     add = Add()([layer_norm3a, layer_norm3b])
@@ -159,8 +159,16 @@ def lstm_model():
     layer_norm3 = LayerNormalization()(lstm3)
     lstm4 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm3)
     layer_norm4 = LayerNormalization()(lstm4)
+    lstm5 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm4)
+    layer_norm5 = LayerNormalization()(lstm5)
+    lstm6 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm5)
+    layer_norm6 = LayerNormalization()(lstm6)
+    lstm7 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm6)
+    layer_norm7 = LayerNormalization()(lstm7)
+    lstm8 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm7)
+    layer_norm8 = LayerNormalization()(lstm8)
     
-    add = Add()([layer_norm1, layer_norm2, layer_norm3, layer_norm4])
+    add = Add()([layer_norm1, layer_norm2, layer_norm3, layer_norm4, layer_norm5, layer_norm6, layer_norm7, layer_norm8])
     
     flatten = Flatten()(add)
     outputs = Dense(1)(flatten)
@@ -172,18 +180,26 @@ def lstm_model():
 def gru_model():
     inputs = Input(shape=(time_step, 1))
     noise = GaussianNoise(0.01)(inputs)
-    gru1 = GRU(32, return_sequences=True, dropout=0.25)(noise)
+    gru1 = GRU(64, return_sequences=True, dropout=0.25)(noise)
     layer_norm1 = LayerNormalization()(gru1)
     gru2 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm1)
     layer_norm2 = LayerNormalization()(gru2)
-    gru3 = GRU(128, return_sequences=True, dropout=0.25)(layer_norm2)
+    gru3 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm2)
     layer_norm3 = LayerNormalization()(gru3)
-    gru4 = GRU(256, return_sequences=True, dropout=0.25)(layer_norm3)
+    gru4 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm3)
     layer_norm4 = LayerNormalization()(gru4)
+    gru5 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm4)
+    layer_norm5 = LayerNormalization()(gru5)
+    gru6 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm5)
+    layer_norm6 = LayerNormalization()(gru6)
+    gru7 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm6)
+    layer_norm7 = LayerNormalization()(gru7)
+    gru8 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm7)
+    layer_norm8 = LayerNormalization()(gru8)
     
-    #add = Add()([layer_norm1, layer_norm2, layer_norm3, layer_norm4])
+    add = Add()([layer_norm1, layer_norm2, layer_norm3, layer_norm4, layer_norm5, layer_norm6, layer_norm7, layer_norm8])
     
-    flatten = Flatten()(layer_norm4)
+    flatten = Flatten()(add)
     outputs = Dense(1)(flatten)
     
     model = Model(inputs=inputs, outputs=outputs)
@@ -227,39 +243,6 @@ def nas_rnn_model():
     outputs = tf.keras.layers.Dense(1)(flatten)
 
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
-    return model
-
-
-def lstm_multihead_attention_model():
-    inputs = Input(shape=(time_step, 1))
-    noise = GaussianNoise(0.01)(inputs)
-    lstm1 = LSTM(64, return_sequences=True, dropout=0.25)(noise)
-    layer_norm1 = LayerNormalization()(lstm1)
-    lstm2 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm1)
-    layer_norm2 = LayerNormalization()(lstm2)
-    lstm3 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm2)
-    layer_norm3 = LayerNormalization()(lstm3)
-    lstm4 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm3)
-    layer_norm4 = LayerNormalization()(lstm4)
-    
-    add1 = Add()([layer_norm1, layer_norm2, layer_norm3, layer_norm4])
-    
-    # Attention mechanism
-    attention1 = MultiHeadAttention(num_heads=1, key_dim=64, dropout=0.25)(add1, add1)
-    layer_norm5 = LayerNormalization()(attention1)
-    multiply1 = Multiply()([add1, layer_norm5])
-    add2 = Add()([add1, multiply1])
-    
-    attention2 = MultiHeadAttention(num_heads=1, key_dim=64, dropout=0.25)(add2, add2)
-    layer_norm6 = LayerNormalization()(attention2)
-    multiply2 = Multiply()([add2, layer_norm6])
-    add3 = Add()([add2, multiply2])
-    
-    # Flatten and output
-    flatten = Flatten()(add3)
-    outputs = Dense(1)(flatten)
-    
-    model = Model(inputs=inputs, outputs=outputs)
     return model
 
 
@@ -414,7 +397,7 @@ def densenet_resnet_model():
     dense2 = dense_block(res_block1, num_layers=4, growth_rate=32, kernel_size=3, padding='causal')
 
     # Second residual block
-    res_block2 = resnet_block(dense2, filters=128, kernel_size=3)
+    res_block2 = resnet_block(dense2, filters=64, kernel_size=3)
 
     flatten = Flatten()(res_block2)
     outputs = Dense(1)(flatten)
@@ -534,14 +517,14 @@ def var_lstm_model():
 
 # model = cnn_lstm_model() # 146.95755226890842 0.006202755495905876 21592.046875
 # model = cnn_model() # 140.725326545822 0.005043825600296259 19806.326171875
-# model = lstm_model() # 160.23631797823094 0.012350289151072502 25647.783203125
-# model = gru_model() # 150.34692755795803 0.005442610941827297 22595.126953125
+# model = lstm_model() # 145.57511644253717 0.00416765408590436 21191.400390625
+model = gru_model() # 150.34692755795803 0.005442610941827297 22595.126953125
 # model = nas_rnn_model() # 155.13566803010383 0.001908295089378953 24062.21484375
 # model = lstm_multihead_attention_model() # 156.0758334958998 0.00855713989585638 24340.04296875
 # model = wavelet_model() # 140.8948050487553 0.0010008609388023615 19850.70703125
 # model = densenet_resnet_model() # 155.51024688443073 0.012486668303608894 24160.541015625
 # model = build_transformer_model(time_step, d_model=64, num_heads=4, num_layers=2, dropout_rate=0.25) # 83.796415175186 0.022571461275219917 6581.54248046875
-# model, prediction_model = var_lstm_model() # 128.90182741723712 0.01319837011396885 16638.669921875
+# model, prediction_model = var_lstm_model() # 64.90182741723712 0.01319837011396885 16638.669921875
 
 
 model.summary()

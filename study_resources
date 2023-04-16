@@ -911,6 +911,7 @@ Command line visualization
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500786&idx=1&sn=ea7c33617f7fe0cb6afd4d67b5bcd072&chksm=fdc8f4d4cabf7dc29ff75bf66b27b89f37beccb84bfa59fb3f2be519468570449971b90fcf28&scene=21#wechat_redirect
 
 GUI
+https://www.51cto.com/article/751631.html
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247499523&idx=1&sn=24f8be16f9131acef084732bd7de8885&chksm=fdc8c825cabf41337fabdd4a925cdaf73dab2e63ce0ef6aeeb59ae157d32a6f8d907cb173aa1&scene=21#wechat_redirect
 https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s/zPpn56Yf3JFuxkXyuLqMPw
 https://opensource.com/resources/python/gui-frameworks?intcmp=7016000000127cYAAQ
@@ -1105,6 +1106,20 @@ These are the 5 critical elements of excel that one should not miss:
 4] Printing Principle - Imagine you spent an entire day preparing an excel model, and when you print it, it is not fitting an A4 size page. How frustrating is it? Before starting the excel model, note the worksheet you need to get print copy and design it accordingly. It is not necessary to fit everything on one page. 
 5] Message Principle - Going through each worksheet is tiring for the user. Even he/she does not have time to review each sheet and learn how you reached your final result. So, what is the solution? Give a proper headline, summary and notes to each worksheet.
 
+API
+Here are the summarized functions of each API mentioned:
+FastAPI: A web framework for building APIs with Python 3.7+.
+Requests: A popular library for gathering data from APIs. It allows you to send HTTP requests and work with APIs.
+Flask: A lightweight framework for building APIs.
+Django REST framework: A framework for building RESTful APIs.
+Tweepy: Used to gather and process tweets and other data from Twitter.
+PyGithub: Used to gather data about repositories, issues, and pull requests from GitHub.
+Twilio: Used to send and receive SMS messages, make voice and video calls, and more.
+PyCurl: Used to send HTTP requests with various methods, set headers and cookies, and more.
+PyFacebook: Used to access Facebook user profiles, pages, and posts.
+Google-api-python-client: Used for working with various Google APIs, such as the Google Drive API, Google Maps API, and more.
+aiohttp: Used for building asynchronous HTTP client/server applications to handle a large number of requests and build high-performance web applications and APIs.
+
 API + Data analysis + Data visualization
 http://blog.itpub.net/69982434/viewspace-2738661
 
@@ -1127,6 +1142,9 @@ https://github.com/Torantulino/Auto-GPT
 https://github.com/yoheinakajima/babyagi
 https://github.com/logspace-ai/langflow
 https://www.youtube.com/watch?v=v6sF8Ed3nTE
+https://github.com/nomic-ai/gpt4all
+https://github.com/acheong08/ChatGPT
+Reverse chatgpt, edgegpt
 https://lwebapp.com/zh/post/python-chatgpt-api
 https://www.youtube.com/watch?v=IvEh7A308FU
 https://colab.research.google.com/drive/1CosxSNod48KrkyBn5_vkeleb7u0CrBa6#scrollTo=EiripIMAqGWf
@@ -1137,12 +1155,14 @@ https://colab.research.google.com/drive/1cVQNg2-zGQb7qZXFECG6kyq5yVIHyf5o?usp=sh
 https://github.com/hackingthemarkets/semantic-search-frontend
 https://colab.research.google.com/drive/1tttDqgnWL9yJtmlOFXJqA-BjQ1Pyfpax?usp=sharing
 https://github.com/openai/openai-cookbook
-
+https://zhuanlan.zhihu.com/p/621735849
+https://zhuanlan.zhihu.com/p/618724929
 
 NLP + machine learning
 https://github.com/tinahuangyt/Project-NatureGeneticsCitation
 https://course.spacy.io/en/p
 https://towardsdatascience.com/using-nlp-to-figure-out-what-people-really-think-e1d10d98e491
+https://www.youtube.com/playlist?list=PLxqBkZuBynVQEvXfJpq3smfuKq3AiNW-N
 
 Machine learning
 https://www.linkedin.com/feed/update/urn:li:activity:7037001701962215424/?utm_source=share&utm_medium=member_android
@@ -1177,6 +1197,9 @@ Word cloud
 https://cloud.tencent.com/developer/article/1931771
 https://blog.csdn.net/yimixgg/article/details/80965797
 https://python-course.eu/applications-python/python-wordcloud-tutorial.php
+
+consistency model
+https://github.com/cloneofsimo/consistency_models
 
 Python + excel
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500457&idx=1&sn=4f7a84d76129883a7ed94f16a43a8467&chksm=fdc8f58fcabf7c999724243d7955b6982164e9a310b75fa8df75e4965ace76394a83606fff02&scene=21#wechat_redirect
