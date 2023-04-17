@@ -147,65 +147,6 @@ def cnn_model(kernel_sizes=[3, 7, 14, 30, 60, 120]):
     return model
 
 
-# LSTM Model
-def lstm_model():
-    inputs = Input(shape=(time_step, 1))
-    noise = GaussianNoise(0.01)(inputs)
-    lstm1 = LSTM(64, return_sequences=True, dropout=0.25)(noise)
-    layer_norm1 = LayerNormalization()(lstm1)
-    lstm2 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm1)
-    layer_norm2 = LayerNormalization()(lstm2)
-    lstm3 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm2)
-    layer_norm3 = LayerNormalization()(lstm3)
-    lstm4 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm3)
-    layer_norm4 = LayerNormalization()(lstm4)
-    lstm5 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm4)
-    layer_norm5 = LayerNormalization()(lstm5)
-    lstm6 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm5)
-    layer_norm6 = LayerNormalization()(lstm6)
-    lstm7 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm6)
-    layer_norm7 = LayerNormalization()(lstm7)
-    lstm8 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm7)
-    layer_norm8 = LayerNormalization()(lstm8)
-    
-    add = Add()([layer_norm1, layer_norm2, layer_norm3, layer_norm4, layer_norm5, layer_norm6, layer_norm7, layer_norm8])
-    
-    flatten = Flatten()(add)
-    outputs = Dense(1)(flatten)
-    
-    model = Model(inputs=inputs, outputs=outputs)
-    return model
-
-
-def gru_model():
-    inputs = Input(shape=(time_step, 1))
-    noise = GaussianNoise(0.01)(inputs)
-    gru1 = GRU(64, return_sequences=True, dropout=0.25)(noise)
-    layer_norm1 = LayerNormalization()(gru1)
-    gru2 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm1)
-    layer_norm2 = LayerNormalization()(gru2)
-    gru3 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm2)
-    layer_norm3 = LayerNormalization()(gru3)
-    gru4 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm3)
-    layer_norm4 = LayerNormalization()(gru4)
-    gru5 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm4)
-    layer_norm5 = LayerNormalization()(gru5)
-    gru6 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm5)
-    layer_norm6 = LayerNormalization()(gru6)
-    gru7 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm6)
-    layer_norm7 = LayerNormalization()(gru7)
-    gru8 = GRU(64, return_sequences=True, dropout=0.25)(layer_norm7)
-    layer_norm8 = LayerNormalization()(gru8)
-    
-    add = Add()([layer_norm1, layer_norm2, layer_norm3, layer_norm4, layer_norm5, layer_norm6, layer_norm7, layer_norm8])
-    
-    flatten = Flatten()(add)
-    outputs = Dense(1)(flatten)
-    
-    model = Model(inputs=inputs, outputs=outputs)
-    return model
-
-
 import tensorflow_addons as tfa
 
 
@@ -258,13 +199,15 @@ class TPALayer(tf.keras.layers.Layer):
             padding='same',
             name='tpa_conv'
         )
+        self.layer_norm = LayerNormalization()
+        self.multiply = Multiply()
         super(TPALayer, self).build(input_shape)
 
     def call(self, x):
         x_transposed = tf.transpose(x, [0, 2, 1])
         conv = self.conv(x_transposed)
-        tpa = tf.multiply(conv, x_transposed)
-        tpa_transposed = tf.transpose(tpa, [0, 2, 1])
+        layer_norm = self.layer_norm(conv)
+        tpa_transposed = tf.transpose(layer_norm, [0, 2, 1])
         return tpa_transposed
     
     def get_config(self):
@@ -285,15 +228,12 @@ class MultiHeadAttentionLayer(tf.keras.layers.Layer):
         self.multi_head_attention = MultiHeadAttention(num_heads=self.num_heads, key_dim=self.key_dim, dropout=self.dropout_rate)
         self.layer_norm = LayerNormalization()
         self.multiply = Multiply()
-        self.add = Add()
         super(MultiHeadAttentionLayer, self).build(input_shape)
 
     def call(self, inputs):
         attention = self.multi_head_attention(inputs, inputs)
         layer_norm = self.layer_norm(attention)
-        multiply = self.multiply([inputs, layer_norm])
-        add = self.add([inputs, multiply])
-        return add
+        return layer_norm
 
     def get_config(self):
         config = super(MultiHeadAttentionLayer, self).get_config()
@@ -315,17 +255,28 @@ def lstm_multihead_attention_model():
     layer_norm3 = LayerNormalization()(lstm3)
     lstm4 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm3)
     layer_norm4 = LayerNormalization()(lstm4)
+    lstm5 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm4)
+    layer_norm5 = LayerNormalization()(lstm5)
+    lstm6 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm5)
+    layer_norm6 = LayerNormalization()(lstm6)
+    lstm7 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm6)
+    layer_norm7 = LayerNormalization()(lstm7)
+    lstm8 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm7)
+    layer_norm8 = LayerNormalization()(lstm8)
     
-    add1 = Add()([layer_norm1, layer_norm2, layer_norm3, layer_norm4])
+    add1 = Add()([layer_norm1, layer_norm2, layer_norm3, layer_norm4, layer_norm5, layer_norm6, layer_norm7, layer_norm8])
 
     # Temporal pooling attention
     tpa1 = TPALayer()(add1)
     
     # Multi-head attention
-    multihead1 = MultiHeadAttentionLayer(num_heads=1, key_dim=64, dropout_rate=0.25)(tpa1)
+    multihead1 = MultiHeadAttentionLayer(num_heads=1, key_dim=64, dropout_rate=0.25)(add1)
+    
+    multiply1 = Multiply()([add1, tpa1, multihead1])
+    add2 = Add()([add1, multiply1])
     
     # Flatten and output
-    flatten = Flatten()(multihead1)
+    flatten = Flatten()(add2)
     outputs = Dense(1)(flatten)
     
     model = Model(inputs=inputs, outputs=outputs)
@@ -517,10 +468,8 @@ def var_lstm_model():
 
 # model = cnn_lstm_model() # 146.95755226890842 0.006202755495905876 21592.046875
 # model = cnn_model() # 140.725326545822 0.005043825600296259 19806.326171875
-# model = lstm_model() # 145.57511644253717 0.00416765408590436 21191.400390625
-model = gru_model() # 150.34692755795803 0.005442610941827297 22595.126953125
 # model = nas_rnn_model() # 155.13566803010383 0.001908295089378953 24062.21484375
-# model = lstm_multihead_attention_model() # 156.0758334958998 0.00855713989585638 24340.04296875
+model = lstm_multihead_attention_model() # 143.2087643116406 0.005121113732457161 20515.361328125
 # model = wavelet_model() # 140.8948050487553 0.0010008609388023615 19850.70703125
 # model = densenet_resnet_model() # 155.51024688443073 0.012486668303608894 24160.541015625
 # model = build_transformer_model(time_step, d_model=64, num_heads=4, num_layers=2, dropout_rate=0.25) # 83.796415175186 0.022571461275219917 6581.54248046875
