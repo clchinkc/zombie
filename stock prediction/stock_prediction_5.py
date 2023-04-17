@@ -9,7 +9,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras import Model
 from tensorflow.keras.layers import (
-    GRU,
     LSTM,
     Activation,
     Add,
@@ -64,33 +63,62 @@ test_dataset = tf.data.Dataset.from_tensor_slices((test_X, test_Y))
 test_dataset = test_dataset.batch(batch_size=16).prefetch(buffer_size=tf.data.AUTOTUNE)
 
 # CNN + LSTM Model
-
-def cnn_lstm_model():
+def cnn_lstm_model(kernel_sizes=[3, 7, 14, 30, 60, 120, 240, 360]):
     inputs = Input(shape=(time_step, 1))
+    noise = GaussianNoise(0.01)(inputs)
     
-    conv1 = Conv1D(filters=32, kernel_size=3, activation='relu', padding='causal')(inputs)
-    layer_norm1 = LayerNormalization()(conv1)
-    conv2 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_norm1)
-    layer_norm2 = LayerNormalization()(conv2)
-    conv3 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_norm2)
-    layer_norm3a = LayerNormalization()(conv3)
-
-    lstm1 = LSTM(32, return_sequences=True, dropout=0.25)(inputs)
-    layer_norm1 = LayerNormalization()(lstm1)
-    lstm2 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm1)
-    layer_norm2 = LayerNormalization()(lstm2)
-    lstm3 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norm2)
-    layer_norm3b = LayerNormalization()(lstm3)
-
-    add = Add()([layer_norm3a, layer_norm3b])
+    # Apply multiple filters of different sizes
+    filter_layers = []
+    excess = 0
+    for size in kernel_sizes:
+        if size > time_step:
+            size = kernel_sizes[excess]
+            excess += 1
+        conv_layer = Conv1D(filters=32, kernel_size=size, activation='relu', padding='causal')(noise)
+        filter_layers.append(conv_layer)
+    
+    # Concatenate filter outputs
+    concat1 = Concatenate()(filter_layers)
+    norm_concat1 = LayerNormalization()(concat1)
+    
+    # Apply LSTM layers
+    lstm1 = LSTM(64, return_sequences=True, dropout=0.25)(norm_concat1)
+    layer_norma1 = LayerNormalization()(lstm1)
+    lstm2 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norma1)
+    layer_norma2 = LayerNormalization()(lstm2)
+    lstm3 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norma2)
+    layer_norma3 = LayerNormalization()(lstm3)
+    lstm4 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norma3)
+    layer_norma4 = LayerNormalization()(lstm4)
+    
+    # Apply CNN layers
+    conv1 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(norm_concat1)
+    layer_normb1 = LayerNormalization()(conv1)
+    conv2 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_normb1)
+    layer_normb2 = LayerNormalization()(conv2)
+    conv3 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_normb2)
+    layer_normb3 = LayerNormalization()(conv3)
+    conv4 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_normb3)
+    layer_normb4 = LayerNormalization()(conv4)
+    
+    # Add scaled residual connections
+    resa1 = Lambda(lambda x: x * 0.125)(layer_norma1)
+    resa2 = Lambda(lambda x: x * 0.125)(layer_norma2)
+    resa3 = Lambda(lambda x: x * 0.125)(layer_norma3)
+    resa4 = Lambda(lambda x: x * 0.125)(layer_norma4)
+    resb1 = Lambda(lambda x: x * 0.125)(layer_normb1)
+    resb2 = Lambda(lambda x: x * 0.125)(layer_normb2)
+    resb3 = Lambda(lambda x: x * 0.125)(layer_normb3)
+    resb4 = Lambda(lambda x: x * 0.125)(layer_normb4)
+    
+    # Add full residual connection
+    add = Add()([resa1, resa2, resa3, resa4, resb1, resb2, resb3, resb4])
+    
     flatten = Flatten()(add)
     outputs = Dense(1)(flatten)
-
+    
     model = Model(inputs=inputs, outputs=outputs)
     return model
-
-
-
 
 
 def cnn_model(kernel_sizes=[3, 7, 14, 30, 60, 120]):
@@ -283,8 +311,6 @@ def lstm_multihead_attention_model():
     return model
 
 
-
-
 import tensorflow_wavelets.Layers.DWT as DWT
 
 
@@ -300,7 +326,6 @@ def wavelet_model():
     
     model = Model(inputs=inputs, outputs=outputs)
     return model
-
 
 
 def resnet_block(inputs, filters, kernel_size, padding='causal'):
@@ -466,14 +491,15 @@ def var_lstm_model():
     return training_model, prediction_model
 
 
-# model = cnn_lstm_model() # 146.95755226890842 0.006202755495905876 21592.046875
+model = cnn_lstm_model() # 151.24902135240558 0.00817540567368269 22862.9921875
 # model = cnn_model() # 140.725326545822 0.005043825600296259 19806.326171875
 # model = nas_rnn_model() # 155.13566803010383 0.001908295089378953 24062.21484375
-model = lstm_multihead_attention_model() # 143.2087643116406 0.005121113732457161 20515.361328125
+# model = lstm_multihead_attention_model() # 143.2087643116406 0.005121113732457161 20515.361328125
 # model = wavelet_model() # 140.8948050487553 0.0010008609388023615 19850.70703125
 # model = densenet_resnet_model() # 155.51024688443073 0.012486668303608894 24160.541015625
 # model = build_transformer_model(time_step, d_model=64, num_heads=4, num_layers=2, dropout_rate=0.25) # 83.796415175186 0.022571461275219917 6581.54248046875
 # model, prediction_model = var_lstm_model() # 64.90182741723712 0.01319837011396885 16638.669921875
+
 
 
 model.summary()
