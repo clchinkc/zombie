@@ -330,6 +330,7 @@ https://blog.csdn.net/csdn_sweetcoder/article/details/109089634
 https://www.udacity.com/course/ai-for-trading--nd880
 
 Reinforcement learning
+RL algorithms can be categorized as either model-based or model-free, and as either value-based or policy-based.
 https://blog.csdn.net/abcdefg90876/article/details/108459475
 https://blog.csdn.net/qq_30615903/article/details/80774384
 https://towardsdatascience.com/advanced-visualization-techniques-for-time-series-analysis-14eeb17ec4b0
@@ -342,12 +343,27 @@ https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 https://simoninithomas.github.io/deep-rl-course/
 finrl
 gym
-stable baselines
+https://github.com/Farama-Foundation/Gymnasium
+PettingZoo
+https://github.com/openai/safety-gym
+https://github.com/deepmind/dm_control
+https://google.github.io/dopamine/
+stable baselines 3
+cleanRL
 tensortrade
 https://github.com/SparkShen02/MDP-with-Value-Iteration-and-Policy-Iteration
 https://towardsdatascience.com/implement-value-iteration-in-python-a-minimal-working-example-f638907f3437
 https://towardsdatascience.com/how-to-code-the-value-iteration-algorithm-for-reinforcement-learning-8fb806e117d1
 https://github.com/carpedm20/deep-rl-tensorflow
+Libraries
+The OpenAI Gym and Safety Gym frameworks provide code to build the environments that the agents are trained in. The researchers from DeepMind provide the Control Suite package, which is used for physics-based RL simulation.
+Algorithm
+The Stable Baselines 3 library is implemented in PyTorch and provides the tool to compare algorithms and create new ones, too. Similarly, the ACME library provides RL agents and building blocks and is flexible enough to do your own research. As the third alternative, one can consider Google’s Dopamine framework, which focuses on fast prototyping for speculative research. It supports JAX and TensorFlow.
+https://github.com/Farama-Foundation/MAgent2 !!!!!!!!!!!!!!!!!!!!!!!
+https://github.com/Farama-Foundation/Minigrid !!!!!!!!!!!!!!!!!!!!!!!
+https://github.com/Farama-Foundation/MiniWorld
+https://github.com/Farama-Foundation/MicroRTS-Py !!!!!!!!!!!!!!!!!!!!!!!
+https://github.com/Farama-Foundation/MicroRTS
 
 Software Design
 https://www.youtube.com/watch?v=tAuRQs_d9F8
@@ -741,6 +757,11 @@ https://github.blog/2022-05-05-ludum-dare-50/
 https://github.blog/2023-01-13-game-off-2022-winners/
 https://github.com/jeremycryan/LD50
 
+Godot
+https://www.youtube.com/watch?v=nIofPW2Z6N8
+https://www.youtube.com/watch?v=HnxvYXyFpa8&list=PL0qDutCc8IQgtUXLQB07H4miK6DPvtjTg
+
+
 Pygame
 https://opensource.com/article/17/12/game-framework-python
 https://opensource.com/article/17/12/game-python-add-a-player
@@ -963,6 +984,10 @@ https://blog.51cto.com/u_14232658/2513385
 web scraping + data processing + mysql + django
 https://blog.51cto.com/u_9399369/1953469
 
+web scraping
+https://zhuanlan.zhihu.com/p/33913257
+https://zhuanlan.zhihu.com/p/33929531
+
 database
 python mysql or other database project
 https://github.com/Almas-Ali/FlexDB
@@ -1086,6 +1111,7 @@ https://github.com/tinahuangyt/Matplotlib_Pyber
 https://towardsdatascience.com/simple-method-of-creating-animated-graphs-127c11f58cc5
 https://stackoverflow.com/questions/70472479/plotting-a-barchart-which-should-be-sorted-by-their-rank-using-particular-column
 https://www.linkedin.com/pulse/what-data-visualization-datathick/
+https://zhuanlan.zhihu.com/p/100949543
 
 excel
 https://www.youtube.com/watch?v=weTmydM3fIE
@@ -1251,6 +1277,7 @@ https://www.sematic.dev/blog/getting-started-with-sematic-in-5-minutes
 Berkeley CS188
 https://thinkinfi.com/fasttext-for-text-classification-python/
 https://thinkinfi.com/accurate-language-detection-using-fasttext-python/
+https://www.tensorflow.org/decision_forests/tutorials/intermediate_colab
 
 Musical score
 https://python-course.eu/applications-python/musical-scores-with-python.php
@@ -1351,6 +1378,8 @@ follow up course
 https://www.coursera.org/deeplearning-ai
 https://huggingface.co/course/chapter1/1
 
+Startup
+https://startupclass.samaltman.com/
 
 
 Useful python libraries

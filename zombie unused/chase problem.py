@@ -147,7 +147,7 @@ def create_dqn_agent(learning_rate, train_env):
     
     train_step_counter = tf.Variable(0)
 
-    tf_agent = dqn_agent.DqnAgent(
+    tf_agent = dqn_agent.DdqnAgent(
     train_env.time_step_spec(),
     train_env.action_spec(),
     q_network=q_net,
@@ -195,8 +195,8 @@ def create_ppo_agent(learning_rate, train_env):
     return train_step_counter, tf_agent
 
 
-# train_step_counter, tf_agent = create_dqn_agent(learning_rate, train_env)
-train_step_counter, tf_agent = create_ppo_agent(learning_rate, train_env)
+train_step_counter, tf_agent = create_dqn_agent(learning_rate, train_env)
+# train_step_counter, tf_agent = create_ppo_agent(learning_rate, train_env)
 
 def create_replay_buffer(replay_buffer_max_length, train_env, tf_agent):
     replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
