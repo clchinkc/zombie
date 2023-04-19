@@ -63,11 +63,8 @@ train_dataset = train_dataset.batch(batch_size=16).prefetch(buffer_size=tf.data.
 test_dataset = tf.data.Dataset.from_tensor_slices((test_X, test_Y))
 test_dataset = test_dataset.batch(batch_size=16).prefetch(buffer_size=tf.data.AUTOTUNE)
 
-# CNN + LSTM Model
-def cnn_lstm_model(kernel_sizes=[3, 7, 14, 30, 60, 120, 240, 360]):
-    inputs = Input(shape=(time_step, 1))
-    noise = GaussianNoise(0.01)(inputs)
-    
+
+def multi_filter_block(inputs, filters=32, kernel_sizes=[3, 7, 14, 30, 60, 120, 240, 360]):
     # Apply multiple filters of different sizes
     filter_layers = []
     excess = 0
@@ -75,12 +72,57 @@ def cnn_lstm_model(kernel_sizes=[3, 7, 14, 30, 60, 120, 240, 360]):
         if size > time_step:
             size = kernel_sizes[excess]
             excess += 1
-        conv_layer = Conv1D(filters=32, kernel_size=size, activation='relu', padding='causal')(noise)
+        conv_layer = Conv1D(filters=filters, kernel_size=size, activation='relu', padding='causal')(inputs)
         filter_layers.append(conv_layer)
-    
-    # Concatenate filter outputs
     concat1 = Concatenate()(filter_layers)
     norm_concat1 = LayerNormalization()(concat1)
+    return norm_concat1
+
+# CNN + LSTM Model
+def cnn_lstm_model():
+    inputs = Input(shape=(time_step, 1))
+    noise = GaussianNoise(0.01)(inputs)
+    
+    norm_concat1 = multi_filter_block(noise)
+    
+    # Apply LSTM layers
+    lstm1 = LSTM(64, return_sequences=True, dropout=0.25)(norm_concat1)
+    layer_norma1 = LayerNormalization()(lstm1)
+    lstm2 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norma1)
+    layer_norma2 = LayerNormalization()(lstm2)
+    lstm3 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norma2)
+    layer_norma3 = LayerNormalization()(lstm3)
+    lstm4 = LSTM(64, return_sequences=True, dropout=0.25)(layer_norma3)
+    layer_norma4 = LayerNormalization()(lstm4)
+    
+    # Apply CNN layers
+    conv1 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(norm_concat1)
+    layer_normb1 = LayerNormalization()(conv1)
+    conv2 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_normb1)
+    layer_normb2 = LayerNormalization()(conv2)
+    conv3 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_normb2)
+    layer_normb3 = LayerNormalization()(conv3)
+    conv4 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_normb3)
+    layer_normb4 = LayerNormalization()(conv4)
+    
+    # Add full residual connection
+    add = Add()([layer_norma1, layer_norma2, layer_norma3, layer_norma4])
+    multiply = Multiply()([layer_normb1, layer_normb2, layer_normb3, layer_normb4])
+    
+    concat = Concatenate()([add, multiply])
+    
+    flatten = Flatten()(concat)
+    outputs = Dense(1)(flatten)
+    
+    model = Model(inputs=inputs, outputs=outputs)
+    return model
+
+
+def cnn_lstm_model_1():
+    inputs = Input(shape=(time_step, 1))
+    noise = GaussianNoise(0.01)(inputs)
+    
+    norm_concat1 = multi_filter_block(noise)
     
     # Apply LSTM layers
     lstm1 = LSTM(64, return_sequences=True, dropout=0.25)(norm_concat1)
@@ -123,22 +165,11 @@ def cnn_lstm_model(kernel_sizes=[3, 7, 14, 30, 60, 120, 240, 360]):
     return model
 
 
-def cnn_model(kernel_sizes=[3, 7, 14, 30, 60, 120]):
+def cnn_model(kernel_sizes=[3, 7, 14, 30, 60, 120, 240, 360]):
     inputs = Input(shape=(time_step, 1))
+    noise = GaussianNoise(0.01)(inputs)
 
-    # First set of convolutional layers
-    conv_layers = []
-    excess = 0
-    for size in kernel_sizes:
-        if size > time_step:
-            size = kernel_sizes[excess]
-            excess += 1
-        conv_layer = Conv1D(filters=32, kernel_size=size, activation='relu', padding='causal')(inputs)
-        norm_layer = LayerNormalization()(conv_layer)
-        conv_layers.append(norm_layer)
-    
-    concat1 = Concatenate()(conv_layers)
-    norm_concat1 = LayerNormalization()(concat1)
+    norm_concat1 = multi_filter_block(noise)
 
     conv1 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(norm_concat1)
     layer_norm1 = LayerNormalization()(conv1)
@@ -157,18 +188,8 @@ def cnn_model(kernel_sizes=[3, 7, 14, 30, 60, 120]):
     conv8 = Conv1D(filters=64, kernel_size=3, activation='relu', padding='causal')(layer_norm7)
     layer_norm8 = LayerNormalization()(conv8)
     
-    # Add scaled residual connections
-    res1 = Lambda(lambda x: x * 0.125)(layer_norm1)
-    res2 = Lambda(lambda x: x * 0.125)(layer_norm2)
-    res3 = Lambda(lambda x: x * 0.125)(layer_norm3)
-    res4 = Lambda(lambda x: x * 0.125)(layer_norm4)
-    res5 = Lambda(lambda x: x * 0.125)(layer_norm5)
-    res6 = Lambda(lambda x: x * 0.125)(layer_norm6)
-    res7 = Lambda(lambda x: x * 0.125)(layer_norm7)
-    res8 = Lambda(lambda x: x * 0.125)(layer_norm8)
-    
     # Add full residual connection
-    add = Add()([res1, res2, res3, res4, res5, res6, res7, res8])
+    add = Multiply()([layer_norm1, layer_norm2, layer_norm3, layer_norm4, layer_norm5, layer_norm6, layer_norm7, layer_norm8])
     
     flatten = Flatten()(add)
     outputs = Dense(1)(flatten)
@@ -494,15 +515,14 @@ def var_lstm_model():
     return training_model, prediction_model
 
 
-# model = cnn_lstm_model() # 151.24902135240558 0.00817540567368269 22862.9921875
-# model = cnn_model() # 140.725326545822 0.005043825600296259 19806.326171875
-model = lstm_multihead_attention_model() # 179.6202153271338 0.05479753017425537 32182.181640625
+model = cnn_lstm_model() # 151.24902135240558 0.00817540567368269 22862.9921875
+# model = cnn_model() # 146.26684775725644 0.006160466931760311 21392.03515625
+# model = lstm_multihead_attention_model() # 179.6202153271338 0.05479753017425537 32182.181640625
 # model = nas_rnn_model() # 155.13566803010383 0.001908295089378953 24062.21484375
 # model = wavelet_model() # 140.8948050487553 0.0010008609388023615 19850.70703125
 # model = densenet_resnet_model() # 155.51024688443073 0.012486668303608894 24160.541015625
 # model = build_transformer_model(time_step, d_model=64, num_heads=4, num_layers=2, dropout_rate=0.25) # 83.796415175186 0.022571461275219917 6581.54248046875
 # model, prediction_model = var_lstm_model() # 64.90182741723712 0.01319837011396885 16638.669921875
-
 
 
 model.summary()

@@ -3,7 +3,9 @@
 import numpy as np
 import pygame
 import tensorflow as tf
+import tensorflow_probability as tfp
 from matplotlib import pyplot as plt
+from tf_agents.agents import CategoricalDqnAgent, ReinforceAgent
 from tf_agents.agents.dqn import dqn_agent
 from tf_agents.agents.ppo import ppo_agent
 from tf_agents.drivers import dynamic_step_driver
@@ -12,6 +14,7 @@ from tf_agents.eval import metric_utils
 from tf_agents.metrics import tf_metrics
 from tf_agents.networks import (
     actor_distribution_network,
+    categorical_q_network,
     normal_projection_network,
     q_network,
     value_network,
@@ -35,6 +38,9 @@ class ChaseEnvironment(py_environment.PyEnvironment):
         self._runner_position = self._reset_position()
         self._chaser_position = self._reset_position()
         self._state = self._create_state()
+        
+        # Define the action distribution spec
+        self._action_distribution_spec = tfp.distributions.Categorical(logits=tf.zeros((self._action_spec.maximum + 1,)))
 
     def action_spec(self):
         return self._action_spec
@@ -116,7 +122,7 @@ class ChaseEnvironment(py_environment.PyEnvironment):
 
         pygame.display.flip()
 
-num_iterations = 20
+num_iterations = 200
 initial_collect_steps = 10
 collect_steps_per_iteration = 1
 replay_buffer_max_length = 10000
@@ -158,17 +164,81 @@ def create_dqn_agent(learning_rate, train_env):
     tf_agent.initialize()
     return train_step_counter, tf_agent
 
+def create_categorical_dqn_agent(learning_rate, train_env):
+    conv_layer_params = ((16, 3, 1), (32, 3, 1))
+    fc_layer_params = (256,)
+    categorical_q_net = categorical_q_network.CategoricalQNetwork(
+        train_env.observation_spec(),
+        train_env.action_spec(),
+        num_atoms=51,
+        conv_layer_params=conv_layer_params,
+        fc_layer_params=fc_layer_params,
+        activation_fn=tf.nn.relu,
+        )
+
+    optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
+
+    train_step_counter = tf.Variable(0)
+    
+    def categorical_huber_loss(target, pred):
+        # Use the huber loss to compute the element-wise loss for the target and pred tensors.
+        elementwise_loss = tf.losses.Huber(target, pred, reduction=tf.losses.Reduction.NONE)
+
+        # Compute the categorical loss by summing the element-wise loss over the atoms dimension
+        # and multiplying by the atom delta.
+        return tf.reduce_sum(elementwise_loss, axis=-1) * categorical_q_net.atom_delta
+
+    tf_agent = CategoricalDqnAgent(
+        train_env.time_step_spec(),
+        train_env.action_spec(),
+        categorical_q_network=categorical_q_net,
+        optimizer=optimizer,
+        td_errors_loss_fn=categorical_huber_loss,
+        train_step_counter=train_step_counter)
+
+    tf_agent.initialize()
+    return train_step_counter, tf_agent
+
+def create_reinforce_agent(learning_rate, train_env):
+    actor_net = actor_distribution_network.ActorDistributionNetwork(
+        train_env.observation_spec(),
+        train_env.action_spec(),
+        fc_layer_params=(100,),
+    )
+
+    optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
+
+    train_step_counter = tf.Variable(0)
+
+    tf_agent = ReinforceAgent(
+        train_env.time_step_spec(),
+        train_env.action_spec(),
+        actor_network=actor_net,
+        optimizer=optimizer,
+        value_network=None,
+        use_advantage_loss=False,
+        gamma=0.99,
+        normalize_returns=True,
+        gradient_clipping=None,
+        debug_summaries=False,
+        summarize_grads_and_vars=False,
+        train_step_counter=train_step_counter,
+    )
+
+    tf_agent.initialize()
+
+    return train_step_counter, tf_agent
+
 def create_ppo_agent(learning_rate, train_env):
     actor_net = actor_distribution_network.ActorDistributionNetwork(
         train_env.observation_spec(),
         train_env.action_spec(),
-        fc_layer_params=(256,),
-        #continuous_projection_net=(normal_projection_network.NormalProjectionNetwork,)
+        fc_layer_params=(100,),
     )
 
     value_net = value_network.ValueNetwork(
         train_env.observation_spec(),
-        fc_layer_params=(256,)
+        fc_layer_params=(100,),
     )
 
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
@@ -176,27 +246,31 @@ def create_ppo_agent(learning_rate, train_env):
     train_step_counter = tf.Variable(0)
 
     tf_agent = ppo_agent.PPOAgent(
-        train_env.time_step_spec(),
-        train_env.action_spec(),
-        optimizer=optimizer,
+        time_step_spec=train_env.time_step_spec(),
+        action_spec=train_env.action_spec(),
         actor_net=actor_net,
         value_net=value_net,
-        entropy_regularization=0.001,
-        #importance_ratio_clipping=0.2,
-        #lambda_value=0.95,
-        #discount_factor=0.99,
-        num_epochs=5,
-        debug_summaries=False,
-        #summarize_grads_and_vars=False,
+        optimizer=optimizer,
+        num_epochs=10,
+        use_gae=True,
+        importance_ratio_clipping=0.2,
+        normalize_rewards=True,
+        reward_norm_clipping=10.0,
+        gradient_clipping=0.5,
+        entropy_regularization=0.0,
+        value_pred_loss_coef=0.5,
         train_step_counter=train_step_counter,
     )
 
     tf_agent.initialize()
+
     return train_step_counter, tf_agent
 
 
-train_step_counter, tf_agent = create_dqn_agent(learning_rate, train_env)
-# train_step_counter, tf_agent = create_ppo_agent(learning_rate, train_env)
+# train_step_counter, tf_agent = create_dqn_agent(learning_rate, train_env)
+# train_step_counter, tf_agent = create_categorical_dqn_agent(learning_rate, train_env)
+# train_step_counter, tf_agent = create_reinforce_agent(learning_rate, train_env)
+train_step_counter, tf_agent = create_ppo_agent(learning_rate, train_env)
 
 def create_replay_buffer(replay_buffer_max_length, train_env, tf_agent):
     replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
@@ -220,7 +294,8 @@ def collect_data(env, policy, buffer, steps):
 
 random_policy = random_tf_policy.RandomTFPolicy(train_env.time_step_spec(), train_env.action_spec())
 
-collect_data(train_env, random_policy, replay_buffer, steps=initial_collect_steps)
+# collect_data(train_env, random_policy, replay_buffer, steps=initial_collect_steps)
+collect_data(eval_env, tf_agent.collect_policy, replay_buffer, steps=initial_collect_steps)
 
 dataset = replay_buffer.as_dataset(
     num_parallel_calls=3,
