@@ -3,9 +3,10 @@
 import numpy as np
 import pygame
 import tensorflow as tf
+import tensorflow_addons as tfa
 import tensorflow_probability as tfp
 from matplotlib import pyplot as plt
-from tf_agents.agents import CategoricalDqnAgent, ReinforceAgent
+from tf_agents.agents import CategoricalDqnAgent, PPOKLPenaltyAgent, ReinforceAgent
 from tf_agents.agents.dqn import dqn_agent
 from tf_agents.agents.ppo import ppo_agent
 from tf_agents.drivers import dynamic_step_driver
@@ -15,7 +16,6 @@ from tf_agents.metrics import tf_metrics
 from tf_agents.networks import (
     actor_distribution_network,
     categorical_q_network,
-    normal_projection_network,
     q_network,
     value_network,
 )
@@ -127,10 +127,18 @@ initial_collect_steps = 10
 collect_steps_per_iteration = 1
 replay_buffer_max_length = 10000
 batch_size = 64
-learning_rate = 1e-3
 log_interval = 5
 num_eval_episodes = 1
 eval_interval = 1000
+
+initial_learning_rate = 0.001
+decay_steps = 1000
+alpha = 0.1
+lr_schedule = tf.keras.optimizers.schedules.CosineDecay(
+    initial_learning_rate=initial_learning_rate,
+    decay_steps=decay_steps,
+    alpha=alpha
+)
 
 grid_size = 10
 env = ChaseEnvironment(grid_size)
@@ -145,19 +153,25 @@ def create_dqn_agent(learning_rate, train_env):
     train_env.action_spec(),
     conv_layer_params=conv_layer_params,
     fc_layer_params=fc_layer_params,
-    kernel_initializer=tf.keras.initializers.VarianceScaling(
-    scale=2.0, mode='fan_in', distribution='truncated_normal')
+    activation_fn=tf.nn.gelu,
     )
 
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
     
     train_step_counter = tf.Variable(0)
+    
+    decay_epsilon_greedy = tf.keras.optimizers.schedules.PolynomialDecay(
+        initial_learning_rate=0.9,
+        decay_steps=num_iterations,
+        end_learning_rate=0.01
+        )
 
     tf_agent = dqn_agent.DdqnAgent(
     train_env.time_step_spec(),
     train_env.action_spec(),
     q_network=q_net,
     optimizer=optimizer,
+    epsilon_greedy=lambda: decay_epsilon_greedy(train_step_counter),
     td_errors_loss_fn=common.element_wise_squared_loss, # tf.losses.Huber(reduction="none")
     train_step_counter=train_step_counter)
 
@@ -173,7 +187,7 @@ def create_categorical_dqn_agent(learning_rate, train_env):
         num_atoms=51,
         conv_layer_params=conv_layer_params,
         fc_layer_params=fc_layer_params,
-        activation_fn=tf.nn.relu,
+        activation_fn=tf.nn.gelu,
         )
 
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
@@ -188,11 +202,20 @@ def create_categorical_dqn_agent(learning_rate, train_env):
         # and multiplying by the atom delta.
         return tf.reduce_sum(elementwise_loss, axis=-1) * categorical_q_net.atom_delta
 
+    decay_epsilon_greedy = tf.keras.optimizers.schedules.PolynomialDecay(
+        initial_learning_rate=0.9,
+        decay_steps=num_iterations,
+        end_learning_rate=0.01
+        )
+
     tf_agent = CategoricalDqnAgent(
         train_env.time_step_spec(),
         train_env.action_spec(),
         categorical_q_network=categorical_q_net,
         optimizer=optimizer,
+        epsilon_greedy=lambda: decay_epsilon_greedy(train_step_counter),
+        target_update_tau=0.05,
+        target_update_period=1,
         td_errors_loss_fn=categorical_huber_loss,
         train_step_counter=train_step_counter)
 
@@ -205,6 +228,11 @@ def create_reinforce_agent(learning_rate, train_env):
         train_env.action_spec(),
         fc_layer_params=(100,),
     )
+    
+    value_net = value_network.ValueNetwork(
+        train_env.observation_spec(),
+        fc_layer_params=(100,),
+    )
 
     optimizer = tf.optimizers.Adam(learning_rate=learning_rate)
 
@@ -214,14 +242,16 @@ def create_reinforce_agent(learning_rate, train_env):
         train_env.time_step_spec(),
         train_env.action_spec(),
         actor_network=actor_net,
+        value_network=value_net,
         optimizer=optimizer,
-        value_network=None,
-        use_advantage_loss=False,
+        use_advantage_loss=True,
+        value_estimation_loss_coef=0.5,
         gamma=0.99,
         normalize_returns=True,
-        gradient_clipping=None,
+        gradient_clipping=0.5,
         debug_summaries=False,
         summarize_grads_and_vars=False,
+        entropy_regularization=0.2,
         train_step_counter=train_step_counter,
     )
 
@@ -245,19 +275,21 @@ def create_ppo_agent(learning_rate, train_env):
 
     train_step_counter = tf.Variable(0)
 
-    tf_agent = ppo_agent.PPOAgent(
+    tf_agent = PPOKLPenaltyAgent(
         time_step_spec=train_env.time_step_spec(),
         action_spec=train_env.action_spec(),
         actor_net=actor_net,
         value_net=value_net,
         optimizer=optimizer,
         num_epochs=10,
+        initial_adaptive_kl_beta=1.0,
+        adaptive_kl_target=0.01,
+        adaptive_kl_tolerance=0.5,
         use_gae=True,
-        importance_ratio_clipping=0.2,
         normalize_rewards=True,
         reward_norm_clipping=10.0,
         gradient_clipping=0.5,
-        entropy_regularization=0.0,
+        entropy_regularization=0.2,
         value_pred_loss_coef=0.5,
         train_step_counter=train_step_counter,
     )
@@ -268,9 +300,9 @@ def create_ppo_agent(learning_rate, train_env):
 
 
 # train_step_counter, tf_agent = create_dqn_agent(learning_rate, train_env)
-# train_step_counter, tf_agent = create_categorical_dqn_agent(learning_rate, train_env)
+train_step_counter, tf_agent = create_categorical_dqn_agent(learning_rate, train_env)
 # train_step_counter, tf_agent = create_reinforce_agent(learning_rate, train_env)
-train_step_counter, tf_agent = create_ppo_agent(learning_rate, train_env)
+# train_step_counter, tf_agent = create_ppo_agent(learning_rate, train_env)
 
 def create_replay_buffer(replay_buffer_max_length, train_env, tf_agent):
     replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
@@ -314,6 +346,8 @@ train_checkpointer = common.Checkpointer(
     policy=tf_agent.policy,
     replay_buffer=replay_buffer,
     global_step=train_step_counter)
+
+train_checkpointer.initialize_or_restore()
 
 def collect_step(environment, policy, buffer):
     time_step = environment.current_time_step()
@@ -411,7 +445,30 @@ if __name__ == '__main__':
     sim_agent(eval_env, tf_agent.policy, num_test_episodes)
     print('Simulation done!')
 
-# https://www.tensorflow.org/agents/tutorials/6_reinforce_tutorial
+
+# https://github.com/christianhidber/easyagents api across libraries
 # each object has a draw method, call all draw method in the environment
 # update update part of the environment and flip update the whole screen
-# dqn agent change to reinforce agent and ppo agent
+# https://github.com/Lostefra/ReinforcementLearningToy/tree/main format
+# https://github.com/telkhir/Deep-RL format
+# https://github.com/priontu/Atari_DemonAttack_Gameplay_with_Reinforcement_Learning_using_TF_Agents format
+# https://github.com/marvinschmitt/DeepLearning-Bomberman MCTS + DQN
+# https://github.com/marload/DeepRL-TensorFlow2 tensorflow from scratch
+# https://github.com/marload/DistRL-TensorFlow2 tensorflow from scratch
+# https://github.com/nslyubaykin/relax pytorch
+# https://github.com/nslyubaykin/rainbow_for_2048 pytorch
+# https://github.com/nslyubaykin/relax_rainbow_dqn_example pytorch
+# https://github.com/cyoon1729/RLcycle pytorch
+# https://github.com/davide97l/Rainbow pytorch rainbow
+# https://github.com/Curt-Park/rainbow-is-all-you-need pytorch
+# https://zhuanlan.zhihu.com/p/220510418
+# https://github.com/willi-menapace/atari_reinforcement_learning pytorch rainbow
+# https://github.com/chucnorrisful/dqn keras-rl
+# https://zhuanlan.zhihu.com/p/261322143 rainbow dqn
+# 以下是每個擴展方法如何提高數據效率和最終性能的詳細解釋：
+# 1. Double Q-learning：傳統的Q-learning算法容易高估某些動作的值，進而導致學習到低質量的策略。Double Q-learning通過使用兩個獨立的Q-networks來解決這個問題，從而減少了高估值的影響。這種方法提高了算法學習到高質量策略的速度和效率。
+# 2. Prioritized Experience Replay：傳統的經驗回放方法是按照時間順序隨機選取存儲在緩存中的經驗來進行訓練。但是，某些重要的經驗可能對算法性能有更大的貢獻。Prioritized Experience Replay通過根據其對算法性能貢獻大小來選擇重要性較高的經驗，從而提高了數據效率和最終性能。
+# 3. Dueling Network Architectures：Dueling Network Architectures將Q-networks分成兩部分：一部分用於估計動作價值，另一部分用於估計基本價值。這種方法使算法能夠更好地學習到不同動作之間的差異，從而提高了最終性能。
+# 4. Multi-step Learning：傳統的Q-learning算法僅考慮當前狀態和下一個狀態之間的轉移。Multi-step Learning通過考慮多個連續狀態之間的轉移，從而使算法能夠更好地利用長期的時間關聯性，從而提高了數據效率和最終性能。
+# 5. Distributional RL：傳統的Q-learning算法僅考慮每個動作的期望回報值。Distributional RL通過估計每個動作的回報分佈，從而提高了算法對不同回報值之間差異的感知能力。這種方法使算法能夠更好地學習到不同動作之間的差異，從而提高了最終性能。
+# 6. Noisy Nets：Noisy Nets通過向神經網絡中添加隨機噪聲，從而使得神經網絡更容易探索新的策略。這種方法提高了算法學習到高質量策略的速度和效率。

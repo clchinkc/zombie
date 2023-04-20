@@ -350,6 +350,7 @@ https://github.com/deepmind/dm_control
 https://google.github.io/dopamine/
 stable baselines 3
 cleanRL
+OpenAI Gym, RLlib, Stable Baselines, Dopamine, keras-rl
 tensortrade
 https://github.com/SparkShen02/MDP-with-Value-Iteration-and-Policy-Iteration
 https://towardsdatascience.com/implement-value-iteration-in-python-a-minimal-working-example-f638907f3437
@@ -364,6 +365,10 @@ https://github.com/Farama-Foundation/Minigrid !!!!!!!!!!!!!!!!!!!!!!!
 https://github.com/Farama-Foundation/MiniWorld
 https://github.com/Farama-Foundation/MicroRTS-Py !!!!!!!!!!!!!!!!!!!!!!!
 https://github.com/Farama-Foundation/MicroRTS
+https://github.com/awilliea/Risk-based_RL_for_Optimal_Trading_Execution stock
+https://github.com/s-diaco/DRL4Trading stock
+https://github.com/kochlisGit/TraderNet-CRv2 stock
+https://github.com/THINK989/Real-Time-Stock-Market-Prediction-using-Ensemble-DL-and-Rainbow-DQN stock
 
 Software Design
 https://www.youtube.com/watch?v=tAuRQs_d9F8
@@ -757,6 +762,7 @@ https://www.youtube.com/watch?v=rPJfadFSCyQ&list=PLEMXAbCVnmY6v0eFYcyiH7twEh1UF2
 https://github.blog/2022-05-05-ludum-dare-50/
 https://github.blog/2023-01-13-game-off-2022-winners/
 https://github.com/jeremycryan/LD50
+https://www.youtube.com/watch?v=cBj8PAQErA4
 
 Godot
 https://www.youtube.com/watch?v=nIofPW2Z6N8
