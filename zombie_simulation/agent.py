@@ -33,8 +33,8 @@ class Agent(ABC):
         self.speed = speed
 
     def move(self, direction: tuple[int, int]):
-        self.position = (self.position[0]+direction[0], 
-                        self.position[1]+direction[1])
+        self.position = Position(self.position.x+direction[0], 
+                                self.position.y+direction[1])
     
     def distance_to_agent(self, other_agent: Agent) -> int:
         x1, y1 = self.position
@@ -120,7 +120,7 @@ class Human(Agent):
         if self._health <= 0:
             print(f"Human {self.id} has died!")
             apocalypse.human_manager.remove_agent(self)
-            zombie = Zombie(len(apocalypse.zombie_manager.zombies), self.position, 100, 10, 0, 1)
+            zombie = Zombie(len(apocalypse.zombie_manager.zombies), Position(self.position.x, self.position.y), 100, 10, 0, 1)
             apocalypse.zombie_manager.add_agent(zombie)
             
     @property
@@ -420,13 +420,13 @@ class Grid:
         
     def get_human(self, position) -> Human:
         if isinstance(self.grid[position], Human):
-            return self.grid[position[0]][position[1]]
+            return self.grid[position]
         else:
             raise Exception('No human at this position')
         
     def get_zombie(self, position) -> Zombie:
         if isinstance(self.grid[position], Zombie):
-            return self.grid[position[0]][position[1]]
+            return self.grid[position]
         else:
             raise Exception('No zombie at this position')
         
@@ -572,11 +572,11 @@ class ZombieApocalypse(Game):
             # End the turn by removing dead humans and zombies from the map.
             for human in self.human_manager.humans:
                 if human.health <= 0:
-                    self.grid[human.position[0]][human.position[1]] = None
+                    self.grid[human.position.x][human.position.y] = None
                     self.human_manager.humans.remove(human)
             for zombie in self.zombie_manager.zombies:
                 if zombie.health <= 0:
-                    self.grid[zombie.position[0]][zombie.position[1]] = None
+                    self.grid[zombie.position.x][zombie.position.y] = None
                     self.zombie_manager.zombies.remove(zombie)
             # End the game if there are no more humans or zombies.
             if self.end_condition():
@@ -726,11 +726,8 @@ random_move(self):
 """
 """
 filter, zip, reduce
-namedtuple
-functools
 iterator, itertools
 https://myapollo.com.tw/zh-tw/python-itertools-more-itertools/
-collections
 assert
 https://www.youtube.com/watch?v=96mDQrlceEk&ab_channel=Indently
 metaprogramming (register lead classes, singleton)
@@ -778,6 +775,7 @@ retry decorator to retry if encounter an exception
 countcall decorator to count the number of function calls
 atexit register decorator to do something when the script is terminated
 functools singledispatch decorator for function overloading
+sonarqube
 """
 
 # Advanced

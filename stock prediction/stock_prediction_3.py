@@ -34,6 +34,7 @@ import pandas as pd
 from pmdarima import auto_arima
 from prophet import Prophet
 from sklearn.cluster import KMeans
+from sklearn.cross_decomposition import PLSRegression
 from sklearn.ensemble import (
     AdaBoostRegressor,
     GradientBoostingClassifier,
@@ -304,6 +305,15 @@ class Gaussian(Model):
         estimated_future_price_2d = np.array([estimated_future_price]).reshape(-1, 1)
         return estimated_future_price_2d
 
+class PLS(Model):
+    def __init__(self):
+        self.model = PLSRegression(n_components=1)
+
+    def train(self, stock_data, **kwargs):
+        self.model.fit(stock_data[:-1].reshape(-1, 1), stock_data[1:])
+
+    def predict(self, stock_data, **kwargs):
+        return self.model.predict(stock_data[-1].reshape(-1, 1))
 
 
 class Exponential(Model):
@@ -618,6 +628,7 @@ if __name__ == '__main__':
     # knn = KNN() # RMSE: 9.675864725503247 R2: -1.0619478379518097
     # gradient = Gradient() # RMSE: 9.659312479842331 R2: -1.0548992328728777
     # gaussian = Gaussian() # RMSE: 9.72262340729911 R2: -1.0819247446449762
+    pls = PLS() # RMSE: 7.665248704685869 R2: -0.2940486360191459
     
     # exponential = Exponential() # RMSE: 9.954503639153755 R2: -1.1824148991825063
     # arima = arima() # RMSE: 19.837721685306764 R2: -7.667257201684693
@@ -637,7 +648,7 @@ if __name__ == '__main__':
     # ada = adaboostregressor() # RMSE: 6.260918391178159 R2: 0.13667526425507082
     # xgb = xgboostregressor() # RMSE: 7.417285824083264 R2: -0.21168052625230027
     
-    stock_predictor = StockPredictor(gaussianregressor, filepath, num_states, days)
+    stock_predictor = StockPredictor(pls, filepath, num_states, days)
     stock_predictor.preprocess_data()
     stock_predictor.get_states()
     stock_predictor.train()

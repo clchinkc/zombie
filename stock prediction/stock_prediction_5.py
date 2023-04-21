@@ -14,7 +14,6 @@ from tensorflow.keras.layers import (
     Add,
     Attention,
     AveragePooling1D,
-    BatchNormalization,
     Concatenate,
     Conv1D,
     Dense,
@@ -29,7 +28,6 @@ from tensorflow.keras.layers import (
     Multiply,
     Reshape,
 )
-from torch import layer_norm
 
 # Load data
 prices_df = pd.read_csv('apple_stock_data.csv', index_col='Date', parse_dates=True)
@@ -49,7 +47,7 @@ def create_dataset(dataset, time_step=1):
         data_Y.append(dataset[i + time_step])
     return np.array(data_X), np.array(data_Y)
 
-time_step = 60
+time_step = 30
 train_X, train_Y = create_dataset(train_data, time_step)
 test_X, test_Y = create_dataset(test_data, time_step)
 
@@ -449,7 +447,7 @@ def transformer_encoder(inputs, d_model, num_heads, dropout_rate):
     ffn_output = tf.keras.layers.Dense(d_model, activation='relu')(out1)
     ffn_output = tf.keras.layers.Dense(d_model)(ffn_output)
     ffn_output = tf.keras.layers.Dropout(dropout_rate)(ffn_output)
-    out2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)(out1 + ffn_output)
+    out2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)([out1, ffn_output])
 
     return out2
 

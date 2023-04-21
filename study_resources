@@ -28,6 +28,34 @@ Capstone projects: high complexity (put everything together, >500 lines, use int
 Social media clones, like twitter, discord, reddit, etc.
 Ecommerce store and website
 
+Project ideas
+A website like quilbot that rephrase sentences where a population of text similar to input text is held and the best fit is optimised using genetic algorithm, fitness is document level text similarity, gene is word
+
+Task: Build a Wikipedia Explorer App
+Goal: Create a web or mobile application that displays a random Wikipedia page and allows users to navigate through articles based on their interests.
+Requirements:
+- The app should be able to generate a random Wikipedia page upon user request.
+- The app should allow users to select categories they are interested in and display a random Wikipedia page within that category.
+- The app should have a rabbit hole mode that allows users to navigate from one article to another by clicking on links within the article. Each new article should be randomly selected from the links in the previous article.
+- The app should have a user-friendly interface that allows for easy navigation and exploration of Wikipedia articles.
+Suggested steps to complete the task:
+1. Plan the app architecture and decide on the programming language and framework you want to use.
+2. Use the Wikipedia API to retrieve articles and their categories.
+3. Implement a random page generator function that fetches a random Wikipedia page and displays it to the user.
+4. Implement a category selection feature that allows users to choose a category and generates a random Wikipedia page within that category.
+5. Implement the rabbit hole mode feature that enables users to navigate through articles by clicking on links in the current article.
+6. Create a user-friendly interface for the app that allows for easy navigation and exploration of Wikipedia articles.
+7. Test the app to ensure it is functioning correctly and make any necessary adjustments.
+8. Deploy the app to a web or mobile platform for users to access.
+Optional Enhancements:
+- Allow users to save their favorite articles and create a personalized library of Wikipedia pages.
+- Add a search feature that enables users to search for specific Wikipedia articles.
+- Incorporate a feature that allows users to share articles on social media platforms.
+
+Build a text reading app with great UI which highlight important part and translate automatically to chinese
+
+Pac-Man simulator
+
 Project suggestions
 hardcore basic apps or useful apps
 https://github.com/vicky002/1000_Projects
@@ -118,11 +146,13 @@ https://pythonforundergradengineers.com/how-i-built-this-site-7.html
 https://lp.leadpages.com/ultimate-website-builder/
 https://tw.alphacamp.co/blog/slicing-interface-design
 https://dev.to/devland/5-real-world-projects-for-practicing-with-nextjs-55g7
+https://www.youtube.com/watch?v=Yw7yWHigGKI&list=WL&index=59&pp=gAQBiAQB
 https://www.youtube.com/watch?v=KjY94sAKLlw&list=WL&index=448
 https://youtu.be/u72H_zZzkcw
 https://youtu.be/4xduSsxa5Os
 
-Frontend + backend
+full stack
+frontend + backend
 https://github.com/TheOdinProject
 https://tms-dev-blog.com/python-backend-with-javascript-frontend-how-to/
 https://blog.csdn.net/weixin_45621944/article/details/109906498
@@ -141,6 +171,17 @@ https://github.com/FredrikOseberg/spa-api
 https://ithelp.ithome.com.tw/users/20110962/ironman/3327
 Turbo Console Log
 https://github.com/google-research/mood-board-search
+https://www.youtube.com/watch?v=7LNl2JlZKHA&list=WL&index=61&pp=gAQBiAQB
+https://www.youtube.com/watch?v=a37BL0stIuM&list=WL&index=60&pp=gAQBiAQB
+https://www.youtube.com/watch?v=mqUN4N2q4qY
+https://www.youtube.com/@javascriptmastery/videos
+https://youtu.be/eu0rExO_C3A
+https://medium.com/@obrm770/setting-up-a-full-stack-react-node-js-project-a-comprehensive-cheat-sheet-ee326576c21a
+https://www.youtube.com/watch?v=1NrHkjlWVhM&list=WL&index=452&t=10s
+https://www.youtube.com/watch?v=od4hT9abIMQ&list=WL&index=31&pp=gAQBiAQB
+https://www.youtube.com/watch?v=k4lHXIzCEkM&list=WL&index=35&pp=gAQBiAQB
+https://www.youtube.com/watch?v=ytkG7RT6SvU&list=WL&index=66&pp=gAQBiAQB
+https://www.youtube.com/watch?v=VjiWpGR82t0&list=WL&index=76&pp=gAQBiAQB
 
 flask
 https://flask.palletsprojects.com/en/2.0.x/quickstart/#a-minimal-application
@@ -154,6 +195,7 @@ https://realpython.com/python-web-applications-with-flask-part-ii/
 https://www.jetbrains.com/help/pycharm/creating-web-application-with-flask.html
 https://www.fullstackpython.com/flask.html
 https://www.freecodecamp.org/news/how-to-build-a-web-application-using-flask-and-deploy-it-to-the-cloud-3551c985e492/
+https://www.youtube.com/watch?v=yBDHkveJUf4&list=WL&index=19&pp=gAQBiAQB
 Flask example GitHub
 https://www.educative.io/collection/page/10370001/5948104969027584/4612762156400640/project
 https://www.youtube.com/watch?v=kng-mJJby8g&ab_channel=TechWithTim
@@ -438,6 +480,12 @@ https://www.coursera.org/specializations/object-oriented-programming
 https://www.coursera.org/specializations/java-object-oriented
 https://python.plainenglish.io/7-levels-of-creating-python-classes-fc440dc96a19
 https://zhuanlan.zhihu.com/p/76618283?utm_id=0
+youtube.com/watch?v=i53Gi_K3o7I&list=WL&index=83
+https://www.youtube.com/watch?v=JubdZIdLQ4M&list=WL&index=94&pp=gAQBiAQB
+https://www.youtube.com/watch?v=cVVMbuKmNes&list=WL&index=95&pp=gAQBiAQB
+https://www.youtube.com/watch?v=lsddiYwWaOQ&list=WL&index=96&pp=gAQBiAQB
+https://www.youtube.com/watch?v=g0XmFpmvsDk&list=WL&index=97&t=1s&pp=gAQBiAQB
+https://www.youtube.com/watch?v=m8Icp_Cid5o&list=WL&index=106&pp=gAQBiAQB
 
 data structure
 https://www.youtube.com/playlist?list=PLUl4u3cNGP61Oq3tWYp6V_F-5jb5L2iHb
@@ -601,6 +649,8 @@ https://youtu.be/wYpCWwD1oz0
 https://www.youtube.com/watch?v=f7T48W0cwXM&list=WL&index=434&t=7s
 https://www.youtube.com/watch?v=Mos5QJAje28&list=WL&index=435&t=6s
 https://www.youtube.com/watch?v=NT299zIk2JY&list=WL&index=436&t=1197s
+https://www.youtube.com/watch?v=X8ipUgXH6jw&list=WL&index=57&pp=gAQBiAQB
+https://www.youtube.com/watch?v=EhI6wb5nEEs&list=WL&index=88&pp=gAQBiAQB
 
 typescript
 https://ithelp.ithome.com.tw/users/20109783/ironman/1659
@@ -717,6 +767,8 @@ https://www.youtube.com/watch?v=78UU0Wta7xo&list=WL&index=397
 https://www.youtube.com/watch?v=91Q6RvKvd7o&list=WL&index=398
 https://www.youtube.com/watch?v=dhmrN2EjkSg&list=WL&index=442
 https://www.youtube.com/watch?v=MnMxRkX7DvU&list=WL&index=443&t=139s
+https://www.youtube.com/watch?v=g0db5kA4BfQ&list=WL&index=133&pp=gAQBiAQB
+https://www.youtube.com/watch?v=NUeCNvYY_x4&list=WL&index=134&pp=gAQBiAQB
 
 html
 https://www.codecademy.com/learn/learn-html
@@ -743,12 +795,6 @@ https://www.uisdc.com/component-library-construction-3
 https://www.youtube.com/watch?v=o-WrQ77zUvA
 https://www.youtube.com/watch?v=Zddof7W_xnY
 
-full stack
-https://www.youtube.com/watch?v=mqUN4N2q4qY
-https://www.youtube.com/@javascriptmastery/videos
-https://youtu.be/eu0rExO_C3A
-https://medium.com/@obrm770/setting-up-a-full-stack-react-node-js-project-a-comprehensive-cheat-sheet-ee326576c21a
-https://www.youtube.com/watch?v=1NrHkjlWVhM&list=WL&index=452&t=10s
 
 Python game
 https://www.youtube.com/watch?v=U9vqzH65Zzw
@@ -763,13 +809,23 @@ https://github.blog/2022-05-05-ludum-dare-50/
 https://github.blog/2023-01-13-game-off-2022-winners/
 https://github.com/jeremycryan/LD50
 https://www.youtube.com/watch?v=cBj8PAQErA4
+https://www.youtube.com/watch?v=rk9vEnjvi54&list=WL&index=5&pp=gAQBiAQB
+https://www.youtube.com/watch?v=zX2o7BGjQRI&list=WL&index=113&pp=gAQBiAQB
+https://www.youtube.com/watch?v=I0JXFHc7tco&list=WL&index=128&t=6s&pp=gAQBiAQB
 
 Godot
 https://www.youtube.com/watch?v=nIofPW2Z6N8
 https://www.youtube.com/watch?v=HnxvYXyFpa8&list=PL0qDutCc8IQgtUXLQB07H4miK6DPvtjTg
+https://www.youtube.com/watch?v=UAS_pUTFA7o&list=WL&index=1&pp=gAQBiAQB
+https://www.youtube.com/watch?v=eU-F-xuEo7s&list=WL&index=36&pp=gAQBiAQB
+https://www.youtube.com/watch?v=BRGe8qttPxQ&list=WL&index=41&pp=gAQBiAQB
 
+unity
+https://www.youtube.com/watch?v=AmGSEH7QcDg
 
 Pygame
+https://www.youtube.com/watch?v=6gLeplbqtqg&list=WL&index=74
+https://github.com/techwithtim/Python-Platformer/blob/main/tutorial.py
 https://opensource.com/article/17/12/game-framework-python
 https://opensource.com/article/17/12/game-python-add-a-player
 https://www.epubit.com/articleDetails?id=NC7E3EF941B50000116101A401B63E380 four in row
@@ -947,6 +1003,10 @@ https://opensource.com/resources/python/gui-frameworks?intcmp=7016000000127cYAAQ
 https://www.youtube.com/watch?v=iM3kjbbKHQU
 https://www.youtube.com/watch?v=PIaccbMT6fo
 https://youtu.be/Z1N9JzNax2k
+NiceGUI
+customtkinter
+react
+kivy
 
 Web scraping
 https://github.com/Kr1s77/awesome-python-login-model
@@ -994,16 +1054,22 @@ https://blog.51cto.com/u_9399369/1953469
 web scraping
 https://zhuanlan.zhihu.com/p/33913257
 https://zhuanlan.zhihu.com/p/33929531
+https://www.youtube.com/watch?v=zucvHSQsKHA&list=WL&index=147&pp=gAQBiAQB
 
 database
 python mysql or other database project
 https://github.com/Almas-Ali/FlexDB
+https://www.youtube.com/watch?v=gwp3dJUsy5g&list=WL&index=114&pp=gAQBiAQB
+https://www.youtube.com/watch?v=LQywWpDoH9s&list=WL&index=115&pp=gAQBiAQB
+https://www.youtube.com/watch?v=l8DCPaHc5TQ&list=WL&index=148&pp=gAQBiAQB
 
 mysql
 https://www.learncodewithmike.com/2020/02/python-mysql.html
 https://www.maxlist.xyz/2018/09/23/python_mysql/
 
 https://note.charlestw.com/python-how-to-connect-sqlite/
+https://www.youtube.com/watch?v=girsuXz0yA8&list=WL&index=146&pp=gAQBiAQB
+https://www.youtube.com/watch?v=c8yHTlrs9EA&list=WL&index=13&pp=gAQBiAQB
 https://www.51cto.com/article/708748.html
 https://blog.boot.dev/backend/top-backend-technologies/
 https://www.youtube.com/watch?v=7s_8f-h5boE
@@ -1193,6 +1259,8 @@ https://colab.research.google.com/drive/1tttDqgnWL9yJtmlOFXJqA-BjQ1Pyfpax?usp=sh
 https://github.com/openai/openai-cookbook
 https://zhuanlan.zhihu.com/p/621735849
 https://zhuanlan.zhihu.com/p/618724929
+https://www.youtube.com/watch?v=ffEDkqfIzxM&list=WL&index=116&pp=gAQBiAQB
+https://www.youtube.com/watch?v=vDZAZuaXf48&list=WL&index=118&pp=gAQBiAQB
 
 NLP + machine learning
 https://github.com/tinahuangyt/Project-NatureGeneticsCitation
