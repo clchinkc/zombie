@@ -140,7 +140,7 @@ class Simulation:
             # check for collisions between agents and food, and eat food if close enough
             for food in self.food:
                 food_rect = pygame.Rect(food.rect)
-                if agent_rect.colliderect(food_rect) and agent.distance(food) <= self.eat_distance:
+                if agent_rect.colliderect(food_rect):
                     agent.eat(food.amount)
                     food.amount = 0
 
@@ -197,9 +197,9 @@ class Game:
             pygame.K_SPACE: lambda: setattr(self, 'paused', not paused),
             pygame.K_ESCAPE: lambda: setattr(self, 'running', False),
             pygame.K_UP: lambda: self.simulation.agents.add(Agent(random.randint(0, 800), random.randint(0, 600), random.uniform(0.5, 1.5), 50)),
-            pygame.K_DOWN: lambda: self.simulation.agents.pop() if len(self.simulation.agents) > 1 else None,
+            pygame.K_DOWN: lambda: self.simulation.agents.remove(self.simulation.agents.sprites()[-1]) if len(self.simulation.agents) > 1 else None,
             pygame.K_RIGHT: lambda: self.simulation.food.add(Food(random.randint(0, 800), random.randint(0, 600), 10)),
-            pygame.K_LEFT: lambda: self.simulation.food.pop() if len(self.simulation.food) > 1 else None
+            pygame.K_LEFT: lambda: self.simulation.food.remove(self.simulation.food.sprites()[-1]) if len(self.simulation.food) > 1 else None
         }
 
         while running:

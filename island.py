@@ -1,4 +1,7 @@
 
+"""
+The suggested simulation is a dynamic model that tracks the populations of sheep, wolves, and grass over time and observes how changes in one population affects the others. The model includes a predator-prey relationship between the sheep and wolves, a carrying capacity for the grass plots, migration behavior, a disease or parasite affecting the sheep population, and seasonality factors. The simulation outputs the changes in each population over time using line graphs, and the distribution of each population at the end of the simulation using histograms. This simulation provides a more realistic representation of the dynamics of sheep and wolf populations in an ecosystem and can be used to study the interplay between these populations.
+"""
 
 import random
 

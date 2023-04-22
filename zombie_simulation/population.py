@@ -12,6 +12,7 @@ Finally, we would need a main simulate function that would set up the initial co
 
 from __future__ import annotations
 
+import itertools
 import math
 import random
 from abc import ABC, abstractmethod
@@ -20,7 +21,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cached_property
 from typing import Any, Optional
-import itertools
+
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -167,7 +168,6 @@ class FleeZombiesStrategy(MovementStrategy):
         direction_distances = [np.linalg.norm(np.add(d, individual.location) - closest_target) for d in legal_directions]
         max_distance = np.max(direction_distances)
         farthest_directions = np.where(direction_distances == max_distance)[0]
-        print("farthest_directions", farthest_directions)
         return legal_directions[random.choice(farthest_directions)]
 
 @dataclass
@@ -188,7 +188,6 @@ class ChaseHumansStrategy(MovementStrategy):
         distance_matrix = np.linalg.norm(np.subtract(np.array(new_locations)[:, np.newaxis, :], np.array(target_locations)[np.newaxis, :, :]), axis=2)
         min_distance = np.min(distance_matrix[distance_matrix != 0])
         min_directions = np.where(distance_matrix == min_distance)[0]
-        print("min_distance_indices", min_directions)
         return legal_directions[random.choice(min_directions)]
 
     # may use np.sign
@@ -321,9 +320,7 @@ class School:
     def __init__(self, school_size: int) -> None:
         self.school_size = school_size
         # Create a 2D grid representing the school with each cell can contain a Individual object
-        self.grid: list[list[Optional[Individual]]] = [
-            [None for _ in range(school_size)] for _ in range(school_size)
-        ]
+        self.grid: np.ndarray = np.full((school_size, school_size), None, dtype=object)
         self.strategy_factory = MovementStrategyFactory()
 
         # may turn to width and height
@@ -433,17 +430,17 @@ class School:
         self.remove_individual(old_location)
         self.add_individual(individual)
 
-def print_info(self) -> None:
-    for column in self.grid:
-        row = " ".join(str(individual.state.value) if individual else " " for individual in column)
-        print(row)
+    def print_info(self) -> None:
+        for column in self.grid:
+            row = " ".join(str(individual.state.value) if individual else " " for individual in column)
+            print(row)
 
-    # return the count inside the grid
-    def __str__(self) -> str:
-        return f"School({self.school_size})"
+        # return the count inside the grid
+        def __str__(self) -> str:
+            return f"School({self.school_size})"
 
-    def __repr__(self) -> str:
-        return "%s(%d,%d)" % (self.__class__.__name__, self.school_size)
+        def __repr__(self) -> str:
+            return "%s(%d,%d)" % (self.__class__.__name__, self.school_size)
 
 
 # Observer Pattern
@@ -556,7 +553,10 @@ class PopulationObserver(Observer):
 
         for row in self.grid:
             for cell in row:
-                print(state_symbols.get(cell.state, " "), end=" ")
+                try:
+                    print(state_symbols[cell.state], end=" ")
+                except AttributeError:
+                    print(state_symbols[cell], end=" ")
             print()
         print()
 
