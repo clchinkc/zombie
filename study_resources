@@ -104,6 +104,7 @@ https://github.com/mkaramica?tab=repositories
 https://github.com/SkalskiP/ILearnDeepLearning.py
 https://www.dataquest.io/blog/datadotworld-python-tutorial/
 https://www.dataquest.io/blog/free-datasets-for-projects/
+https://b-cd.net/youtube vercel website
 
 Must read books
 https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
@@ -375,6 +376,27 @@ https://maven.com/fpaprep/fpa-bootcamp
 https://www.datacamp.com/tracks/finance-fundamentals-in-python
 https://blog.csdn.net/csdn_sweetcoder/article/details/109089634
 https://www.udacity.com/course/ai-for-trading--nd880
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9680880/
+https://chenhh.gitbooks.io/multiperiod_portfolio_optimization/content/
+Data Science
+The tutorial will cover the following topics:
+Data processing and analysis, including data cleaning, applying data science techniques, data extraction and manipulation.
+Using Python for data visualization. Commonly used packages such as Matplotlib, Seaborn, bokeh will be used to create charts, while industry-standard Tableau will be used to create interactive data visualizations.
+Managing large datasets, including relational and non-relational databases, and using SQL to query data.
+Gain in-depth understanding of analyzing financial data, particularly cryptocurrency, through practical scenarios and tool usage. Additionally, learn how to incorporate other data for correlation analysis, such as foreign exchange, futures, and real estate.
+Development and management practices, such as how to write clean code, use Git version control, deploy environments conveniently, collaborate effectively, and what agile development management is. The roles and responsibilities of engineers, PMs, and designers in collaborative work and communication will also be introduced.
+Quantitative Trading
+The purpose of quantitative trading is to allow everyone to develop their own quantitative strategies and build their own Live Trading system without the risk of key leakage from third-party platforms.
+The tutorial will cover the following topics:
+Teach the basics of quantitative trading.
+What are the traditional quantitative trading methods and backtesting methods? How to accelerate backtesting in practice?
+Can quantitative trading be done using pattern instead of traditional indicators? How to do it?
+How to let the program help you find support and resistance? What are the various methods for this and their significance?
+Understand correlation calculation to enhance asset risk management capabilities. In addition, various algorithms and their meanings for correlation calculations will be taught.
+How to conduct risk assessment and asset allocation?
+How to execute exchange connections? How to deploy the platform?
+How to use AI for quantitative trading? What are machine learning and deep learning? What models can be used for quantitative trading? What are the variations of these models?
+How to connect Telegram bots to report orders or automatically report trading status?
 
 Reinforcement learning
 RL algorithms can be categorized as either model-based or model-free, and as either value-based or policy-based.
@@ -516,6 +538,7 @@ https://www.coursera.org/specializations/algorithms
 https://www.udacity.com/course/data-structures-and-algorithms-in-swift--ud1011
 https://www.udacity.com/course/data-structures-and-algorithms-nanodegree--nd256
 https://www.coursera.org/learn/python-data
+https://www.udemy.com/user/mohammed-abdul-bari-2/
 
 Code style
 https://en.wikipedia.org/wiki/Coding_best_practices
@@ -664,6 +687,11 @@ https://youtu.be/gieEQFIfgYc
 
 Vue, svelete, angular
 https://www.smashingmagazine.com/2018/02/jquery-vue-javascript/
+
+express
+next.js
+spring boot
+.net mvc
 
 Javascript
 https://developer.mozilla.org/zh-TW/docs/Learn/JavaScript
@@ -1001,6 +1029,7 @@ https://www.youtube.com/watch?v=Ea9jgBjQxEs
 https://github.com/togethercomputer/OpenChatKit
 https://huggingface.co/spaces/togethercomputer/OpenChatKit
 https://github.com/lm-sys/FastChat
+https://huggingface.co/spaces/trl-lib/stack-llama
 
 Command line application
 https://github.com/lxgr-linux/pokete
@@ -1077,6 +1106,15 @@ https://github.com/Almas-Ali/FlexDB
 https://www.youtube.com/watch?v=gwp3dJUsy5g&list=WL&index=114&pp=gAQBiAQB
 https://www.youtube.com/watch?v=LQywWpDoH9s&list=WL&index=115&pp=gAQBiAQB
 https://www.youtube.com/watch?v=l8DCPaHc5TQ&list=WL&index=148&pp=gAQBiAQB
+https://www.khanacademy.org/computing/computer-programming/sql/
+https://sqlzoo.net/wiki/SQL_Tutorial
+https://sqlbolt.com/
+https://www.youtube.com/@LukeBarousse
+https://www.youtube.com/@AlexTheAnalyst
+https://www.youtube.com/@TheOyinbooke
+https://www.freecodecamp.org/news/sql-and-databases-full-course/
+https://www.freecodecamp.org/news/learn-sql-free-relational-database-courses-for-beginners/#relational-database-freecodecamp-curriculum
+
 
 mysql
 https://www.learncodewithmike.com/2020/02/python-mysql.html
@@ -1259,6 +1297,10 @@ https://www.youtube.com/watch?v=2xxziIWmaSA
 https://github.com/logspace-ai/langflow
 https://www.youtube.com/watch?v=v6sF8Ed3nTE
 https://www.youtube.com/watch?v=XS8eRtlcCGU
+https://www.pinecone.io/learn/langchain-agents/
+Pinecone.io
+http://stablelm.co/
+https://github.com/stability-AI/stableLM/
 https://github.com/nomic-ai/gpt4all
 https://github.com/acheong08/ChatGPT
 Reverse chatgpt, edgegpt
@@ -1358,6 +1400,12 @@ https://www.youtube.com/watch?v=soqTT0o1ZKo
 MCMC
 pymc3
 bayesian modeling and computation in python
+
+liquid neural network
+https://github.com/raminmh/liquid_time_constant_networks
+https://arxiv.org/abs/2106.13898
+https://github.com/raminmh/CfC
+https://github.com/HazyResearch/state-spaces
 
 money
 Stripe API

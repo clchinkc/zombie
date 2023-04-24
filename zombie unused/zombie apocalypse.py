@@ -585,6 +585,9 @@ https://github.com/je-suis-tm/graph-theory/blob/master/diversity%20trumps%20abil
 
 Gillespie Algorithm
 https://github.com/je-suis-tm/graph-theory/blob/master/Epidemic%20Outbreak%20project/gillespie%20algorithm.ipynb
+
+virus simulation
+https://www.youtube.com/watch?v=g7xzVqpyiPY
 """
 
 """

@@ -473,3 +473,8 @@ if __name__ == '__main__':
 # 4. Multi-step Learning：傳統的Q-learning算法僅考慮當前狀態和下一個狀態之間的轉移。Multi-step Learning通過考慮多個連續狀態之間的轉移，從而使算法能夠更好地利用長期的時間關聯性，從而提高了數據效率和最終性能。
 # 5. Distributional RL：傳統的Q-learning算法僅考慮每個動作的期望回報值。Distributional RL通過估計每個動作的回報分佈，從而提高了算法對不同回報值之間差異的感知能力。這種方法使算法能夠更好地學習到不同動作之間的差異，從而提高了最終性能。
 # 6. Noisy Nets：Noisy Nets通過向神經網絡中添加隨機噪聲，從而使得神經網絡更容易探索新的策略。這種方法提高了算法學習到高質量策略的速度和效率。
+# https://www.tensorflow.org/agents/api_docs/python/tf_agents/bandits
+# https://www.tensorflow.org/decision_forests/tutorials/automatic_tuning_colab
+# https://www.tensorflow.org/decision_forests/tutorials/model_composition_colab
+# https://www.tensorflow.org/decision_forests/tutorials/advanced_colab
+# https://www.tensorflow.org/probability/examples/Probabilistic_Layers_Regression
