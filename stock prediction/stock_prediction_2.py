@@ -235,3 +235,4 @@ Convergence diagnostics: To ensure that the MCMC chain has converged to the targ
 
 Using alternative MCMC methods: You can also try other MCMC methods, such as the Hamiltonian Monte Carlo (HMC) or the No-U-Turn Sampler (NUTS), which can provide better exploration of the target distribution, especially in high-dimensional problems.
 """
+# tensorflow_probability MCMC

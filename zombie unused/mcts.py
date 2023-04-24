@@ -278,3 +278,4 @@ if __name__ == "__main__":
     model.save("model.h5")
     
     
+# Assume human is one side of chess and zombie is one side of chess. Use alphazero's monte carlo tree search.
