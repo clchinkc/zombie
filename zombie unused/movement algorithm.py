@@ -1,7 +1,19 @@
 
-import heapq
+
+"""
+There are many ways to implement more complex algorithms for controlling the movements of people and zombies in a simulation. Here are a few examples of more advanced approaches you could consider:
+
+Pathfinding algorithms: You could use algorithms such as A* or Dijkstra's algorithm to allow people and zombies to intelligently navigate the school layout and avoid obstacles. This could be useful for simulating more realistic or strategic movements, such as people trying to find the best route to escape the school or zombies trying to track down nearby survivors.
+
+Flocking algorithms: You could use algorithms such as Boids or Reynolds' steering behaviors to simulate the collective movements of groups of people or zombies. This could be used to model the behavior of crowds or hordes, and could help to create more realistic and dynamic simulations.
+
+Machine learning algorithms: You could use machine learning techniques such as reinforcement learning or decision trees to train people and zombies to make more intelligent decisions about their movements. This could allow the simulation to adapt and improve over time, and could potentially enable the people and zombies to learn from their experiences and make more effective decisions in the future.
+"""
+
+
 import random
 from enum import Enum
+from queue import PriorityQueue
 
 import numpy as np
 import pygame
@@ -14,11 +26,12 @@ class CellType(Enum):
     AGENT = 2
     GOAL = 3
 
+
 class Grid:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.grid = np.full((height, width), CellType.EMPTY)
+        self.grid = np.full((height, width), CellType.OBSTACLE)
 
     def set_obstacle(self, x, y):
         self.grid[y][x] = CellType.OBSTACLE
@@ -28,6 +41,107 @@ class Grid:
 
     def is_valid_move(self, x, y):
         return 0 <= x < self.width and 0 <= y < self.height and self.grid[y][x] != CellType.OBSTACLE
+
+    # Depth-first search maze generation algorithm
+    def generate_maze(self, start_x, start_y, end_x, end_y):
+        def is_valid_cell(x, y):
+            return 0 <= x < self.width and 0 <= y < self.height
+
+        def get_neighbors(x, y):
+            neighbors = []
+            for dx, dy in [(-2, 0), (2, 0), (0, -2), (0, 2)]:
+                nx, ny = x + dx, y + dy
+                if is_valid_cell(nx, ny):
+                    neighbors.append((nx, ny))
+            return neighbors
+
+        def remove_wall(x1, y1, x2, y2):
+            self.grid[y1][x1] = CellType.EMPTY
+            self.grid[y2][x2] = CellType.EMPTY
+            self.grid[(y1 + y2) // 2][(x1 + x2) // 2] = CellType.EMPTY
+
+        stack = [(start_x, start_y)]
+
+        while stack:
+            x, y = stack[-1]
+            self.grid[y][x] = CellType.EMPTY
+
+            neighbors = [
+                (nx, ny)
+                for nx, ny in get_neighbors(x, y)
+                if self.grid[ny][nx] == CellType.OBSTACLE
+            ]
+
+            if neighbors:
+                nx, ny = neighbors[np.random.randint(len(neighbors))]
+                remove_wall(x, y, nx, ny)
+                stack.append((nx, ny))
+            else:
+                stack.pop()
+
+        for y in range(self.height):
+            for x in range(self.width):
+                if (self.height % 2 == 0 and y == self.height - 1) or (self.width % 2 == 0 and x == self.width - 1):
+                    self.grid[y][x] = CellType.EMPTY
+
+        self.set_goal(end_x, end_y)
+
+    # Prim's algorithm
+    def generate_maze(self, start_x, start_y, end_x, end_y):
+        def is_valid_cell(x, y):
+            return 0 <= x < self.width and 0 <= y < self.height
+
+        def get_neighbors(x, y):
+            neighbors = []
+            for dx, dy in [(-2, 0), (2, 0), (0, -2), (0, 2)]:
+                nx, ny = x + dx, y + dy
+                if is_valid_cell(nx, ny):
+                    neighbors.append((nx, ny))
+            return neighbors
+
+        def remove_wall(x1, y1, x2, y2):
+            self.grid[y1][x1] = CellType.EMPTY
+            self.grid[y2][x2] = CellType.EMPTY
+            self.grid[(y1 + y2) // 2][(x1 + x2) // 2] = CellType.EMPTY
+
+        for y in range(self.height):
+            for x in range(self.width):
+                if x % 2 == 0 or y % 2 == 0:
+                    self.grid[y][x] = CellType.OBSTACLE
+
+        start_cell = (start_x, start_y)
+        visited = {start_cell}
+        frontier = get_neighbors(start_x, start_y)
+
+        while frontier:
+            current_cell = frontier.pop(np.random.randint(len(frontier)))
+            x, y = current_cell
+            connecting_neighbors = [
+                (nx, ny) for nx, ny in get_neighbors(x, y) if (nx, ny) in visited
+            ]
+            if connecting_neighbors:
+                cx, cy = connecting_neighbors[np.random.randint(len(connecting_neighbors))]
+                remove_wall(x, y, cx, cy)
+                visited.add(current_cell)
+                frontier.extend([n for n in get_neighbors(x, y) if n not in visited and n not in frontier])
+
+        for y in range(self.height):
+            for x in range(self.width):
+                if (self.height % 2 == 0 and y == self.height - 1 and end_y == self.height - 1) or (
+                        self.width % 2 == 0 and x == self.width - 1 and end_x == self.width - 1):
+                    self.grid[y][x] = CellType.EMPTY
+
+        self.set_goal(end_x, end_y)
+
+# or wave function collapse
+# https://github.com/avihuxp/WaveFunctionCollapse
+# https://www.youtube.com/watch?v=2SuvO4Gi7uY
+# https://en.wikipedia.org/wiki/Maze_generation_algorithm
+# https://youtu.be/rI_y2GAlQFM
+# https://youtu.be/TlLIOgWYVpI
+# https://youtu.be/20KHNA9jTsE
+# https://youtu.be/TO0Tx3w5abQ
+
 
 # Create agent classes
 class Agent:
@@ -51,49 +165,9 @@ class RandomWalk:
                 return new_x, new_y
         return x, y
 
-class AStar:
-    def __init__(self, goal_x, goal_y):
-        self.goal_x = goal_x
-        self.goal_y = goal_y
-
-    def heuristic(self, x, y):
-        return abs(x - self.goal_x) + abs(y - self.goal_y)
-
-    def move(self, x, y, grid):
-        open_list = []
-        heapq.heappush(open_list, (0, (x, y)))
-        came_from = dict()
-        g_score = {pos: float("inf") for pos in np.ndindex(grid.height, grid.width)}
-        g_score[(x, y)] = 0
-
-        while open_list:
-            _, current = heapq.heappop(open_list)
-            current_y, current_x = current
-
-            if (current_x, current_y) == (self.goal_x, self.goal_y):
-                path = [current]
-                while current in came_from:
-                    current = came_from[current]
-                    path.append(current)
-                return path[-2]
-
-            neighbors = [(current_y + dy, current_x + dx) for dy, dx in [(1, 0), (-1, 0), (0, 1), (0, -1)]]
-            for neighbor_y, neighbor_x in neighbors:
-                if not grid.is_valid_move(neighbor_y, neighbor_x):
-                    continue
-
-                tentative_g_score = g_score[(current_y, current_x)] + 1
-                if tentative_g_score < g_score[(neighbor_y, neighbor_x)]:
-                    came_from[(neighbor_y, neighbor_x)] = (current_y, current_x)
-                    g_score[(neighbor_y, neighbor_x)] = tentative_g_score
-                    f_score = tentative_g_score + self.heuristic(neighbor_y, neighbor_x)
-                    heapq.heappush(open_list, (f_score, (neighbor_y, neighbor_x)))
-
-        return x, y
-
 class Swarm:
     def __init__(self, goal_x, goal_y):
-        self.num_particles = 1
+        self.num_particles = 100
         self.max_iter = 100
         self.goal_x = goal_x
         self.goal_y = goal_y
@@ -192,6 +266,58 @@ class Swarm:
         best_move_index = move_scores.index(min(move_scores))
         return moves[best_move_index]
 
+class AStar:
+    def __init__(self, goal_x, goal_y):
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+        self.heuristic_cache = {}
+
+    def heuristic(self, x, y):
+        if (x, y) not in self.heuristic_cache:
+            self.heuristic_cache[(x, y)] = abs(x - self.goal_x) + abs(y - self.goal_y)
+        return self.heuristic_cache[(x, y)]
+
+    def find_neighbors(self, grid, pos):
+        x, y = pos
+        neighbors = [(x + dy, y + dx) for dy, dx in [(1, 0), (-1, 0), (0, 1), (0, -1)]]
+        valid_neighbors = [neighbor for neighbor in neighbors if grid.is_valid_move(*neighbor)]
+        return valid_neighbors
+
+    def find_path(self, start_pos, grid):
+        end_pos = (self.goal_x, self.goal_y)
+
+        open_list = PriorityQueue()
+        open_list.put((0, (start_pos, [start_pos])))
+        visited = set()
+
+        g_scores = {start_pos: 0}
+        f_scores = {start_pos: self.heuristic(*start_pos)}
+
+        while not open_list.empty():
+            _, (current, path) = open_list.get()
+            if current == end_pos:
+                return path
+
+            neighbors = self.find_neighbors(grid, current)
+            for neighbor in neighbors:
+                if neighbor in visited:
+                    continue
+
+                tentative_g_score = g_scores[current] + 1
+                if neighbor not in g_scores or tentative_g_score < g_scores[neighbor]:
+                    g_scores[neighbor] = tentative_g_score
+                    f_scores[neighbor] = tentative_g_score + self.heuristic(*neighbor)
+                    open_list.put((f_scores[neighbor], (neighbor, path + [neighbor])))
+                    visited.add(neighbor)
+
+        return []
+
+    def move(self, x, y, grid):
+        path = self.find_path((x, y), grid)
+        if len(path) > 1:
+            next_step = path[1]
+            return next_step
+        return x, y
 
 
 def draw_grid(screen, grid):
@@ -254,12 +380,12 @@ def run_simulation(grid, agents, goal_x, goal_y, max_iterations=1000):
 
 
 # Create and populate the grid environment
-width, height = 10, 10
+width, height = 9, 9
 grid = Grid(width, height)
-grid.set_obstacle(3, 3)
-grid.set_obstacle(4, 4)
-goal_x, goal_y = 9, 9
-grid.set_goal(goal_x, goal_y)
+start_x, start_y = 0, 0
+goal_x, goal_y = 8, 8
+grid.generate_maze(start_x, start_y, goal_x, goal_y)
+
 
 # Pygame constants
 CELL_SIZE = 40
@@ -275,9 +401,9 @@ FPS = 10
 
 # Create agents
 agents = [
-    # Agent(0, 0, RandomWalk()),
-    Agent(0, 1, AStar(goal_x, goal_y)),
-    Agent(0, 2, Swarm(goal_x, goal_y)),
+    Agent(0, 0, RandomWalk()),
+    Agent(0, 0, Swarm(goal_x, goal_y)),
+    Agent(0, 0, AStar(goal_x, goal_y)),
 ]
 
 # Run the simulation
