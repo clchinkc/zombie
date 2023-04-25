@@ -60,7 +60,19 @@ class SIZR:
     def __init__(self, sigma, beta, rho, alpha, delta_S, delta_I, delta_Z, S0, I0, Z0, R0):
         """
         The Zombie class
-        initial value:  S0, I0, Z0, R0
+        
+        Parameters:
+        - sigma: float or callable, rate of population birth
+        - beta: float or callable, rate of transmission between susceptible and zombie populations
+        - rho: float or callable, rate of recovery from zombie infection
+        - alpha: float or callable, rate of decay of zombies due to natural causes or combat
+        - delta_S: float or callable, rate of susceptible population death 
+        - delta_I: float or callable, rate of infected population death
+        - delta_Z: float or callable, rate of zombie population death
+        - S0: float, initial susceptible population
+        - I0: float, initial infected population
+        - Z0: float, initial zombie population
+        - R0: float, initial removed (dead or immune) population
         """
 
         for name, argument in locals().items():
@@ -75,14 +87,12 @@ class SIZR:
     def __call__(self, u, t):
         """RHS of system of ODEs"""
 
-        S, I, Z, _ = u 
+        S, I, Z, R = u 
 
-        dSdt, dIdt, dZdt, dRdt = np.asarray([
-            self.sigma(t) - self.beta(t)*S*Z - self.delta_S(t)*S - self.alpha(t)*S**2,
-            self.beta(t)*S*Z - self.rho(t)*I - self.delta_I(t)*I - self.alpha(t)*I**2,
-            self.rho(t)*I - self.delta_Z(t)*S*Z - self.alpha(t)*Z**2,
-            self.delta_S(t)*S + self.delta_I(t)*I + self.delta_Z(t)*S*Z +self.alpha(t)*S**2 + self.alpha(t)*I**2 + self.alpha(t)*Z**2
-        ])
+        dSdt = self.sigma(t) - self.beta(t)*S*Z - self.delta_S(t)*S - self.alpha(t)*S**2
+        dIdt = self.beta(t)*S*Z - self.rho(t)*I - self.delta_I(t)*I - self.alpha(t)*I**2
+        dZdt = self.rho(t)*I - self.delta_Z(t)*S*Z - self.alpha(t)*Z**2
+        dRdt = self.delta_S(t)*S + self.delta_I(t)*I + self.delta_Z(t)*S*Z + self.alpha(t)*(S**2 + I**2 + Z**2)
         
         assert abs(dSdt + dIdt + dZdt + dRdt - self.sigma(t)) < 1e-10, "The sum of the derivatives is not zero"
         
@@ -110,18 +120,18 @@ if __name__ == "__main__":
     delta_I = lambda t: 0 if t < 4 else (0.014 if t > 4 and t < 28 else 0.05)
     delta_S = lambda t: 0 if t < 28 else 0.007
 
-    # beta = 0.012
-    # delta_Z = 0.0016
-    # sigma = 2
-    # rho = 1
-    # alpha = 0.0001
-    # delta_I = 0.014
-    # delta_S = 0.0
+    # sigma = 2 # rate of population birth
+    # beta = 0.012 # rate of transmission between susceptible and zombie populations
+    # rho = 1 # rate of transformation from infected to zombie
+    # alpha = 0.0001 # overpopulation factor
+    # delta_S = 0.0 # death rate of susceptible individuals
+    # delta_I = 0.014 # death rate of infected individuals
+    # delta_Z = 0.0016 # death rate of zombies
 
-    S0 = 100
-    I0 = 0
-    Z0 = 10
-    R0 = 0
+    S0 = 100 # initial susceptible population
+    I0 = 0 # initial infected population
+    Z0 = 10 # initial zombie population
+    R0 = 0 # initial removed (dead or immune) population
     
     zombie_model = SIZR(sigma, beta, rho, alpha, delta_S, delta_I, delta_Z, S0, I0, Z0, R0)
     

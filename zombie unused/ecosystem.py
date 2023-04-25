@@ -42,9 +42,16 @@ class Agent(pygame.sprite.Sprite):
             self.dy = -self.dy
 
         # Randomly change agent direction
-        if random.random() < 0.1:
-            self.dx = random.uniform(-1, 1)
-            self.dy = random.uniform(-1, 1)
+        self.randomly_change_direction()
+
+    def randomly_change_direction(self, gamma=0.1, sigma=0.1):
+        # gamma is friction coefficient
+        # sigma is noise strength
+        # calculate new position and velocity using Langevin equation
+        dvx = -gamma*self.dx + sigma*np.random.normal(0, 1)
+        dvy = -gamma*self.dy + sigma*np.random.normal(0, 1)
+        self.dx += dvx
+        self.dy += dvy
 
     def move(self, dx, dy):
         self.rect.move_ip(dx * self.speed, dy * self.speed)

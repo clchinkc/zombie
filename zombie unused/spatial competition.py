@@ -172,15 +172,6 @@ plt.xticks(fontsize=20)
 plt.grid()
 plt.show()
 
-"""
-This code block creates a plot that visualizes the solution of the simulation at a certain time step.
-The plot shows the populations of two species (Species 1 and Species 2) as well as the resources they compete for.
-The populations are represented by arrays p1 and p2, and the resources are represented by the array r.
-The code uses the time step i to specify the current state of the populations in the simulation.
-The plot is labeled with the values of the parameters d1 and d2, which control the diffusion rate of the populations.
-The plot also includes the resources r(x) for comparison.
-"""
-
 # animate the solution
 
 def animate(i):
@@ -200,9 +191,83 @@ ani = animation.FuncAnimation(fig, animate, frames=400, interval=50)
 ani.save('species.gif',writer='pillow',fps=10)
 
 """
-This is code to animate a solution of a 2 species and resource model.
-The animate function takes an integer i as input and updates the plot at each time step.
-The plot shows the population of species 1 and species 2 and the resources.
-The animation is saved as a gif using the FuncAnimation function from the matplotlib animation library.
-The animation shows how the populations of both species and the resources change over time.
+class SpatialSIZR:
+    def __init__(self, sigma, beta, rho, alpha, delta_S, delta_I, delta_Z, S0, I0, Z0, R0, dS, dI, dZ, aS, aI, r):
+        for name, argument in locals().items():
+            if name not in ('self', 'S0', 'I0', 'R0', 'Z0'):
+                if isinstance(argument, (float, int)):
+                    setattr(self, name, lambda self, value=argument: value)
+                elif callable(argument):
+                    setattr(self, name, argument)
+
+        self.initial_conditions = [S0, I0, Z0, R0]
+
+    def __call__(self, u, t, x):
+        """RHS of system of PDEs"""
+
+        S, I, Z, R = u
+
+        dSdt = self.sigma(t) - self.beta(t) * S * Z - self.delta_S(t) * S - self.alpha(t) * S ** 2 + self.dS(t) * (S[x-1] - 2 * S[x] + S[x+1]) + self.r(t) * S * (1 - self.aS(t) * Z)
+        dIdt = self.beta(t) * S * Z - self.rho(t) * I - self.delta_I(t) * I - self.alpha(t) * I ** 2 + self.dI(t) * (I[x-1] - 2 * I[x] + I[x+1]) + self.r(t) * I * (1 - self.aI(t) * Z)
+        dZdt = self.rho(t) * I - self.delta_Z(t) * S * Z - self.alpha(t) * Z ** 2 + self.dZ(t) * (Z[x-1] - 2 * Z[x] + Z[x+1])
+        dRdt = self.delta_S(t) * S + self.delta_I(t) * I + self.delta_Z(t) * S * Z + self.alpha(t) * (S ** 2 + I ** 2 + Z ** 2)
+
+        assert abs(dSdt + dIdt + dZdt + dRdt - self.sigma(t)) < 1e-10, "The sum of the derivatives is not zero"
+
+        return [dSdt, dIdt, dZdt, dRdt]
+
+
+def spatial_sizr_finite_difference(zombie_model, initial_conditions, time_steps, x_steps):
+    S0, I0, Z0, R0 = initial_conditions
+    dt = time_steps[1] - time_steps[0]
+    dx = x_steps[1] - x_steps[0]
+    S = np.zeros((len(time_steps), len(x_steps)))
+    I = np.zeros((len(time_steps), len(x_steps)))
+    Z = np.zeros((len(time_steps), len(x_steps)))
+    R = np.zeros((len(time_steps), len(x_steps)))
+
+    S[0, :] = S0
+    I[0, :] = I0
+    Z[0, :] = Z0
+    R[0, :] = R0
+
+    for t in range(1, len(time_steps)):
+        for x in range(1, len(x_steps) - 1):
+            dSdt, dIdt, dZdt, dRdt = zombie_model([S[t - 1, x], I[t - 1, x], Z[t - 1, x], R[t - 1, x]], time_steps[t], x)
+            S[t, x] = S[t - 1, x] + dt * dSdt
+            I[t, x] = I[t - 1, x] + dt * dIdt
+            Z[t, x] = Z[t - 1, x] + dt * dZdt
+            R[t, x] = R[t - 1, x] + dt * dRdt
+
+        # Apply zero-flux boundary conditions
+        S[t, 0], S[t, -1] = S[t, 1], S[t, -2]
+        I[t, 0], I[t, -1] = I[t, 1], I[t, -2]
+        Z[t, 0], Z[t, -1] = Z[t, 1], Z[t, -2]
+        R[t, 0], R[t, -1] = R[t, 1], R[t, -2]
+
+    return S, I, Z, R
+
+# Example usage
+time_steps = np.linspace(0, 10, 100)
+x_steps = np.linspace(0, 1, 100)
+S0 = np.ones(len(x_steps))
+I0 = np.zeros(len(x_steps))
+Z0 = np.zeros(len(x_steps))
+R0 = np.zeros(len(x_steps))
+
+# Instantiate the SpatialSIZR model with example parameters
+zombie_model = SpatialSIZR(sigma=0.1, beta=0.2, rho=0.1, alpha=0.1, delta_S=0.1, delta_I=0.1, delta_Z=0.1, S0=S0, I0=I0, Z0=Z0, R0=R0, dS=0.01, dI=0.01, dZ=0.01, aS=0.5, aI=0.5, r=1)
+
+# Run the simulation
+S, I, Z, R = spatial_sizr_finite_difference(zombie_model, [S0, I0, Z0, R0], time_steps, x_steps)
+
+# Plot the results
+import matplotlib.pyplot as plt
+
+plt.plot(x_steps, S[-1, :], label='S')
+plt.plot(x_steps, I[-1, :], label='I')
+plt.plot(x_steps, Z[-1, :], label='Z')
+plt.plot(x_steps, R[-1, :], label='R')
+plt.legend()
+plt.show()
 """
