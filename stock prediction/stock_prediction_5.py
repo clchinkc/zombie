@@ -211,6 +211,84 @@ def cnn_model(kernel_sizes=[3, 7, 14, 30, 60, 120, 240, 360]):
     model = Model(inputs=inputs, outputs=outputs)
     return model
 
+def tcn_model():
+    inputs = Input(shape=(time_step, 1))
+    noise = GaussianNoise(0.01)(inputs)
+    
+    # Temporal Convolutional Network layers
+    tcn1 = Conv1D(filters=64, kernel_size=3, dilation_rate=1, padding='causal', activation='relu')(noise)
+    layer_norm1 = LayerNormalization()(tcn1)
+    dropout1 = Dropout(0.25)(layer_norm1)
+    
+    tcn2 = Conv1D(filters=64, kernel_size=3, dilation_rate=2, padding='causal', activation='relu')(dropout1)
+    layer_norm2 = LayerNormalization()(tcn2)
+    dropout2 = Dropout(0.25)(layer_norm2)
+    
+    tcn3 = Conv1D(filters=64, kernel_size=3, dilation_rate=4, padding='causal', activation='relu')(dropout2)
+    layer_norm3 = LayerNormalization()(tcn3)
+    dropout3 = Dropout(0.25)(layer_norm3)
+    
+    tcn4 = Conv1D(filters=64, kernel_size=3, dilation_rate=8, padding='causal', activation='relu')(dropout3)
+    layer_norm4 = LayerNormalization()(tcn4)
+    dropout4 = Dropout(0.25)(layer_norm4)
+
+    tcn5 = Conv1D(filters=64, kernel_size=3, dilation_rate=1, padding='causal', activation='relu')(noise)
+    layer_norm5 = LayerNormalization()(tcn5)
+    dropout5 = Dropout(0.25)(layer_norm5)
+    
+    tcn6 = Conv1D(filters=64, kernel_size=3, dilation_rate=2, padding='causal', activation='relu')(dropout5)
+    layer_norm6 = LayerNormalization()(tcn6)
+    dropout6 = Dropout(0.25)(layer_norm6)
+    
+    tcn7 = Conv1D(filters=64, kernel_size=3, dilation_rate=4, padding='causal', activation='relu')(dropout6)
+    layer_norm7 = LayerNormalization()(tcn7)
+    dropout7 = Dropout(0.25)(layer_norm7)
+    
+    tcn8 = Conv1D(filters=64, kernel_size=3, dilation_rate=8, padding='causal', activation='relu')(dropout7)
+    layer_norm8 = LayerNormalization()(tcn8)
+    dropout8 = Dropout(0.25)(layer_norm8)
+
+    # Residual connections
+    multiply1 = Multiply()([dropout1, dropout2, dropout3, dropout4])
+    multiply2 = Multiply()([dropout5, dropout6, dropout7, dropout8])
+    add = Add()([multiply1, multiply2])
+
+    # Flatten and output
+    flatten = Flatten()(add)
+    outputs = Dense(1)(flatten)
+
+    model = Model(inputs=inputs, outputs=outputs)
+    return model
+
+def tcn_layer(x, dilation_rate, filters, kernel_size, dropout_rate):
+    x = Conv1D(filters=filters, kernel_size=kernel_size, padding='causal', activation='relu')(x)
+    x = LayerNormalization()(x)
+    x = Dropout(dropout_rate)(x)
+    x = Conv1D(filters=filters, kernel_size=kernel_size, dilation_rate=dilation_rate, padding='causal', activation='relu')(x)
+    x = LayerNormalization()(x)
+    x = Dropout(dropout_rate)(x)
+    return x
+
+def tcn_model():
+    inputs = Input(shape=(time_step, 1))
+    noise = GaussianNoise(0.01)(inputs)
+    
+    # Temporal Convolutional Network layers
+    tcn1 = tcn_layer(noise, 1, 64, 3, 0.25)
+    tcn2 = tcn_layer(tcn1, 2, 64, 3, 0.25)
+    tcn3 = tcn_layer(tcn2, 4, 64, 3, 0.25)
+    tcn4 = tcn_layer(tcn3, 8, 64, 3, 0.25)
+    
+    # Residual connections
+    multiply1 = Multiply()([tcn1, tcn2, tcn3, tcn4])
+
+    # Flatten and output
+    flatten = Flatten()(multiply1)
+    outputs = Dense(1)(flatten)
+
+    model = Model(inputs=inputs, outputs=outputs)
+    return model
+
 
 def lstm_model():
     inputs = Input(shape=(time_step, 1))
@@ -524,6 +602,7 @@ def var_lstm_model():
 
 model = cnn_lstm_model() # 146.4884190923206 0.00599536020308733 21457.16796875
 # model = cnn_model() # 146.26684775725644 0.006160466931760311 21392.03515625
+model = tcn_model() # 139.98291335128096 0.01153571903705597 19614.171875
 # model = lstm_model() # 142.48942210831834 0.004451433662325144 20307.927734375
 # model = nas_rnn_model() # 155.13566803010383 0.001908295089378953 24062.21484375
 # model = wavelet_model() # 140.8948050487553 0.0010008609388023615 19850.70703125
