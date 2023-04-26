@@ -279,3 +279,7 @@ if __name__ == "__main__":
     
     
 # Assume human is one side of chess and zombie is one side of chess. Use alphazero's monte carlo tree search.
+# https://www.youtube.com/watch?v=wuSQpLinRB4
+# https://tmoer.github.io/AlphaZero/
+# https://github.com/timvvvht/AlphaZero-Connect4
+# https://github.com/topics/alphazero
