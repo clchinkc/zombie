@@ -203,7 +203,7 @@ class SpatialSIZR:
         self.initial_conditions = [S0, I0, Z0, R0]
 
     def __call__(self, u, t, x):
-        """RHS of system of PDEs"""
+        # RHS of system of PDEs
 
         S, I, Z, R = u
 

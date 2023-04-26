@@ -152,31 +152,3 @@ if __name__ == "__main__":
     plt.show()
 
 
-
-"""
-A zombie apocalypse population model that takes into account overpopulation can be created by combining the classical SIZR (Susceptible, Infected, Zombie, Removed) model with a population model that accounts for overpopulation.
-
-In the SIZR model, the population is divided into four compartments: Susceptible (S), Infected (I), Zombie (Z), and Removed (R). The population dynamics of each compartment are governed by a set of differential equations that describe the rate at which individuals move between the compartments. The equations are as follows:
-
-dS/dt = -βSZ/N
-dI/dt = βSZ/N - γI
-dZ/dt = γI - αSZ/N
-dR/dt = αSZ/N
-
-where β is the infection rate, γ is the recovery rate, α is the rate at which zombies are killed, and N is the total population size.
-
-To account for overpopulation, we can modify the population size N in the above equations to reflect the fact that the population is exceeding its carrying capacity. This can be done by introducing a carrying capacity K, such that the population size is limited to K:
-
-N = K - S - I - Z - R
-
-The modified equations become:
-
-dS/dt = -βSZ/(K-S-I-Z-R)
-dI/dt = βSZ/(K-S-I-Z-R) - γI
-dZ/dt = γI - αSZ/(K-S-I-Z-R)
-dR/dt = αSZ/(K-S-I-Z-R)
-
-In this model, the carrying capacity K represents the maximum number of individuals that the environment can sustainably support. When the population exceeds the carrying capacity, the rate at which individuals move between compartments is reduced, reflecting the fact that there are fewer resources available to support the population. The model assumes that the carrying capacity remains constant over time, which may not be realistic in the case of a zombie apocalypse, as the environment would likely be heavily impacted by the outbreak.
-
-Overall, this model provides a framework for understanding how overpopulation could impact the dynamics of a zombie apocalypse. The model suggests that overpopulation could reduce the effectiveness of interventions aimed at controlling the outbreak, such as quarantine or vaccination, by limiting the resources available to support the population.
-"""

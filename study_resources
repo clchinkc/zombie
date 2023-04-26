@@ -56,10 +56,74 @@ Build a text reading app with great UI which highlight important part and transl
 
 Pac-Man simulator
 
+The code is a Python implementation of the popular card game Blackjack. It includes a Card class that defines a card object with a face, numerical value, and symbol. Other functions include show_cards, which takes a list of cards and displays them, deal_card, which selects a random card from the deck and removes it, and play_blackjack, which runs a game of blackjack using the previously defined functions. The game deals two cards to the player and dealer, shows the player's cards and one of the dealer's cards, and continues until the player stands or busts. The winner is determined by comparing scores without going over 21. The code also includes an init_deck function that creates a new deck of 52 cards. When the code is executed, it creates a new deck and starts a game of blackjack.
+
+This Python program is a library management system built using object-oriented programming, showcasing a simple yet powerful example of how real-world systems can be created. It includes two classes, Library and Student, that interact with each other to simulate the library system. The Library class has methods to show available books, lend books to students, and return books, while the Student class has methods to view borrowed books, request books, and return books. Furthermore, the program features a user-friendly interface with a menu of options that allows users to display available books, borrow books, return books, view borrowed books, and exit the program. The system can be expanded to include additional features such as unique book IDs, multiple copies of the same book, return dates, and late fees, demonstrating the versatility and potential of object-oriented programming in building real-world applications.
+
+The Speed Typing Test is a Python project that tests a user's typing speed and accuracy. It utilizes the tkinter module to create a simple graphical user interface (GUI) consisting of labels, buttons, and entry fields. The timeit module is used for timing, and the random module selects a test phrase from a list. The program displays a random sentence, and the user has to type it correctly to get their typing speed. The time taken to type the sentence accurately is displayed on the screen. The code provided sets up the GUI, test phrases, timer, and checks user input against the given sentence.
+
+This Python project uses the tkinter library to create a simple text editor with a Graphical User Interface (GUI). The text editor allows users to open and save files, featuring standard GUI components such as labels, buttons, and entry fields. The code demonstrates how to use tkinter to build the interface, as well as how to implement file handling for opening and saving files. This project is a great way to learn about file handling and GUI programming, and can be further expanded by adding more features like a "find word" function.
+
+This is a Python project that implements a GUI for solving Sudoku puzzles using a backtracking algorithm. The program uses the pygame library to create the GUI, which allows the user to enter values into the Sudoku grid, visualize the solution process, and reset or clear the grid as desired.
+The backtracking algorithm works by incrementally checking for solutions and abandoning the current solution if it is not viable. The program steps back to try a new solution until it finds a valid one, and this process is carried out until the entire grid has been filled correctly.
+The program includes several user-defined functions, such as get_coord(), draw_box(), draw(), draw_val(), raise_error_1(), raise_error_2(), valid(), and solve(). These functions are used to draw the Sudoku grid, handle user input, and validate solutions as the program runs.
+The default Sudoku board is included in the code, but the user can also experiment with different Sudoku puzzles and even expand the size of the grid if desired (although a new base image would need to be used). Overall, this project is a fun and challenging way to practice GUI programming, algorithm design, and problem-solving skills.
+
+The Site Connectivity Checker is a Python project that tests website connectivity using the urllib and tkinter modules. It creates a GUI using the tkinter module to allow users to enter a web address. The program then uses the urllib module's .getcode() function to return a HTTP status code for the current website. The program checks if the HTTP code is 200, and if it is, it informs the user that the website is available, otherwise, it informs the user that it is not available. The program can be expanded to consider a more granular approach to handling the various HTTP response codes.
+
+One project that could make use of your experience with the previously mentioned projects is a multi-player online card game. You could incorporate your knowledge of object-oriented programming, GUI design, and algorithm design to create a fun and engaging game that allows players to compete against each other in a virtual card game. The game could feature a variety of card games, including blackjack, poker, and other popular games, and could utilize a similar GUI and back-end design as the previous projects. Additionally, the game could include features such as real-time chat, leaderboards, and the ability to customize avatars and game settings. This project would be a great way to demonstrate your skills in Python and showcase your ability to build complex, interactive applications.
+
+Another project idea could be a text-based adventure game. This project would involve creating a story with multiple branching paths and choices for the player to make, and implementing a system for tracking the player's progress and displaying the appropriate outcomes based on their choices. This project would involve using object-oriented programming to create the various characters and objects in the game, as well as implementing a system for handling user input and displaying the game's text. Additionally, the game could include features such as a save/load system, multiple endings, and a scoring system. This project would be a great way to showcase your creativity and storytelling abilities, as well as your skills in Python and object-oriented programming.
+
+YouTube video downloader
+One of the best ideas to start experimenting with your hands-on python projects for students is working on a YouTube video downloader. This is the best example of introducing python to beginners in a fun way. More than a billion people watch YouTube every month. Sometimes there are videos we like to download permanently. YouTube doesn’t give you that option, but you can create an app with a simple UI and the ability to download YouTube videos in different formats and video quality. This project looks tough, but it is straightforward when you start working on it.
+
+Spin a Yarn
+Things get more interesting here since strings are infinitely more complex to play with at the beginning.
+The program first prompts the user to enter a series of inputs. These can be an adjective, a preposition, a proper noun, etc. Once all the inputs are in place, they are placed in a premade story template using concatenation. In the end, the full story is printed out to read some misintended madness!
+
+Random Password Generator
+This is one of the most popular coding project ideas in python. Online security is quintessential in this modern world where everything happens online. Passwords are the armors that protect our accounts from getting hacked or compromised. Having said that, creating a strong password and remembering it is a tedious task. You can build a program that intakes some words from the user and then generates a random password using those words. The user can remember the password with the help of the words he gave as input.
+
+Random Wikipedia Article
+This is a complicated yet straightforward program. The program searches Wikipedia and fetches a random article. Then it asks the user if he wants to read that article or not. If the answer is yes, the material is shown; otherwise, another random report is presented. This is an apt project for those developers at the intermediary level looking to further their careers by developing creative and complex Python programs. 
+
+Reddit Bot
+This is one of the excellent python project ideas for beginners. Reddit is a handy platform, and many people want to be online as much as they can. You can program a bot that monitors subreddits and reports whenever they find something useful. It will save Redditors a lot of time and provide helpful information with it.
+
+Steganography
+Steganography is the art of hiding a secret message in another form of media, for example, hiding a coded message in an image or video. You can create a program that protects messages inside pictures for you. This coding project in Python can encode and decode images at a quick pace. It is apt for entry-level aspirants looking to enhance their coding skills. 
+
+Post-it Notes
+Post-it notes are an excellent way to note down trivial chores so that you don’t forget to do them. In this project, we’ll make a virtual version of the physical, adhesive post-it notes. The main goal of building this application is to allow users to carry their post-it notes wherever they go (since it is on a digital platform). The application should have an option for account creation, different layouts for post-it notes, and a categorization feature to allow users to segment their notes. You can consider using Django for this project since it has an in-built user authentication feature.
+
+Content Aggregator
+The internet is filled with websites, articles, and information. When we want to find something, it is tough to go through each of them. For this use, you can create a content aggregator that automatically searches popular websites and looks for relevant content and then complies with all the content and lets the user choose which content they want. It is very much like Google but unbiased. And this is the perfect idea for your next python project!
+
+Plagiarism Checker
+Content writing is one of the most prolific online businesses. The market lacks a free tool that can be used to check for plagiarism in documents. You can use a natural language processing library along with the Google search API to create a program that searches the first few pages of Google and checks for plagiarism.
+
+Web Crawler
+A web crawler is an automated program script that surfs the internet and stores the content of a particular webpage. A web crawler is one of the most useful python projects to find up-to-date information. You will need to use a multi-thread concept for such a program. You can use Python’s request module to make the crawler bot, or you can use Scrapy. It is Python’s open-source web crawling framework explicitly designed for web scraping and extracting data by using APIs.
+
+Music Player
+Everyone likes listening to music; you can also create your music player app. Other than playing music, your program can explore your file directories and search for music. This is one of the creative python projects you might face is creating an interactive interface that can be used by regular users. The app will have a neat interface that will allow users to browse through tracks, increase/decrease volume, and display the name of the song, artist, or album. This project will mainly involve the basics of Python programming, database management, algorithm construction, and data processing.
+
+Expense Tracker
+As you can guess by the name, an expense tracker is a software application that lets you keep track of your expenses, and even analyze the expenses. In this python project, you will build a simple expense tracker that can keep track of the user’s expenses. Expense tracker is one of the trending python projects which should also be able to perform statistical analysis to give accurate insights to users on their expenses so that they can plan their expenses better. You can use PySimpleGUI to create the interface for this application, and even Python libraries like Pandas and Matplotlib can be handy tools for the project.
+
+Regex Query Tool
+Regular search tools often fail to produce the desired results for specific queries. In such events, what you need is a Regex Query Tool. In simple words, a regex is a set of strings, which means that when you enter a query in this tool, it will check the validity of your query. If the regex can match patterns in the text query entered by the user, it notifies the user by highlighting all the matching patterns. A Regex Query Tool is one of the trending python projects which allows users to quickly check the validity of their regex strings on the Web, thereby making the search process much easier. Python’s re library is the perfect tool for running the query strings on the user-inputted text.
+
+Instagram Photo Downloader
+This would be an app that automatically downloads all the Instagram images of your friends. As Instagram is growing everyday, this is one of the useful python projects and it is quite similar to the above command line app as this app will use your credentials to open your account and then look for your friend’s ID and download their photos. This app would be handy when people want to delete pages and save just the images.
+
+Quiz Application
+This is one of the interesting python project ideas to create. This is a standard quiz application that presents a set of carefully curated questions to the users (a questionnaire), allows them to answer the same, and displays the correct answer if they are wrong. Each test will display the final score of the user. The application will have an account creation option, wherein some users can be appointed as Admins. These Admins can create tests for other users. In this way, the tests and quizzes continue to be updated. This application requires a database to store all the questions, answers, and scores of the users. You can also include additional features like timers for tests.
+
 Project suggestions
 hardcore basic apps or useful apps
 https://github.com/vicky002/1000_Projects
-https://www.upgrad.com/blog/python-projects-ideas-topics-beginners/
 https://www.crio.do/blog/python-projects-for-developers/
 https://github.com/RichardFu123/pythonTools
 Django 搭建简易博客
@@ -105,6 +169,8 @@ https://github.com/SkalskiP/ILearnDeepLearning.py
 https://www.dataquest.io/blog/datadotworld-python-tutorial/
 https://www.dataquest.io/blog/free-datasets-for-projects/
 https://b-cd.net/youtube vercel website
+https://realpython.com/intermediate-python-project-ideas/
+https://github.com/karan/Projects
 
 Must read books
 https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
@@ -298,6 +364,11 @@ https://www.justintodata.com/python-interactive-dashboard-with-plotly-dash-tutor
 https://towardsdatascience.com/web-development-with-python-dash-complete-tutorial-6716186e09b3
 https://towardsdatascience.com/how-to-build-a-web-based-app-in-50-lines-of-code-using-plotly-and-dash-3953f039b217
 
+time series analysis
+https://www.mql5.com/en/articles/12140
+https://towardsdatascience.com/time-series-forecasting-deep-learning-vs-statistics-who-wins-c568389d02df
+
+
 financial analysis
 quantitative finance python
 https://github.com/harryworlds/FinancialAnalysisMachineLearningAlgortihmsByHemantThapa
@@ -324,6 +395,7 @@ https://www.mtj-community.com/1-intraday-fundamentals-2-technical-analysis-3-rea
 https://www.mtj-community.com/tag/%e4%ba%a4%e6%98%93%e5%9f%ba%e6%9c%ac%e8%a6%81%e7%9f%a5%e7%9a%84%e4%ba%8b/
 Operational Research
 quant tutorial
+https://www.youtube.com/watch?v=ZSavDAaKy50
 https://www.wallstreetprep.com/self-study-programs/premium-package/
 stock prediction
 Use library for stock backtesting
@@ -861,6 +933,15 @@ https://youtu.be/BUA0X9l-UI4
 https://www.youtube.com/watch?v=WEt2JHEe-do
 https://www.youtube.com/watch?v=H-LoESVEmOE
 https://www.youtube.com/watch?v=KSlGkqpICqg
+https://www.youtube.com/watch?v=YBgCUQVDRkw
+https://academy.zenva.com/search/?s=godot+
+https://academy.zenva.com/product/godot-game-development-mini-degree/
+https://www.udemy.com/courses/search/?src=ukw&q=godot+4
+https://docs.godotengine.org/en/stable/getting_started/first_2d_game/index.html
+https://kidscancode.org/godot_recipes/4.x/
+https://quiver.dev/tutorials/
+https://quiver.dev/tutorials/create-your-first-godot-4-game/
+https://www.appsflyer.com/blog/mobile-marketing/hyper-casual-games/
 
 unity
 https://www.youtube.com/watch?v=AmGSEH7QcDg
@@ -886,7 +967,7 @@ https://github.com/PaulleDemon/TankGame
 https://www.youtube.com/watch?v=rvLfF9hciU8
 https://github.com/FergusGriggs/fegaria-remastered
 https://github.com/NickWayne/NLC-2015
-
+https://www.youtube.com/watch?v=QU1pPzEGrqw
 pyglet
 https://www.youtube.com/watch?v=KbiRYkoBV34&ab_channel=DreamsofCode
 
@@ -938,6 +1019,7 @@ https://github.com/HabitRPG/habitica
 Open source project
 https://learnku.com/articles/23010/teach-you-to-read-the-python-open-source-project-code
 https://opensource.guide/how-to-contribute/
+https://doc-geonode.readthedocs.io/en/latest/005_dev_workshop/008_contribute_geonode/work_with_github.html
 https://github.com/scipy/scipy/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22+
 https://goodfirstissue.dev/language/python
 https://github.com/matplotlib/matplotlib/issues/24404
@@ -1308,6 +1390,7 @@ API + Data analysis + Data visualization
 https://github.com/tinahuangyt/Python-API_World-Weather
 
 Openai API project
+https://www.youtube.com/watch?v=MlK6SIjcjE8
 https://github.com/Torantulino/Auto-GPT
 https://github.com/yoheinakajima/babyagi
 https://www.youtube.com/watch?v=2xxziIWmaSA
