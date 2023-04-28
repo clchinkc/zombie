@@ -3,13 +3,11 @@
 import numpy as np
 import pygame
 import tensorflow as tf
-import tensorflow_addons as tfa
 import tensorflow_probability as tfp
 from matplotlib import pyplot as plt
 from tf_agents.agents import CategoricalDqnAgent, PPOKLPenaltyAgent, ReinforceAgent
 from tf_agents.agents.dqn import dqn_agent
-from tf_agents.agents.ppo import ppo_agent
-from tf_agents.drivers import dynamic_step_driver
+from tf_agents.drivers import dynamic_episode_driver, dynamic_step_driver
 from tf_agents.environments import py_environment, tf_py_environment
 from tf_agents.eval import metric_utils
 from tf_agents.metrics import tf_metrics
@@ -27,18 +25,43 @@ from tf_agents.trajectories import trajectory
 from tf_agents.utils import common
 
 
-class ChaseEnvironment(py_environment.PyEnvironment):
+class Runner:
+    def __init__(self, position, grid_size):
+        self.position = position
+        self._grid_size = grid_size
 
+    def move(self, direction):
+        new_position = self.position.copy()
+        if direction == 0:   # up
+            new_position[0] -= 1
+        elif direction == 1: # right
+            new_position[1] += 1
+        elif direction == 2: # down
+            new_position[0] += 1
+        elif direction == 3: # left
+            new_position[1] -= 1
+        self.position = np.clip(new_position, 0, self._grid_size - 1)
+
+class Chaser:
+    def __init__(self, position):
+        self.position = position
+
+    def move_towards_runner(self, runner_position):
+        move_direction = np.argmax(np.abs(runner_position - self.position))
+        direction_sign = np.sign(runner_position[move_direction] - self.position[move_direction])
+        self.position[move_direction] += direction_sign
+
+class ChaseEnvironment(py_environment.PyEnvironment):
     def __init__(self, grid_size):
         self._grid_size = grid_size
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(), dtype=np.int32, minimum=0, maximum=3, name='action')
         self._observation_spec = array_spec.BoundedArraySpec(
             shape=(grid_size, grid_size, 2), dtype=np.float32, minimum=0., maximum=1., name='observation')
-        self._runner_position = self._reset_position()
-        self._chaser_position = self._reset_position()
+        self._runner = Runner(self._reset_position(), grid_size)
+        self._chaser = Chaser(self._reset_position())
         self._state = self._create_state()
-        
+
         # Define the action distribution spec
         self._action_distribution_spec = tfp.distributions.Categorical(logits=tf.zeros((self._action_spec.maximum + 1,)))
 
@@ -53,48 +76,31 @@ class ChaseEnvironment(py_environment.PyEnvironment):
 
     def _create_state(self):
         state = np.zeros((self._grid_size, self._grid_size, 2), dtype=np.float32)
-        state[tuple(self._runner_position), 0] = 1.
-        state[tuple(self._chaser_position), 1] = 1.
+        state[tuple(self._runner.position), 0] = 1.
+        state[tuple(self._chaser.position), 1] = 1.
         return state
 
-    def _take_action(self, action):
-        new_position = self._runner_position.copy()
-        if action == 0:   # up
-            new_position[0] = np.clip(new_position[0] - 1, 0, self._grid_size - 1)
-        elif action == 1: # right
-            new_position[1] = np.clip(new_position[1] + 1, 0, self._grid_size - 1)
-        elif action == 2: # down
-            new_position[0] = np.clip(new_position[0] + 1, 0, self._grid_size - 1)
-        elif action == 3: # left
-            new_position[1] = np.clip(new_position[1] - 1, 0, self._grid_size - 1)
-        return new_position
-
-    def _move_chaser(self):
-        move_direction = np.argmax(np.abs(self._runner_position - self._chaser_position))
-        direction_sign = np.sign(self._runner_position[move_direction] - self._chaser_position[move_direction])
-        self._chaser_position[move_direction] += direction_sign
-
     def _is_done(self):
-        return np.array_equal(self._runner_position, self._chaser_position)
+        return np.array_equal(self._runner.position, self._chaser.position)
 
     def _reward(self):
-        return np.linalg.norm(self._runner_position - self._chaser_position)
+        return np.linalg.norm(self._runner.position - self._chaser.position)
         # return -np.linalg.norm(self._runner_position - self._chaser_position) for chaser
         # return 1 / (1 + np.linalg.norm(self._runner_position - self._chaser_position)) for runner for smoothly approach
         # return -1 / (1 + np.linalg.norm(self._runner_position - self._chaser_position)) for chaser for smoothly avoid
 
     def _reset(self):
-        self._runner_position = self._reset_position()
-        self._chaser_position = self._reset_position()
+        self._runner.position = self._reset_position()
+        self._chaser.position = self._reset_position()
         self._state = self._create_state()
         return ts.restart(self._state)
 
     def _step(self, action):
         if self._is_done():
-            return self.reset()
+            return self._reset()
 
-        self._runner_position = self._take_action(action)
-        self._move_chaser()
+        self._runner.move(action)
+        self._chaser.move_towards_runner(self._runner.position)
         self._state = self._create_state()
 
         if self._is_done():
@@ -115,19 +121,19 @@ class ChaseEnvironment(py_environment.PyEnvironment):
                 pygame.draw.rect(screen, (255, 255, 255), rect, 1)
 
         # Draw the runner (blue) and the chaser (red)
-        runner_rect = pygame.Rect(self._runner_position[1] * cell_size, self._runner_position[0] * cell_size, cell_size, cell_size)
-        chaser_rect = pygame.Rect(self._chaser_position[1] * cell_size, self._chaser_position[0] * cell_size, cell_size, cell_size)
+        runner_rect = pygame.Rect(self._runner.position[1] * cell_size, self._runner.position[0] * cell_size, cell_size, cell_size)
+        chaser_rect = pygame.Rect(self._chaser.position[1] * cell_size, self._chaser.position[0] * cell_size, cell_size, cell_size)
         pygame.draw.rect(screen, (0, 0, 255), runner_rect)
         pygame.draw.rect(screen, (255, 0, 0), chaser_rect)
 
         pygame.display.flip()
 
-num_iterations = 2000
+num_iterations = 20
 initial_collect_steps = 1000
 collect_steps_per_iteration = 3
 replay_buffer_max_length = 10000
 batch_size = 64
-log_interval = 100
+log_interval = 10
 num_eval_episodes = 1
 eval_interval = 10000
 
@@ -287,10 +293,10 @@ def create_ppo_agent(learning_rate, train_env):
     return train_step_counter, tf_agent
 
 
-train_step_counter, tf_agent = create_dqn_agent(lr_schedule, train_env)
+# train_step_counter, tf_agent = create_dqn_agent(lr_schedule, train_env)
 # train_step_counter, tf_agent = create_categorical_dqn_agent(lr_schedule, train_env)
 # train_step_counter, tf_agent = create_reinforce_agent(lr_schedule, train_env)
-# train_step_counter, tf_agent = create_ppo_agent(lr_schedule, train_env)
+train_step_counter, tf_agent = create_ppo_agent(lr_schedule, train_env)
 
 def create_replay_buffer(replay_buffer_max_length, train_env, tf_agent):
     replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
@@ -344,33 +350,32 @@ def collect_step(environment, policy, buffer):
     traj = trajectory.from_transition(time_step, action_step, next_time_step)
     buffer.add_batch(traj)
 
-def eval_agent(environment, policy, num_episodes=num_eval_episodes):
-    metrics = [
-        tf_metrics.AverageReturnMetric(buffer_size=num_episodes),
-        tf_metrics.AverageEpisodeLengthMetric(buffer_size=num_episodes)
-    ]
-    results = metric_utils.eager_compute(
-        metrics=metrics,
-        environment=environment,
-        policy=policy,
-        num_episodes=num_episodes
-    )
-    return results['AverageReturn'], results['AverageEpisodeLength']
-
 # def eval_agent(environment, policy, num_episodes=num_eval_episodes):
-#     average_return_metric = tf_metrics.AverageReturnMetric(buffer_size=num_episodes)
-#     average_episode_length_metric = tf_metrics.AverageEpisodeLengthMetric(buffer_size=num_episodes)
-#     driver = dynamic_episode_driver.DynamicEpisodeDriver(
-#         environment,
-#         policy,
-#         observers=[average_return_metric, average_episode_length_metric],
+#     metrics = [
+#         tf_metrics.AverageReturnMetric(buffer_size=num_episodes),
+#         tf_metrics.AverageEpisodeLengthMetric(buffer_size=num_episodes)
+#     ]
+#     results = metric_utils.eager_compute(
+#         metrics=metrics,
+#         environment=environment,
+#         policy=policy,
 #         num_episodes=num_episodes
 #     )
-#     driver.run(maximum_iterations=1000)
-#     environment.render()
-#     avg_return = average_return_metric.result().numpy()
-#     avg_length = average_episode_length_metric.result().numpy()
-#     return avg_return, avg_length
+#     return results['AverageReturn'], results['AverageEpisodeLength']
+
+def eval_agent(environment, policy, num_episodes=num_eval_episodes):
+    average_return_metric = tf_metrics.AverageReturnMetric(buffer_size=num_episodes)
+    average_episode_length_metric = tf_metrics.AverageEpisodeLengthMetric(buffer_size=num_episodes)
+    driver = dynamic_episode_driver.DynamicEpisodeDriver(
+        environment,
+        policy,
+        observers=[average_return_metric, average_episode_length_metric],
+        num_episodes=num_episodes
+    )
+    driver.run(maximum_iterations=1000)
+    avg_return = average_return_metric.result().numpy()
+    avg_length = average_episode_length_metric.result().numpy()
+    return avg_return, avg_length
 
 def train_agent(num_iterations, collect_steps_per_iteration, log_interval, num_eval_episodes, eval_interval, train_env, eval_env, train_step_counter, tf_agent, replay_buffer, iterator, train_checkpointer, collect_step, compute_avg_return):
     
@@ -434,6 +439,7 @@ if __name__ == '__main__':
     # print('Simulation done!')
 
 
+# Reward = overall enemy casualties
 # https://github.com/christianhidber/easyagents api across libraries
 # each object has a draw method, call all draw method in the environment
 # update update part of the environment and flip update the whole screen
@@ -478,3 +484,8 @@ if __name__ == '__main__':
 # https://www.tensorflow.org/decision_forests/tutorials/model_composition_colab
 # https://www.tensorflow.org/decision_forests/tutorials/advanced_colab
 # https://www.tensorflow.org/probability/examples/Probabilistic_Layers_Regression
+# https://worldmodels.github.io/
+# https://github.com/ctallec/world-models
+# https://blog.otoro.net/2018/06/09/world-models-experiments/
+# https://people.idsia.ch/~juergen/FKI-126-90_(revised)bw_ocr.pdf
+# https://arxiv.org/pdf/1511.09249.pdf

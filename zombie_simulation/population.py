@@ -16,11 +16,12 @@ import itertools
 import math
 import random
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cached_property
-from typing import Any, Optional
+from typing import Any, Generator, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -161,7 +162,7 @@ class FleeZombiesStrategy(MovementStrategy):
         return self.direction_against_closest(self.individual, self.legal_directions, zombies_locations)
 
     # find the closest zombie and move away from it
-    def direction_against_closest(self, individual: Individual,legal_directions: list[tuple[int, int]],target_locations: list[tuple[int, int]],) -> tuple[int, int]:
+    def direction_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]],) -> tuple[int, int]:
         distances = [np.linalg.norm(np.subtract(individual.location, target)) for target in target_locations]
         closest_index = np.argmin(distances)
         closest_target = target_locations[closest_index]
@@ -225,8 +226,8 @@ class MovementStrategyFactory:
         if not neighbors:
             return RandomMovementStrategy(individual, legal_directions, neighbors)
         # get number of human and zombies neighbors
-        alive_number = sum(1 for neighbor in neighbors if neighbor.state == State.HEALTHY)
-        zombies_number = sum(1 for neighbor in neighbors if neighbor.state == State.ZOMBIE)
+        alive_number = len([alive for alive in neighbors if alive.state == State.HEALTHY])
+        zombies_number = len([zombies for zombies in neighbors if zombies.state == State.ZOMBIE])
         # if no human neighbors, move away from the closest zombies
         if alive_number == 0 and zombies_number > 0:
             return FleeZombiesStrategy(individual, legal_directions, neighbors)
@@ -464,13 +465,12 @@ class PopulationObserver(Observer):
         self.subject = population
         self.subject.attach_observer(self)
         self.statistics = []
-        self.grid = []
-        self.agent_list = []
+        self.grid = None
+        self.agent_list = None
 
     def update(self) -> None:
-        statistics = self.subject.get_population_statistics()
-        self.statistics.append(statistics)
-        self.grid = self.subject.school.grid
+        self.statistics.append(deepcopy(self.subject.get_population_statistics()))
+        self.grid = deepcopy(self.subject.school.grid)
         self.agent_list = deepcopy(self.subject.agent_list)
         
 
@@ -573,7 +573,7 @@ class PopulationObserver(Observer):
             color=sns.color_palette("deep")
         )
         # Set axis range as maximum count states
-        plt.ylim(0, max(counts.values())+1)
+        plt.ylim(0, self.subject.population_size)
         # Put a legend to the right of the current axis
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         # Show the plot
@@ -581,9 +581,11 @@ class PopulationObserver(Observer):
         plt.show()
 
     def print_scatter_graph(self):
+        # Create a figure
+        fig, ax = plt.subplots(1, 1)
+        
         # create a scatter plot of the population
-        cell_states_value = [
-            individual.state.value for individual in self.agent_list]
+        cell_states_value = [individual.state.value for individual in self.agent_list]
         x = [individual.location[0] for individual in self.agent_list]
         y = [individual.location[1] for individual in self.agent_list]
         
@@ -593,10 +595,14 @@ class PopulationObserver(Observer):
         # create a list of legend labels and colors for each state in the State enum
         handles = [patches.Patch(color=cmap(i), label=state.name) for i, state in enumerate(State)]
         
-        plt.scatter(x, y, c=cell_states_value, cmap=cmap)
+        ax.scatter(x, y, c=cell_states_value, cmap=cmap)
+
+        # Set axis range
+        ax.set_xlim(-1, self.subject.school.school_size)
+        ax.set_ylim(-1, self.subject.school.school_size)
 
         # Put a legend to the right of the current axis
-        plt.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=State.name_list())
+        ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=State.name_list())
         plt.tight_layout()
         plt.show()
 
@@ -607,8 +613,7 @@ class PopulationAnimator(Observer):
         self.agent_history = []
 
     def update(self) -> None:
-        agent_list = deepcopy(self.subject.agent_list)
-        self.agent_history.append(agent_list)
+        self.agent_history.append(deepcopy(self.subject.agent_list))
 
     def display_observation(self, format="chart"):
         if format == "chart":
@@ -634,7 +639,7 @@ class PopulationAnimator(Observer):
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         # Set axis range
-        ax.set_ylim(0, max([max(i) for i in y])+1)
+        ax.set_ylim(0, self.subject.population_size)
 
         # create the bar chart
         bars = ax.bar(x, y[0], tick_label=ticks, label=State.name_list(), color=sns.color_palette("deep"))
@@ -662,24 +667,22 @@ class PopulationAnimator(Observer):
         plt.show()
 
     def print_scatter_animation(self):
-        cell_states_value = []
-        x = []
-        y = []
-        for i in range(len(self.agent_history)):
-            cell_states_value.append([individual.state.value for individual in self.agent_history[i]])
-            x.append([individual.location[0] for individual in self.agent_history[i]])
-            y.append([individual.location[1] for individual in self.agent_history[i]])
+        cell_states_value = [[individual.state.value for individual in agent_list] for agent_list in self.agent_history]
+        x = [[individual.location[0] for individual in agent_list] for agent_list in self.agent_history]
+        y = [[individual.location[1] for individual in agent_list] for agent_list in self.agent_history]
+
         # tick label suitable for maps
         self.scatter_chart_animation(x, y, cell_states_value)
 
     def scatter_chart_animation(self, x, y, cell_states_value):
         # Create a figure
         fig, ax = plt.subplots(1, 1)
+        
         # Create an animation function
-
         def animate(i, sc, label):
             # Update the scatter plot
             sc.set_offsets(np.c_[x[i], y[i]])
+            sc.set_array(cell_states_value[i])
             # Set the label
             label.set_text("t = {}".format(i))
             # Return the artists set
@@ -695,10 +698,13 @@ class PopulationAnimator(Observer):
         sc = ax.scatter(x, y, c=cell_states_value, cmap=cmap)
         # Create a label
         label = ax.text(0.05, 0.9, "", transform=ax.transAxes)
+        # Set axis range
+        ax.set_xlim(0, self.subject.school.school_size)
+        ax.set_ylim(0, self.subject.school.school_size)
         # Create the animation object
-        anim = animation.FuncAnimation(fig,animate,frames=len(x),interval=100,blit=True,repeat=False,fargs=(sc, label))
+        anim = animation.FuncAnimation(fig, animate, frames=len(x), interval=1000, repeat=False, fargs=(sc, label))
         # Put a legend to the right of the current axis
-        plt.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5))
+        plt.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=State.name_list())
         # Save the animation
         #anim.save("scatter_chart_animation.gif", writer="pillow", fps=3, dpi=10)
         # Show the plot
@@ -773,10 +779,14 @@ class Population:
                 self.school.remove_individual(individual.location)
 
     def update_population_metrics(self) -> None:
-        self.num_healthy = sum(1 for individual in self.agent_list if individual.state == State.HEALTHY)
-        self.num_infected = sum(1 for individual in self.agent_list if individual.state == State.INFECTED)
-        self.num_zombie = sum(1 for individual in self.agent_list if individual.state == State.ZOMBIE)
-        self.num_dead = sum(1 for individual in self.agent_list if individual.state == State.DEAD)
+        self.state_counts = defaultdict(int)
+        for individual in self.agent_list:
+            self.state_counts[individual.state] += 1
+
+        self.num_healthy = self.state_counts[State.HEALTHY]
+        self.num_infected = self.state_counts[State.INFECTED]
+        self.num_zombie = self.state_counts[State.ZOMBIE]
+        self.num_dead = self.state_counts[State.DEAD]
         self.population_size = self.num_healthy + self.num_infected + self.num_zombie
         self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity))) # logistic function
         self.turning_probability = self.severity / (1 + self.severity) # softplus function
@@ -791,9 +801,6 @@ class Population:
 
     def attach_observer(self, observer: Observer) -> None:
         self.observers.append(observer)
-
-    def detach_observer(self, observer: Observer) -> None:
-        self.observers.remove(observer)
 
     def notify_observers(self) -> None:
         for observer in self.observers:
@@ -831,14 +838,18 @@ def main():
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
+    
+    print("Observers:")
+    print(population_observer.agent_list)
+    print(population_animator.agent_history[-1])
 
     # observe the statistics of the population
-    population_observer.display_observation(format="statistics")
-    population_observer.display_observation(format="grid")
+    # population_observer.display_observation(format="statistics")
+    # population_observer.display_observation(format="grid")
     population_observer.display_observation(format="chart")
-    population_observer.display_observation(format="scatter")
+    # population_observer.display_observation(format="scatter")
     population_animator.display_observation(format="chart")
-    population_animator.display_observation(format="scatter")
+    # population_animator.display_observation(format="scatter")
 
 
 if __name__ == "__main__":

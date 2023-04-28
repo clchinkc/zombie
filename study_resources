@@ -177,6 +177,7 @@ https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指�
 https://pyda.apachecn.org/#/ # 利用 Python 进行数据分析 · 第 2 版
 machine learning for trading
 machine learning for algorithmic trading
+https://github.com/ceobillionaire/WHAT-AI-CAN-DO-FOR-YOU
 
 Web development
 https://www.coursera.org/programs/coursera-for-hkust-yetdg?collectionId=3Jzsr&currentTab=CATALOG&productId=Tn_VM61TEeaH0xIrfa92QA&productType=s12n&showMiniModal=true
@@ -219,6 +220,7 @@ https://www.youtube.com/watch?v=Yw7yWHigGKI&list=WL&index=59&pp=gAQBiAQB
 https://www.youtube.com/watch?v=KjY94sAKLlw&list=WL&index=448
 https://youtu.be/u72H_zZzkcw
 https://youtu.be/4xduSsxa5Os
+https://github.com/z358z358?tab=repositories
 
 full stack
 frontend + backend
@@ -294,6 +296,10 @@ machine learning model deployment in flask
 https://medium.com/@connect.hashblock/creating-an-api-in-flask-with-mysql-a-step-by-step-guide-446f08722057
 https://www.udacity.com/course/ai-artificial-intelligence-nanodegree--nd898
 
+pyscript
+https://pyscript.net/
+https://towardsdatascience.com/pyscript-v-flask-how-to-create-a-python-app-in-the-browser-or-on-a-server-2cfe4dd0df9d
+
 django
 https://www.djangoproject.com/
 https://realpython.com/tutorials/django/
@@ -365,6 +371,7 @@ https://towardsdatascience.com/web-development-with-python-dash-complete-tutoria
 https://towardsdatascience.com/how-to-build-a-web-based-app-in-50-lines-of-code-using-plotly-and-dash-3953f039b217
 
 time series analysis
+https://towardsdatascience.com/advanced-visualization-techniques-for-time-series-analysis-14eeb17ec4b0
 https://www.mql5.com/en/articles/12140
 https://towardsdatascience.com/time-series-forecasting-deep-learning-vs-statistics-who-wins-c568389d02df
 
@@ -472,16 +479,11 @@ How to connect Telegram bots to report orders or automatically report trading st
 
 Reinforcement learning
 RL algorithms can be categorized as either model-based or model-free, and as either value-based or policy-based.
-https://blog.csdn.net/abcdefg90876/article/details/108459475
-https://blog.csdn.net/qq_30615903/article/details/80774384
-https://towardsdatascience.com/advanced-visualization-techniques-for-time-series-analysis-14eeb17ec4b0
-https://worldmodels.github.io/
 https://en.wikipedia.org/wiki/Multi-objective_optimization
-https://analyticsindiamag.com/top-reinforcement-learning-algorithms/
+https://blog.csdn.net/abcdefg90876/article/details/108459475
 https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html
-https://pythonprogramming.net/deep-q-learning-dqn-reinforcement-learning-python-tutorial/
-https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial
 https://simoninithomas.github.io/deep-rl-course/
+http://people.eecs.berkeley.edu/~pabbeel/nips-tutorial-policy-optimization-Schulman-Abbeel.pdf
 finrl
 gym
 https://github.com/Farama-Foundation/Gymnasium
@@ -494,8 +496,6 @@ cleanRL
 OpenAI Gym, RLlib, Stable Baselines, Dopamine, keras-rl
 tensortrade
 https://github.com/SparkShen02/MDP-with-Value-Iteration-and-Policy-Iteration
-https://towardsdatascience.com/implement-value-iteration-in-python-a-minimal-working-example-f638907f3437
-https://towardsdatascience.com/how-to-code-the-value-iteration-algorithm-for-reinforcement-learning-8fb806e117d1
 https://github.com/carpedm20/deep-rl-tensorflow
 Libraries
 The OpenAI Gym and Safety Gym frameworks provide code to build the environments that the agents are trained in. The researchers from DeepMind provide the Control Suite package, which is used for physics-based RL simulation.
@@ -611,6 +611,7 @@ https://www.udacity.com/course/data-structures-and-algorithms-in-swift--ud1011
 https://www.udacity.com/course/data-structures-and-algorithms-nanodegree--nd256
 https://www.coursera.org/learn/python-data
 https://www.udemy.com/user/mohammed-abdul-bari-2/
+https://cses.fi/book/book.pdf
 
 Code style
 https://en.wikipedia.org/wiki/Coding_best_practices
@@ -942,6 +943,8 @@ https://kidscancode.org/godot_recipes/4.x/
 https://quiver.dev/tutorials/
 https://quiver.dev/tutorials/create-your-first-godot-4-game/
 https://www.appsflyer.com/blog/mobile-marketing/hyper-casual-games/
+https://www.youtube.com/watch?v=DuyAHbznRx0
+https://www.youtube.com/watch?v=iBRSn63huJ8
 
 unity
 https://www.youtube.com/watch?v=AmGSEH7QcDg
@@ -970,6 +973,7 @@ https://github.com/NickWayne/NLC-2015
 https://www.youtube.com/watch?v=QU1pPzEGrqw
 pyglet
 https://www.youtube.com/watch?v=KbiRYkoBV34&ab_channel=DreamsofCode
+https://www.youtube.com/watch?v=61eX0bFAsYs
 
 neat
 https://github.com/AMMIROSOH/RacingCar
@@ -1110,7 +1114,6 @@ https://coolshell.cn/articles/18024.html
 Chatbot
 eliza
 https://replit.com/@HyperHacker/Chatbot
-https://github.com/yihui-he/ActGPT
 https://github.com/nat/natbot
 https://github.com/jaspreetsidhu3/voice_assistant
 https://www.edureka.co/blog/how-to-make-a-chatbot-in-python/#chatterbot
@@ -1126,6 +1129,43 @@ https://github.com/togethercomputer/OpenChatKit
 https://huggingface.co/spaces/togethercomputer/OpenChatKit
 https://github.com/lm-sys/FastChat
 https://huggingface.co/spaces/trl-lib/stack-llama
+
+Openai API project
+https://www.youtube.com/watch?v=MlK6SIjcjE8
+https://github.com/Torantulino/Auto-GPT
+https://github.com/yoheinakajima/babyagi
+https://github.com/yihui-he/ActGPT
+https://www.youtube.com/watch?v=2xxziIWmaSA
+https://www.hk01.com/%E6%95%B8%E7%A2%BC%E7%94%9F%E6%B4%BB/889954/autogpt%E6%95%99%E5%AD%B8%E6%87%B6%E4%BA%BA%E5%8C%85-%E4%B8%8B%E8%BC%89-%E5%AE%89%E8%A3%9D%E6%96%B9%E5%BC%8F%E5%8F%8A%E5%AF%A6%E6%B8%AC-%E8%87%AA%E4%B8%BB%E5%88%86%E6%9E%90%E5%8A%9F%E8%83%BD%E6%9B%B4%E5%BC%B7%E5%A4%A7
+https://github.com/logspace-ai/langflow
+https://www.youtube.com/watch?v=v6sF8Ed3nTE
+https://www.youtube.com/watch?v=XS8eRtlcCGU
+https://www.pinecone.io/learn/langchain-agents/
+https://github.com/sophiamyang/tutorials-LangChain/blob/main/LangChain_Overview.ipynb
+langchain in colab that store my code base and chain two language models to produce an expert prompt with one and put in second, with summarization of chat history
+Pinecone.io
+http://stablelm.co/
+https://github.com/stability-AI/stableLM/
+https://github.com/nomic-ai/gpt4all
+https://github.com/acheong08/ChatGPT
+Reverse chatgpt, edgegpt
+https://lwebapp.com/zh/post/python-chatgpt-api
+https://www.youtube.com/watch?v=IvEh7A308FU
+https://colab.research.google.com/drive/1CosxSNod48KrkyBn5_vkeleb7u0CrBa6#scrollTo=EiripIMAqGWf
+https://github.com/jerpint/buster/blob/main/buster/apps/gradio_app.ipynb
+https://huggingface.co/spaces/jerpint/buster
+https://www.youtube.com/playlist?list=PLvzuUVysUFOv4iwJE6p1TtuH_I4MFrK50
+https://colab.research.google.com/drive/1cVQNg2-zGQb7qZXFECG6kyq5yVIHyf5o?usp=sharing
+https://github.com/hackingthemarkets/semantic-search-frontend
+https://colab.research.google.com/drive/1tttDqgnWL9yJtmlOFXJqA-BjQ1Pyfpax?usp=sharing
+https://github.com/openai/openai-cookbook
+https://zhuanlan.zhihu.com/p/621735849
+https://zhuanlan.zhihu.com/p/618724929
+https://www.youtube.com/watch?v=ffEDkqfIzxM&list=WL&index=116&pp=gAQBiAQB
+https://www.youtube.com/watch?v=vDZAZuaXf48&list=WL&index=118&pp=gAQBiAQB
+https://github.com/microsoft/semantic-kernel/tree/main
+https://learn.microsoft.com/zh-tw/semantic-kernel/
+https://github.com/davila7/youtube-gpt
 
 Command line application
 https://github.com/lxgr-linux/pokete
@@ -1389,46 +1429,12 @@ https://github.com/tinahuangyt/SQLAlchemy_Climate-Analysis
 API + Data analysis + Data visualization
 https://github.com/tinahuangyt/Python-API_World-Weather
 
-Openai API project
-https://www.youtube.com/watch?v=MlK6SIjcjE8
-https://github.com/Torantulino/Auto-GPT
-https://github.com/yoheinakajima/babyagi
-https://www.youtube.com/watch?v=2xxziIWmaSA
-https://github.com/logspace-ai/langflow
-https://www.youtube.com/watch?v=v6sF8Ed3nTE
-https://www.youtube.com/watch?v=XS8eRtlcCGU
-https://www.pinecone.io/learn/langchain-agents/
-https://github.com/sophiamyang/tutorials-LangChain/blob/main/LangChain_Overview.ipynb
-langchain in colab that store my code base and chain two language models to produce an expert prompt with one and put in second, with summarization of chat history
-Pinecone.io
-http://stablelm.co/
-https://github.com/stability-AI/stableLM/
-https://github.com/nomic-ai/gpt4all
-https://github.com/acheong08/ChatGPT
-Reverse chatgpt, edgegpt
-https://lwebapp.com/zh/post/python-chatgpt-api
-https://www.youtube.com/watch?v=IvEh7A308FU
-https://colab.research.google.com/drive/1CosxSNod48KrkyBn5_vkeleb7u0CrBa6#scrollTo=EiripIMAqGWf
-https://github.com/jerpint/buster/blob/main/buster/apps/gradio_app.ipynb
-https://huggingface.co/spaces/jerpint/buster
-https://www.youtube.com/playlist?list=PLvzuUVysUFOv4iwJE6p1TtuH_I4MFrK50
-https://colab.research.google.com/drive/1cVQNg2-zGQb7qZXFECG6kyq5yVIHyf5o?usp=sharing
-https://github.com/hackingthemarkets/semantic-search-frontend
-https://colab.research.google.com/drive/1tttDqgnWL9yJtmlOFXJqA-BjQ1Pyfpax?usp=sharing
-https://github.com/openai/openai-cookbook
-https://zhuanlan.zhihu.com/p/621735849
-https://zhuanlan.zhihu.com/p/618724929
-https://www.youtube.com/watch?v=ffEDkqfIzxM&list=WL&index=116&pp=gAQBiAQB
-https://www.youtube.com/watch?v=vDZAZuaXf48&list=WL&index=118&pp=gAQBiAQB
-https://github.com/microsoft/semantic-kernel/tree/main
-https://learn.microsoft.com/zh-tw/semantic-kernel/
-https://github.com/davila7/youtube-gpt
-
 NLP + machine learning
 https://github.com/tinahuangyt/Project-NatureGeneticsCitation
 https://course.spacy.io/en/p
 https://towardsdatascience.com/using-nlp-to-figure-out-what-people-really-think-e1d10d98e491
 https://www.youtube.com/playlist?list=PLxqBkZuBynVQEvXfJpq3smfuKq3AiNW-N
+https://github.com/tensorflow/tensor2tensor
 
 Machine learning
 https://www.linkedin.com/feed/update/urn:li:activity:7037001701962215424/?utm_source=share&utm_medium=member_android

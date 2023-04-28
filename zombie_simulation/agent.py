@@ -725,7 +725,8 @@ random_move(self):
 # check legal move
 """
 """
-filter, zip, reduce
+filter, zip
+functools, reduce
 iterator, itertools
 https://myapollo.com.tw/zh-tw/python-itertools-more-itertools/
 assert
