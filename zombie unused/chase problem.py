@@ -532,3 +532,41 @@ if __name__ == '__main__':
 # https://people.idsia.ch/~juergen/FKI-126-90_(revised)bw_ocr.pdf
 # https://arxiv.org/pdf/1511.09249.pdf
 # https://github.com/zhongwen/predictron
+
+# Universal Value Function Approximators (UVFAs)
+# https://proceedings.mlr.press/v37/schaul15.pdf
+# https://github.com/rllabmcgill/rlcourse-march-17-hugobb
+
+# intrinsic motivation, curiosity-driven exploration, count-based exploration
+
+# VIME (Houthooft et al., 2016)
+# count-based exploration (Ostrovski et al., 2017)
+# bootstrapped DQN (Osband et al., 2016)
+
+# https://en.m.wikipedia.org/wiki/Multi-armed_bandit
+
+# 添加更多學習信號
+# Hindsight Experience Replay
+# https://arxiv.org/abs/1707.01495
+# Auxiliary Tasks
+# https://arxiv.org/abs/1611.05397
+
+# 基於模型的學習
+# https://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=711FEF6BA26BBF98C28BC111B26F8761?doi=10.1.1.48.6005&rep=rep1&type=pdf
+# https://zhuanlan.zhihu.com/p/524200581
+# https://zhuanlan.zhihu.com/p/524200581
+
+# Difficulties in Deep Reinforcement Learning
+# https://arxiv.org/abs/1709.06560
+# https://openai.com/research/faulty-reward-functions
+
+# Monte Carlo Tree Search for Atari
+# https://papers.nips.cc/paper_files/paper/2014/hash/8bb88f80d334b1869781beb89f7b73be-Abstract.html
+
+# 逆向強化學習和模仿學習
+# https://ai.stanford.edu/~ang/papers/icml00-irl.pdf
+# http://ai.stanford.edu/~ang/papers/icml04-apprentice.pdf
+# https://arxiv.org/pdf/1603.00448.pdf
+# https://papers.nips.cc/paper_files/paper/2017/hash/d5e2c0adad503c91f91df240d0cd4e49-Abstract.html
+# https://arxiv.org/abs/1711.02827
+# http://proceedings.mlr.press/v78/bajcsy17a/bajcsy17a.pdf
