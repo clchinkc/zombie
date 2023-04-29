@@ -58,20 +58,38 @@ class GameState:
 # Define the neural network architecture
 def create_neural_network(input_shape, num_actions):
     inputs = layers.Input(shape=input_shape)
-    x = layers.Conv2D(256, 3, padding="same", activation="relu")(inputs)
-    x = layers.BatchNormalization()(x)
-    x = layers.Conv2D(256, 3, padding="same", activation="relu")(x)
-    x = layers.BatchNormalization()(x)
 
+    # first residual block
+    x = layers.Conv2D(128, 3, padding="same")(inputs)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation("relu")(x)
+    shortcut = x
+    x = layers.Conv2D(128, 3, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Add()([shortcut, x])
+    x = layers.Activation("relu")(x)
+
+    # second residual block
+    shortcut = x
+    x = layers.Conv2D(128, 3, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation("relu")(x)
+    x = layers.Conv2D(128, 3, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Add()([shortcut, x])
+    x = layers.Activation("relu")(x)
+
+    # policy head
     policy_head = layers.Conv2D(2, 1, padding="same", activation="relu")(x)
     policy_head = layers.BatchNormalization()(policy_head)
     policy_head = layers.Flatten()(policy_head)
     policy_head = layers.Dense(num_actions, activation="softmax")(policy_head)
 
+    # value head
     value_head = layers.Conv2D(1, 1, padding="same", activation="relu")(x)
     value_head = layers.BatchNormalization()(value_head)
     value_head = layers.Flatten()(value_head)
-    value_head = layers.Dense(256, activation="relu")(value_head)
+    value_head = layers.Dense(128, activation="relu")(value_head)
     value_head = layers.Dense(1, activation="tanh")(value_head)
 
     model = models.Model(inputs=inputs, outputs=[policy_head, value_head])
@@ -81,6 +99,7 @@ def create_neural_network(input_shape, num_actions):
                 loss_weights=[1.0, 1.0])
 
     return model
+
 
 # Define the MCTS algorithm
 class MCTS:
@@ -195,7 +214,7 @@ def train_neural_network(model, data, num_epochs, batch_size):
     target_probs = np.concatenate(target_probs, axis=0)
     target_values = np.array(target_values)
 
-    model.fit(input_data, [target_probs, target_values], batch_size=batch_size, epochs=num_epochs, verbose=0)
+    model.fit(input_data, [target_probs, target_values], batch_size=batch_size, epochs=num_epochs)
 
 
 # Define the training loop
@@ -264,7 +283,7 @@ if __name__ == "__main__":
     mcts = MCTS(model)
     
     # Train the neural network
-    model = train(model, mcts, num_iterations=10, num_games=10, num_epochs=10, batch_size=128)
+    model = train(model, mcts, num_iterations=10, num_games=10, num_epochs=10, batch_size=1024)
     
     # Play against opponents
     game_state = GameState()
