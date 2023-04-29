@@ -510,6 +510,21 @@ https://github.com/awilliea/Risk-based_RL_for_Optimal_Trading_Execution stock
 https://github.com/s-diaco/DRL4Trading stock
 https://github.com/kochlisGit/TraderNet-CRv2 stock
 https://github.com/THINK989/Real-Time-Stock-Market-Prediction-using-Ensemble-DL-and-Rainbow-DQN stock
+https://github.com/rll/rllab
+https://github.com/RPC2/DRL_paper_summary/tree/master
+https://github.com/deepmind/acme
+https://github.com/deepmind/envlogger
+https://github.com/deepmind/dm_control
+https://github.com/deepmind/pysc2
+https://github.com/openai/retro
+https://github.com/unixpickle/muniverse
+https://github.com/unixpickle/demoverse
+
+Multiagent Reinforcement Learning
+https://arxiv.org/abs/1711.02301
+https://arxiv.org/abs/1711.00832
+https://arxiv.org/abs/1511.06342
+https://github.com/deepmind/meltingpot
 
 Software Design
 https://www.youtube.com/watch?v=tAuRQs_d9F8
@@ -945,6 +960,7 @@ https://quiver.dev/tutorials/create-your-first-godot-4-game/
 https://www.appsflyer.com/blog/mobile-marketing/hyper-casual-games/
 https://www.youtube.com/watch?v=DuyAHbznRx0
 https://www.youtube.com/watch?v=iBRSn63huJ8
+https://www.youtube.com/watch?v=_EeVDI-PVRw
 
 unity
 https://www.youtube.com/watch?v=AmGSEH7QcDg
@@ -1201,6 +1217,7 @@ https://blog.csdn.net/VictoriaSue/article/details/107792075?utm_medium=distribut
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247484076&idx=1&sn=fac8b75e2fbdb8eecff16b1faa4dc7f2&chksm=fdcb358acabcbc9c20769d3800f77f7cafb16844486e2c3fd35b0d567923eeac352189cc6285&scene=21#wechat_redirect
 https://python.plainenglish.io/5000-per-hour-web-scraping-legal-site-db4bf949360e
 https://www.youtube.com/watch?v=qo_fUjb02ns
+https://www.youtube.com/watch?v=mBoX_JCKZTE
 
 search
 https://github.com/meilisearch/meilisearch
@@ -1435,6 +1452,7 @@ https://course.spacy.io/en/p
 https://towardsdatascience.com/using-nlp-to-figure-out-what-people-really-think-e1d10d98e491
 https://www.youtube.com/playlist?list=PLxqBkZuBynVQEvXfJpq3smfuKq3AiNW-N
 https://github.com/tensorflow/tensor2tensor
+https://github.com/deepmind/sonnet
 
 Machine learning
 https://www.linkedin.com/feed/update/urn:li:activity:7037001701962215424/?utm_source=share&utm_medium=member_android
@@ -1453,6 +1471,7 @@ Feature Engineering and Selection: A Practical Approach for Predictive Models, b
 https://medium.com/plain-simple-software/build-an-ai-text-summarizer-in-python-6209fb23875d
 https://python.plainenglish.io/how-machine-learning-can-help-you-purchase-your-next-home-89d9bf771f68
 https://towardsdatascience.com/how-to-use-monte-carlo-simulation-to-help-decision-making-a0a164bc8619
+Bayesian neural networks
 
 Visualizing map
 https://zhuanlan.zhihu.com/p/388573380
