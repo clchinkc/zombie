@@ -12,16 +12,16 @@ Finally, we would need a main simulate function that would set up the initial co
 
 from __future__ import annotations
 
-import itertools
 import math
 import random
 from abc import ABC, abstractmethod
-from collections import defaultdict
+from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum, auto
 from functools import cached_property
-from typing import Any, Generator, Optional
+from itertools import product
+from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -384,7 +384,7 @@ class School:
         
         neighbors = filter(
             lambda pos: (pos[0] != x or pos[1] != y) and self.within_distance(self.grid[x][y], self.grid[pos[0]][pos[1]], interact_range),
-            itertools.product(x_range, y_range)
+            product(x_range, y_range)
         )
 
         return [self.grid[i][j] for i, j in neighbors]
@@ -465,8 +465,8 @@ class PopulationObserver(Observer):
         self.subject = population
         self.subject.attach_observer(self)
         self.statistics = []
-        self.grid = None
-        self.agent_list = None
+        self.grid = self.subject.school.grid
+        self.agent_list = self.subject.agent_list
 
     def update(self) -> None:
         self.statistics.append(deepcopy(self.subject.get_population_statistics()))
@@ -779,14 +779,11 @@ class Population:
                 self.school.remove_individual(individual.location)
 
     def update_population_metrics(self) -> None:
-        self.state_counts = defaultdict(int)
-        for individual in self.agent_list:
-            self.state_counts[individual.state] += 1
-
-        self.num_healthy = self.state_counts[State.HEALTHY]
-        self.num_infected = self.state_counts[State.INFECTED]
-        self.num_zombie = self.state_counts[State.ZOMBIE]
-        self.num_dead = self.state_counts[State.DEAD]
+        state_counts = Counter([individual.state for individual in self.agent_list])
+        self.num_healthy = state_counts[State.HEALTHY]
+        self.num_infected = state_counts[State.INFECTED]
+        self.num_zombie = state_counts[State.ZOMBIE]
+        self.num_dead = state_counts[State.DEAD]
         self.population_size = self.num_healthy + self.num_infected + self.num_zombie
         self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity))) # logistic function
         self.turning_probability = self.severity / (1 + self.severity) # softplus function

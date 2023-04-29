@@ -508,6 +508,7 @@ if __name__ == '__main__':
 # https://github.com/cyoon1729/RLcycle pytorch
 # https://github.com/davide97l/Rainbow pytorch rainbow
 # https://github.com/Curt-Park/rainbow-is-all-you-need pytorch
+# https://github.com/deepmind/dqn_zoo jax
 # https://zhuanlan.zhihu.com/p/220510418
 # https://github.com/willi-menapace/atari_reinforcement_learning pytorch rainbow
 # https://github.com/chucnorrisful/dqn keras-rl
