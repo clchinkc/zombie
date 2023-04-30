@@ -890,7 +890,7 @@ sonarqube
 # One way to use stochastic control theory in a zombie apocalypse simulation is to model the behavior of the zombies and the survivors as stochastic processes and to design a control policy that maximizes the survival rate of the human population or minimizes the risk of infection. This can be done by using tools such as dynamic programming or stochastic differential equations to model the behavior of the zombies and the survivors over time and to optimize the control policy.
 # For example, the control policy could involve decisions such as where to find food and water, how to avoid or confront zombies, and when to move to a new location. These decisions would be based on the current state of the environment, such as the location and density of zombies, the availability of resources, and the health and skills of the survivors.
 
-
+# Optimal control wiki
 # Automated planning and scheduling
 # Classical planning algorithms 
 # STRIPS (Stanford Research Institute Problem Solver) algorithm

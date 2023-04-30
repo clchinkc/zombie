@@ -688,3 +688,7 @@ To use a different time scale, you can adjust the time interval of the data used
 Evaluate and fine-tune the model:
 To evaluate and fine-tune the model, you can use cross-validation techniques such as k-fold cross-validation or time series cross-validation to estimate the performance of the model. You can also use hyperparameter tuning techniques such as grid search, random search, or Bayesian optimization to optimize the parameters of the model.
 """
+
+# neural decision trees
+# https://github.com/wOOL/DNDT/blob/master/tensorflow/demo.ipynb
+# https://github.com/wOOL/DNDT/blob/master/tensorflow/neural_network_decision_tree.py

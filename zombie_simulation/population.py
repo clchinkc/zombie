@@ -428,7 +428,7 @@ class School:
 
     def get_info(self) -> str:
         return "\n".join(
-            " ".join(individual.state.value or "" for individual in column)
+            " ".join(str(individual.state.value) if individual else " " for individual in column)
             for column in self.grid
             )
 
@@ -759,7 +759,8 @@ class Population:
             print("Updated State")
             self.update_population_metrics()
             print("Updated Population Metrics")
-            self.print_all_individual_info()
+            individual_info = self.get_all_individual_info()
+            print(individual_info)
             print("Got Individual Info")
             school_info = self.school.get_info()
             print(school_info)
@@ -790,9 +791,10 @@ class Population:
 
         # may use other metrics or functions to calculate the probability of infection, turning, death, migration
 
-    def print_all_individual_info(self) -> None:
-        print(f"Population of size {self.population_size}"+ "\n" + 
-                "\n".join([individual.get_info() for individual in self.agent_list]))
+    def get_all_individual_info(self) -> str:
+        return f"Population of size {self.population_size}\n" + \
+            "\n".join(individual.get_info() for individual in self.agent_list)
+
 
     def attach_observer(self, observer: Observer) -> None:
         self.observers.append(observer)
