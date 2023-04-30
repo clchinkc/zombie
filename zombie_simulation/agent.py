@@ -890,6 +890,18 @@ sonarqube
 # One way to use stochastic control theory in a zombie apocalypse simulation is to model the behavior of the zombies and the survivors as stochastic processes and to design a control policy that maximizes the survival rate of the human population or minimizes the risk of infection. This can be done by using tools such as dynamic programming or stochastic differential equations to model the behavior of the zombies and the survivors over time and to optimize the control policy.
 # For example, the control policy could involve decisions such as where to find food and water, how to avoid or confront zombies, and when to move to a new location. These decisions would be based on the current state of the environment, such as the location and density of zombies, the availability of resources, and the health and skills of the survivors.
 
+
+# Automated planning and scheduling
+# Classical planning algorithms 
+# STRIPS (Stanford Research Institute Problem Solver) algorithm
+# Graphplan algorithm
+# General Game Playing
+# Partially observed planning / POMDP (Partially Observable Markov Decision Process) algorithm
+# Constraint satisfaction algorithm
+# Operations Research algorithm
+
+
+
 # Graph:
 # A graph is a data structure that consists of a set of vertices (or nodes) and a set of edges connecting these vertices. Graphs are frequently used in computer science and other fields to represent relationships between entities. For instance, a social network could be depicted as a graph, with each person being a node and the connections between them being edges.
 # In a zombie apocalypse simulation, a graph can be employed to represent the network of survivors, zombies, and resources. Each node in the graph could represent a location, such as a building, road, or other landmark, and each edge could represent a path or connection between locations. This graph can be used to model the movement of survivors, the spread of zombies, and the distribution of resources.

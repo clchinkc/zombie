@@ -303,12 +303,7 @@ class Individual:
         return f"Individual {self.id}"
 
     def __repr__(self) -> str:
-        return "%s(%d, %d, %s)" % (
-            self.__class__.__name__,
-            self.id,
-            self.state.value,
-            self.location,
-        )
+        return f"{self.__class__.__name__}({self.id}, {self.state.value}, {self.location})"
 
 
 # separate inheritance for human and zombie class
@@ -410,14 +405,14 @@ class School:
         ]
         return legal_directions
 
-    def legal_location(self, location: tuple[int, int]):
+    def legal_location(self, location: tuple[int, int]) -> bool:
         return self.in_bounds(location) and self.is_occupied(location)
 
-    def in_bounds(self, location: tuple[int, int]):
+    def in_bounds(self, location: tuple[int, int]) -> bool:
         # check if the location is in the grid
         return (0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size)
 
-    def is_occupied(self, location: tuple[int, int]):
+    def is_occupied(self, location: tuple[int, int]) -> bool:
         # check if the location is empty
         return self.grid[location[0]][location[1]] == None
 
@@ -425,23 +420,25 @@ class School:
         return any(agent.position == (x, y) for agent in self.agents)
     """
 
-    def move_individual(self, individual: Individual, direction: tuple[int, int]):
+    def move_individual(self, individual: Individual, direction: tuple[int, int]) -> None:
         old_location = individual.location
         individual.move(direction)
         self.remove_individual(old_location)
         self.add_individual(individual)
 
-    def print_info(self) -> None:
-        for column in self.grid:
-            row = " ".join(str(individual.state.value) if individual else " " for individual in column)
-            print(row)
+    def get_info(self) -> str:
+        return "\n".join(
+            " ".join(individual.state.value or "" for individual in column)
+            for column in self.grid
+            )
 
-        # return the count inside the grid
-        def __str__(self) -> str:
-            return f"School({self.school_size})"
+    # return the count inside the grid
+    
+    def __str__(self) -> str:
+        return f"School({self.school_size})"
 
-        def __repr__(self) -> str:
-            return "%s(%d,%d)" % (self.__class__.__name__, self.school_size)
+    def __repr__(self) -> str:
+        return "%s(%d,%d)" % (self.__class__.__name__, self.school_size)
 
 
 # Observer Pattern
@@ -764,7 +761,8 @@ class Population:
             print("Updated Population Metrics")
             self.print_all_individual_info()
             print("Got Individual Info")
-            self.school.print_info()
+            school_info = self.school.get_info()
+            print(school_info)
             print("Got School Info")
             self.notify_observers()
             print("Notified Observers")
@@ -1375,3 +1373,5 @@ Reinforcement learning: Reinforcement learning algorithms can be used to model a
 
 Ultimately, the choice of data structure and algorithm will depend on the specific requirements of your application and the characteristics of the agent interactions you are modeling.
 """
+
+
