@@ -121,6 +121,19 @@ This would be an app that automatically downloads all the Instagram images of yo
 Quiz Application
 This is one of the interesting python project ideas to create. This is a standard quiz application that presents a set of carefully curated questions to the users (a questionnaire), allows them to answer the same, and displays the correct answer if they are wrong. Each test will display the final score of the user. The application will have an account creation option, wherein some users can be appointed as Admins. These Admins can create tests for other users. In this way, the tests and quizzes continue to be updated. This application requires a database to store all the questions, answers, and scores of the users. You can also include additional features like timers for tests.
 
+A project that can showcase your understanding of these concepts could be a pathfinding visualization tool that allows users to interact with different algorithms and data structures to find the shortest path between two points in a graph. Here are some suggestions on how you can incorporate the different concepts:
+1. Sorting algorithms: You can use a sorting algorithm to sort the nodes in the graph or the edges based on their weight.
+2. Search algorithms: You can use search algorithms like BFS or DFS to explore the graph and find the shortest path between two points.
+3. Graph algorithms: You can implement graph algorithms like Dijkstra's algorithm or A* algorithm to find the shortest path between two points in the graph.
+4. Dynamic programming: You can use dynamic programming to optimize the search for the shortest path by storing the solutions to subproblems and reusing them.
+5. Greedy algorithms: You can use a greedy algorithm to choose the next node to visit based on its distance from the start node.
+6. Divide and Conquer: You can use divide and conquer to split the graph into smaller subgraphs to solve the problem.
+7. Backtracking: You can use backtracking to explore all possible paths in the graph to find the shortest path.
+8. Randomized Algorithm: You can use a randomized algorithm to introduce some randomness in the search process, which can help avoid getting stuck in local optima.
+9. Graph and Tree: You can use graph and tree data structures to represent the graph and implement the different algorithms.
+10. Queue and Array: You can use queue and array data structures to implement the search algorithms and store the nodes to be visited.
+With these concepts in mind, you can create a project that allows users to visualize the different algorithms and data structures in action and compare their performance in finding the shortest path between two points in a graph.
+
 Project suggestions
 hardcore basic apps or useful apps
 https://github.com/vicky002/1000_Projects
@@ -526,6 +539,7 @@ https://github.com/deepmind/pysc2
 https://github.com/openai/retro
 https://github.com/unixpickle/muniverse
 https://github.com/unixpickle/demoverse
+https://towardsdatascience.com/hyperbolic-deep-reinforcement-learning-b2de787cf2f7
 
 Multiagent Reinforcement Learning
 https://arxiv.org/abs/1711.02301
@@ -900,6 +914,7 @@ https://www.youtube.com/watch?v=dhmrN2EjkSg&list=WL&index=442
 https://www.youtube.com/watch?v=MnMxRkX7DvU&list=WL&index=443&t=139s
 https://www.youtube.com/watch?v=g0db5kA4BfQ&list=WL&index=133&pp=gAQBiAQB
 https://www.youtube.com/watch?v=NUeCNvYY_x4&list=WL&index=134&pp=gAQBiAQB
+https://www.youtube.com/watch?v=IXucQAEkIMo
 
 html
 https://www.codecademy.com/learn/learn-html
@@ -949,6 +964,7 @@ https://www.raylib.com/
 https://www.youtube.com/watch?v=RAkxRyXjv1M
 https://www.youtube.com/watch?v=j35nmJEMhpg
 https://www.youtube.com/@Goodgis/videos
+https://youtu.be/QGKBeBFOM90
 
 Godot
 https://www.youtube.com/watch?v=yQZKXdwyh-Q
