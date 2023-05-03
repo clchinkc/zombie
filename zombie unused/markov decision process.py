@@ -265,3 +265,5 @@ next_state = agent.move(next_state)
 print(f"Next state: {next_state}")
 print(f"Cost: {env.get_cost(next_state)}")
 
+
+# https://www.datascienceblog.net/post/reinforcement-learning/mdps_dynamic_programming/

@@ -466,7 +466,18 @@ class PopulationObserver(Observer):
         self.agent_list = self.subject.agent_list
 
     def update(self) -> None:
-        self.statistics.append(deepcopy(self.subject.get_population_statistics()))
+        statistics =  {
+            "num_healthy": self.subject.num_healthy,
+            "num_infected": self.subject.num_infected,
+            "num_zombie": self.subject.num_zombie,
+            "num_dead": self.subject.num_dead,
+            "population_size": self.subject.population_size,
+            "infection_probability": self.subject.infection_probability,
+            "turning_probability": self.subject.turning_probability,
+            "death_probability": self.subject.death_probability,
+            "migration_probability": self.subject.migration_probability,
+        }
+        self.statistics.append(deepcopy(statistics))
         self.grid = deepcopy(self.subject.school.grid)
         self.agent_list = deepcopy(self.subject.agent_list)
         
@@ -795,27 +806,12 @@ class Population:
         return f"Population of size {self.population_size}\n" + \
             "\n".join(individual.get_info() for individual in self.agent_list)
 
-
     def attach_observer(self, observer: Observer) -> None:
         self.observers.append(observer)
 
     def notify_observers(self) -> None:
         for observer in self.observers:
             observer.update()
-
-    def get_population_statistics(self) -> dict[str, float]:
-        # returns a dictionary of population statistics
-        return {
-            "num_healthy": self.num_healthy,
-            "num_infected": self.num_infected,
-            "num_zombie": self.num_zombie,
-            "num_dead": self.num_dead,
-            "population_size": self.population_size,
-            "infection_probability": self.infection_probability,
-            "turning_probability": self.turning_probability,
-            "death_probability": self.death_probability,
-            "migration_probability": self.migration_probability,
-        }
 
     def __str__(self) -> str:
         return f"Population with {self.num_healthy} healthy, {self.num_infected} infected, and {self.num_zombie} zombie individuals"
@@ -921,16 +917,11 @@ birth_probability, death_probability, infection_probability, turning_probability
 
 Here are a few additional considerations that you may want to take into account when implementing the simulation:
 
-Data collection and storage: You may want to consider how you will store and track data about the attributes of each individual, such as their age, gender, location, and state. This could involve creating a database or data structure to store this information.
-
-Visualization: It may be helpful to visualize the simulation in some way, such as by creating a graphical user interface or using a visualization tool like Matplotlib. This can make it easier to understand the results of the simulation and identify trends or patterns.
-
 Validation: It's important to validate the accuracy of the simulation by comparing the results to real-world data or known facts about how zombie outbreaks spread. This can help ensure that the simulation is a realistic and accurate representation of the scenario it is modeling.
 
 Sensitivity analysis: It may be useful to perform sensitivity analysis to understand how the simulation results change as different parameters or assumptions are altered. For example, you could vary the rate of infection or the effectiveness of containment measures and see how these changes affect the outcome of the simulation.
 
 Extension: You may want to consider extending the simulation to include additional factors or scenarios. For example, you could incorporate the behavior of external actors, such as emergency responders or military individualnel, or model the spread of the zombie virus to other locations outside the school.
-
 
 Additionally, the model could be expanded to include more detailed information about the layout of the school, 
 such as the locations of classrooms, doors, and other features. 
@@ -942,41 +933,7 @@ and interactions of students, teachers, and zombies within the school environmen
 """
 use random walk algorithm to simulate movement based on probability adjusted by cell's infection status and location
 """
-"""
-def simulate_movement(self):
-    for i in range(self.width):
-        for j in range(self.height):
-            individual = self.grid[i][j]
-            if individual is not None:
-                # use the A* algorithm to find the shortest path to the nearest exit
-                start = (i, j)
-                # the four corners of the grid
-                exits = [(0, 0), (0, self.width-1),
-                        (self.height-1, 0), (self.height-1, self.width-1)]
-                distances, previous = self.a_star(start, exits)
-                # use the first exit as the destination
-                path = self.reconstruct_path(previous, start, exits[0])
 
-                # move to the next cell in the shortest path to the nearest exit
-                if len(path) > 1:  # check if there is a valid path to the nearest exit
-                    next_x, next_y = path[1]
-                    # update the individual's location
-                    individual.location = (next_x, next_y)
-                    # remove the individual from their current location
-                    self.grid[i][j] = None
-                    # add the individual to their new location
-                    self.grid[next_x][next_y] = individual
-
-def a_star(self, start, goals):
-    # implement the A* algorithm to find the shortest path from the start to one of the goals
-    # returns the distances and previous nodes for each node in the grid
-    pass
-
-def reconstruct_path(self, previous, start, goal):
-    # implement the algorithm to reconstruct the path from the previous nodes
-    # returns the shortest path from the start to the goal
-    pass
-"""
 
 """
 High order function
@@ -1261,6 +1218,9 @@ Use stack to store the commands and pop the last command to undo it, using FILO
 clone the command and store it in the stack, to ensure the command won't be change or called again, using prototype pattern
 use abstract class toimplement template method or storereceiver state, combine with template method pattern
 
+The Command pattern is useful when you want to decouple the sender of a request (the client) from the object that performs the action (the receiver). It allows you to encapsulate a request as an object, which can then be parameterized with different arguments and queued or logged. You can also undo operations, support redo, and keep a history of executed commands. 
+The Command pattern is often used in GUI applications, where menu items and toolbar buttons invoke commands, which are then executed by receivers such as document objects. It's also used in transactional systems, where a series of operations need to be executed as a single transaction, with the option to rollback the entire transaction if any of the operations fail. 
+Overall, the Command pattern is useful in any situation where you want to decouple the sender of a request from the receiver, add new requests dynamically, or support undo/redo functionality.
 """
 
 """
@@ -1303,20 +1263,55 @@ for element in elements:
 # the logic of selecting the operation depending on the element is moved to the visitor
 # In this example, the ConcreteElementA and ConcreteElementB classes define the objects that can be visited, and the ConcreteVisitor1 class defines the operations that can be performed on those objects. The accept method in the Element class allows the visitor to perform operations on the elements, and the visit method in the Visitor class is the entry point for the visitor to perform the operation.
 # By using the visitor pattern, we can separate the operations from the elements and add new operations or change existing ones without modifying the elements themselves.
+
+The Visitor pattern is useful when you have a complex structure of objects and you want to perform some operations on these objects without modifying their classes. It allows you to separate the algorithm or operation from the objects it operates on.
+The Visitor pattern is particularly useful in the following cases:
+1. When you have a complex object structure and want to perform operations on all of its elements.
+2. When you have a set of related operations that you want to perform on an object structure, but don't want to modify the objects' classes to add these operations.
+3. When you want to add new operations to an object structure without modifying its classes.
+4. When you want to gather data from an object structure without modifying the objects' classes.
+The Visitor pattern can be particularly useful when working with abstract syntax trees or other complex data structures where operations need to be performed on all elements of the structure. It allows you to keep the structure of the data separate from the operations performed on it, making it easier to maintain and extend the code.
+
+The Visitor pattern is used when you have a set of classes that represent different types of objects and you want to perform operations on these objects without modifying their classes. The main idea behind the Visitor pattern is to separate the algorithm from the object structure. The Visitor pattern defines a new operation to be performed on each element of the object structure, and implements this operation for each class of the object structure. This allows you to add new operations to the object structure without modifying the classes of the objects themselves.
+You should use the Visitor pattern when you have a complex object structure with many different types of objects, and you want to perform operations on these objects without modifying their classes. The Visitor pattern is especially useful when you have a large number of operations that need to be performed on the objects, as it allows you to encapsulate the operations in a separate class.
 """
 
 """
 http://plague-like.blogspot.com/
+https://www.earthempires.com/
 https://www.pygame.org/tags/zombie
 https://github.com/JarvistheJellyFish/AICivGame/blob/master/Villager.py
 https://github.com/najarvis/villager-sim
-https://zhuanlan.zhihu.com/p/138003795
 civilization simulator python
+GOAP
+https://zhuanlan.zhihu.com/p/138003795
+有限狀態機
+行為樹
+https://zhuanlan.zhihu.com/p/540191047
+https://zhuanlan.zhihu.com/p/448895599
+http://www.aisharing.com/archives/439
+https://gwb.tencent.com/community/detail/126344
+https://blog.51cto.com/u_4296776/5372084
+https://www.jianshu.com/p/9c2200ffbb0f
+https://juejin.cn/post/7162151580421062670
+https://juejin.cn/post/7128710213535793182
+https://juejin.cn/post/6844903425717567495
+https://juejin.cn/post/6844903784489943047
+http://www.aisharing.com/archives/280
+https://blog.csdn.net/LIQIANGEASTSUN/article/details/118976709
+Crowd Simulation Models
+https://image.hanspub.org/Html/25-2570526_51496.htm
+http://www.cjig.cn/html/2017/12/20171212.htm
+https://zhuanlan.zhihu.com/p/35100455
+Reciprocal Velocity Obstacle
+Optimal Reciprocal Collision Avoidance
+碰撞回避算法
+路径规划算法
 """
 
 
 """
-https://github.com/djeada/Proste-Projekty
+
 https://github.com/neo-mashiro/GameStore
 https://github.com/HumanRickshaw/Python_Games
 https://github.com/JrTai/Python-projects
@@ -1360,20 +1355,6 @@ Overall, updating the PopulationObserver class to provide analysis and predictio
 
 """
 
-"""
-There are several data structures and algorithms that can be used for modeling agent interactions, depending on the specific needs of your application. Here are a few examples:
 
-Graphs: A graph data structure can be used to represent agents as nodes and interactions between them as edges. This can be useful for modeling networks of agents, such as social networks or communication networks.
-
-Queues: A queue data structure can be used to represent a message queue between agents. This can be useful for modeling asynchronous communication between agents, where messages are sent and received in a first-in, first-out (FIFO) order.
-
-Decision trees: A decision tree algorithm can be used to model the decision-making process of agents. This can be useful for modeling agents that make decisions based on a set of rules or conditions.
-
-Game theory: Game theory algorithms can be used to model interactions between agents in a strategic context, where each agent's actions affect the outcomes of other agents. This can be useful for modeling competitive or cooperative interactions between agents.
-
-Reinforcement learning: Reinforcement learning algorithms can be used to model agents that learn from their interactions with the environment. This can be useful for modeling agents that adapt to changing circumstances and learn from experience.
-
-Ultimately, the choice of data structure and algorithm will depend on the specific requirements of your application and the characteristics of the agent interactions you are modeling.
-"""
 
 

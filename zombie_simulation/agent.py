@@ -390,15 +390,13 @@ class AgentFactory:
         """Unregister a game character type."""
         self.character_creation_funcs.pop(character_type, None)
 
-    def produce(self, arguments: dict[str, Any]) -> Agent:
+    def produce(self, character_type: str, arguments: dict[str, Union[int, tuple]]) -> Agent:
         """Create a game character of a specific type."""
-        args_copy = arguments.copy()
-        character_type = args_copy.pop("type")
         try:
             creator_func = self.character_creation_funcs[character_type]
         except KeyError:
             raise ValueError(f"unknown character type {character_type!r}") from None
-        return creator_func.create_agent(**args_copy)
+        return creator_func.create_agent(arguments)
 
 # store counter in factory
 # may use builder pattern if the product is composite or if there are more parameters
@@ -530,14 +528,13 @@ class ZombieApocalypse(Game):
         self.grid.print_map()
     
     # separate the creation and the use for humans and zombies
-    def create_agent(self, id, school_size, type) -> Agent:
+    def create_agent(self, id: int, school_size: int, type: str) -> Agent:
         arguments = {
-            "type": type,
             "id": id,
             "position": (random.randint(0, school_size-1),
                         random.randint(0, school_size-1))
         }
-        return self.factory.produce(arguments)
+        return self.factory.produce(type, arguments)
         
     # ensure legal position
     # factory pattern for weapons
@@ -735,10 +732,10 @@ metaprogramming (register lead classes, singleton)
 https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Metaprogramming.html#the-metaclass-hook
 function factory python
 https://levelup.gitconnected.com/how-to-create-callable-objects-in-python-python-oop-complete-course-part-20-15fe46e3e2c3
-use of hashing in game
 Techniques for advanced functional programming using lambda functions and partial function application.
 Concurrent programming methods to optimize how your code interacts with APIs.
 Advanced control logic using iterators and generators.
+statsmodels
 """
 
 """
@@ -901,7 +898,6 @@ sonarqube
 # Operations Research algorithm
 
 
-
 # Graph:
 # A graph is a data structure that consists of a set of vertices (or nodes) and a set of edges connecting these vertices. Graphs are frequently used in computer science and other fields to represent relationships between entities. For instance, a social network could be depicted as a graph, with each person being a node and the connections between them being edges.
 # In a zombie apocalypse simulation, a graph can be employed to represent the network of survivors, zombies, and resources. Each node in the graph could represent a location, such as a building, road, or other landmark, and each edge could represent a path or connection between locations. This graph can be used to model the movement of survivors, the spread of zombies, and the distribution of resources.
@@ -920,6 +916,10 @@ sonarqube
 # Inverted Index:
 # An inverted index is a data structure employed to create full-text search systems. Given a set of text documents, this algorithm generates an index that maps each word in the documents to the list of documents containing the word. This algorithm is used in search engines, document management systems, and other applications requiring efficient searching of large volumes of text. A project using this algorithm would typically involve building a search engine or a document management system.
 # In a zombie apocalypse simulation, an inverted index can be used to search for information about zombies, such as their location, behavior, and weaknesses. The index can aid survivors in strategizing and discovering ways to defeat the zombies.
+
+# Queues:
+# A queue data structure can be used to represent a message queue between agents. This can be useful for modeling asynchronous communication between agents, where messages are sent and received in a first-in, first-out (FIFO) order.
+# In a zombie apocalypse simulation, a queue can be used to model the communication between survivors and to represent the order in which messages are sent and received. For example, a survivor may send a message requesting assistance, and the message would be placed at the end of the queue. Another survivor may receive the message and respond, and their response would be placed at the end of the queue. The first survivor would then receive the response and act on it, and so on.
 
 # In summary, to simulate the movement of survivors in a zombie apocalypse, you could use Dijkstra's algorithm to determine the shortest path between two locations while accounting for the potential danger posed by zombies. Additionally, you could use a connectivity graph to represent the relationships between different locations and to determine which locations are connected and accessible.
 # By combining these techniques, you can create a more comprehensive and effective zombie apocalypse simulation. For instance, using the Dijkstra algorithm can help survivors navigate the terrain efficiently while avoiding high-risk areas. Meanwhile, a connectivity graph can give an overview of the entire network of locations, enabling strategic planning and escape route identification. Finally, incorporating a minimum spanning tree can help optimize resource distribution and survivor movement, while an inverted index can provide valuable information to devise strategies against zombies.

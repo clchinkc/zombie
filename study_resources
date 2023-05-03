@@ -134,6 +134,31 @@ A project that can showcase your understanding of these concepts could be a path
 10. Queue and Array: You can use queue and array data structures to implement the search algorithms and store the nodes to be visited.
 With these concepts in mind, you can create a project that allows users to visualize the different algorithms and data structures in action and compare their performance in finding the shortest path between two points in a graph.
 
+Your task will be to implement a distributed system that will find large primes. The system should have one server that is in control of the computation and a dynamic set of workers that are assigned numbers to test for primarity.
+
+Your task is to implement a small web server in Erlang. The aim of this exercise is that you should be able to: describe the procedures for using a socket API, describe the structure of a server process and describe the HTTP protocol.
+snap-shot algorithm
+
+MyTop100Movies - API,Database,CRUD - Application which lets users set their top 100 movies. Movies could come from an API like The Movie Database (http://tmdb.org). Should allow for users to add a movie, list and rank their movie selections. Start with basic CRUD for movies and add features.
+
+ScheduleMaker - This one's harder. Can develop the database schema or an application. Let one user define the schedule for others. Or let users select their own schedule.
+
+Weather Logger - Build the standard weather widget API project but add the ability to log the current weather data and to view historical data. Bonus points if it's accessible programmatically. https://www.ncdc.noaa.gov/cdo-web/webservices/v2
+
+Faceted Search/Navigation. This is the advanced search/filter functionality available on many sites. It's a design pattern. Can read about it here : http://alistapart.com/article/design-patterns-faceted-navigation . Implement it on the back end and the front end if you're bored.
+
+oAuth Login - Recommend this one because it can replace a user system in some of these examples. Numerous libraries exist for setting this up.
+
+Simple CRUD sites - Create, Read,Update,Delete (read includes list). Possible 'objects' could be Dog Breeds, any type of pet, plants, flowers etc. Level of detail is up to you. Locations like Museums, National Parks. Events like music festivals is another possibility. Data Model sample for Events : http://www.databaseanswers.org/data_models/enterprise_data_model_for_events_and_exhibitions/index.htm
+
+RESTful API - use the same list from the CRUD sites but make it available as an API.
+
+Build some Data Models - People of importance or historical, whichever you like. Can use http://databaseanswers.org as a starting point with people and citizen data models : http://www.databaseanswers.org/data_models/people.htm , http://www.databaseanswers.org/data_models/citizens/index.htm
+
+Image Search - FreeCodeCamp calls this Image Search Abstraction Layer which sounds complicated. Instead of interfacing with a 3rd party, make it search a defined path on the local file system. FCC's description : https://www.freecodecamp.com/challenges/image-search-abstraction-layer
+
+Workflow Application - Design a system which requires interaction between users. Simplest example would be author > editor with the object being passed is an article. Author submits article, editor approves or rejects it.
+
 Project suggestions
 hardcore basic apps or useful apps
 https://github.com/vicky002/1000_Projects
@@ -184,6 +209,14 @@ https://www.dataquest.io/blog/free-datasets-for-projects/
 https://b-cd.net/youtube vercel website
 https://realpython.com/intermediate-python-project-ideas/
 https://github.com/karan/Projects
+https://www.ece.rutgers.edu/~marsic/books/SE/projects/MinorityGame/
+https://www.ece.rutgers.edu/~marsic/books/SE/projects/TradingLeague/
+https://www.ece.rutgers.edu/~marsic/books/SE/
+https://www.ece.rutgers.edu/~marsic/books/SE/projects/StockForecasters/
+https://austinhenley.com/blog/challengingprojects.html
+https://github.com/Python-World/python-mini-projects
+https://github.com/practical-tutorials/project-based-learning
+https://github.com/bradtraversy/50projects50days
 
 Must read books
 https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
@@ -236,6 +269,7 @@ https://youtu.be/4xduSsxa5Os
 https://github.com/z358z358?tab=repositories
 https://github.com/yihong0618/running_page
 https://github.com/rip-tyang/generator-zero
+https://gist.github.com/MWins/250000f187bdbdd7e2757d50be8507d5
 
 full stack
 frontend + backend
@@ -326,6 +360,7 @@ https://www.udemy.com/course/django-python-advanced/
 https://www.youtube.com/watch?v=llbtoQTt4qw
 https://codeculturepro.medium.com/difference-between-node-js-and-django-which-one-you-should-choose-b3e5ca5c44de
 https://www.youtube.com/watch?v=t10QcFx7d5k
+https://www.dj4e.com/project/00_overview.md
 
 Chart animation
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247486653&idx=1&sn=92128455c20ada46b355f5166ba5d4b5
@@ -807,6 +842,7 @@ spring boot
 
 Javascript
 https://developer.mozilla.org/zh-TW/docs/Learn/JavaScript
+https://www.theodinproject.com/paths/full-stack-javascript
 https://github.com/Code-Bullet/WebsiteTest
 https://github.com/Code-Bullet/MarbleCalculator
 https://notfalse.net/64/js-dom-2017
@@ -1048,6 +1084,7 @@ https://www.youtube.com/watch?v=iEn0ozP-jxc&list=WL&index=67&ab_channel=PolyMars
 https://github.com/gregwinther/Obscura/tree/master/src
 https://youtu.be/Lq2vRXMWCis
 https://github.com/mgerdes/Open-Golf
+https://www.youtube.com/watch?v=vtqCWvmnGTs
 
 web game
 https://replit.com/@IroncladDev/P5Platformer
@@ -1099,6 +1136,8 @@ spoj
 
 readme
 https://github.com/ashutoshpipriye/Awesome-Profile-README-templates
+https://github.com/alecortega/portfolio-template
+https://github.com/othneildrew/Best-README-Template
 
 Coding interview
 https://www.explainthis.io/zh-hant/about
@@ -1181,12 +1220,26 @@ https://huggingface.co/spaces/trl-lib/stack-llama
 https://github.com/franklindyer/discord_nlp/tree/main
 
 Openai API project
+https://arxiv.org/pdf/2304.03442.pdf
+https://reverie.herokuapp.com/arXiv_Demo/
 https://www.youtube.com/watch?v=MlK6SIjcjE8
 https://github.com/Torantulino/Auto-GPT
+https://github.com/Significant-Gravitas/Auto-GPT
 https://github.com/yoheinakajima/babyagi
 https://github.com/yihui-he/ActGPT
 https://www.youtube.com/watch?v=2xxziIWmaSA
 https://www.hk01.com/%E6%95%B8%E7%A2%BC%E7%94%9F%E6%B4%BB/889954/autogpt%E6%95%99%E5%AD%B8%E6%87%B6%E4%BA%BA%E5%8C%85-%E4%B8%8B%E8%BC%89-%E5%AE%89%E8%A3%9D%E6%96%B9%E5%BC%8F%E5%8F%8A%E5%AF%A6%E6%B8%AC-%E8%87%AA%E4%B8%BB%E5%88%86%E6%9E%90%E5%8A%9F%E8%83%BD%E6%9B%B4%E5%BC%B7%E5%A4%A7
+https://github.com/lightaime/camel
+https://colab.research.google.com/drive/1AzP33O8rnMW__7ocWJhVBXjKziJXPtim?usp=sharing
+https://python.langchain.com/en/latest/use_cases/agents/camel_role_playing.html
+https://arxiv.org/abs/2303.17760
+https://www.camel-ai.org/
+https://github.com/yoheinakajima/babyagi
+https://yoheinakajima.com/task-driven-autonomous-agent-utilizing-gpt-4-pinecone-and-langchain-for-diverse-applications/
+https://python.langchain.com/en/latest/use_cases/agents/baby_agi_with_agent.html
+https://python.langchain.com/en/latest/use_cases/agents/baby_agi.html
+https://github.com/alaeddine-13/thinkgpt#replay-agent-memory-and-infer-new-observations
+https://python.langchain.com/en/latest/modules/indexes/retrievers/examples/time_weighted_vectorstore.html
 https://github.com/logspace-ai/langflow
 https://www.youtube.com/watch?v=v6sF8Ed3nTE
 https://www.youtube.com/watch?v=XS8eRtlcCGU
@@ -1258,6 +1311,7 @@ https://www.youtube.com/watch?v=mBoX_JCKZTE
 search
 https://github.com/meilisearch/meilisearch
 https://pypi.org/project/LocalitySensitiveHashing/
+https://link.medium.com/uWMA4GbFpzb
 
 transformer.js
 https://github.com/xenova/transformers.js

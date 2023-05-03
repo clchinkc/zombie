@@ -303,3 +303,4 @@ if __name__ == "__main__":
 # https://github.com/timvvvht/AlphaZero-Connect4
 # https://github.com/topics/alphazero
 # https://github.com/deepmind/mctx
+# In the training of AlphaZero, a hashing function is used to reduce the dimensionality of the input space. The hashing function maps each game state to a fixed-length vector, regardless of the size of the game board. The hash function used in AlphaZero is designed to preserve the similarity between game states, meaning that game states that are similar will be mapped to similar hash values. During training, the neural network takes in the hashed game state as input, and the output of the network represents the optimal policy and value function for that game state. The use of a hashing function allows AlphaZero to process high-dimensional game states efficiently, enabling it to learn and improve its playing strategy over time.
