@@ -11,6 +11,7 @@ Machine learning algorithms: You could use machine learning techniques such as r
 """
 
 
+import math
 import random
 from enum import Enum
 from queue import PriorityQueue
@@ -319,6 +320,221 @@ class AStar:
             return next_step
         return x, y
 
+class ThetaStar:
+    def __init__(self, goal_x, goal_y):
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+        self.heuristic_cache = {}
+
+    def heuristic(self, x, y):
+        if (x, y) not in self.heuristic_cache:
+            self.heuristic_cache[(x, y)] = abs(x - self.goal_x) + abs(y - self.goal_y)
+        return self.heuristic_cache[(x, y)]
+
+    def line_of_sight(self, grid, start, end):
+        if not grid.is_valid_move(*start) or not grid.is_valid_move(*end):
+            return False
+        
+        x0, y0 = start
+        x1, y1 = end
+        dy = y1 - y0
+        dx = x1 - x0
+        sy = 1 if dy >= 0 else -1
+        sx = 1 if dx >= 0 else -1
+        dy = abs(dy)
+        dx = abs(dx)
+        f = 0
+        is_valid_move = grid.is_valid_move
+        offset_x = (1 ^ sx) >> 1
+        offset_y = (1 ^ sy) >> 1
+
+        if dx > dy:
+            while x0 != x1:
+                x0 += sx
+                f += dy
+                if f >= dx:
+                    y0 += sy
+                    f -= dx
+                    if not is_valid_move(x0 - offset_x, y0 - offset_y):
+                        return False
+                if not is_valid_move(x0 - offset_x, y0 - offset_y):
+                    return False
+        else:
+            while y0 != y1:
+                y0 += sy
+                f += dx
+                if f >= dy:
+                    x0 += sx
+                    f -= dy
+                    if not is_valid_move(x0 - offset_x, y0 - offset_y):
+                        return False
+                if not is_valid_move(x0 - offset_x, y0 - offset_y):
+                    return False
+
+        return True
+
+
+    def find_neighbors(self, grid, pos, came_from):
+        x, y = pos
+        neighbors = [(x + dy, y + dx) for dy, dx in [(1, 0), (-1, 0), (0, 1), (0, -1)]]
+        valid_neighbors = [neighbor for neighbor in neighbors if grid.is_valid_move(*neighbor)]
+
+        if pos in came_from:
+            parent = came_from[pos]
+            if self.line_of_sight(grid, parent, pos):
+                valid_neighbors.append(parent)
+
+        return valid_neighbors
+
+    def find_path(self, start_pos, grid):
+        end_pos = (self.goal_x, self.goal_y)
+
+        open_list = PriorityQueue()
+        open_list.put((0, (start_pos, [start_pos])))
+        visited = set()
+
+        g_scores = {start_pos: 0}
+        f_scores = {start_pos: self.heuristic(*start_pos)}
+        came_from = {}
+
+        while not open_list.empty():
+            _, (current, path) = open_list.get()
+            if current == end_pos:
+                return path
+
+            neighbors = self.find_neighbors(grid, current, came_from)
+            for neighbor in neighbors:
+                if neighbor in visited:
+                    continue
+
+                if self.line_of_sight(grid, current, neighbor):
+                    new_g_score = g_scores[current] + math.sqrt((neighbor[0] - current[0])**2 + (neighbor[1] - current[1])**2)
+                else:
+                    new_g_score = g_scores[current] + 1
+
+                if neighbor not in g_scores or new_g_score < g_scores[neighbor]:
+                    came_from[neighbor] = current
+                    g_scores[neighbor] = new_g_score
+                    f_scores[neighbor] = new_g_score + self.heuristic(*neighbor)
+                    open_list.put((f_scores[neighbor], (neighbor, path + [neighbor])))
+                    visited.add(neighbor)
+                    
+        return []
+    
+    def move(self, x, y, grid):
+        path = self.find_path((x, y), grid)
+        if len(path) > 1:
+            next_step = path[1]
+            return next_step
+        return x, y
+
+class JPS:
+    def __init__(self, goal_x, goal_y):
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+        self.heuristic_cache = {}
+
+    def heuristic(self, x, y):
+        if (x, y) not in self.heuristic_cache:
+            self.heuristic_cache[(x, y)] = abs(x - self.goal_x) + abs(y - self.goal_y)
+        return self.heuristic_cache[(x, y)]
+
+    def find_neighbors(self, grid, pos):
+        x, y = pos
+        neighbors = [(x + dy, y + dx) for dy, dx in [(1, 0), (-1, 0), (0, 1), (0, -1)]]
+        valid_neighbors = [neighbor for neighbor in neighbors if grid.is_valid_move(*neighbor)]
+        return valid_neighbors
+
+    def jump(self, grid, current, direction):
+        x, y = current
+        dx, dy = direction
+
+        new_x, new_y = x + dx, y + dy
+        if not grid.is_valid_move(new_x, new_y):
+            return None
+
+        if (new_x, new_y) == (self.goal_x, self.goal_y):
+            return (new_x, new_y)
+
+        if dx != 0 and dy != 0:
+            if (grid.is_valid_move(new_x - dx, new_y) and not grid.is_valid_move(x - dx, y)) or \
+               (grid.is_valid_move(new_x, new_y - dy) and not grid.is_valid_move(x, y - dy)):
+                return (new_x, new_y)
+        else:
+            if dx != 0:
+                if (grid.is_valid_move(new_x, new_y - 1) and not grid.is_valid_move(x, y - 1)) or \
+                   (grid.is_valid_move(new_x, new_y + 1) and not grid.is_valid_move(x, y + 1)):
+                    return (new_x, new_y)
+            else:
+                if (grid.is_valid_move(new_x - 1, new_y) and not grid.is_valid_move(x - 1, y)) or \
+                   (grid.is_valid_move(new_x + 1, new_y) and not grid.is_valid_move(x + 1, y)):
+                    return (new_x, new_y)
+
+        return self.jump(grid, (new_x, new_y), direction)
+
+    def find_jump_points(self, grid, current):
+        jump_points = []
+        neighbors = self.find_neighbors(grid, current)
+
+        for neighbor in neighbors:
+            direction = (neighbor[0] - current[0], neighbor[1] - current[1])
+            jump_point = self.jump(grid, current, direction)
+
+            if jump_point is not None:
+                jump_points.append(jump_point)
+
+        return jump_points
+
+    def reconstruct_path(self, path):
+        full_path = []
+        for i in range(len(path) - 1):
+            current = path[i]
+            next_node = path[i + 1]
+            diff_x, diff_y = next_node[0] - current[0], next_node[1] - current[1]
+            step_x, step_y = diff_x // abs(diff_x) if diff_x != 0 else 0, diff_y // abs(diff_y) if diff_y != 0 else 0
+
+            while current != next_node:
+                full_path.append(current)
+                current = (current[0] + step_x, current[1] + step_y)
+        full_path.append(path[-1])
+        return full_path
+
+    def find_path(self, start_pos, grid):
+        end_pos = (self.goal_x, self.goal_y)
+
+        open_list = PriorityQueue()
+        open_list.put((0, (start_pos, [start_pos])))
+        visited = set()
+
+        g_scores = {start_pos: 0}
+        f_scores = {start_pos: self.heuristic(*start_pos)}
+
+        while not open_list.empty():
+            _, (current, path) = open_list.get()
+            if current == end_pos:
+                return self.reconstruct_path(path)
+
+            jump_points = self.find_jump_points(grid, current)
+            for jump_point in jump_points:
+                if jump_point in visited:
+                    continue
+
+                tentative_g_score = g_scores[current] + math.sqrt((jump_point[0] - current[0])**2 + (jump_point[1] - current[1])**2)
+                if jump_point not in g_scores or tentative_g_score < g_scores[jump_point]:
+                    g_scores[jump_point] = tentative_g_score
+                    f_scores[jump_point] = tentative_g_score + self.heuristic(*jump_point)
+                    open_list.put((f_scores[jump_point], (jump_point, path + [jump_point])))
+                    visited.add(jump_point)
+                    
+        return []
+
+    def move(self, x, y, grid):
+        path = self.find_path((x, y), grid)
+        if len(path) > 1:
+            next_step = path[1]
+            return next_step
+        return x, y
+
 
 def draw_grid(screen, grid):
     for y in range(grid.height):
@@ -399,15 +615,73 @@ BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 FPS = 10
 
-# Create agents
-agents = [
-    Agent(0, 0, RandomWalk()),
-    Agent(0, 0, Swarm(goal_x, goal_y)),
-    Agent(0, 0, AStar(goal_x, goal_y)),
-]
+# # Create agents
+# agents = [
+#     Agent(0, 0, RandomWalk()),
+#     Agent(0, 0, Swarm(goal_x, goal_y)),
+#     Agent(0, 0, AStar(goal_x, goal_y)),
+#     Agent(0, 0, ThetaStar(goal_x, goal_y)),
+#     Agent(0, 0, JPS(goal_x, goal_y)),
+# ]
 
-# Run the simulation
-run_simulation(grid, agents, goal_x, goal_y)
+# # Run the simulation
+# run_simulation(grid, agents, goal_x, goal_y)
+
+
+import random
+import time
+
+# create 10 random grids of different sizes
+grids = []
+for i in range(100):
+    size = random.randint(1000, 2000)
+    grids.append(Grid(size, size))
+
+# create the AStar, ThetaStar and JPS algorithms
+astar = AStar(goal_x, goal_y)
+thetastar = ThetaStar(goal_x, goal_y)
+jps = JPS(goal_x, goal_y)
+
+# measure the time it takes for each algorithm to find a path on each grid
+astar_times = []
+thetastar_times = []
+jps_times = []
+for grid in grids:
+    # set the starting position and goal position for each grid
+    start_x, start_y = random.randint(0, grid.width - 1), random.randint(0, grid.height - 1)
+    goal_x, goal_y = random.randint(0, grid.width - 1), random.randint(0, grid.height - 1)
+
+    # update AStar and ThetaStar goal positions
+    astar.goal_x, astar.goal_y = goal_x, goal_y
+    thetastar.goal_x, thetastar.goal_y = goal_x, goal_y
+    jps.goal_x, jps.goal_y = goal_x, goal_y
+
+    # measure AStar time
+    start_time = time.time()
+    path = astar.find_path((start_x, start_y), grid)
+    end_time = time.time()
+    astar_time = end_time - start_time
+    astar_times.append(astar_time)
+
+    # measure ThetaStar time
+    start_time = time.time()
+    path = thetastar.find_path((start_x, start_y), grid)
+    end_time = time.time()
+    thetastar_time = end_time - start_time
+    thetastar_times.append(thetastar_time)
+    
+    # measure JPS time
+    start_time = time.time()
+    path = jps.find_path((start_x, start_y), grid)
+    end_time = time.time()
+    jps_time = end_time - start_time
+    jps_times.append(jps_time)
+
+# print the average time for each algorithm
+print(f"AStar average time: {sum(astar_times) / len(astar_times):.6f} seconds")
+print(f"ThetaStar average time: {sum(thetastar_times) / len(thetastar_times):.6f} seconds")
+print(f"JPS average time: {sum(jps_times) / len(jps_times):.6f} seconds")
+
 
 
 # http://www.codenamepandey.com/movementalgo

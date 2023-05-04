@@ -1311,16 +1311,12 @@ Optimal Reciprocal Collision Avoidance
 
 
 """
-
-https://github.com/neo-mashiro/GameStore
-https://github.com/HumanRickshaw/Python_Games
 https://github.com/JrTai/Python-projects
 https://github.com/CleverProgrammer/coursera
 https://github.com/brunoratkaj/coursera-POO
 https://github.com/xkal36/principles_of_computing
 https://github.com/seschwartz8/intermediate-python-programs
 https://github.com/yudong-94/Fundamentals-of-Computing-in-Python
-https://github.com/Sakib37/Python_Games
 https://github.com/chrisnatali/zombie
 https://github.com/ITLabProject2016/internet_technology_lab_project
 https://github.com/GoogleCloudPlatform/appengine-scipy-zombie-apocalypse-python
