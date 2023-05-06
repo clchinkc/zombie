@@ -570,3 +570,6 @@ if __name__ == '__main__':
 # https://papers.nips.cc/paper_files/paper/2017/hash/d5e2c0adad503c91f91df240d0cd4e49-Abstract.html
 # https://arxiv.org/abs/1711.02827
 # http://proceedings.mlr.press/v78/bajcsy17a/bajcsy17a.pdf
+
+# https://towardsdatascience.com/hyperbolic-deep-reinforcement-learning-b2de787cf2f7
+

@@ -790,109 +790,109 @@ BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 FPS = 10
 
-# # Create agents
-# agents = [
-#     # Agent(0, 0, RandomWalk()),
-#     # Agent(0, 0, Swarm(goal_x, goal_y)),
-#     Agent(0, 0, AStar(goal_x, goal_y)),
-#     Agent(0, 0, ThetaStar(goal_x, goal_y)),
-#     Agent(0, 0, JPS(goal_x, goal_y)),
-#     Agent(0, 0, DFS(goal_x, goal_y)),
-#     Agent(0, 0, DStar(goal_x, goal_y)),
-#     Agent(0, 0, DStarLite(goal_x, goal_y)),
-# ]
+# Create agents
+agents = [
+    # Agent(0, 0, RandomWalk()),
+    # Agent(0, 0, Swarm(goal_x, goal_y)),
+    Agent(0, 0, AStar(goal_x, goal_y)),
+    Agent(0, 0, ThetaStar(goal_x, goal_y)),
+    Agent(0, 0, JPS(goal_x, goal_y)),
+    Agent(0, 0, DFS(goal_x, goal_y)),
+    Agent(0, 0, DStar(goal_x, goal_y)),
+    Agent(0, 0, DStarLite(goal_x, goal_y)),
+]
 
-# # Run the simulation
-# run_simulation(grid, agents, goal_x, goal_y)
+# Run the simulation
+run_simulation(grid, agents, goal_x, goal_y)
 
 
-import random
-import time
+# import random
+# import time
 
-# create 10 random grids of different sizes
-grids = []
-for i in range(1):
-    size = random.randint(900, 1000)
-    grids.append(Grid(size, size))
+# # create 10 random grids of different sizes
+# grids = []
+# for i in range(1):
+#     size = random.randint(900, 1000)
+#     grids.append(Grid(size, size))
 
-# create the AStar, ThetaStar and JPS algorithms
-astar = AStar(goal_x, goal_y)
-thetastar = ThetaStar(goal_x, goal_y)
-jps = JPS(goal_x, goal_y)
-dfs = DFS(goal_x, goal_y)
-dstar = DStar(goal_x, goal_y)
-dstarlite = DStarLite(goal_x, goal_y)
+# # create the AStar, ThetaStar and JPS algorithms
+# astar = AStar(goal_x, goal_y)
+# thetastar = ThetaStar(goal_x, goal_y)
+# jps = JPS(goal_x, goal_y)
+# dfs = DFS(goal_x, goal_y)
+# dstar = DStar(goal_x, goal_y)
+# dstarlite = DStarLite(goal_x, goal_y)
 
-# measure the time it takes for each algorithm to find a path on each grid
-astar_times = []
-thetastar_times = []
-jps_times = []
-dfs_times = []
-dstar_times = []
-dstarlite_times = []
-for grid in grids:
-    # set the starting position and goal position for each grid
-    start_x, start_y = random.randint(0, grid.width - 1), random.randint(0, grid.height - 1)
-    goal_x, goal_y = random.randint(0, grid.width - 1), random.randint(0, grid.height - 1)
-    grid.generate_maze(start_x, start_y, goal_x, goal_y)
+# # measure the time it takes for each algorithm to find a path on each grid
+# astar_times = []
+# thetastar_times = []
+# jps_times = []
+# dfs_times = []
+# dstar_times = []
+# dstarlite_times = []
+# for grid in grids:
+#     # set the starting position and goal position for each grid
+#     start_x, start_y = random.randint(0, grid.width - 1), random.randint(0, grid.height - 1)
+#     goal_x, goal_y = random.randint(0, grid.width - 1), random.randint(0, grid.height - 1)
+#     grid.generate_maze(start_x, start_y, goal_x, goal_y)
 
-    # update AStar and ThetaStar goal positions
-    astar.goal_x, astar.goal_y = goal_x, goal_y
-    thetastar.goal_x, thetastar.goal_y = goal_x, goal_y
-    jps.goal_x, jps.goal_y = goal_x, goal_y
-    dfs.goal_x, dfs.goal_y = goal_x, goal_y
-    dstar.goal_x, dstar.goal_y = goal_x, goal_y
-    dstarlite.goal_x, dstarlite.goal_y = goal_x, goal_y
+#     # update AStar and ThetaStar goal positions
+#     astar.goal_x, astar.goal_y = goal_x, goal_y
+#     thetastar.goal_x, thetastar.goal_y = goal_x, goal_y
+#     jps.goal_x, jps.goal_y = goal_x, goal_y
+#     dfs.goal_x, dfs.goal_y = goal_x, goal_y
+#     dstar.goal_x, dstar.goal_y = goal_x, goal_y
+#     dstarlite.goal_x, dstarlite.goal_y = goal_x, goal_y
 
-    # measure AStar time
-    start_time = time.time()
-    path = astar.find_path((start_x, start_y), grid)
-    end_time = time.time()
-    astar_time = end_time - start_time
-    astar_times.append(astar_time)
+#     # measure AStar time
+#     start_time = time.time()
+#     path = astar.find_path((start_x, start_y), grid)
+#     end_time = time.time()
+#     astar_time = end_time - start_time
+#     astar_times.append(astar_time)
 
-    # measure ThetaStar time
-    start_time = time.time()
-    path = thetastar.find_path((start_x, start_y), grid)
-    end_time = time.time()
-    thetastar_time = end_time - start_time
-    thetastar_times.append(thetastar_time)
+#     # measure ThetaStar time
+#     start_time = time.time()
+#     path = thetastar.find_path((start_x, start_y), grid)
+#     end_time = time.time()
+#     thetastar_time = end_time - start_time
+#     thetastar_times.append(thetastar_time)
     
-    # measure JPS time
-    start_time = time.time()
-    path = jps.find_path((start_x, start_y), grid)
-    end_time = time.time()
-    jps_time = end_time - start_time
-    jps_times.append(jps_time)
+#     # measure JPS time
+#     start_time = time.time()
+#     path = jps.find_path((start_x, start_y), grid)
+#     end_time = time.time()
+#     jps_time = end_time - start_time
+#     jps_times.append(jps_time)
     
-    # measure DFS time
-    start_time = time.time()
-    path = dfs.find_path((start_x, start_y), grid)
-    end_time = time.time()
-    dfs_time = end_time - start_time
-    dfs_times.append(dfs_time)
+#     # measure DFS time
+#     start_time = time.time()
+#     path = dfs.find_path((start_x, start_y), grid)
+#     end_time = time.time()
+#     dfs_time = end_time - start_time
+#     dfs_times.append(dfs_time)
     
-    # measure DStar time
-    start_time = time.time()
-    path = dstar.find_path((start_x, start_y), grid)
-    end_time = time.time()
-    dstar_time = end_time - start_time
-    dstar_times.append(dstar_time)
+#     # measure DStar time
+#     start_time = time.time()
+#     path = dstar.find_path((start_x, start_y), grid)
+#     end_time = time.time()
+#     dstar_time = end_time - start_time
+#     dstar_times.append(dstar_time)
     
-    # measure DStarLite time
-    start_time = time.time()
-    path = dstarlite.find_path((start_x, start_y), grid)
-    end_time = time.time()
-    dstarlite_time = end_time - start_time
-    dstarlite_times.append(dstarlite_time)
+#     # measure DStarLite time
+#     start_time = time.time()
+#     path = dstarlite.find_path((start_x, start_y), grid)
+#     end_time = time.time()
+#     dstarlite_time = end_time - start_time
+#     dstarlite_times.append(dstarlite_time)
 
-# print the average time for each algorithm
-print(f"AStar average time: {sum(astar_times)/len(astar_times):.6f} seconds")
-print(f"ThetaStar average time: {sum(thetastar_times)/len(thetastar_times):.6f} seconds")
-print(f"JPS average time: {sum(jps_times)/len(jps_times):.6f} seconds")
-print(f"DFS average time: {sum(dfs_times)/len(dfs_times):.6f} seconds")
-print(f"DStar average time: {sum(dstar_times)/len(dstar_times):.6f} seconds")
-print(f"DStarLite average time: {sum(dstarlite_times)/len(dstarlite_times):.6f} seconds")
+# # print the average time for each algorithm
+# print(f"AStar average time: {sum(astar_times)/len(astar_times):.6f} seconds")
+# print(f"ThetaStar average time: {sum(thetastar_times)/len(thetastar_times):.6f} seconds")
+# print(f"JPS average time: {sum(jps_times)/len(jps_times):.6f} seconds")
+# print(f"DFS average time: {sum(dfs_times)/len(dfs_times):.6f} seconds")
+# print(f"DStar average time: {sum(dstar_times)/len(dstar_times):.6f} seconds")
+# print(f"DStarLite average time: {sum(dstarlite_times)/len(dstarlite_times):.6f} seconds")
 
 """
 100 random grids of different sizes from 10x10 to 20x20
@@ -941,7 +941,16 @@ DStarLite average time: 15.427422 seconds
 """
 
 # http://www.codenamepandey.com/movementalgo
+# https://en.wikipedia.org/wiki/Multi-agent_pathfinding
 # 1 change to grid.get_cost of that cell and neighbor
+# https://gamedev.stackexchange.com/questions/141688/how-to-optimize-pathfinding-on-a-very-large-dynamic-2d-grid
+# https://grail.cs.washington.edu/projects/crowd-flows/78-treuille.pdf
+
+"""
+Multi-agent pathfinding
+Main article: Multi-agent pathfinding
+Multi-agent pathfinding is to find the paths for multiple agents from their current locations to their target locations without colliding with each other, while at the same time optimizing a cost function, such as the sum of the path lengths of all agents. It is a generalization of pathfinding. Many multi-agent pathfinding algorithms are generalized from A*, or based on reduction to other well studied problems such as integer linear programming.[10] However, such algorithms are typically incomplete; in other words, not proven to produce a solution within polynomial time. A different category of algorithms sacrifice optimality for performance by either making use of known navigation patterns (such as traffic flow) or the topology of the problem space.[11]
+"""
 
 """
 Johnson算法
