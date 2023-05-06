@@ -163,25 +163,13 @@ Project suggestions
 hardcore basic apps or useful apps
 https://github.com/vicky002/1000_Projects
 https://www.crio.do/blog/python-projects-for-developers/
-https://github.com/RichardFu123/pythonTools
 Django 搭建简易博客
 Flask 开发轻博客
 https://github.com/zky001/fluent-python-translate
 https://zhuanlan.zhihu.com/p/95526617
 https://www.analyticsinsight.net/top-10-python-data-science-courses-and-boot-camps-to-know-in-2023/
-https://python-course.eu/oop/polynomial-class.php
-https://langchain.readthedocs.io/en/latest/getting_started/getting_started.html
-https://github.com/gkamradt/langchain-tutorials
-https://github.com/jerryjliu/gpt_index
 https://medium.com/pipeline-a-data-engineering-resource/creating-the-dashboard-that-got-me-a-data-analyst-job-offer-de3f0d6b1771
 https://www.youtube.com/watch?v=jl5yUEdekEM&ab_channel=TechWithTim
-Recommendation system
-https://github.com/anthonyli358/spotify-recommender-systems
-https://github.com/Qing93/anime_recommend
-https://zhuanlan.zhihu.com/p/22494721
-https://whuhan2013.github.io/blog/2016/11/07/flask-mysql-learn/
-Currency converter
-https://www.thepythoncode.com/article/make-a-currency-converter-in-python
 https://github.com/AsmrProg-YT/100-days-of-javascript
 https://www.youtube.com/watch?v=54XyRw9y8oE
 https://www.projectpro.io/projects/data-science-projects
@@ -194,7 +182,6 @@ https://www.coursera.org/search?index=prod_all_launched_products_term_optimizati
 https://github.com/kiteco/python-youtube-code
 https://www.programcreek.com/python/?action=search_project
 tk text editor add textblob and pyspellchecker spellcheck, add autocomplete, add nltk sentiment analysis
-use fuzzywuzzy for searching
 https://www.usandopy.com/en/artigo/how-to-build-a-pokedex-in-python-python-project-part-01/
 https://www.pycob.com/gallery?tag=Featured
 https://github.com/pycob/sample-apps
@@ -1005,9 +992,13 @@ https://www.youtube.com/watch?v=j35nmJEMhpg
 https://www.youtube.com/@Goodgis/videos
 https://youtu.be/QGKBeBFOM90
 https://www.youtube.com/watch?v=NnI_1DOYt2A
-https://github.com/neo-mashiro/GameStore
-https://github.com/HumanRickshaw/Python_Games
-https://github.com/Sakib37/Python_Games
+https://www.youtube.com/watch?v=fjjmGzCeGlI
+https://www.youtube.com/watch?v=3LG4zlCfnmw
+https://www.youtube.com/watch?v=cj16wK4CGy8
+https://www.youtube.com/watch?v=jJw7kYHp-yc
+https://www.youtube.com/watch?v=6BrZryMz-ac
+https://www.youtube.com/watch?v=ltF0KuotA30
+https://www.youtube.com/watch?v=WnnaI_OXeEA
 
 Godot
 https://www.youtube.com/watch?v=DQFmF3u-7L8
@@ -1126,7 +1117,7 @@ https://youtu.be/hYLte2eoQkw
 https://youtu.be/WIe-ewLxHSY
 https://ossrank.com/p
 
-Command line search
+Command line
 https://www.commands.dev/
 
 coding website
@@ -1219,6 +1210,8 @@ https://island-stretch-3e4.notion.site/Best-Chat-GPT-Resources-b54f0284c7644583b
 https://pyoflife.com/building-chatbots-with-python-using-natural-language-processing-and-machine-learning/
 https://github.com/hwchase17/chat-your-data
 https://github.com/hwchase17/langchain-streamlit-template
+https://langchain.readthedocs.io/en/latest/getting_started/getting_started.html
+https://github.com/gkamradt/langchain-tutorials
 https://www.youtube.com/watch?v=J_0qvRt4LNk
 https://www.youtube.com/watch?v=Ea9jgBjQxEs
 https://github.com/togethercomputer/OpenChatKit
@@ -1230,6 +1223,7 @@ https://github.com/franklindyer/discord_nlp/tree/main
 Openai API project
 https://arxiv.org/pdf/2304.03442.pdf
 https://reverie.herokuapp.com/arXiv_Demo/
+https://www.youtube.com/watch?v=CaGqEBjsJtA
 https://www.youtube.com/watch?v=MlK6SIjcjE8
 https://github.com/Torantulino/Auto-GPT
 https://github.com/Significant-Gravitas/Auto-GPT
@@ -1279,6 +1273,7 @@ https://learn.microsoft.com/zh-tw/semantic-kernel/
 https://github.com/davila7/youtube-gpt
 https://github.com/alaminmagaga/Image-Generator-with-OpenAI-API
 https://alaminmusamagaga.medium.com/building-an-ai-powered-image-generation-application-with-django-and-openai-api-3e117a35face
+https://github.com/jerryjliu/llama_index
 
 Command line application
 https://github.com/lxgr-linux/pokete
@@ -1320,6 +1315,7 @@ search
 https://github.com/meilisearch/meilisearch
 https://pypi.org/project/LocalitySensitiveHashing/
 https://link.medium.com/uWMA4GbFpzb
+fuzzywuzzy
 
 transformer.js
 https://github.com/xenova/transformers.js
@@ -1514,6 +1510,13 @@ These are the 5 critical elements of excel that one should not miss:
 4] Printing Principle - Imagine you spent an entire day preparing an excel model, and when you print it, it is not fitting an A4 size page. How frustrating is it? Before starting the excel model, note the worksheet you need to get print copy and design it accordingly. It is not necessary to fit everything on one page. 
 5] Message Principle - Going through each worksheet is tiring for the user. Even he/she does not have time to review each sheet and learn how you reached your final result. So, what is the solution? Give a proper headline, summary and notes to each worksheet.
 
+Recommendation system
+https://github.com/anthonyli358/spotify-recommender-systems
+https://github.com/Qing93/anime_recommend
+https://zhuanlan.zhihu.com/p/22494721
+https://whuhan2013.github.io/blog/2016/11/07/flask-mysql-learn/
+https://github.com/yudong-94/My-Movie-Recommender
+
 API
 Here are the summarized functions of each API mentioned:
 FastAPI: A web framework for building APIs with Python 3.7+.
@@ -1552,6 +1555,7 @@ https://towardsdatascience.com/using-nlp-to-figure-out-what-people-really-think-
 https://www.youtube.com/playlist?list=PLxqBkZuBynVQEvXfJpq3smfuKq3AiNW-N
 https://github.com/tensorflow/tensor2tensor
 https://github.com/deepmind/sonnet
+https://github.com/ssymmetry/BBT-FinCUGE-Applications
 
 Machine learning
 https://www.linkedin.com/feed/update/urn:li:activity:7037001701962215424/?utm_source=share&utm_medium=member_android
@@ -1577,6 +1581,13 @@ https://zhuanlan.zhihu.com/p/388573380
 https://cloud.tencent.com/developer/article/1933412
 https://blog.51cto.com/u_14848199/3809668
 https://blog.51cto.com/u_13389043/5166211
+
+big data
+Apache Spark, Hadoop, and Kafka are three different technologies used in the field of big data. While they share some similarities, each one serves a distinct purpose.
+Hadoop is a distributed data processing framework that is designed to store and process large volumes of structured and unstructured data across multiple servers. It consists of two main components: the Hadoop Distributed File System (HDFS) for storing data and MapReduce for processing data. Hadoop is primarily used for batch processing of large data sets.
+Apache Spark, on the other hand, is an in-memory data processing engine that can handle both batch and real-time processing of data. It provides a faster and more flexible alternative to Hadoop's MapReduce for processing large volumes of data. Spark can also be used for machine learning and graph processing.
+Kafka, on the other hand, is a distributed messaging system that is used for real-time data streaming. It allows large volumes of data to be ingested in real-time and processed in real-time. Kafka is often used in conjunction with Spark for real-time processing of data.
+In summary, Hadoop is primarily used for batch processing, Spark is used for both batch and real-time processing, and Kafka is used for real-time data streaming. Depending on your specific needs, you may use one or more of these technologies in combination to build a robust big data infrastructure.
 
 system design
 https://bytebytego.com/

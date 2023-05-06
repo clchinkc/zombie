@@ -11,6 +11,7 @@ Machine learning algorithms: You could use machine learning techniques such as r
 """
 
 
+import heapq
 import math
 import random
 from enum import Enum
@@ -88,7 +89,7 @@ class Grid:
         self.set_goal(end_x, end_y)
 
     # Prim's algorithm
-    def generate_maze(self, start_x, start_y, end_x, end_y):
+    def generate_maze_1(self, start_x, start_y, end_x, end_y):
         def is_valid_cell(x, y):
             return 0 <= x < self.width and 0 <= y < self.height
 
@@ -135,6 +136,12 @@ class Grid:
         self.set_goal(end_x, end_y)
 
 # or wave function collapse
+# Greedy Best-First Search
+# Bidirectional Search
+# Recursive Division
+# Eller's Algorithm
+# Kruskal's Algorithm
+# Prim's Algorithm
 # https://github.com/avihuxp/WaveFunctionCollapse
 # https://www.youtube.com/watch?v=2SuvO4Gi7uY
 # https://en.wikipedia.org/wiki/Maze_generation_algorithm
@@ -535,6 +542,174 @@ class JPS:
             return next_step
         return x, y
 
+class DFS:
+    def __init__(self, goal_x, goal_y):
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+
+    def find_path(self, start_pos, grid):
+        end_pos = (self.goal_x, self.goal_y)
+        stack = [(start_pos, [start_pos])]
+        visited = set()
+
+        while stack:
+            current, path = stack.pop()
+            if current == end_pos:
+                return path
+
+            visited.add(current)
+            neighbors = self.find_neighbors(grid, current)
+            for neighbor in neighbors:
+                if neighbor not in visited:
+                    stack.append((neighbor, path + [neighbor]))
+
+        return []
+
+    def find_neighbors(self, grid, pos):
+        x, y = pos
+        neighbors = [(x + dy, y + dx) for dy, dx in [(1, 0), (-1, 0), (0, 1), (0, -1)]]
+        valid_neighbors = [neighbor for neighbor in neighbors if grid.is_valid_move(*neighbor)]
+        return valid_neighbors
+
+    def move(self, x, y, grid):
+        path = self.find_path((x, y), grid)
+        if len(path) > 1:
+            next_step = path[1]
+            return next_step
+        return x, y
+
+class DStar:
+    def __init__(self, goal_x, goal_y):
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+        self.heuristic_cache = {}
+
+    def heuristic(self, x, y):
+        if (x, y) not in self.heuristic_cache:
+            self.heuristic_cache[(x, y)] = abs(x - self.goal_x) + abs(y - self.goal_y)
+        return self.heuristic_cache[(x, y)]
+
+    def find_neighbors(self, grid, pos):
+        x, y = pos
+        neighbors = [(x + dy, y + dx) for dy, dx in [(1, 0), (-1, 0), (0, 1), (0, -1)]]
+        valid_neighbors = [neighbor for neighbor in neighbors if grid.is_valid_move(*neighbor)]
+        return valid_neighbors
+
+    def update_graph(self, grid, changes):
+        for pos, cost in changes:
+            grid.update_cost(pos, cost)
+
+    def find_path(self, start_pos, grid, changes=None):
+        if changes:
+            self.update_graph(grid, changes)
+
+        end_pos = (self.goal_x, self.goal_y)
+
+        open_list = PriorityQueue()
+        open_list.put((0, (start_pos, [start_pos])))
+        visited = set()
+
+        g_scores = {start_pos: 0}
+        f_scores = {start_pos: self.heuristic(*start_pos)}
+
+        while not open_list.empty():
+            _, (current, path) = open_list.get()
+            if current == end_pos:
+                return path
+
+            neighbors = self.find_neighbors(grid, current)
+            for neighbor in neighbors:
+                if neighbor in visited:
+                    continue
+
+                tentative_g_score = g_scores[current] + 1
+                if neighbor not in g_scores or tentative_g_score < g_scores[neighbor]:
+                    g_scores[neighbor] = tentative_g_score
+                    f_scores[neighbor] = tentative_g_score + self.heuristic(*neighbor)
+                    open_list.put((f_scores[neighbor], (neighbor, path + [neighbor])))
+                    visited.add(neighbor)
+
+        return []
+
+    def move(self, x, y, grid, changes=None):
+        path = self.find_path((x, y), grid, changes)
+        if len(path) > 1:
+            next_step = path[1]
+            return next_step
+        return x, y
+
+class DStarLite:
+    def __init__(self, goal_x, goal_y):
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+        self.heuristic_cache = {}
+        self.INFINITY = float('inf')
+
+    def heuristic(self, x, y):
+        if (x, y) not in self.heuristic_cache:
+            self.heuristic_cache[(x, y)] = abs(x - self.goal_x) + abs(y - self.goal_y)
+        return self.heuristic_cache[(x, y)]
+
+    def find_neighbors(self, grid, pos):
+        x, y = pos
+        neighbors = [(x + dy, y + dx) for dy, dx in [(1, 0), (-1, 0), (0, 1), (0, -1)]]
+        valid_neighbors = [neighbor for neighbor in neighbors if grid.is_valid_move(*neighbor)]
+        return valid_neighbors
+
+    def calculate_key(self, node, g, rhs):
+        return (min(g[node], rhs[node]) + self.heuristic(*node), min(g[node], rhs[node]))
+
+    def update_vertex(self, node, grid, g, rhs, open_list, visited):
+        if node != (self.goal_x, self.goal_y):
+            rhs[node] = min(g[neighbor] + 1 for neighbor in self.find_neighbors(grid, node))
+        if node in visited:
+            open_list.remove((self.calculate_key(node, g, rhs), node))
+        if g[node] != rhs[node]:
+            open_list.add((self.calculate_key(node, g, rhs), node))
+            visited.add(node)
+
+    def find_path(self, start_pos, grid):
+        g = {(x, y): self.INFINITY for x in range(grid.width) for y in range(grid.height)}
+        rhs = g.copy()
+        rhs[(self.goal_x, self.goal_y)] = 0
+
+        open_list = set()
+        visited = set()
+
+        open_list.add((self.calculate_key((self.goal_x, self.goal_y), g, rhs), (self.goal_x, self.goal_y)))
+        visited.add((self.goal_x, self.goal_y))
+
+        while open_list:
+            current = min(open_list, key=lambda x: x[0])
+            open_list.remove(current)
+            current_key, current_node = current
+
+            if g[current_node] > rhs[current_node]:
+                g[current_node] = rhs[current_node]
+            else:
+                g[current_node] = self.INFINITY
+                self.update_vertex(current_node, grid, g, rhs, open_list, visited)
+
+            for neighbor in self.find_neighbors(grid, current_node):
+                if neighbor not in visited:
+                    self.update_vertex(neighbor, grid, g, rhs, open_list, visited)
+
+        path = []
+        current = (start_pos)
+        while current != (self.goal_x, self.goal_y) and g[current] != self.INFINITY:
+            path.append(current)
+            current = min(self.find_neighbors(grid, current), key=lambda x: g[x] + 1)
+        path.append((self.goal_x, self.goal_y))
+
+        return path if g[current] != self.INFINITY else []
+
+    def move(self, x, y, grid):
+        path = self.find_path((x, y), grid)
+        if len(path) > 1:
+            next_step = path[1]
+            return next_step
+        return x, y
+
 
 def draw_grid(screen, grid):
     for y in range(grid.height):
@@ -617,11 +792,14 @@ FPS = 10
 
 # # Create agents
 # agents = [
-#     Agent(0, 0, RandomWalk()),
-#     Agent(0, 0, Swarm(goal_x, goal_y)),
+#     # Agent(0, 0, RandomWalk()),
+#     # Agent(0, 0, Swarm(goal_x, goal_y)),
 #     Agent(0, 0, AStar(goal_x, goal_y)),
 #     Agent(0, 0, ThetaStar(goal_x, goal_y)),
 #     Agent(0, 0, JPS(goal_x, goal_y)),
+#     Agent(0, 0, DFS(goal_x, goal_y)),
+#     Agent(0, 0, DStar(goal_x, goal_y)),
+#     Agent(0, 0, DStarLite(goal_x, goal_y)),
 # ]
 
 # # Run the simulation
@@ -633,28 +811,38 @@ import time
 
 # create 10 random grids of different sizes
 grids = []
-for i in range(100):
-    size = random.randint(1000, 2000)
+for i in range(1):
+    size = random.randint(900, 1000)
     grids.append(Grid(size, size))
 
 # create the AStar, ThetaStar and JPS algorithms
 astar = AStar(goal_x, goal_y)
 thetastar = ThetaStar(goal_x, goal_y)
 jps = JPS(goal_x, goal_y)
+dfs = DFS(goal_x, goal_y)
+dstar = DStar(goal_x, goal_y)
+dstarlite = DStarLite(goal_x, goal_y)
 
 # measure the time it takes for each algorithm to find a path on each grid
 astar_times = []
 thetastar_times = []
 jps_times = []
+dfs_times = []
+dstar_times = []
+dstarlite_times = []
 for grid in grids:
     # set the starting position and goal position for each grid
     start_x, start_y = random.randint(0, grid.width - 1), random.randint(0, grid.height - 1)
     goal_x, goal_y = random.randint(0, grid.width - 1), random.randint(0, grid.height - 1)
+    grid.generate_maze(start_x, start_y, goal_x, goal_y)
 
     # update AStar and ThetaStar goal positions
     astar.goal_x, astar.goal_y = goal_x, goal_y
     thetastar.goal_x, thetastar.goal_y = goal_x, goal_y
     jps.goal_x, jps.goal_y = goal_x, goal_y
+    dfs.goal_x, dfs.goal_y = goal_x, goal_y
+    dstar.goal_x, dstar.goal_y = goal_x, goal_y
+    dstarlite.goal_x, dstarlite.goal_y = goal_x, goal_y
 
     # measure AStar time
     start_time = time.time()
@@ -676,14 +864,203 @@ for grid in grids:
     end_time = time.time()
     jps_time = end_time - start_time
     jps_times.append(jps_time)
+    
+    # measure DFS time
+    start_time = time.time()
+    path = dfs.find_path((start_x, start_y), grid)
+    end_time = time.time()
+    dfs_time = end_time - start_time
+    dfs_times.append(dfs_time)
+    
+    # measure DStar time
+    start_time = time.time()
+    path = dstar.find_path((start_x, start_y), grid)
+    end_time = time.time()
+    dstar_time = end_time - start_time
+    dstar_times.append(dstar_time)
+    
+    # measure DStarLite time
+    start_time = time.time()
+    path = dstarlite.find_path((start_x, start_y), grid)
+    end_time = time.time()
+    dstarlite_time = end_time - start_time
+    dstarlite_times.append(dstarlite_time)
 
 # print the average time for each algorithm
-print(f"AStar average time: {sum(astar_times) / len(astar_times):.6f} seconds")
-print(f"ThetaStar average time: {sum(thetastar_times) / len(thetastar_times):.6f} seconds")
-print(f"JPS average time: {sum(jps_times) / len(jps_times):.6f} seconds")
+print(f"AStar average time: {sum(astar_times)/len(astar_times):.6f} seconds")
+print(f"ThetaStar average time: {sum(thetastar_times)/len(thetastar_times):.6f} seconds")
+print(f"JPS average time: {sum(jps_times)/len(jps_times):.6f} seconds")
+print(f"DFS average time: {sum(dfs_times)/len(dfs_times):.6f} seconds")
+print(f"DStar average time: {sum(dstar_times)/len(dstar_times):.6f} seconds")
+print(f"DStarLite average time: {sum(dstarlite_times)/len(dstarlite_times):.6f} seconds")
 
-
+"""
+100 random grids of different sizes from 10x10 to 20x20
+AStar average time: 0.001272 seconds
+ThetaStar average time: 0.001804 seconds
+JPS average time: 0.000892 seconds
+DFS average time: 0.000445 seconds
+DStar average time: 0.001012 seconds
+DStarLite average time: 0.003286 seconds
+"""
+"""
+100 random grids of different sizes from 50x50 to 100x100
+AStar average time: 0.017849 seconds
+ThetaStar average time: 0.029060 seconds
+JPS average time: 0.012722 seconds
+DFS average time: 0.011744 seconds
+DStar average time: 0.018033 seconds
+DStarLite average time: 0.050464 seconds
+"""
+"""
+10 random grids of different sizes from 100x100 to 200x200
+AStar average time: 0.108244 seconds
+ThetaStar average time: 0.152231 seconds
+JPS average time: 0.054897 seconds
+DFS average time: 0.085088 seconds
+DStar average time: 0.100939 seconds
+DStarLite average time: 0.200560 seconds
+"""
+"""
+1 random grids of different sizes from 400x400 to 500x500
+AStar average time: 4.952447 seconds
+ThetaStar average time: 6.005916 seconds
+JPS average time: 1.408849 seconds
+DFS average time: 2.561519 seconds
+DStar average time: 5.609891 seconds
+DStarLite average time: 3.847868 seconds
+"""
+"""
+1 random grids of different sizes from 900x900 to 1000x1000
+AStar average time: 26.007051 seconds
+ThetaStar average time: 28.495731 seconds
+JPS average time: 2.713599 seconds
+DFS average time: 224.046146 seconds
+DStar average time: 35.168455 seconds
+DStarLite average time: 15.427422 seconds
+"""
 
 # http://www.codenamepandey.com/movementalgo
+# 1 change to grid.get_cost of that cell and neighbor
 
+"""
+Johnson算法
 
+Johnson算法是一種用於在加權有向圖中找到所有節點對之間最短路徑的單源最短路徑算法，由Donald Johnson於1977年提出。該算法是一種基於Bellman-Ford算法和Dijkstra算法的改進算法，它的時間複雜度為O(V^2logV + VE)，其中V是節點數，E是邊數。
+
+Johnson算法的主要思想是先通過將每個節點的權重重新賦值，使得圖中不存在負權邊，然後再運用Dijkstra算法來計算所有節點對之間的最短路徑。為了使圖中不存在負權邊，Johnson算法使用了一種稱為“SPFA”的算法來計算每個節點的權重，這個算法類似於Bellman-Ford算法，但是它具有更高的效率。
+
+在Johnson算法中，每個節點的權重被重新賦值為其到所有其他節點的最短路徑中最小的那個值。這個過程可以通過對圖中每個節點運行一遍SPFA算法來完成。然後，對於每個節點，我們可以通過運行Dijkstra算法來計算它到所有其他節點的最短路徑。最後，所有節點對之間的最短路徑可以通過將每個節點的Dijkstra算法計算結果加上它們之間的權重來得到。
+
+雖然Johnson算法比Dijkstra算法和Bellman-Ford算法更複雜，但是它可以處理帶有負權邊的圖，並且在某些情況下比Floyd-Warshall算法更快。
+
+Fredman和Tarjan的算法
+
+Fredman和Tarjan在1984年的論文中提出了一種新的算法，用於在有向圖中解決帶非負邊權重的單源最短路問題。該算法的時間複雜度為O（m log n），其中n是圖中的頂點數，m是邊的數量。
+
+該算法基於Dijkstra算法，該算法維護一組已訪問的頂點和一個待探索的頂點的優先級隊列。 Fredman和Tarjan算法的主要思想是將頂點分為兩個集合，活動和非活動，並根據它們到源的潛在距離維護一個活動頂點的堆。
+
+在算法的每一步中，從活動頂點堆中刪除具有最小潛在距離的頂點，並將其添加到已訪問的頂點集合中。然後，對於每條外向邊，如果必要，則更新相應目標頂點的潛在距離，並且如果它們尚未被訪問，則將它們添加到活動頂點堆中。
+
+潛在距離用於估計源到頂點的實際距離。它們對於源頂點初始化為零，並在從活動頂點堆中刪除頂點時進行更新。頂點的潛在距離是其任何入邊的最小潛在距離加上入邊的權重。
+
+該算法的正確性基於已訪問頂點的潛在距離始終等於它們到源的實際距離，而活動頂點的潛在距離始終是它們到源的實際距離的下限。因此，當活動頂點堆為空時，算法可以終止，所有頂點的潛在距離給出源到它們的實際距離。
+
+總的來說，Fredman和Tarjan的算法在時間複雜度方面相對於Dijkstra算法提供了顯著的改進，但需要更多的內存來維護活動頂點的堆。
+
+Thorup 演算法
+
+Thorup 在 1999 年提出了一個單源最短路徑演算法，稱為 Thorup 演算法。這個演算法的時間複雜度是 O(m log n)，其中 n 是圖中節點的數量，m 是邊的數量。
+
+Thorup 演算法的主要思想是將圖分成多個層次，每個層次包含一組節點，並且在這些節點之間只存在一定的關係。在這個演算法中，Thorup 使用了一個稱為“漸進式疊代縮減”的技術，通過反覆地將圖分解成更小的子圖，最終得到一個只有兩個節點的子圖，並在此基礎上求出最短路徑。
+
+Thorup 演算法的優點是具有良好的理論基礎，並且能夠處理一些具有特殊結構的圖，例如稠密圖和稀疏圖。然而，實際應用中，由於其實現複雜度較高，因此可能不如其他較簡單的演算法，例如 Dijkstra 算法和 Bellman-Ford 算法，具有更好的實際效率。
+
+Gabow's 演算法
+
+Gabow's 演算法是一種用於在有向圖中解決單源最短路徑問題的算法。該算法由Harold N. Gabow於1985年提出，它的時間複雜度為O(mlogn)，其中n是節點數，m是邊數。
+
+Gabow's 演算法是一種基於Dijkstra算法的改進算法。它使用了一種稱為“桶優化”的技術，該技術可以顯著減少Dijkstra算法中需要處理的節點數。
+
+在Gabow's 演算法中，節點被分為三個類別：已訪問的節點、待訪問的節點和未訪問的節點。算法從源節點開始，將源節點標記為已訪問的節點，並將其相鄰的節點加入待訪問的節點中。
+
+然後，算法從待訪問節點中選取一個與源節點距離最短的節點，並將其標記為已訪問的節點。然後，算法將該節點的所有未訪問的相鄰節點加入待訪問節點中，並根據其距離從小到大放入不同的桶中。
+
+在接下來的每一步中，算法從所有未訪問節點中選取與源節點距離最短的節點，並將其標記為已訪問的節點。然後，算法將該節點的所有未訪問的相鄰節點加入待訪問節點中，並將其根據距離放入不同的桶中。
+
+當算法完成時，所有節點的最短路徑都已計算出來。
+
+Gabow's 演算法的優點是能夠處理稀疏圖和密集圖，並且其時間複雜度相對較低。但是，該算法需要額外的內存來存儲節點和桶，並且不如其他一些算法，例如Dijkstra算法和Bellman-Ford算法，易於實現。
+"""
+
+"""
+這些算法都是用來解決圖中最短路徑問題的，下面是它們各自的優缺點和適用情況：
+
+1. Dijkstra算法：
+   優點：對於邊權值非負的圖來說，是最快的單源最短路徑算法，時間複雜度為O(E+VlogV)。
+   缺點：對於邊權值為負的圖，不能處理；需要額外的數據結構支持（如堆）。
+   適用情況：邊權值非負的圖。
+
+2. Bellman-Ford算法：
+   優點：能夠處理邊權值為負的圖，也可以檢測負權環；不需要額外的數據結構支持。
+   缺點：時間複雜度為O(EV)，比Dijkstra算法慢。
+   適用情況：邊權值可以為負的圖，或者需要檢測負權環的情況。
+
+3. Shortest Path Faster算法（SPFA）：
+   優點：對於一般的稠密圖（即E接近V^2）來說，比Dijkstra算法快；可以處理負權邊。
+   缺點：可能會陷入死循環，需要進行優化；時間複雜度最壞為O(EV)。
+   適用情況：邊權值可以為負的圖，或者是稠密圖。
+
+4. Floyd-Warshall算法：
+   優點：可以求解任意兩點間的最短路徑；不受邊權值正負的限制。
+   缺點：時間複雜度為O(V^3)，空間複雜度也較大。
+    適用情況：圖中邊權值可以為正負的情況，求解任意兩點間的最短路徑。
+
+5. Johnson算法：
+   優點：對於稀疏圖，比Floyd-Warshall算法更快；可以處理負權邊。
+   缺點：需要先求解最短路徑的估計值，複雜度為O(EVlogV)，然後再進行Dijkstra算法，總的時間複雜度為O(EVlogV)。
+    適用情況：邊權值可以為負的圖，或者是稀疏圖。
+
+6. 雙向搜索算法：
+   優點：可以減少搜索的節點數量，從而提高搜索速度。
+   缺點：需要知道起點和終點，不能用於單源最短路徑問題。
+    適用情況：需要求解特定兩點間的最短路徑問題。
+"""
+
+"""
+The DARPA Grand Challenge was a series of autonomous vehicle races organized by the Defense Advanced Research Projects Agency (DARPA) in the early 2000s. The goal of the Grand Challenge was to accelerate the development of autonomous vehicle technology for military use.
+
+The first DARPA Grand Challenge was held in 2004 and involved a 142-mile course through the Mojave Desert in California. The challenge was to build a fully autonomous vehicle that could navigate the course without any human intervention. None of the teams were able to complete the course, with the farthest any vehicle made it being 7.4 miles.
+
+The second DARPA Grand Challenge was held in 2005 and had a more difficult course that covered 132 miles through the desert. This time, five teams were able to complete the course, with the winner being "Stanley," a self-driving car developed by a team from Stanford University.
+
+The success of the DARPA Grand Challenge helped to kickstart the development of autonomous vehicle technology and led to further advancements in the field. Today, autonomous vehicles are becoming more common in both military and civilian applications, and the technology continues to evolve rapidly.
+"""
+
+"""
+Ma, H., & Koenig, S. (2016). Optimal target assignment and path finding for teams of agents. arXiv preprint arXiv:1612.05693.
+"""
+
+"""
+ Stern, R., Sturtevant, N., Felner, A., Koenig, S., Ma, H., Walker, T., ... & Boyarski, E. (2019). Multi-agent pathfinding: Definitions, variants, and benchmarks (PDF). arXiv preprint arXiv:1906.08291.
+"""
+
+"""
+"Multi-level path planning" or "hierarchical motion planning" is an approach to motion planning that involves breaking down a complex task into smaller, more manageable subtasks. This is achieved by dividing the environment or workspace into clusters, where each cluster represents a region of the environment that can be navigated relatively easily.
+
+On the high-level layer, a path is planned between the clusters, which represents the overall motion plan. This plan provides a rough guidance for navigating between the clusters while avoiding obstacles and minimizing the distance traveled. 
+
+On the low-level layer, a second path is planned within each cluster to navigate the robot through the cluster while avoiding any obstacles within that cluster. This plan is based on the high-level plan and provides the detailed guidance for navigating through the local environment.
+
+The advantage of using a hierarchical motion planning approach is that it can reduce the number of nodes that need to be considered during planning, thereby improving the computational efficiency of the algorithm. Additionally, it can help to simplify the planning problem by breaking it down into smaller, more manageable subtasks.
+
+However, implementing a hierarchical path planner can be challenging, as it requires developing algorithms for both the high-level and low-level planning tasks, as well as developing a mechanism for integrating the two plans to ensure that they are coherent and feasible. Moreover, designing an appropriate cluster hierarchy that accurately captures the environment's structure is often not trivial, and it requires expertise in both the domain of motion planning and the specific application domain.
+"""
+
+"""
+A quadtree is a tree data structure that can be used to represent two-dimensional space and partition it into smaller squares or rectangles. It is commonly used for spatial indexing, including in computer graphics, image processing, and geographical information systems. One application of quadtree is hierarchical pathfinding, where the quadtree represents a map or terrain and the pathfinding algorithm searches for a path between two points.
+
+The hierarchical pathfinding algorithm can start by searching for a path between the start and end points on the highest level of the quadtree. If the path is blocked by an obstacle or the terrain is difficult to traverse, the algorithm can move down to a lower level of the quadtree and search for a path between smaller areas of the map. Each leaf node of the quadtree represents a small area of the map and contains information about the terrain or obstacles in that area. This process can be repeated until the algorithm reaches the lowest level of the quadtree, where it can perform a detailed search to find the exact path between the start and end points.
+
+Quadtree operations can also be used to solve other problems, such as quickly determining the nearest neighbor of a point in a set of points or efficiently storing and querying spatial data. By using a quadtree for hierarchical pathfinding, the algorithm can efficiently search large areas of the map and avoid the need to perform detailed searches on areas of the map that are easy to traverse or do not contain obstacles, significantly reducing the computational cost of the pathfinding algorithm and improving its performance.
+"""
