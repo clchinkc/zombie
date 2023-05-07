@@ -223,18 +223,16 @@ print_map(env)
 print("\n")
 
 class Agent:
-    def __init__(self, env, gamma=0.99, epsilon=1e-5, algorithm='value_iteration'):
+    def __init__(self, env, gamma=0.99, epsilon=1e-5, algorithm=value_iteration):
         self.env = env
         self.gamma = gamma
         self.epsilon = epsilon
         self.algorithm = algorithm
         
-        if self.algorithm == 'value_iteration':
-            self.V, self.policy = value_iteration(env, gamma, epsilon)
-        elif self.algorithm == 'policy_iteration':
-            self.V, self.policy = policy_iteration(env, gamma, epsilon)
-        else:
-            raise ValueError(f"Invalid algorithm: {self.algorithm}")
+        try:
+            self.V, self.policy = self.algorithm(env, gamma, epsilon)
+        except TypeError:
+            raise TypeError("The algorithm must be a function that takes the environment, gamma, and epsilon as arguments.")
     
     def move(self, state):
         return self.env.get_next_state(state, self.policy[state])
@@ -248,7 +246,7 @@ grid = [
 ]
 
 env = Environment(grid)
-agent = Agent(env, algorithm='policy_iteration')
+agent = Agent(env, algorithm=policy_iteration)
 
 current_state = (0, 0)
 print(f"Current state: {current_state}")

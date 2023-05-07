@@ -12,10 +12,13 @@ Finally, we would need a main simulate function that would set up the initial co
 
 from __future__ import annotations
 
+import concurrent.futures
 import math
 import random
+import threading
 from abc import ABC, abstractmethod
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -311,13 +314,14 @@ class Individual:
 
 class School:
 
-    __slots__ = "school_size", "grid", "strategy_factory"
+    __slots__ = "school_size", "grid", "strategy_factory", "grid_lock"
 
     def __init__(self, school_size: int) -> None:
         self.school_size = school_size
         # Create a 2D grid representing the school with each cell can contain a Individual object
         self.grid: np.ndarray = np.full((school_size, school_size), None, dtype=object)
         self.strategy_factory = MovementStrategyFactory()
+        self.grid_lock = threading.Lock()
 
         # may turn to width and height
         # may put Cell class in the grid where Cell class has individual attributes and rates
@@ -334,15 +338,24 @@ class School:
 
     # may change the add\remove function to accept individual class as well as location
 
-    def update_connections(self) -> None:
-        for row in self.grid:
-            for cell in row:
-                if cell is None:
-                    continue
-                neighbors = self.get_neighbors(
-                    (cell.location), cell.interact_range)
-                for neighbor in neighbors:
-                    cell.add_connection(neighbor)
+    def update_cell_connections(self, cell) -> None:
+        if cell is None:
+            return
+        neighbors = self.get_neighbors(cell.location, cell.interact_range)
+        for neighbor in neighbors:
+            cell.add_connection(neighbor)
+
+    def update_connections(self, max_workers=4) -> None:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = []
+            for row in self.grid:
+                for cell in row:
+                    futures.append(executor.submit(self.update_cell_connections, cell))
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    future.result()
+                except Exception as exc:
+                    print(f"An exception occurred: {exc}")
 
     """
         for i, row in enumerate(self.grid):
@@ -353,20 +366,28 @@ class School:
     """
 
     # update the grid in the population based on their interactions with other people
-    def update_grid(self, population: list[Individual], migration_probability: float, randomness=random.random()) -> None:
-        for individuals in population:
-            i, j = individuals.location
-            cell = self.get_individual((i, j))
+    def update_individual(self, individual, migration_probability, randomness):
+        i, j = individual.location
+        cell = self.get_individual((i, j))
 
-            if cell is None:
-                continue
+        if cell is None:
+            return
 
-            if randomness < migration_probability:
-                movement_strategy = self.strategy_factory.create_strategy(cell, self)
-                direction = cell.choose_direction(movement_strategy)
-                self.move_individual(cell, direction)
-            else:
-                continue
+        if randomness < migration_probability:
+            movement_strategy = self.strategy_factory.create_strategy(cell, self)
+            direction = cell.choose_direction(movement_strategy)
+            self.move_individual(cell, direction)
+        else:
+            return
+
+    def update_grid(self, population: list[Individual], migration_probability: float, randomness=random.random(), max_workers=4) -> None:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [executor.submit(self.update_individual, individual, migration_probability, randomness) for individual in population]
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    future.result()
+                except Exception as exc:
+                    print(f"An exception occurred: {exc}")
 
                 # if right next to then don't move
                 # get neighbors with larger and larger range until there is a human
@@ -421,6 +442,11 @@ class School:
     """
 
     def move_individual(self, individual: Individual, direction: tuple[int, int]) -> None:
+        new_location = tuple(np.add(individual.location, direction))
+        
+        with self.grid_lock:
+            if self.is_occupied(new_location):
+                return
         old_location = individual.location
         individual.move(direction)
         self.remove_individual(old_location)
@@ -581,7 +607,7 @@ class PopulationObserver(Observer):
             color=sns.color_palette("deep")
         )
         # Set axis range as maximum count states
-        plt.ylim(0, self.subject.population_size)
+        plt.ylim(0, self.statistics[0]["population_size"])
         # Put a legend to the right of the current axis
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         # Show the plot
@@ -647,7 +673,7 @@ class PopulationAnimator(Observer):
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         # Set axis range
-        ax.set_ylim(0, self.subject.population_size)
+        ax.set_ylim(0, len(self.agent_history[0]))
 
         # create the bar chart
         bars = ax.bar(x, y[0], tick_label=ticks, label=State.name_list(), color=sns.color_palette("deep"))
@@ -912,23 +938,31 @@ save_data() save the necessary data in a save order
 load_data() load the necessary data in a load order
 refresh() refresh the data in the simulation according to time
 
-birth_probability, death_probability, infection_probability, turning_probability, death_probability, connection_probability, movement_probability, attack_probability may be changed to adjust the simulation
-
-
 Here are a few additional considerations that you may want to take into account when implementing the simulation:
 
 Validation: It's important to validate the accuracy of the simulation by comparing the results to real-world data or known facts about how zombie outbreaks spread. This can help ensure that the simulation is a realistic and accurate representation of the scenario it is modeling.
 
-Sensitivity analysis: It may be useful to perform sensitivity analysis to understand how the simulation results change as different parameters or assumptions are altered. For example, you could vary the rate of infection or the effectiveness of containment measures and see how these changes affect the outcome of the simulation.
+Sensitivity analysis: It may be useful to perform sensitivity analysis to understand how the simulation results change as different parameters or assumptions are altered. For example, you could vary birth_probability, death_probability, infection_probability, turning_probability, death_probability, connection_probability, movement_probability, attack_probability and see how these changes affect the outcome of the simulation.
 
 Extension: You may want to consider extending the simulation to include additional factors or scenarios. For example, you could incorporate the behavior of external actors, such as emergency responders or military individualnel, or model the spread of the zombie virus to other locations outside the school.
 
-Additionally, the model could be expanded to include more detailed information about the layout of the school, 
-such as the locations of classrooms, doors, and other features. 
-This could allow for more accurate simulations of the movement 
-and interactions of students, teachers, and zombies within the school environment.
+Additionally, the model could be expanded to include more detailed information about the layout of the school, such as the locations of classrooms, doors, and other features. This could allow for more accurate simulations of the movement and interactions of students, teachers, and zombies within the school environment.
 """
 
+"""
+To provide analysis and prediction for the zombie apocalypse simulation, you can update the PopulationObserver class in the following ways:
+
+Implement methods for calculating statistical measures: You can implement methods for calculating statistical measures such as mean, median, mode, and standard deviation based on the data collected by the observer. These methods can be used to provide insights into the behavior of zombies and the survival strategies that are most effective.
+
+Use machine learning algorithms to predict zombie behavior: You can use machine learning algorithms such as decision trees, random forests, and neural networks to predict zombie behavior based on the data collected by the observer. For example, you can use these algorithms to predict the likelihood of a zombie outbreak occurring in a specific area or the rate of infection in a population.
+
+Integrate real-world data into the simulation: You can integrate real-world data such as population demographics, climate data, and disease transmission models into the simulation to provide more accurate predictions of zombie behavior. For example, you can use population demographics to predict the rate of zombie infection in a specific area or climate data to predict the spread of the zombie virus.
+
+Implement scenario analysis: You can implement scenario analysis to explore the impact of different variables on the outcome of the simulation. For example, you can explore the impact of different survival strategies on the rate of infection or the impact of different zombie types on the survival of the population.
+
+Overall, updating the PopulationObserver class to provide analysis and prediction for the zombie apocalypse simulation can provide valuable insights into the behavior of zombies and the most effective survival strategies.
+
+"""
 
 """
 use random walk algorithm to simulate movement based on probability adjusted by cell's infection status and location
@@ -1311,46 +1345,24 @@ Optimal Reciprocal Collision Avoidance
 
 
 """
-https://github.com/JrTai/Python-projects
-https://github.com/CleverProgrammer/coursera
-https://github.com/brunoratkaj/coursera-POO
-https://github.com/xkal36/principles_of_computing
-https://github.com/seschwartz8/intermediate-python-programs
+https://github.com/CleverProgrammer/coursera/
 https://github.com/yudong-94/Fundamentals-of-Computing-in-Python
+https://github.com/seschwartz8/intermediate-python-programs
+https://github.com/xkal36/principles_of_computing
+https://github.com/brunoratkaj/coursera-POO
+https://github.com/neo-mashiro/GameStore
+https://github.com/HumanRickshaw/Python_Games
+https://github.com/Sakib37/Python_Games
+https://github.com/JrTai/Python-projects
 https://github.com/chrisnatali/zombie
 https://github.com/ITLabProject2016/internet_technology_lab_project
 https://github.com/GoogleCloudPlatform/appengine-scipy-zombie-apocalypse-python
-https://github.com/radical-cybertools/radical.saga
-
 """
 
 """
 Population-based models (PBM) and individual-based models (IBM) are two types of models that can be used to study populations.
-
 Population-based models (PBM) consider all individuals in a population to be interchangeable, and the main variable of interest is N, the population size. N is controlled by endogenous factors, such as density-dependence and demographic stochasticity, and exogenous factors, such as environmental stochasticity and harvest.
-
 Individual-based models (IBM), also known as agent-based models, consider each individual explicitly. In IBM, each individual may have different survival probabilities, breeding chances, and movement propensities. Differences may be due to spatial context or genetic variation. In IBM models, N is an emergent property of individual organisms interacting with each other, with predators, competitors, and their environment.
-
 The choice of model structure depends on the research question and understanding of the study system. If the primary data source is at the individual level, such as telemetry data, IBM is preferred. If the primary data is at the population level, such as mark-recapture analyses, PBM is preferred.
-
 Both IBM and PBM can be used to address questions at the population or metapopulation level. The Principle of Parsimony suggests using the simplest approach when two different model structures are equally appropriate.
 """
-
-"""
-To provide analysis and prediction for the zombie apocalypse simulation, you can update the PopulationObserver class in the following ways:
-
-Implement methods for calculating statistical measures: You can implement methods for calculating statistical measures such as mean, median, mode, and standard deviation based on the data collected by the observer. These methods can be used to provide insights into the behavior of zombies and the survival strategies that are most effective.
-
-Use machine learning algorithms to predict zombie behavior: You can use machine learning algorithms such as decision trees, random forests, and neural networks to predict zombie behavior based on the data collected by the observer. For example, you can use these algorithms to predict the likelihood of a zombie outbreak occurring in a specific area or the rate of infection in a population.
-
-Integrate real-world data into the simulation: You can integrate real-world data such as population demographics, climate data, and disease transmission models into the simulation to provide more accurate predictions of zombie behavior. For example, you can use population demographics to predict the rate of zombie infection in a specific area or climate data to predict the spread of the zombie virus.
-
-Implement scenario analysis: You can implement scenario analysis to explore the impact of different variables on the outcome of the simulation. For example, you can explore the impact of different survival strategies on the rate of infection or the impact of different zombie types on the survival of the population.
-
-Overall, updating the PopulationObserver class to provide analysis and prediction for the zombie apocalypse simulation can provide valuable insights into the behavior of zombies and the most effective survival strategies.
-
-"""
-
-
-
-

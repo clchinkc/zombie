@@ -283,7 +283,7 @@ if __name__ == "__main__":
     mcts = MCTS(model)
     
     # Train the neural network
-    model = train(model, mcts, num_iterations=10, num_games=10, num_epochs=10, batch_size=1024)
+    model = train(model, mcts, num_iterations=2, num_games=2, num_epochs=2, batch_size=64)
     
     # Play against opponents
     game_state = GameState()
@@ -294,13 +294,13 @@ if __name__ == "__main__":
     print("Winner: {}".format(game_state.get_winner()))
     
     # Save the trained model
-    model.save("model.h5")
+    # model.save("model.h5")
     
     
 # Assume human is one side of chess and zombie is one side of chess. Use alphazero's monte carlo tree search.
 # https://www.youtube.com/watch?v=wuSQpLinRB4
+# https://github.com/suragnair/alpha-zero-general
 # https://tmoer.github.io/AlphaZero/
 # https://github.com/timvvvht/AlphaZero-Connect4
 # https://github.com/topics/alphazero
 # https://github.com/deepmind/mctx
-# In the training of AlphaZero, a hashing function is used to reduce the dimensionality of the input space. The hashing function maps each game state to a fixed-length vector, regardless of the size of the game board. The hash function used in AlphaZero is designed to preserve the similarity between game states, meaning that game states that are similar will be mapped to similar hash values. During training, the neural network takes in the hashed game state as input, and the output of the network represents the optimal policy and value function for that game state. The use of a hashing function allows AlphaZero to process high-dimensional game states efficiently, enabling it to learn and improve its playing strategy over time.

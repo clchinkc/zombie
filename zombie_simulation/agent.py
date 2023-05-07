@@ -726,7 +726,7 @@ filter, zip
 functools, reduce
 iterator, itertools
 https://myapollo.com.tw/zh-tw/python-itertools-more-itertools/
-assert
+pprint
 https://www.youtube.com/watch?v=96mDQrlceEk&ab_channel=Indently
 metaprogramming (register lead classes, singleton)
 https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Metaprogramming.html#the-metaclass-hook
@@ -755,7 +755,7 @@ runtime type checking
 typeguard
 a debug mode that print all variables in each steps and allow user control of the agents in the map
 https://pythonforundergradengineers.com/writing-tests-for-scientific-code.html
-speed up
+Cython
 https://mp.weixin.qq.com/s/M7DdUWLzqOLVR7qJFmvZdA
 concurrent.futures module
 threading
@@ -852,14 +852,11 @@ sonarqube
 # Another objective could be to maximize the number of survivors, while also minimizing the risk of infection and the spread of the zombie virus. A third objective could be to maximize the effectiveness of defense mechanisms, such as barricades and traps, while minimizing the time and effort required to maintain them.
 # In this scenario, the optimization problem would involve finding a balance between these conflicting objectives and determining the optimal allocation of resources to achieve the best possible outcome under the given constraints. This type of problem is known as a multi-objective optimization problem, and it requires the use of advanced mathematical modeling techniques to generate solutions that are both feasible and efficient.
 
-# Dynamic programming and recursive programming are both useful approaches for solving problems in computer science, but they have different strengths and weaknesses depending on the problem being tackled. In the context of a zombie apocalypse simulation, both approaches could be useful, but they would be applied in different ways.
 # Dynamic programming is an algorithmic approach that solves a problem by breaking it down into smaller subproblems and storing the solutions to those subproblems in a table. By building up solutions to increasingly larger subproblems, dynamic programming can efficiently solve problems that would otherwise require repeated computations. In the context of a zombie apocalypse simulation, dynamic programming could be used to optimize survival strategies by breaking down the problem into smaller subproblems and building up a solution based on the optimal solutions to those subproblems. For example, one subproblem might be how to efficiently gather resources like food, water, and medicine, while another might be how to avoid or eliminate zombie threats. By solving these subproblems and storing the solutions, the simulation could optimize survival strategies for longer-term survival.
-# Recursive programming, on the other hand, is an algorithmic approach that solves a problem by calling itself with smaller instances of the problem. Recursion is useful when a problem can be broken down into smaller instances of the same problem, and the base case can be easily identified. In the context of a zombie apocalypse simulation, recursive programming could be used to simulate the spread of the zombie virus or the movement of individual zombies. For example, a recursive function could be used to simulate the spread of the virus by calling itself with smaller instances of the infection until the entire population has been infected or the spread is contained.
-# In summary, both dynamic programming and recursive programming could be useful in a zombie apocalypse simulation, but they would be applied in different ways. Dynamic programming would be useful for optimizing survival strategies over a longer time frame, while recursive programming would be useful for simulating the spread of the virus or the movement of individual zombies.
-
 # Dynamic programming can be used for behaviour decision making, resources management, and pathfinding. It can include factors such as the risk of encountering zombies, the availability of resources, and the physical and mental state of the survivors.
-
+# Recursive programming, on the other hand, is an algorithmic approach that solves a problem by calling itself with smaller instances of the problem. Recursion is useful when a problem can be broken down into smaller instances of the same problem, and the base case can be easily identified. In the context of a zombie apocalypse simulation, recursive programming could be used to simulate the spread of the zombie virus or the movement of individual zombies. For example, a recursive function could be used to simulate the spread of the virus by calling itself with smaller instances of the infection until the entire population has been infected or the spread is contained.
 # Recursive programming can be used in a zombie apocalypse simulation to model the spread of the zombie virus through a population. The recursive function would take an infected individual and then recursively call itself for each uninfected individual within a certain range. The range would be determined by the likelihood of infection and the distance between individuals. The function would then mark each newly infected individual as infected and call itself again for that individual.
+# In summary, both dynamic programming and recursive programming could be useful in a zombie apocalypse simulation, but they would be applied in different ways. Dynamic programming would be useful for optimizing survival strategies over a longer time frame, while recursive programming would be useful for simulating the spread of the virus or the movement of individual zombies.
 
 # A hash map is a data structure that allows for efficient storage and retrieval of key-value pairs. You should use a hash map when you need to store data in a way that allows for fast lookup, insertion, and deletion of items based on a key.
 # Here are some common scenarios where using a hash map can be particularly beneficial:
@@ -891,6 +888,7 @@ sonarqube
 # Automated planning and scheduling
 # Classical planning algorithms 
 # STRIPS (Stanford Research Institute Problem Solver) algorithm
+# ABSTRIPS (Abstraction-Based STRIPS)
 # Graphplan algorithm
 # General Game Playing
 # Partially observed planning / POMDP (Partially Observable Markov Decision Process) algorithm
