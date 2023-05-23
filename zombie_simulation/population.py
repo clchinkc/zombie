@@ -18,7 +18,6 @@ import random
 import threading
 from abc import ABC, abstractmethod
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum, auto

@@ -757,9 +757,6 @@ a debug mode that print all variables in each steps and allow user control of th
 https://pythonforundergradengineers.com/writing-tests-for-scientific-code.html
 Cython
 https://mp.weixin.qq.com/s/M7DdUWLzqOLVR7qJFmvZdA
-concurrent.futures module
-threading
-https://python-course.eu/applications-python/threads.php
 subprocessing
 https://www.digitalocean.com/community/tutorials/how-to-use-subprocess-to-run-external-programs-in-python-3
 https://codereview.stackexchange.com/questions/120790/distributed-system-simulator?rq=1
@@ -786,10 +783,6 @@ sonarqube
 # Keep track of the state of the population: Keep track of the state of the population, including the number of healthy individuals, the number of infected individuals, and the number of fatalities. You could also keep track of other relevant metrics, such as the number of safe havens, the amount of supplies, and the distribution of the population over the landscape.
 # Run the simulation multiple times: Finally, you'll want to run the simulation multiple times, perhaps hundreds or thousands of times, to generate a range of possible scenarios. This will provide valuable insights into the range of possible outcomes and help you prepare for a wide range of contingencies.
 # Analyze the results: Once you have run the simulation multiple times, you can analyze the results to get a better understanding of the dynamics of the zombie apocalypse. For example, you could calculate statistics such as the average number of fatalities, the average number of survivors, and the average time to reach a safe haven. You could also generate graphs and visualizations to help you understand the results and identify any patterns or trends.
-
-# Backtracking agent
-# Monte carlo agent
-# A* agent
 
 # powerup and other resources and weapon may use same probability pickup function
 
