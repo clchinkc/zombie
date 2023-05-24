@@ -60,26 +60,24 @@ class StateMachine(ABC):
     def update_state(self, severity: float) -> None:
         pass
 
-    def is_infected(self, context: Individual, severity: float, randomness=random.random()) -> bool:
+    def is_infected(self, severity: float, randomness=random.random()) -> bool:
         infection_probability = 1 / (1 + math.exp(-severity))
-        for other in context.connections:
-            if other.state == State.ZOMBIE:
-                if randomness < infection_probability:
-                    return True
+        if any(other.state == State.ZOMBIE for other in self.context.connections):
+            if randomness < infection_probability:
+                return True
         return False
 
-    def is_turned(self, context: Individual, severity: float, randomness=random.random()) -> bool:
-        turning_probability = context.infection_severity
+    def is_turned(self, severity: float, randomness=random.random()) -> bool:
+        turning_probability = self.context.infection_severity
         if randomness < turning_probability:
             return True
         return False
 
-    def is_died(self, context: Individual, severity: float, randomness=random.random()) -> bool:
+    def is_died(self, severity: float, randomness=random.random()) -> bool:
         death_probability = severity
-        for other in context.connections:
-            if other.state == State.HEALTHY or other.state == State.INFECTED:
-                if randomness < death_probability:
-                    return True
+        if any(other.state == State.HEALTHY or other.state == State.INFECTED for other in self.context.connections):
+            if randomness < death_probability:
+                return True
         return False
 
 
@@ -88,22 +86,22 @@ class StateMachine(ABC):
 class HealthyMachine(StateMachine):
     # cellular automaton
     def update_state(self, severity: float) -> None:
-        if self.is_infected(self.context, severity):
+        if self.is_infected(severity):
             self.context.state = State.INFECTED
 
 class InfectedMachine(StateMachine):
     # cellular automaton
     def update_state(self, severity: float) -> None:
         self.context.infection_severity += 0.1
-        if self.is_turned(self.context, severity):
+        if self.is_turned(severity):
             self.context.state = State.ZOMBIE
-        elif self.is_died(self.context, severity):
+        elif self.is_died(severity):
             self.context.state = State.DEAD
 
 class ZombieMachine(StateMachine):
     # cellular automaton
     def update_state(self, severity: float) -> None:
-        if self.is_died(self.context, severity):
+        if self.is_died(severity):
             self.context.state = State.DEAD
 
 
