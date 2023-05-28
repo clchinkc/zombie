@@ -169,17 +169,18 @@ class ChaseEnvironment(py_environment.PyEnvironment):
 
         pygame.display.flip()
 
-num_iterations = 20
+num_iterations = 2000
 initial_collect_steps = 1000
-collect_steps_per_iteration = 3
+collect_steps_per_iteration = 2
 replay_buffer_max_length = 10000
 batch_size = 64
-log_interval = 10
-num_eval_episodes = 1
+log_interval = 100
+num_eval_episodes = 10
 eval_interval = 10000
 
 grid_size = 10
-env = ChaseEnvironment(grid_size)
+num_obstacles = 3
+env = ChaseEnvironment(grid_size=grid_size, num_obstacles=num_obstacles)
 train_env = tf_py_environment.TFPyEnvironment(env)
 eval_env = tf_py_environment.TFPyEnvironment(env)
 
@@ -197,7 +198,7 @@ decay_epsilon_greedy = tf.keras.optimizers.schedules.PolynomialDecay(
     end_learning_rate=0.1
 )
 
-num_steps_update = 2
+num_steps_update = 5
 
 def create_dqn_agent(lr_schedule, train_env, decay_epsilon_greedy=decay_epsilon_greedy, num_steps_update=num_steps_update):
 
@@ -334,10 +335,10 @@ def create_ppo_agent(learning_rate, train_env):
     return train_step_counter, tf_agent
 
 
-# train_step_counter, tf_agent = create_dqn_agent(lr_schedule, train_env)
+train_step_counter, tf_agent = create_dqn_agent(lr_schedule, train_env)
 # train_step_counter, tf_agent = create_categorical_dqn_agent(lr_schedule, train_env)
 # train_step_counter, tf_agent = create_reinforce_agent(lr_schedule, train_env)
-train_step_counter, tf_agent = create_ppo_agent(lr_schedule, train_env)
+# train_step_counter, tf_agent = create_ppo_agent(lr_schedule, train_env)
 
 def create_replay_buffer(replay_buffer_max_length, train_env, tf_agent):
     replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
@@ -365,7 +366,7 @@ random_policy = random_tf_policy.RandomTFPolicy(train_env.time_step_spec(), trai
 collect_data(eval_env, tf_agent.collect_policy, replay_buffer, steps=initial_collect_steps)
 
 dataset = replay_buffer.as_dataset(
-    num_parallel_calls=3,
+    num_parallel_calls=2,
     sample_batch_size=batch_size,
     num_steps=num_steps_update + 1
     ).prefetch(tf.data.experimental.AUTOTUNE)

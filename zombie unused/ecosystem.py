@@ -243,8 +243,43 @@ if __name__ == '__main__':
 """
 Here are a few suggestions for optimizing this code:
 
+Use sprite groups to store and manage sprites. This can improve performance by reducing the number of times that Pygame has to iterate over all of the sprites in the game.
+
+Use dirty rectangles to only update the parts of the screen that have changed. This can improve performance by reducing the number of times that Pygame has to redraw the entire screen.
+
+Use blitting instead of pygame.draw.rect() to draw images to the screen. This is a fast way to draw images to the screen.
+
+Use pygame.time.Clock() to limit the frame rate of the game. This can improve performance by preventing the game from running too fast and using up too much CPU resources.
+
+Use the pygame.sprite.Group.draw method to draw all of the sprites in a group. This is more efficient than drawing each sprite individually.
+
+Use the pygame.display.flip method to update the display. This is more efficient than calling the pygame.display.update method for each sprite.
+
+Use pygame.sprite.collide_circle() to check for collisions between circles. This function is more efficient than pygame.sprite.collide_rect() when checking for collisions between circles. This is because it only needs to compare the radii of the circles, rather than the entire rectangles.
+
+Use pygame.sprite.spritecollide() to check for collisions between a sprite and a group of sprites. This function is more efficient than using pygame.sprite.collide_rect_list().
+
+Use pygame.sprite.groupcollide() to check for collisions between two groups of sprites. This function is more efficient than using pygame.sprite.collide_rect_list_list().
+
+Use pygame.sprite.Group.remove() to remove sprites from a group. This function is more efficient than using del to remove sprites from a group.
+
+Use pygame.Surface.convert() to convert a Surface to a faster format, such as a 16-bit or 8-bit Surface. This can improve performance by reducing the amount of time that Pygame has to spend rendering the Surface.
+
+Use pygame.Surface.convert_alpha() to convert a Surface to a format that supports transparency. This can improve performance by reducing the amount of time that Pygame has to spend blending the Surface with the background.
+
+Use pygame.Surface.get_rect() to get the bounding rectangle of a Surface. This can improve performance by reducing the number of times that Pygame has to calculate the bounding rectangle of a Surface.
+
+Use pygame.sprite.spritecollide() to efficiently check for collisions between sprites. This can improve performance by reducing the number of times that Pygame has to iterate over all of the sprites in the game.
+
+Use pygame.sprite.spritecollide_mask() to efficiently check for collisions between sprites that have masks. This can improve performance by reducing the number of times that Pygame has to do a pixel-by-pixel collision check.
+
 Use numpy arrays instead of lists for storing agent and food objects. Numpy arrays are more efficient for numerical operations and can be used for more efficient collision detection.
 
 Use a Quadtree data structure to efficiently detect collisions between agents and food objects.
 
 """
+
+# https://www.youtube.com/watch?v=r_It_X7v-1E
+# https://github.com/SebLague/Ecosystem-2/tree/master
+# https://github.com/Emergent-Behaviors-in-Biology/community-simulator/blob/master/Tutorial.ipynb
+
