@@ -24,10 +24,13 @@ Monte Carlo methods can be computationally efficient and offer good performance 
 In summary, minimax is a deterministic approach that explores all possible moves to find the optimal solution in games with perfect information, while Monte Carlo methods, such as MCTS, rely on random sampling to estimate move values and are often used in games with stochastic elements or incomplete information.
 """
 
+import math
+
 import numpy as np
 import pygame
 import tensorflow as tf
 import tensorflow_probability as tfp
+from keras import layers, models, optimizers
 from tf_agents.environments import py_environment
 from tf_agents.specs import array_spec
 from tf_agents.trajectories import time_step as ts
@@ -307,19 +310,236 @@ class ChaseEnvironment(py_environment.PyEnvironment):
         pygame.display.flip()
 
 
+# Define the neural network architecture
+def create_neural_network(input_shape, num_actions):
+    inputs = layers.Input(shape=input_shape)
+
+    # first residual block
+    x = layers.Conv2D(128, 3, padding="same")(inputs)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation("relu")(x)
+    shortcut = x
+    x = layers.Conv2D(128, 3, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Add()([shortcut, x])
+    x = layers.Activation("relu")(x)
+
+    # second residual block
+    shortcut = x
+    x = layers.Conv2D(128, 3, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation("relu")(x)
+    x = layers.Conv2D(128, 3, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Add()([shortcut, x])
+    x = layers.Activation("relu")(x)
+
+    # policy head
+    policy_head = layers.Conv2D(2, 1, padding="same", activation="relu")(x)
+    policy_head = layers.BatchNormalization()(policy_head)
+    policy_head = layers.Flatten()(policy_head)
+    policy_head = layers.Dense(num_actions, activation="softmax")(policy_head)
+
+    # value head
+    value_head = layers.Conv2D(1, 1, padding="same", activation="relu")(x)
+    value_head = layers.BatchNormalization()(value_head)
+    value_head = layers.Flatten()(value_head)
+    value_head = layers.Dense(128, activation="relu")(value_head)
+    value_head = layers.Dense(1, activation="tanh")(value_head)
+
+    model = models.Model(inputs=inputs, outputs=[policy_head, value_head])
+
+    model.compile(optimizer=optimizers.Adam(learning_rate=0.001),
+                loss=['categorical_crossentropy', 'mse'],
+                loss_weights=[1.0, 1.0])
+
+    return model
+
+class Node:
+    
+        def __init__(self, parent=None, action=None, reward=0):
+            self.parent = parent
+            self.action = action
+            self.reward = reward
+            self.children = []
+    
+        def expand(self):
+            new_node = Node(parent=self)
+            self.children.append(new_node)
+            return new_node
+    
+        def is_terminal(self):
+            return len(self.children) == 0
+    
+        def select_best_action(self):
+            best_action = None
+            best_reward = float('-inf')
+            for child in self.children:
+                if child.reward > best_reward:
+                    best_reward = child.reward
+                    best_action = child.action
+            return best_action
+    
+        def select_leaf_node(self):
+            while not self.is_terminal():
+                self.select_best_child()
+            return self
+        
+        def select_best_child(self):
+            best_child = None
+            best_score = float('-inf')
+            for child in self.children:
+                score = child.reward + math.sqrt(2 * math.log(self.get_num_visits()) / 1 + child.get_num_visits())
+                if score > best_score:
+                    best_score = score
+                    best_child = child
+            return best_child
+        
+        def get_num_visits(self):
+            num_visits = 0
+            while self is not None:
+                num_visits += 1
+                self = self.parent
+            return num_visits
+
+class MCTS():
+
+    def __init__(self, num_iterations=1000, c=1.0):
+        self.num_iterations = num_iterations
+        self.c = c
+
+        # Initialize the MCTS tree.
+        self.tree = Node()
+
+    def act(self, state):
+        # Perform MCTS.
+        for _ in range(self.num_iterations):
+            reward = self._select_expand_and_simulate(state)
+
+        # Select the best action according to the tree.
+        best_action = self.tree.select_best_action()
+
+        return best_action
+
+    def _select_expand_and_simulate(self, state):
+        # Select a leaf node.
+        node = self.tree.select_leaf_node()
+
+        # Expand the node.
+        if not node.is_terminal():
+            node = node.expand()
+
+        # Simulate a game from the node.
+        reward = self._simulate_game(node)
+
+        # Backpropagate the reward to the tree.
+        self._backpropagate(node, reward)
+
+        return reward
+
+    def _simulate_game(self, node):
+        # If the game is over, return the reward.
+        if node.is_terminal():
+            return node.reward
+
+        # Select the next action according to the tree.
+        action = node.select_best_action()
+
+        # Simulate the next state and reward.
+        next_state, reward = self._simulate_game(node.children[action])
+
+        # Return the reward from the simulation.
+        return reward
+
+    def _backpropagate(self, node, reward):
+        while node is not None:
+            node.reward += reward * self.c
+            node = node.parent
+
+
+
+class MCTSChaseAgent():
+
+    def __init__(self, grid_size, num_iterations=1000, c=1.0):
+        self.num_iterations = num_iterations
+        self.c = c
+
+        # Initialize the MCTS tree.
+        self.tree = Node()
+
+        # Initialize the neural network.
+        self.model = create_neural_network((grid_size, grid_size, 2), 4) # with policy and value heads
+
+        # Initialize the hyperparameters.
+        self.epsilon = 0.1
+
+    def act(self, state):
+        # Perform MCTS.
+        for _ in range(self.num_iterations):
+            reward = self._select_expand_and_simulate(state)
+
+        # Select the best action according to the tree.
+        best_action = self.tree.select_best_action()
+
+        return best_action
+
+    def _select_expand_and_simulate(self, state):
+        # Select a leaf node.
+        node = self.tree.select_leaf_node()
+
+        # Expand the node.
+        if not node.is_terminal():
+            node = node.expand()
+
+        # Simulate a game from the node.
+        reward = self._simulate_game(node)
+
+        # Backpropagate the reward to the tree.
+        self._backpropagate(node, reward)
+
+        return reward
+
+    def _simulate_game(self, node):
+        # If the game is over, return the reward.
+        if node.is_terminal():
+            return node.reward
+
+        # Select the next action according to the policy network.
+        action_probs, _ = self.model.predict(np.array([node.state]))
+        action = np.argmax(action_probs[0])
+
+        # Simulate the next state and reward.
+        next_state, reward = self._simulate_game(node.children[action])
+
+        # Return the next state and reward.
+        return next_state, reward
+
+    def _backpropagate(self, node, reward):
+        # Update the node's reward.
+        node.reward += reward
+
+        # If the node is not the root, backpropagate.
+        if node.parent is not None:
+            self._backpropagate(node.parent, reward)
+
 num_obstacles = 5
 grid_size = 10
 env = ChaseEnvironment(grid_size, num_obstacles)
 env.reset()
 env._render()
 
+# Create the MCTS agent.
+mcts = MCTSChaseAgent(grid_size=grid_size, num_iterations=10)
+
 # Run the environment
 num_episodes = 10
 for _ in range(num_episodes):
     time_step = env.reset()
     while not time_step.is_last():
-        action = np.random.randint(0, 4)
-        time_step = env.step(action)
+        # use minimax to find the best move for the runner
+        # best_runner_move = best_move_for_runner(env._runner, env._chaser, env, depth=5, tree_nodes=env.tree_nodes)
+        best_runner_move = mcts.act(env._state)
+        time_step = env.step(best_runner_move)
         env._render()
         pygame.time.delay(500)
     print('Episode ended! Reward: {}'.format(time_step.reward))
@@ -327,11 +547,4 @@ for _ in range(num_episodes):
 pygame.quit()
 
 
-if __name__ == '__main__':
-    pursuer_pos = (0, 0)
-    evader_pos = (9, 9)
-    node = Node(pursuer_pos, evader_pos)
-
-    move = best_move(node, depth=5)
-    print(move)
 
