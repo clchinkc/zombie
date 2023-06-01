@@ -12,7 +12,7 @@ And the ability to combine frontend and backend
 Some other projects that I can do to showcase other skills
 
 Simple projects: low complexity (do less than 5 things, <200 lines, no libraries), high visibility, do betweeen 4-8
-Digital clock + to-do list -> budget and expense tracker
+Digital clock + to-do list (番茄鐘+待辦清單) -> budget and expense tracker
 + calculator + data analysis -> budget and expense planner
 
 Intermediate projects: medium complexity (do more than 5 things, <500 lines, minimal use of libraries or frameworks), do between 3-5
@@ -123,6 +123,9 @@ The code is a Python implementation of the popular card game Blackjack. It inclu
 This Python program is a library management system built using object-oriented programming, showcasing a simple yet powerful example of how real-world systems can be created. It includes two classes, Library and Student, that interact with each other to simulate the library system. The Library class has methods to show available books, lend books to students, and return books, while the Student class has methods to view borrowed books, request books, and return books. Furthermore, the program features a user-friendly interface with a menu of options that allows users to display available books, borrow books, return books, view borrowed books, and exit the program. The system can be expanded to include additional features such as unique book IDs, multiple copies of the same book, return dates, and late fees, demonstrating the versatility and potential of object-oriented programming in building real-world applications.
 
 GUI programming, algorithm design, string manipulation, multi-thread, database management, and data processing
+
+https://coding-interview.kalan.dev/
+https://github.com/jwasham/coding-interview-university
 
 Project suggestions
 hardcore basic apps or useful apps
@@ -379,6 +382,7 @@ Libraries
 The OpenAI Gym and Safety Gym frameworks provide code to build the environments that the agents are trained in. The researchers from DeepMind provide the Control Suite package, which is used for physics-based RL simulation.
 Algorithm
 The Stable Baselines 3 library is implemented in PyTorch and provides the tool to compare algorithms and create new ones, too. Similarly, the ACME library provides RL agents and building blocks and is flexible enough to do your own research. As the third alternative, one can consider Google’s Dopamine framework, which focuses on fast prototyping for speculative research. It supports JAX and TensorFlow.
+https://github.com/deepmind/pycolab !!!!!!!!!!!!!!!!!!!!!!!
 https://github.com/Farama-Foundation/MAgent2 !!!!!!!!!!!!!!!!!!!!!!!
 https://github.com/Farama-Foundation/Minigrid !!!!!!!!!!!!!!!!!!!!!!!
 https://github.com/Farama-Foundation/MiniWorld
@@ -398,6 +402,7 @@ https://github.com/openai/retro
 https://github.com/unixpickle/muniverse
 https://github.com/unixpickle/demoverse
 https://towardsdatascience.com/hyperbolic-deep-reinforcement-learning-b2de787cf2f7
+
 
 Multiagent Reinforcement Learning
 https://arxiv.org/abs/1711.02301
@@ -572,7 +577,7 @@ https://youtu.be/udP4cD2JAFM
 https://medium.com/techtofreedom/10-remarkable-python-oop-tips-that-will-optimize-your-code-significantly-a47e4103b44d
 https://learnku.com/python
 https://www.udacity.com/course/intro-to-programming-nanodegree--nd000
-
+https://towardsdatascience.com/combining-traditional-thread-based-code-and-asyncio-in-python-dc162084756c
 
 c++
 “The Most Important C++ Books...Ever”
@@ -656,6 +661,9 @@ https://www.youtube.com/watch?v=ltF0KuotA30
 https://www.youtube.com/watch?v=WnnaI_OXeEA
 https://www.youtube.com/watch?v=2-CQtwX-x4Y
 https://www.youtube.com/watch?v=jLLAtxPNaC0
+https://www.upgrad.com/blog/6-components-of-video-game-design/
+How many components are there in game design?
+https://www.youtube.com/watch?v=h1o5UzKfZcQ
 
 Godot
 https://github.com/godotengine/godot-vscode-plugin
@@ -1451,3 +1459,5 @@ https://www.coursera.org/professional-certificates/ibm-full-stack-cloud-develope
 https://www.coursera.org/professional-certificates/devops-and-software-engineering
 https://www.coursera.org/specializations/java-programming
 https://www.udemy.com/course/python-programming-beyond-the-basics-intermediate-training/?couponCode=ED44ACD62524527688A9
+
+

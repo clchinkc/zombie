@@ -588,6 +588,9 @@ https://github.com/je-suis-tm/graph-theory/blob/master/Epidemic%20Outbreak%20pro
 
 virus simulation
 https://www.youtube.com/watch?v=g7xzVqpyiPY
+
+visual neighborhood model
+https://neurosciencenews.com/visual-neighborhood-crowd-dynamics-23255/
 """
 
 """
