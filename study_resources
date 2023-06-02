@@ -248,6 +248,7 @@ https://www.mql5.com/en/articles/12140
 https://towardsdatascience.com/time-series-forecasting-deep-learning-vs-statistics-who-wins-c568389d02df
 https://towardsdatascience.com/time-series-forecasting-with-facebooks-prophet-in-10-minutes-958bd1caff3f
 https://jadream1159.medium.com/mtgnn-kdd2020-connecting-the-dots-multivariate-time-series-forecasting-with-graph-neural-a66459f3af4a
+https://www.sarem-seitz.com/winning-with-simple-not-even-linear-time-series-models/
 
 financial analysis
 quantitative finance python
@@ -336,6 +337,10 @@ https://github.com/SmartLever/SmartBots
 https://3commas.io/blog/maximize-grid-bot-performance-automatic-backtesting
 butterfly spread
 reverse iron butterfly
+https://github.com/waditu/tushare
+dcf forecasting
+revenue forecasting
+https://redis.io/
 
 Data Science
 The tutorial will cover the following topics:
@@ -485,6 +490,8 @@ https://www.youtube.com/watch?v=lsddiYwWaOQ&list=WL&index=96&pp=gAQBiAQB
 https://www.youtube.com/watch?v=g0XmFpmvsDk&list=WL&index=97&t=1s&pp=gAQBiAQB
 https://www.youtube.com/watch?v=m8Icp_Cid5o&list=WL&index=106&pp=gAQBiAQB
 https://dev.to/javinpaul/my-favorite-free-courses-to-learn-design-patterns-in-depth-5dp5
+https://www.milanjovanovic.tech/blog/visualize-your-software-architecture-with-the-c4-model
+http://modernescpp.com/index.php/category/patterns
 
 data structure
 https://www.youtube.com/playlist?list=PLUl4u3cNGP61Oq3tWYp6V_F-5jb5L2iHb
@@ -664,6 +671,12 @@ https://www.youtube.com/watch?v=jLLAtxPNaC0
 https://www.upgrad.com/blog/6-components-of-video-game-design/
 How many components are there in game design?
 https://www.youtube.com/watch?v=h1o5UzKfZcQ
+https://game.udn.com/game/story/122090/7208105
+https://game.udn.com/game/story/122089/7205931
+心流
+明確目的
+清晰回饋
+適當挑戰
 
 Godot
 https://github.com/godotengine/godot-vscode-plugin
@@ -889,6 +902,9 @@ https://huggingface.co/spaces/togethercomputer/OpenChatKit
 https://github.com/lm-sys/FastChat
 https://huggingface.co/spaces/trl-lib/stack-llama
 https://github.com/franklindyer/discord_nlp/tree/main
+https://huggingface.co/blog/rwkv
+https://github.com/csunny/DB-GPT
+https://github.com/imartinez/privateGPT
 
 Openai API project
 https://arxiv.org/pdf/2304.03442.pdf
@@ -944,6 +960,13 @@ https://github.com/davila7/youtube-gpt
 https://github.com/alaminmagaga/Image-Generator-with-OpenAI-API
 https://alaminmusamagaga.medium.com/building-an-ai-powered-image-generation-application-with-django-and-openai-api-3e117a35face
 https://github.com/jerryjliu/llama_index
+https://github.com/gventuri/pandas-ai
+
+bard api
+https://github.com/dsdanielpark/Bard-API
+
+Huggingface api
+https://huggingface.co/docs/transformers/transformers_agents
 
 Command line application
 https://github.com/lxgr-linux/pokete
@@ -1226,6 +1249,10 @@ https://www.youtube.com/playlist?list=PLxqBkZuBynVQEvXfJpq3smfuKq3AiNW-N
 https://github.com/tensorflow/tensor2tensor
 https://github.com/deepmind/sonnet
 https://github.com/ssymmetry/BBT-FinCUGE-Applications
+KerasCV
+KerasNLP
+https://www.kaggle.com/models
+https://tfhub.dev/
 
 Machine learning
 https://www.linkedin.com/feed/update/urn:li:activity:7037001701962215424/?utm_source=share&utm_medium=member_android
@@ -1299,10 +1326,15 @@ https://github.com/s0md3v/XSStrike
 https://google-images-download.readthedocs.io/en/latest/examples.html#
 
 GPT
+https://github.com/karpathy/minGPT
+https://github.com/karpathy/nanoGPT
+https://github.com/Lightning-AI/lit-llama
 https://github.com/shyamsn97/mario-gpt
 https://github.com/sanjeevanahilan/nanoChatGPT
 https://colab.research.google.com/drive/1VyU-W4WcWqQzHSJF1BfdPo9YDBJ6ik8j?usp=sharing
 https://www.youtube.com/watch?v=soqTT0o1ZKo
+https://github.com/mosaicml/llm-foundry
+https://github.com/openlm-research/open_llama
 
 MCMC
 pymc3

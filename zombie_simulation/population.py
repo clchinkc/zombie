@@ -1363,3 +1363,178 @@ Individual-based models (IBM), also known as agent-based models, consider each i
 The choice of model structure depends on the research question and understanding of the study system. If the primary data source is at the individual level, such as telemetry data, IBM is preferred. If the primary data is at the population level, such as mark-recapture analyses, PBM is preferred.
 Both IBM and PBM can be used to address questions at the population or metapopulation level. The Principle of Parsimony suggests using the simplest approach when two different model structures are equally appropriate.
 """
+
+"""
+The Pipes-and-Filters pattern is a way to process data by breaking it down into smaller parts called filters. Each filter takes in some data, works on it, and outputs new data, which is then used as input for the next filter. The connection between these filters is called a pipe. This pattern gives us different ways of controlling how the data flows between filters, like pushing data from one filter to the next, pulling data from the previous filter, or using a mix of both methods. There is also a way of using independent filters called Producer/Consumer.
+
+Universal interface in a Pipes-and-Filters architecture has pros and cons. Pros are that no intermediate buffering of data is needed, filters can be replaced or reordered easily, and work can be optimally distributed and run in a distributed architecture. Cons are possible inefficiencies due to communication, serialization, and synchronization overhead, the need for big queues, and the need for formatted data. Error handling is also complicated. When the architecture crashes, options include restarting the process with original data or using only fully processed data.
+"""
+
+"""
+The Layers Pattern is an architectural pattern that splits a task into horizontal layers, allowing each layer to have a specific responsibility and provide a service to a higher layer. It structures large systems requiring disassembly, offering its services with the help of the layer below. Most layered architectures consist of three or four independent layers, where a layer can only access the one below it. The pattern often uses the Facade Pattern to provide a simplified interface to a complex system.
+
+Layered architecture offers modularization benefits such as testability and replacement of layers, but it has some downsides worth noting. Finding the appropriate granularity of layers can be difficult, and too many or too few layers can lead to issues in understanding and development. Additionally, the performance may be impacted by the sequence of calls triggered by client calls, especially if remote layers are involved.
+"""
+
+"""
+The layered pattern, also known as the layered architecture pattern or n-tier architecture pattern, is a widely used software design pattern that structures an application as a set of layers. It provides a structured approach to organizing and designing software systems by dividing them into distinct layers that work together as a cohesive unit. Each layer in this pattern has a specific responsibility and interacts with adjacent layers in a predefined manner.
+
+In a layered architecture, the software system is typically divided into four main layers, although the number of layers can vary depending on the specific implementation:
+
+1. Presentation Layer (UI Layer): This is the topmost layer and is responsible for handling the user interface and user interactions with the software system. It focuses on the presentation and visual aspects of the application, providing an interface for users to interact with.
+
+2. Business Logic Layer (Application Layer): The middle layer, also known as the business logic layer or application layer, contains the core functionality and business rules of the software system. It encapsulates the logic and algorithms required for processing and manipulating data.
+
+3. Data Access Layer (Persistence Layer): This layer is responsible for accessing and storing data. It interacts with databases or other data sources to perform data-related operations. It provides an abstraction for the business logic layer to interact with the underlying data storage.
+
+4. Database Layer: This is the bottommost layer where the application's data is stored. It represents the physical storage mechanism such as a relational database or a NoSQL datastore.
+
+The layers are typically stacked on top of each other, with the presentation layer at the top and the database layer at the bottom. Each layer communicates with the layers above and below it by passing messages, allowing for loose coupling and modularity.
+
+The layered pattern offers several benefits:
+
+- Separation of Concerns: Each layer focuses on a specific aspect of the system, promoting modularity and encapsulation. This separation allows for easier maintenance, scalability, and reusability of components.
+
+- Code Reusability: By separating the layers, components can be reused across different applications or projects, reducing development effort.
+
+- Testability: The separation of layers enables easier testing as each layer can be tested independently, improving the overall quality of the software system.
+
+- Flexibility and Adaptability: Modifying or replacing a specific layer does not necessarily require changes to other layers, providing flexibility in adapting to changing requirements or technologies.
+
+However, the layered pattern also has some drawbacks:
+
+- Increased Complexity: As the system grows, the number of layers and their interactions may become more complex, requiring careful design and management.
+
+- Performance Overhead: The separation between layers may introduce some performance overhead due to communication and data transformation between layers.
+
+- Security: The layered architecture can make it more challenging to secure the application, as each layer has access to the data in the layers above and below it.
+
+Despite these drawbacks, the layered pattern remains popular in software development due to its simplicity, separation of concerns, and maintainability. It is a versatile pattern that can be applied to various types of applications, providing a clear structure for organizing the components of a software system.
+"""
+
+"""
+In software design, the broker pattern is an architectural pattern that involves the use of an intermediary software entity called a "broker" to facilitate communication between two or more software components. The broker acts as a "middleman" between the components, allowing them to communicate without being directly aware of each other's existence. In the broker pattern, the broker is responsible for receiving messages from one component and forwarding them to the appropriate recipient. The components that communicate through the broker are known as servers or clients.
+
+The broker pattern can be used to decouple components in a distributed system. This can make the system more scalable and resilient, as well as easier to maintain and evolve. The broker pattern can also be used to implement a variety of other architectural patterns, such as the mediator pattern, the observer pattern, and the facade pattern.
+
+Here are some of the benefits of using the broker pattern:
+
+Decoupling: The broker pattern decouples components in a distributed system, making them more independent and easier to maintain.
+Scalability: The broker pattern can be used to scale a distributed system by adding or removing brokers as needed.
+Resilience: The broker pattern can make a distributed system more resilient to failures by routing requests around failed components.
+Maintainability: The broker pattern can make a distributed system easier to maintain by centralizing the logic for routing requests.
+Here are some of the drawbacks of using the broker pattern:
+
+Complexity: The broker pattern can add complexity to a distributed system.
+Performance: The broker pattern can add latency to requests that are routed through the broker.
+Centralization: The broker pattern can centralize control over a distributed system, making it a single point of failure.
+Overall, the broker pattern is a powerful architectural pattern that can be used to decouple components in a distributed system. However, it is important to weigh the benefits and drawbacks of the pattern before using it in a particular project.
+
+The broker pattern is a versatile architectural pattern that can be used in a variety of different contexts. If you are designing a distributed system, the broker pattern is a pattern worth considering.
+"""
+
+"""
+The broker pattern is an architectural pattern used in software design to structure distributed systems with decoupled components that interact through remote procedure calls (RPCs). It involves the introduction of a broker component that is responsible for coordinating communication between the components of the system.
+
+In the context of distributed software systems, the broker pattern provides a way to achieve loose coupling between components by abstracting away the details of communication and enabling components to interact without direct dependencies on each other. The broker component acts as an intermediary, facilitating the exchange of messages or requests between components and forwarding the results and exceptions.
+
+The responsibilities of the broker component include receiving requests from clients, directing these requests to the appropriate server, and returning the responses back to the clients [1][2]. It plays a crucial role in managing the communication and coordination aspects of the system, allowing components to focus on their specific functionalities.
+
+It's worth noting that the broker pattern can be applied in different contexts. For instance, in event-driven architecture (EDA), the broker pattern is used to decouple event publishers and subscribers by introducing a broker as an intermediary. The broker receives events from publishers and distributes them to the relevant subscribers based on their interests and subscriptions [4].
+
+The broker pattern is one of several software architecture patterns that provide ways to structure and organize software systems. Other patterns mentioned in the search results include layered architecture, pipe-filter pattern, blackboard pattern, and event-bus pattern, each serving different purposes in software design [5].
+
+In summary, the broker pattern is an architectural pattern used in software design to structure distributed systems with decoupled components. It introduces a broker component responsible for coordinating communication between the components, facilitating the exchange of messages or requests and managing the transmission of results and exceptions. It can be used in various contexts, including event-driven architecture, to achieve loose coupling and efficient communication between components.
+"""
+
+"""
+The broker pattern, also known as the mediator pattern, is a software design pattern that promotes loose coupling and centralizes communication between components of a system. It provides a mediator object that encapsulates the interaction and coordination between multiple objects, allowing them to communicate indirectly through the mediator instead of directly with each other.
+
+The broker pattern is commonly used in complex systems where the direct communication between components can become tangled and hard to manage. By introducing a central mediator, the pattern helps to reduce dependencies and simplifies the overall architecture.
+
+Here's how the broker pattern works:
+
+1. Mediator/Broker: The mediator object acts as a centralized communication hub. It defines an interface that components can use to send and receive messages. The mediator knows about all the participating components and facilitates their communication.
+
+2. Components: Components are the individual objects or subsystems that need to communicate with each other. Instead of directly interacting with each other, they send messages to the mediator, which then relays the messages to the appropriate recipients.
+
+3. Message Passing: Components communicate with each other by sending messages through the mediator. The mediator receives these messages, processes them, and forwards them to the intended recipients. The mediator may perform additional logic or transformations on the messages as required.
+
+4. Loose Coupling: By decoupling the components and promoting indirect communication, the broker pattern reduces dependencies between objects. Components only need to know about the mediator interface and not about the internal details of other components. This loose coupling enhances flexibility and maintainability.
+
+Benefits of using the broker pattern include improved modularity, easier extensibility, and better code organization. It centralizes communication logic, making it easier to add new components or modify existing ones without impacting the entire system.
+
+Overall, the broker pattern helps to simplify complex systems by introducing a mediator object that manages communication between components, promoting loose coupling and reducing dependencies.
+"""
+
+"""
+The Model-View-Controller architectural pattern divides user interface program logic into independent components: Model (data and business logic), View (output), and Controller (input).
+
+Model: The model deals with the important information and rules of the program. It stores and manages the data that is used by the application.
+View: The view is responsible for observing the Model and displaying the data to the user. It renders the data in a way that is easy for the user to understand and interact with.
+Controller: The controller is responsible for receiving user input and updating the model. It also receives data from the model and updates the view.
+
+During initialization, the model initializes its data, and the view and controller get created and start observing the model. With user input, the controller accepts and handles input, triggering the model to change its internal data. The view and controller then update themselves to show the program's new outputs.
+
+The MVC pattern is a popular design pattern for developing web applications, desktop applications, and mobile applications.
+"""
+
+"""
+The Model-View-Controller (MVC) architectural pattern is a widely used design pattern in software development that separates the components of an application into three interconnected parts: the model, the view, and the controller.
+
+1. Model: The model represents the data and the business logic of the application. It encapsulates the data and provides methods to manipulate and access it. It is responsible for managing the state and behavior of the application, including data validation, storage, retrieval, and processing.
+
+2. View: The view is responsible for the presentation layer of the application. It provides the user interface through which the users interact with the application. The view receives data from the model and renders it visually, focusing on the display and presentation aspects rather than the data itself.
+
+3. Controller: The controller acts as an intermediary between the model and the view. It receives user input through the view and translates it into actions to be performed by the model. It updates the model based on user interactions and changes in the application's state. It also updates the view to reflect the changes made to the model. The controller handles user events, delegates the appropriate actions to the model and the view, and manages the flow of data between them.
+
+The MVC pattern promotes the separation of concerns of data management, user interface, and user input handling, making the application more modular and maintainable. It allows for the independent development and modification of each component, as they are decoupled from each other. Changes made to one component do not require modifications in the others, as long as the interfaces between the components remain consistent.
+
+In addition to the core components (model, view, and controller), some variations of MVC include additional elements, such as data access objects (DAO) or services, to handle data persistence or external services. However, the basic principles of separation and responsibility remain the same.
+"""
+
+"""
+The reactor pattern is an event-driven architectural pattern used for GUIs, servers, and handling concurrent service requests in software applications. It provides a scalable and efficient solution for managing multiple events and requests delivered concurrently from various sources by utilizing a single-threaded event loop.
+
+In this pattern, the reactor acts as a central component that manages the event loop. It is often implemented using a blocking I/O approach. The service handler blocks until new events or requests become available from a set of observed resources. It receives and demultiplexes incoming events or requests, meaning it separates and categorizes the requests based on their respective sources. These events can include user interactions in a GUI, network connections, or open files. The reactor maps and dispatches each event synchronously to its corresponding concrete event handler, ensuring that they are processed in a specific order specified by the handler.
+
+The Hollywood principle of the reactor pattern inverts the flow of control. Instead of applications actively requesting services, the reactor waits for indication events and dispatches them to the appropriate event handlers. The dynamic behaviour allows the reactor to process events in a specific order provided by the event handler.
+
+The reactor pattern offers clear separation between the framework and application logic by employing modular event handlers. This separation allows for easier development and maintenance of the application. By using a single-threaded event loop, the reactor pattern provides benefits such as simplicity, scalability, and increased performance. It eliminates the overhead of creating and managing multiple threads, making it suitable for handling a large number of concurrent connections. However, it's important to note that the reactor pattern is best suited for I/O-bound applications rather than CPU-bound ones.
+
+However, the reactor pattern relies on an event demultiplexing system call that can halt the progress of the reactor, which may introduce performance considerations. Additionally, the inversion of control in this pattern can make testing and debugging more challenging.
+
+Overall, the reactor pattern is a powerful design pattern that enables efficient handling of multiple requests in an event-driven system. It provides benefits such as scalability, modularity, and improved performance, making it suitable for applications with high concurrency and I/O-bound operations.
+"""
+
+"""
+The reactor pattern is a software design pattern that is used for handling concurrent and asynchronous event-driven programming. It provides an approach for building scalable and efficient systems that can handle multiple I/O operations without blocking the execution of the program.
+
+The core idea behind the reactor pattern is to have a central event dispatcher, often called the "reactor," which is responsible for receiving and dispatching events to appropriate event handlers. These events can be various I/O operations, such as receiving data from a network socket, writing data to a file, or handling user input.
+
+Here's a general overview of how the reactor pattern works:
+
+1. Event Loop: The reactor pattern typically employs an event loop, which is a continuous loop that waits for events to occur. It can be implemented using a variety of techniques, such as select(), poll(), or epoll(), depending on the underlying operating system and programming language.
+
+2. Event Handlers: Each type of event is associated with a corresponding event handler. An event handler is responsible for performing the necessary actions when a specific event occurs. For example, if a network socket receives data, the event handler for that socket will process the incoming data.
+
+3. Registration: Event handlers register their interest in specific types of events with the reactor. This allows the reactor to know which events should be dispatched to which handlers.
+
+4. Event Dispatching: When an event occurs, such as data being received on a network socket, the reactor receives the event and dispatches it to the appropriate event handler. The reactor uses the registration information to determine which handler should process the event.
+
+5. Non-Blocking I/O: To achieve high performance and scalability, the reactor pattern often utilizes non-blocking I/O operations. This means that when an event handler initiates an I/O operation, it doesn't wait for the operation to complete but rather continues processing other events. It can later receive a notification when the I/O operation is finished.
+
+By using the reactor pattern, applications can efficiently handle multiple I/O operations concurrently without blocking the execution flow. This enables systems to be more scalable, responsive, and capable of handling a large number of clients or events.
+
+It's worth noting that there are other related patterns and frameworks based on the reactor pattern, such as the Proactor pattern and event-driven frameworks like Node.js, which build upon the concepts of the reactor pattern to provide powerful and efficient event-driven programming models.
+"""
+
+"""
+The reactor pattern is an event-driven software design pattern that demultiplexes and dispatches service requests that are delivered to an application from one or more clients. It is one of the most popular and widely used patterns in concurrent and network programming.
+
+The reactor pattern works by having a single thread that listens for events on a set of input sources. When an event occurs, the thread dispatches it to the appropriate handler. This allows the application to handle multiple concurrent requests without blocking any of them.
+
+The reactor pattern excels in handling a large number of concurrent requests, making it particularly suitable for web servers and database applications. By leveraging an event-driven architecture, the reactor pattern ensures scalability, allowing applications to effectively handle multiple requests. It also enhances efficiency by avoiding resource waste through non-blocking threads.
+"""
+
+
