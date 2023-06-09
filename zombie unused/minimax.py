@@ -36,100 +36,6 @@ from tf_agents.specs import array_spec
 from tf_agents.trajectories import time_step as ts
 
 
-class TreeNode:
-    def __init__(self, positions, value=None):
-        self.positions = positions
-        self.value = value
-        self.children = []
-
-def minimax_alpha_beta(runner, chaser, environment, depth, alpha, beta, maximizing_runner, tree_nodes):
-    current_positions = (tuple(runner.position.copy()), tuple(chaser.position.copy()))
-    key = str(current_positions)  # Convert tuple to a hashable string key
-
-    if key in tree_nodes:
-        return tree_nodes[key].value
-
-    if depth == 0 or environment._is_done():
-        value = environment._reward()
-        tree_nodes[key] = TreeNode(current_positions, value)
-        return value
-
-    if maximizing_runner:
-        max_value = -float('inf')
-
-        # Reorder moves based on a heuristic for move ordering
-        moves = runner.possible_moves(environment.is_valid_position)
-        ordered_moves = prioritize_moves(runner, chaser, environment, moves)
-
-        for _, new_position in ordered_moves:
-            saved_position = runner.position.copy()
-            runner.position = new_position
-            value = minimax_alpha_beta(runner, chaser, environment, depth - 1, alpha, beta, False, tree_nodes)
-            runner.position = saved_position
-            max_value = max(max_value, value)
-            alpha = max(alpha, max_value)
-            if beta <= alpha:
-                break
-
-        tree_nodes[key] = TreeNode(current_positions, max_value)
-        return max_value
-    else:
-        min_value = float('inf')
-
-        # Reorder moves based on a heuristic for move ordering
-        moves = chaser.possible_moves(environment.is_valid_position)
-        ordered_moves = prioritize_moves(runner, chaser, environment, moves)
-
-        for _, new_position in ordered_moves:
-            saved_position = chaser.position.copy()
-            chaser.position = new_position
-            value = minimax_alpha_beta(runner, chaser, environment, depth - 1, alpha, beta, True, tree_nodes)
-            chaser.position = saved_position
-            min_value = min(min_value, value)
-            beta = min(beta, min_value)
-            if beta <= alpha:
-                break
-
-        tree_nodes[key] = TreeNode(current_positions, min_value)
-        return min_value
-
-def prioritize_moves(runner, chaser, environment, moves):
-    ordered_moves = []
-
-    for _, move in moves:
-        distance = np.linalg.norm(move - chaser.position)
-        ordered_moves.append((distance, move))
-
-    ordered_moves.sort(key=lambda x: x[0], reverse=True)
-
-    return ordered_moves
-
-def best_move_for_runner(runner, chaser, environment, depth, tree_nodes):
-    max_value = -float('inf')
-    best_move = None
-    for direction, new_position in runner.possible_moves(environment.is_valid_position):
-        saved_position = runner.position.copy()
-        runner.position = new_position
-        value = minimax_alpha_beta(runner, chaser, environment, depth - 1, -float('inf'), float('inf'), False, tree_nodes)
-        runner.position = saved_position
-        if value > max_value:
-            max_value = value
-            best_move = direction
-    return best_move
-
-def best_move_for_chaser(runner, chaser, environment, depth, tree_nodes):
-    min_value = float('inf')
-    best_move = None
-    for direction, new_position in chaser.possible_moves(environment.is_valid_position):
-        saved_position = chaser.position.copy()
-        chaser.position = new_position
-        value = minimax_alpha_beta(runner, chaser, environment, depth - 1, -float('inf'), float('inf'), True, tree_nodes)
-        chaser.position = saved_position
-        if value < min_value:
-            min_value = value
-            best_move = direction
-    return best_move
-
 class Runner:
     def __init__(self, position):
         self.position = position
@@ -310,50 +216,100 @@ class ChaseEnvironment(py_environment.PyEnvironment):
         pygame.display.flip()
 
 
-# Define the neural network architecture
-def create_neural_network(input_shape, num_actions):
-    inputs = layers.Input(shape=input_shape)
+class TreeNode:
+    def __init__(self, positions, value=None):
+        self.positions = positions
+        self.value = value
+        self.children = []
 
-    # first residual block
-    x = layers.Conv2D(128, 3, padding="same")(inputs)
-    x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
-    shortcut = x
-    x = layers.Conv2D(128, 3, padding="same")(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Add()([shortcut, x])
-    x = layers.Activation("relu")(x)
+def minimax_alpha_beta(runner, chaser, environment, depth, alpha, beta, maximizing_runner, tree_nodes):
+    current_positions = (tuple(runner.position.copy()), tuple(chaser.position.copy()))
+    key = str(current_positions)  # Convert tuple to a hashable string key
 
-    # second residual block
-    shortcut = x
-    x = layers.Conv2D(128, 3, padding="same")(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Activation("relu")(x)
-    x = layers.Conv2D(128, 3, padding="same")(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Add()([shortcut, x])
-    x = layers.Activation("relu")(x)
+    if key in tree_nodes:
+        return tree_nodes[key].value
 
-    # policy head
-    policy_head = layers.Conv2D(2, 1, padding="same", activation="relu")(x)
-    policy_head = layers.BatchNormalization()(policy_head)
-    policy_head = layers.Flatten()(policy_head)
-    policy_head = layers.Dense(num_actions, activation="softmax")(policy_head)
+    if depth == 0 or environment._is_done():
+        value = environment._reward()
+        tree_nodes[key] = TreeNode(current_positions, value)
+        return value
 
-    # value head
-    value_head = layers.Conv2D(1, 1, padding="same", activation="relu")(x)
-    value_head = layers.BatchNormalization()(value_head)
-    value_head = layers.Flatten()(value_head)
-    value_head = layers.Dense(128, activation="relu")(value_head)
-    value_head = layers.Dense(1, activation="tanh")(value_head)
+    if maximizing_runner:
+        max_value = -float('inf')
 
-    model = models.Model(inputs=inputs, outputs=[policy_head, value_head])
+        # Reorder moves based on a heuristic for move ordering
+        moves = runner.possible_moves(environment.is_valid_position)
+        ordered_moves = prioritize_moves(runner, chaser, environment, moves)
 
-    model.compile(optimizer=optimizers.Adam(learning_rate=0.001),
-                loss=['categorical_crossentropy', 'mse'],
-                loss_weights=[1.0, 1.0])
+        for _, new_position in ordered_moves:
+            saved_position = runner.position.copy()
+            runner.position = new_position
+            value = minimax_alpha_beta(runner, chaser, environment, depth - 1, alpha, beta, False, tree_nodes)
+            runner.position = saved_position
+            max_value = max(max_value, value)
+            alpha = max(alpha, max_value)
+            if beta <= alpha:
+                break
 
-    return model
+        tree_nodes[key] = TreeNode(current_positions, max_value)
+        return max_value
+    else:
+        min_value = float('inf')
+
+        # Reorder moves based on a heuristic for move ordering
+        moves = chaser.possible_moves(environment.is_valid_position)
+        ordered_moves = prioritize_moves(runner, chaser, environment, moves)
+
+        for _, new_position in ordered_moves:
+            saved_position = chaser.position.copy()
+            chaser.position = new_position
+            value = minimax_alpha_beta(runner, chaser, environment, depth - 1, alpha, beta, True, tree_nodes)
+            chaser.position = saved_position
+            min_value = min(min_value, value)
+            beta = min(beta, min_value)
+            if beta <= alpha:
+                break
+
+        tree_nodes[key] = TreeNode(current_positions, min_value)
+        return min_value
+
+def prioritize_moves(runner, chaser, environment, moves):
+    ordered_moves = []
+
+    for _, move in moves:
+        distance = np.linalg.norm(move - chaser.position)
+        ordered_moves.append((distance, move))
+
+    ordered_moves.sort(key=lambda x: x[0], reverse=True)
+
+    return ordered_moves
+
+def best_move_for_runner(runner, chaser, environment, depth, tree_nodes):
+    max_value = -float('inf')
+    best_move = None
+    for direction, new_position in runner.possible_moves(environment.is_valid_position):
+        saved_position = runner.position.copy()
+        runner.position = new_position
+        value = minimax_alpha_beta(runner, chaser, environment, depth - 1, -float('inf'), float('inf'), False, tree_nodes)
+        runner.position = saved_position
+        if value > max_value:
+            max_value = value
+            best_move = direction
+    return best_move
+
+def best_move_for_chaser(runner, chaser, environment, depth, tree_nodes):
+    min_value = float('inf')
+    best_move = None
+    for direction, new_position in chaser.possible_moves(environment.is_valid_position):
+        saved_position = chaser.position.copy()
+        chaser.position = new_position
+        value = minimax_alpha_beta(runner, chaser, environment, depth - 1, -float('inf'), float('inf'), True, tree_nodes)
+        chaser.position = saved_position
+        if value < min_value:
+            min_value = value
+            best_move = direction
+    return best_move
+
 
 class Node:
     
@@ -456,6 +412,51 @@ class MCTS():
             node.reward += reward * self.c
             node = node.parent
 
+
+# Define the neural network architecture
+def create_neural_network(input_shape, num_actions):
+    inputs = layers.Input(shape=input_shape)
+
+    # first residual block
+    x = layers.Conv2D(128, 3, padding="same")(inputs)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation("relu")(x)
+    shortcut = x
+    x = layers.Conv2D(128, 3, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Add()([shortcut, x])
+    x = layers.Activation("relu")(x)
+
+    # second residual block
+    shortcut = x
+    x = layers.Conv2D(128, 3, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Activation("relu")(x)
+    x = layers.Conv2D(128, 3, padding="same")(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.Add()([shortcut, x])
+    x = layers.Activation("relu")(x)
+
+    # policy head
+    policy_head = layers.Conv2D(2, 1, padding="same", activation="relu")(x)
+    policy_head = layers.BatchNormalization()(policy_head)
+    policy_head = layers.Flatten()(policy_head)
+    policy_head = layers.Dense(num_actions, activation="softmax")(policy_head)
+
+    # value head
+    value_head = layers.Conv2D(1, 1, padding="same", activation="relu")(x)
+    value_head = layers.BatchNormalization()(value_head)
+    value_head = layers.Flatten()(value_head)
+    value_head = layers.Dense(128, activation="relu")(value_head)
+    value_head = layers.Dense(1, activation="tanh")(value_head)
+
+    model = models.Model(inputs=inputs, outputs=[policy_head, value_head])
+
+    model.compile(optimizer=optimizers.Adam(learning_rate=0.001),
+                loss=['categorical_crossentropy', 'mse'],
+                loss_weights=[1.0, 1.0])
+
+    return model
 
 
 class MCTSChaseAgent():

@@ -1537,4 +1537,10 @@ The reactor pattern works by having a single thread that listens for events on a
 The reactor pattern excels in handling a large number of concurrent requests, making it particularly suitable for web servers and database applications. By leveraging an event-driven architecture, the reactor pattern ensures scalability, allowing applications to effectively handle multiple requests. It also enhances efficiency by avoiding resource waste through non-blocking threads.
 """
 
-
+"""
+fuzzy logic
+laws of thermodynamics
+https://zh-yue.m.wikipedia.org/wiki/%E9%81%8A%E6%88%B2%E5%88%86%E6%9E%90
+https://zh-yue.m.wikipedia.org/wiki/%E9%81%8A%E6%88%B2%E8%A8%AD%E8%A8%88
+https://zh-yue.m.wikipedia.org/wiki/%E9%81%8A%E6%88%B2%E7%B7%A8%E7%A8%8B
+"""
