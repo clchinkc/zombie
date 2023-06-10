@@ -1,6 +1,6 @@
 
 from pygame.sprite import Sprite, Group
-
+import sys
 from collections import deque
 import pygame
 import numpy as np
@@ -86,14 +86,19 @@ class Human(Agent):
             if np.linalg.norm(self.position - position) < 50.0:
                 desired_velocity += (self.position - position)
 
-        # Limiting the maximum velocity to prevent explosion
+        # Randomly move around
+        friction = -0.01 * desired_velocity
+        noise = 0.02 * np.random.normal(0, 1)
+        desired_velocity += friction + noise
+
+        # Limiting the maximum velocity by normalizing the vector
         if np.linalg.norm(desired_velocity) > 1:
-            desired_velocity /= np.linalg.norm(desired_velocity)  # normalize the vector
+            desired_velocity /= np.linalg.norm(desired_velocity)
 
         # The rate of acceleration change
         self.acceleration = 0.05 * (desired_velocity - self.velocity)
 
-        # Limiting the maximum acceleration to prevent explosion
+        # Limiting the maximum acceleration by normalizing the vector
         if np.linalg.norm(self.acceleration) > 1.0:
             self.acceleration /= np.linalg.norm(self.acceleration)
 
@@ -109,14 +114,19 @@ class Zombie(Agent):
         closest_human = min(humans, key=lambda human: np.linalg.norm(self.position - human.position))
         desired_velocity += 0.01 * (closest_human.position - self.position)
 
-        # Limiting the maximum velocity to prevent explosion
+        # Randomly move around
+        friction = -0.01 * desired_velocity
+        noise = 0.02 * np.random.normal(0, 1)
+        desired_velocity += friction + noise
+
+        # Limiting the maximum velocity by normalizing the vector
         if np.linalg.norm(desired_velocity) > 1:
-            desired_velocity /= np.linalg.norm(desired_velocity)  # normalize the vector
+            desired_velocity /= np.linalg.norm(desired_velocity)
 
         # The rate of acceleration change
         self.acceleration = 0.05 * (desired_velocity - self.velocity)
 
-        # Limiting the maximum acceleration to prevent explosion
+        # Limiting the maximum acceleration by normalizing the vector
         if np.linalg.norm(self.acceleration) > 1.0:
             self.acceleration /= np.linalg.norm(self.acceleration)
 
@@ -137,8 +147,13 @@ trail_sprites = Group(TrailSprite(agent) for agent in agents)
 clock = pygame.time.Clock()
 
 # Main loop
-running = True
-paused = False  # Variable to handle pausing of the clock
+running = True # Variable to keep the main loop running
+paused = False # Variable to handle pausing of the clock
+key_actions = {
+    pygame.K_ESCAPE: lambda: setattr(sys.modules[__name__], 'running', False),
+    pygame.K_SPACE: lambda: setattr(sys.modules[__name__], 'paused', not paused)
+}
+
 while running:
     clock.tick(120)  # limit the frame rate to 60 FPS
 
@@ -146,12 +161,11 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:  # If space is pressed, toggle pause
-                paused = not paused
+            if event.key in key_actions:
+                key_actions[event.key]()
 
     if paused:
         continue  # Skip the rest of the loop if paused
-
     # Separate humans and zombies
     humans = [agent for agent in agents if isinstance(agent, Human)]
     zombies = [agent for agent in agents if isinstance(agent, Zombie)]
@@ -199,4 +213,16 @@ while running:
 pygame.quit()
 
 
+# https://github.com/warownia1/PythonCollider
 
+"""
+Here are a few suggestions for optimizing this code:
+
+Use pygame.sprite.collide_circle() to check for collisions between circles.
+
+Use pygame.sprite.spritecollide() to check for collisions between a sprite and a group of sprites.
+
+Use pygame.sprite.groupcollide() to check for collisions between two groups of sprites.
+
+Please update the code according to these comments on pygame optimization.
+"""
