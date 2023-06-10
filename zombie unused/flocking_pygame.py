@@ -146,3 +146,35 @@ class Simulation:
 
 if __name__ == '__main__':
     Simulation().run()
+
+"""
+The provided script, written in Python, is a representation of a flocking simulation involving multiple autonomous agents. This simulation is often termed a "boids" simulation, following the pioneering work by Craig Reynolds on simulating flocking behavior. The individual agents (or boids) in this simulation operate according to three principal rules: separation, alignment, and cohesion. 
+
+1. **Agent Representation:**
+In the `Agent` class, every agent is represented as an object with properties such as position and velocity, initialized randomly. The position signifies the location of the agent within the simulation's confines, and velocity indicates its speed and the direction of motion. There is no explicit acceleration attribute in this implementation; however, changes in velocity (essentially acceleration) are determined by the interaction rules applied.
+
+2. **Neighboring Agents:**
+The code uses a proximity-based approach to determine neighboring agents. An agent is considered a neighbor if it lies within a predefined distance (`DETECTION_RADIUS`) from the subject agent. This is seen in the methods `calculate_separation`, `calculate_alignment`, and `calculate_cohesion`.
+
+3. **Interaction Rules:**
+The agents' behavior is defined by three fundamental interaction rules: cohesion, alignment, and separation.
+
+    - **Cohesion:** Through the `calculate_cohesion` method, agents are steered towards the average position of their neighbors, promoting group formation.
+    - **Alignment:** Through the `calculate_alignment` method, agents attempt to match velocity with nearby agents, promoting uniformity in movement direction.
+    - **Separation:** The `calculate_separation` method ensures that each agent maintains a certain distance from others, helping avoid collisions.
+
+    The final velocity after applying these behaviors is a weighted combination of these three forces, with factors (`COHESION_FACTOR`, `ALIGNMENT_FACTOR`, `SEPARATION_FACTOR`) controlling their relative influences.
+
+4. **Environment Constraints:**
+In this simulation, the environment is a wraparound 2D grid with a width and height defined by `WIDTH` and `HEIGHT`. If an agent crosses the boundary on one side, it reappears on the opposite side, emulating a toroidal topology. There are no obstacles in this environment; however, modifications could be made to include obstacles and define agent behavior upon encountering them.
+
+5. **Visualization:**
+The visualization aspect is handled by the `Simulation` class using the Pygame library. Each agent is depicted as a white circle moving within a black window. The position and motion of agents provide a visual representation of the emergent flocking behavior.
+
+6. **Experimentation and Analysis:**
+The parameters of the simulation, such as the number of agents (`NUM_AGENTS`), radius of detection (`DETECTION_RADIUS`), and the weights of different interaction rules, can be modified to observe changes in the flocking behavior. Analyzing these results could provide insights into the effects of these parameters on the emergent behavior of the flock.
+
+7. **Documentation:**
+The current script is written with clear function and class definitions, making it easy to understand the purpose of each piece of code. For further developments or modifications, maintaining comprehensive documentation would be useful for others to understand the structure, design decisions, and obtained insights.
+
+"""

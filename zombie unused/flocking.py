@@ -30,12 +30,11 @@ class Agent:
 
 
 class TrailSprite(Sprite):
-    def __init__(self, agent, size=5):
+    def __init__(self, agent):
         super().__init__()
         self.image = pygame.Surface((width, height), pygame.SRCALPHA).convert_alpha()
         self.rect = self.image.get_rect()
         self.agent = agent
-        self.size = size
 
     def update(self):
         # Clear the image
@@ -43,24 +42,23 @@ class TrailSprite(Sprite):
         # Draw the trail
         for i, pos in enumerate(reversed(self.agent.history)):
             color = tuple([int(c * (1 - i / len(self.agent.history))) for c in self.agent.color])
-            pygame.draw.circle(self.image, color + (100,), (int(pos[0]), int(pos[1])), self.size)
+            pygame.draw.circle(self.image, color + (100,), (int(pos[0]), int(pos[1])), 5)
         self.rect.topleft = (0, 0)  # Always draw on the topleft and let pygame handle the blit optimization
 
 class AgentSprite(Sprite):
-    def __init__(self, agent, size=5):
+    def __init__(self, agent):
         super().__init__()
-        self.image = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA).convert_alpha()
+        self.image = pygame.Surface((width, height), pygame.SRCALPHA).convert_alpha()
         self.rect = self.image.get_rect()
         self.agent = agent
-        self.size = size
 
     def update(self):
         self.agent.move()
         # Clear the image
         self.image.fill((0, 0, 0, 0))
         # Draw the agent
-        pygame.draw.circle(self.image, self.agent.color, (self.size, self.size), self.size)
-        self.rect.center = (int(self.agent.position[0]), int(self.agent.position[1]))  # Update position
+        pygame.draw.circle(self.image, self.agent.color, (int(self.agent.position[0]), int(self.agent.position[1])), 5)
+        self.rect.topleft = (0, 0)  # Always draw on the topleft and let pygame handle the blit optimization
 
 
 class Human(Agent):
@@ -140,12 +138,19 @@ clock = pygame.time.Clock()
 
 # Main loop
 running = True
+paused = False  # Variable to handle pausing of the clock
 while running:
     clock.tick(120)  # limit the frame rate to 60 FPS
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:  # If space is pressed, toggle pause
+                paused = not paused
+
+    if paused:
+        continue  # Skip the rest of the loop if paused
 
     # Separate humans and zombies
     humans = [agent for agent in agents if isinstance(agent, Human)]
@@ -170,9 +175,10 @@ while running:
         # Check if human has been turned into a zombie
         if any(np.linalg.norm(human.position - zombie.position) < 10.0 for zombie in zombies):
             agents.remove(human)
-            agents.append(Zombie(human.position[0], human.position[1]))
-            agent_sprites.add(AgentSprite(agents[-1]))
-            trail_sprites.add(TrailSprite(agents[-1]))
+            new_zombie = Zombie(human.position[0], human.position[1])
+            agents.append(new_zombie)
+            agent_sprites.add(AgentSprite(new_zombie))
+            trail_sprites.add(TrailSprite(new_zombie))
 
     for zombie in zombies:
         zombie.update_velocity(humans)
@@ -182,8 +188,10 @@ while running:
     screen.fill((0, 0, 0))
     trail_sprites.update()
     agent_sprites.update()
-    trail_sprites.draw(screen)
-    agent_sprites.draw(screen)
+    for sprite in trail_sprites:
+        screen.blit(sprite.image, sprite.rect)
+    for sprite in agent_sprites:
+        screen.blit(sprite.image, sprite.rect)
     screen.blit(pygame.font.SysFont('Arial', 20).render('Humans: {}'.format(len(humans)), False, (255, 255, 255)), (10, 10))
     screen.blit(pygame.font.SysFont('Arial', 20).render('Zombies: {}'.format(len(zombies)), False, (255, 255, 255)), (10, 30))
     pygame.display.flip()
