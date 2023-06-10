@@ -1,4 +1,6 @@
 
+from pygame.sprite import Sprite, Group
+
 from collections import deque
 import pygame
 import numpy as np
@@ -14,6 +16,7 @@ class Agent:
 
     def move(self):
         self.velocity += self.acceleration
+        self.velocity = np.clip(self.velocity, -1, 1)  # Limit maximum velocity to -1 and 1
         self.position += self.velocity
         self.history.append(self.position.copy())  # Save position for drawing trails
 
@@ -25,11 +28,39 @@ class Agent:
         self.velocity[0] = abs(self.velocity[0]) if self.position[0] == 0 or self.position[0] == width - 1 else self.velocity[0]
         self.velocity[1] = abs(self.velocity[1]) if self.position[1] == 0 or self.position[1] == height - 1 else self.velocity[1]
 
-    def draw(self):
-        # Draw the agent's trail
-        for i, pos in enumerate(reversed(self.history)):
-            color = tuple([int(c * (1 - i / len(self.history))) for c in self.color])
-            pygame.draw.circle(screen, color, (int(pos[0]), int(pos[1])), 3)
+
+class TrailSprite(Sprite):
+    def __init__(self, agent, size=5):
+        super().__init__()
+        self.image = pygame.Surface((width, height), pygame.SRCALPHA).convert_alpha()
+        self.rect = self.image.get_rect()
+        self.agent = agent
+        self.size = size
+
+    def update(self):
+        # Clear the image
+        self.image.fill((0, 0, 0, 0))
+        # Draw the trail
+        for i, pos in enumerate(reversed(self.agent.history)):
+            color = tuple([int(c * (1 - i / len(self.agent.history))) for c in self.agent.color])
+            pygame.draw.circle(self.image, color + (100,), (int(pos[0]), int(pos[1])), self.size)
+        self.rect.topleft = (0, 0)  # Always draw on the topleft and let pygame handle the blit optimization
+
+class AgentSprite(Sprite):
+    def __init__(self, agent, size=5):
+        super().__init__()
+        self.image = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA).convert_alpha()
+        self.rect = self.image.get_rect()
+        self.agent = agent
+        self.size = size
+
+    def update(self):
+        self.agent.move()
+        # Clear the image
+        self.image.fill((0, 0, 0, 0))
+        # Draw the agent
+        pygame.draw.circle(self.image, self.agent.color, (self.size, self.size), self.size)
+        self.rect.center = (int(self.agent.position[0]), int(self.agent.position[1]))  # Update position
 
 
 class Human(Agent):
@@ -58,10 +89,13 @@ class Human(Agent):
                 desired_velocity += (self.position - position)
 
         # Limiting the maximum velocity to prevent explosion
-        desired_velocity *= 0.5 if np.linalg.norm(desired_velocity) > 1 else 1 
+        if np.linalg.norm(desired_velocity) > 1:
+            desired_velocity /= np.linalg.norm(desired_velocity)  # normalize the vector
 
-        self.acceleration = 0.05 * (desired_velocity - self.velocity)  # The rate of acceleration change
+        # The rate of acceleration change
+        self.acceleration = 0.05 * (desired_velocity - self.velocity)
 
+        # Limiting the maximum acceleration to prevent explosion
         if np.linalg.norm(self.acceleration) > 1.0:
             self.acceleration /= np.linalg.norm(self.acceleration)
 
@@ -78,10 +112,13 @@ class Zombie(Agent):
         desired_velocity += 0.01 * (closest_human.position - self.position)
 
         # Limiting the maximum velocity to prevent explosion
-        desired_velocity *= 0.5 if np.linalg.norm(desired_velocity) > 1 else 1 
+        if np.linalg.norm(desired_velocity) > 1:
+            desired_velocity /= np.linalg.norm(desired_velocity)  # normalize the vector
 
-        self.acceleration = 0.05 * (desired_velocity - self.velocity)  # The rate of acceleration change
+        # The rate of acceleration change
+        self.acceleration = 0.05 * (desired_velocity - self.velocity)
 
+        # Limiting the maximum acceleration to prevent explosion
         if np.linalg.norm(self.acceleration) > 1.0:
             self.acceleration /= np.linalg.norm(self.acceleration)
 
@@ -96,9 +133,16 @@ num_zombies = 20
 agents = [Human(np.random.randint(0, width), np.random.randint(0, height)) for _ in range(num_humans)]
 agents += [Zombie(np.random.randint(0, width), np.random.randint(0, height)) for _ in range(num_zombies)]
 
+agent_sprites = Group(AgentSprite(agent) for agent in agents)
+trail_sprites = Group(TrailSprite(agent) for agent in agents)
+
+clock = pygame.time.Clock()
+
 # Main loop
 running = True
 while running:
+    clock.tick(120)  # limit the frame rate to 60 FPS
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -110,11 +154,11 @@ while running:
     # Fit the NearestNeighbors model to the agents' positions
     positions = np.array([agent.position for agent in humans])
     velocities = np.array([agent.velocity for agent in humans])
-    nbrs = NearestNeighbors(n_neighbors=5, algorithm='ball_tree').fit(positions)
+    nbrs = NearestNeighbors(radius=20.0, algorithm='ball_tree').fit(positions)
 
     # Update agent states
     for human in humans:
-        distances, indices = nbrs.kneighbors(human.position.reshape(1, -1))
+        indices = nbrs.kneighbors(human.position.reshape(1, -1), return_distance=False)
 
         # Get positions and velocities of the neighbors
         neighbors_positions = positions[indices[0]]
@@ -127,6 +171,8 @@ while running:
         if any(np.linalg.norm(human.position - zombie.position) < 10.0 for zombie in zombies):
             agents.remove(human)
             agents.append(Zombie(human.position[0], human.position[1]))
+            agent_sprites.add(AgentSprite(agents[-1]))
+            trail_sprites.add(TrailSprite(agents[-1]))
 
     for zombie in zombies:
         zombie.update_velocity(humans)
@@ -134,8 +180,12 @@ while running:
 
     # Draw all agents
     screen.fill((0, 0, 0))
-    for agent in agents:
-        agent.draw()
+    trail_sprites.update()
+    agent_sprites.update()
+    trail_sprites.draw(screen)
+    agent_sprites.draw(screen)
+    screen.blit(pygame.font.SysFont('Arial', 20).render('Humans: {}'.format(len(humans)), False, (255, 255, 255)), (10, 10))
+    screen.blit(pygame.font.SysFont('Arial', 20).render('Zombies: {}'.format(len(zombies)), False, (255, 255, 255)), (10, 30))
     pygame.display.flip()
 
 pygame.quit()
