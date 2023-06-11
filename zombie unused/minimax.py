@@ -111,8 +111,6 @@ class ChaseEnvironment(py_environment.PyEnvironment):
         self._runner = Runner(self._init_position())
         self._chaser = Chaser(self._init_position())
         self._obstacles = [Obstacle(self._init_position()) for _ in range(num_obstacles)]
-        self._state = self._create_state()
-        self.tree_nodes = {}
 
         # Define the action distribution spec
         self._action_distribution_spec = tfp.distributions.Categorical(logits=tf.zeros((self._action_spec.maximum + 1,)))
@@ -167,8 +165,7 @@ class ChaseEnvironment(py_environment.PyEnvironment):
         if self._is_done():
             return self._reset()
 
-        best_runner_move = best_move_for_runner(self._runner, self._chaser, self, depth=5, tree_nodes=self.tree_nodes)
-        self._runner.move(best_runner_move, self.is_valid_position)
+        self._runner.move(action, self.is_valid_position)
 
         # The chaser moves towards the runner.
         self._chaser.move_towards_runner(self._runner.position, self.is_valid_position)
@@ -194,7 +191,7 @@ class ChaseEnvironment(py_environment.PyEnvironment):
             # Create runner, chaser, and obstacle rects
             self.runner_rect = pygame.Rect(0, 0, cell_size, cell_size)
             self.chaser_rect = pygame.Rect(0, 0, cell_size, cell_size)
-            self.obstacle_rects = [pygame.Rect(0, 0, cell_size, cell_size) for _ in range(num_obstacles)]
+            self.obstacle_rects = [pygame.Rect(0, 0, cell_size, cell_size) for _ in range(len(self._obstacles))]
         
         self.screen.fill((0, 0, 0))
 
@@ -222,93 +219,98 @@ class TreeNode:
         self.value = value
         self.children = []
 
-def minimax_alpha_beta(runner, chaser, environment, depth, alpha, beta, maximizing_runner, tree_nodes):
-    current_positions = (tuple(runner.position.copy()), tuple(chaser.position.copy()))
-    key = str(current_positions)  # Convert tuple to a hashable string key
+class MinimaxAlphaBeta:
+    def __init__(self, depth):
+        self.depth = depth
+        self.tree_nodes = {}
 
-    if key in tree_nodes:
-        return tree_nodes[key].value
+    def save_current_state(self, player):
+        return player.position.copy()
 
-    if depth == 0 or environment._is_done():
-        value = environment._reward()
-        tree_nodes[key] = TreeNode(current_positions, value)
-        return value
+    def restore_state(self, player, saved_position):
+        player.position = saved_position
 
-    if maximizing_runner:
+    def get_move_and_new_position(self, player, environment):
+        for direction, new_position in player.possible_moves(environment.is_valid_position):
+            saved_position = self.save_current_state(player)
+            player.position = new_position
+            yield direction, new_position, saved_position
+
+    def process_maximizing_player(self, runner, chaser, environment, depth, alpha, beta, tree_nodes):
         max_value = -float('inf')
-
-        # Reorder moves based on a heuristic for move ordering
-        moves = runner.possible_moves(environment.is_valid_position)
-        ordered_moves = prioritize_moves(runner, chaser, environment, moves)
-
-        for _, new_position in ordered_moves:
-            saved_position = runner.position.copy()
-            runner.position = new_position
-            value = minimax_alpha_beta(runner, chaser, environment, depth - 1, alpha, beta, False, tree_nodes)
-            runner.position = saved_position
+        for _, new_position, saved_position in self.get_move_and_new_position(runner, environment):
+            value = self.minimax_alpha_beta(runner, chaser, environment, depth - 1, alpha, beta, False, tree_nodes)
+            self.restore_state(runner, saved_position)
             max_value = max(max_value, value)
             alpha = max(alpha, max_value)
             if beta <= alpha:
                 break
-
-        tree_nodes[key] = TreeNode(current_positions, max_value)
         return max_value
-    else:
+
+    def process_minimizing_player(self, runner, chaser, environment, depth, alpha, beta, tree_nodes):
         min_value = float('inf')
-
-        # Reorder moves based on a heuristic for move ordering
-        moves = chaser.possible_moves(environment.is_valid_position)
-        ordered_moves = prioritize_moves(runner, chaser, environment, moves)
-
-        for _, new_position in ordered_moves:
-            saved_position = chaser.position.copy()
-            chaser.position = new_position
-            value = minimax_alpha_beta(runner, chaser, environment, depth - 1, alpha, beta, True, tree_nodes)
-            chaser.position = saved_position
+        for _, new_position, saved_position in self.get_move_and_new_position(chaser, environment):
+            value = self.minimax_alpha_beta(runner, chaser, environment, depth - 1, alpha, beta, True, tree_nodes)
+            self.restore_state(chaser, saved_position)
             min_value = min(min_value, value)
             beta = min(beta, min_value)
             if beta <= alpha:
                 break
-
-        tree_nodes[key] = TreeNode(current_positions, min_value)
         return min_value
 
-def prioritize_moves(runner, chaser, environment, moves):
-    ordered_moves = []
+    def minimax_alpha_beta(self, runner, chaser, environment, depth, alpha, beta, maximizing_runner, tree_nodes):
+        current_positions = (tuple(runner.position.copy()), tuple(chaser.position.copy()))
+        key = str(current_positions)  # Convert tuple to a hashable string key
 
-    for _, move in moves:
-        distance = np.linalg.norm(move - chaser.position)
-        ordered_moves.append((distance, move))
+        if key in tree_nodes:
+            return tree_nodes[key].value
 
-    ordered_moves.sort(key=lambda x: x[0], reverse=True)
+        if depth == 0 or environment._is_done():
+            value = environment._reward()
+            tree_nodes[key] = TreeNode(current_positions, value)
+            return value
 
-    return ordered_moves
+        if maximizing_runner:
+            value = self.process_maximizing_player(runner, chaser, environment, depth, alpha, beta, tree_nodes)
+        else:
+            value = self.process_minimizing_player(runner, chaser, environment, depth, alpha, beta, tree_nodes)
 
-def best_move_for_runner(runner, chaser, environment, depth, tree_nodes):
-    max_value = -float('inf')
-    best_move = None
-    for direction, new_position in runner.possible_moves(environment.is_valid_position):
-        saved_position = runner.position.copy()
-        runner.position = new_position
-        value = minimax_alpha_beta(runner, chaser, environment, depth - 1, -float('inf'), float('inf'), False, tree_nodes)
-        runner.position = saved_position
-        if value > max_value:
-            max_value = value
-            best_move = direction
-    return best_move
+        tree_nodes[key] = TreeNode(current_positions, value)
+        return value
 
-def best_move_for_chaser(runner, chaser, environment, depth, tree_nodes):
-    min_value = float('inf')
-    best_move = None
-    for direction, new_position in chaser.possible_moves(environment.is_valid_position):
-        saved_position = chaser.position.copy()
-        chaser.position = new_position
-        value = minimax_alpha_beta(runner, chaser, environment, depth - 1, -float('inf'), float('inf'), True, tree_nodes)
-        chaser.position = saved_position
-        if value < min_value:
-            min_value = value
-            best_move = direction
-    return best_move
+    # Prioritize moves method remains the same
+    def prioritize_moves(self, runner, chaser, environment, moves):
+        ordered_moves = []
+
+        for _, move in moves:
+            distance = np.linalg.norm(move - chaser.position)
+            ordered_moves.append((distance, move))
+
+        ordered_moves.sort(key=lambda x: x[0], reverse=True)
+
+        return ordered_moves
+
+    def best_move_for_runner(self, runner, chaser, environment, depth, tree_nodes):
+        max_value = -float('inf')
+        best_move = None
+        for direction, new_position, saved_position in self.get_move_and_new_position(runner, environment):
+            value = self.minimax_alpha_beta(runner, chaser, environment, depth - 1, -float('inf'), float('inf'), False, tree_nodes)
+            self.restore_state(runner, saved_position)
+            if value > max_value:
+                max_value = value
+                best_move = direction
+        return best_move
+
+    def best_move_for_chaser(self, runner, chaser, environment, depth, tree_nodes):
+        min_value = float('inf')
+        best_move = None
+        for direction, new_position, saved_position in self.get_move_and_new_position(chaser, environment):
+            value = self.minimax_alpha_beta(runner, chaser, environment, depth - 1, -float('inf'), float('inf'), True, tree_nodes)
+            self.restore_state(chaser, saved_position)
+            if value < min_value:
+                min_value = value
+                best_move = direction
+        return best_move
 
 
 class Node:
@@ -338,7 +340,7 @@ class Node:
     
         def select_leaf_node(self):
             while not self.is_terminal():
-                self.select_best_child()
+                self = self.select_best_child()
             return self
         
         def select_best_child(self):
@@ -353,10 +355,13 @@ class Node:
         
         def get_num_visits(self):
             num_visits = 0
-            while self is not None:
+            temp_node = self
+            while temp_node is not None:
                 num_visits += 1
-                self = self.parent
+                temp_node = temp_node.parent
             return num_visits
+
+
 
 class MCTS():
 
@@ -469,7 +474,7 @@ class MCTSChaseAgent():
         self.tree = Node()
 
         # Initialize the neural network.
-        self.model = create_neural_network((grid_size, grid_size, 2), 4) # with policy and value heads
+        self.model = create_neural_network((grid_size, grid_size, 3), 4) # with policy and value heads
 
         # Initialize the hyperparameters.
         self.epsilon = 0.1
@@ -496,7 +501,7 @@ class MCTSChaseAgent():
         reward = self._simulate_game(node)
 
         # Backpropagate the reward to the tree.
-        self._backpropagate(node, reward)
+        self._backpropagate(node, state, reward)
 
         return reward
 
@@ -506,7 +511,7 @@ class MCTSChaseAgent():
             return node.reward
 
         # Select the next action according to the policy network.
-        action_probs, _ = self.model.predict(np.array([node.state]))
+        action_probs, value = self.model.predict(np.array([node.state]))
         action = np.argmax(action_probs[0])
 
         # Simulate the next state and reward.
@@ -516,35 +521,37 @@ class MCTSChaseAgent():
         return next_state, reward
 
     def _backpropagate(self, node, reward):
-        # Update the node's reward.
         node.reward += reward
-
-        # If the node is not the root, backpropagate.
         if node.parent is not None:
             self._backpropagate(node.parent, reward)
 
-num_obstacles = 5
-grid_size = 10
-env = ChaseEnvironment(grid_size, num_obstacles)
+
+env = ChaseEnvironment(grid_size=8, num_obstacles=5)
 env.reset()
 env._render()
 
-# Create the MCTS agent.
-mcts = MCTSChaseAgent(grid_size=grid_size, num_iterations=10)
+# Create the agent.
+agent = MinimaxAlphaBeta(depth=3)
+# agent = MCTSChaseAgent(grid_size=grid_size, num_iterations=10)
 
 # Run the environment
-num_episodes = 10
+pygame.init()
+running = True
+num_episodes = 2
 for _ in range(num_episodes):
     time_step = env.reset()
-    while not time_step.is_last():
-        # use minimax to find the best move for the runner
-        # best_runner_move = best_move_for_runner(env._runner, env._chaser, env, depth=5, tree_nodes=env.tree_nodes)
-        best_runner_move = mcts.act(env._state)
+    while not time_step.is_last() and running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        best_runner_move = agent.best_move_for_runner(env._runner, env._chaser, env, agent.depth, agent.tree_nodes)
+        # best_runner_move = agent.act(env._state)
         time_step = env.step(best_runner_move)
         env._render()
         pygame.time.delay(500)
     print('Episode ended! Reward: {}'.format(time_step.reward))
-    pygame.time.delay(1000)
+    pygame.time.delay(100)
 pygame.quit()
 
 
