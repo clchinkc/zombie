@@ -35,6 +35,17 @@ from tf_agents.environments import py_environment
 from tf_agents.specs import array_spec
 from tf_agents.trajectories import time_step as ts
 
+import math
+import random
+
+import numpy as np
+import pygame
+import tensorflow as tf
+import tensorflow_probability as tfp
+from keras import layers, models, optimizers
+from tf_agents.environments import py_environment
+from tf_agents.specs import array_spec
+from tf_agents.trajectories import time_step as ts
 
 class Runner:
     def __init__(self, position):
@@ -138,6 +149,17 @@ class ChaseEnvironment(py_environment.PyEnvironment):
 
         return is_inside_grid and not_occupied
 
+    def get_current_state(self):
+        return self._state
+
+    def _set_state(self, state):
+        self._runner.position = np.array(np.where(state[:, :, 0] == 1.)).flatten()
+        self._chaser.position = np.array(np.where(state[:, :, 1] == 1.)).flatten()
+        self._obstacles = []
+        for i in range(2, state.shape[2]):
+            self._obstacles.append(Obstacle(np.array(np.where(state[:, :, i] == 1.)).flatten()))
+        self._state = state
+
     def _create_state(self):
         state = np.zeros((self._grid_size, self._grid_size, 3), dtype=np.float32)
         state[tuple(self._runner.position), 0] = 1.
@@ -212,6 +234,13 @@ class ChaseEnvironment(py_environment.PyEnvironment):
 
         pygame.display.flip()
 
+    def copy(self):
+        env = ChaseEnvironment(self._grid_size, len(self._obstacles))
+        env._runner.position = self._runner.position.copy()
+        env._chaser.position = self._chaser.position.copy()
+        for i, obstacle in enumerate(self._obstacles):
+            env._obstacles[i].position = obstacle.position.copy()
+        return env
 
 class TreeNode:
     def __init__(self, positions, value=None):
@@ -219,7 +248,7 @@ class TreeNode:
         self.value = value
         self.children = []
 
-class MinimaxAlphaBeta:
+class MinimaxAlphaBetaAgent:
     def __init__(self, depth):
         self.depth = depth
         self.tree_nodes = {}
@@ -312,110 +341,78 @@ class MinimaxAlphaBeta:
                 best_move = direction
         return best_move
 
+class MCTSNode:
+    def __init__(self, state, parent=None, reward=0, num_visits=0):
+        self.state = state
+        self.parent = parent
+        self.reward = reward
+        self.num_visits = num_visits
+        self.children = {}
 
-class Node:
-    
-        def __init__(self, parent=None, action=None, reward=0):
-            self.parent = parent
-            self.action = action
-            self.reward = reward
-            self.children = []
-    
-        def expand(self):
-            new_node = Node(parent=self)
-            self.children.append(new_node)
-            return new_node
-    
-        def is_terminal(self):
-            return len(self.children) == 0
-    
-        def select_best_action(self):
-            best_action = None
-            best_reward = float('-inf')
-            for child in self.children:
-                if child.reward > best_reward:
-                    best_reward = child.reward
-                    best_action = child.action
-            return best_action
-    
-        def select_leaf_node(self):
-            while not self.is_terminal():
-                self = self.select_best_child()
-            return self
-        
-        def select_best_child(self):
-            best_child = None
-            best_score = float('-inf')
-            for child in self.children:
-                score = child.reward + math.sqrt(2 * math.log(self.get_num_visits()) / 1 + child.get_num_visits())
-                if score > best_score:
-                    best_score = score
-                    best_child = child
-            return best_child
-        
-        def get_num_visits(self):
-            num_visits = 0
-            temp_node = self
-            while temp_node is not None:
-                num_visits += 1
-                temp_node = temp_node.parent
-            return num_visits
+class MCTSAgent:
+    def __init__(self, num_simulations=1000, exploration_weight=1.):
+        self.num_simulations = num_simulations
+        self.exploration_weight = exploration_weight
 
+    def uct_value(self, parent_visit, child_reward, child_visit):
+        # Calculate the UCT value
+        return child_reward / (child_visit + 1e-5) + self.exploration_weight * \
+               np.sqrt(np.log(parent_visit + 1) / (child_visit + 1e-5))
 
+    def select_node(self, node):
+        # Select the node with the highest UCT value
+        best_node = max(node.children.items(), 
+                        key=lambda item: self.uct_value(node.num_visits, item[1].reward, item[1].num_visits))
 
-class MCTS():
+        return best_node
 
-    def __init__(self, num_iterations=1000, c=1.0):
-        self.num_iterations = num_iterations
-        self.c = c
+    def expand_node(self, node, action):
+        # Expand the node with the given action
+        new_state = node.state.copy()
+        new_state._step(action)
+        child_node = MCTSNode(new_state, parent=node)
+        node.children[action] = child_node
+        return child_node
 
-        # Initialize the MCTS tree.
-        self.tree = Node()
+    def simulate(self, node):
+        # Simulate a random game from the given node until a terminal state is reached
+        while not node.state._is_done():
+            action = self.get_random_action(node)
+            node = self.expand_node(node, action)
+        return node.state._reward()
 
-    def act(self, state):
-        # Perform MCTS.
-        for _ in range(self.num_iterations):
-            reward = self._select_expand_and_simulate(state)
+    def backpropagate(self, node, reward):
+        # Update the current node and all its ancestors with the result of the simulation
+        node.num_visits += 1
+        node.reward += reward
+        if node.parent is not None:
+            self.backpropagate(node.parent, reward)
 
-        # Select the best action according to the tree.
-        best_action = self.tree.select_best_action()
+    def get_random_action(self, node):
+        possible_moves = node.state._runner.possible_moves(node.state.is_valid_position)
+        direction = list(zip(*possible_moves))[0]
+        return np.random.choice(direction)
 
-        return best_action
+    def get_best_action(self, root):
+        # Return the action leading to the child with the highest number of visits
+        return max(root.children.items(), key=lambda item: item[1].num_visits)[0]
 
-    def _select_expand_and_simulate(self, state):
-        # Select a leaf node.
-        node = self.tree.select_leaf_node()
+    def plan(self, state):
+        # Create the root node
+        root = MCTSNode(state.copy())
 
-        # Expand the node.
-        if not node.is_terminal():
-            node = node.expand()
+        # Perform MCTS
+        for _ in range(self.num_simulations):
+            node = root
+            while node.children:
+                _, node = self.select_node(node)
+            if not node.state._is_done():
+                node = self.expand_node(node, self.get_random_action(node))
+            reward = self.simulate(node)
+            self.backpropagate(node, reward)
 
-        # Simulate a game from the node.
-        reward = self._simulate_game(node)
-
-        # Backpropagate the reward to the tree.
-        self._backpropagate(node, reward)
-
-        return reward
-
-    def _simulate_game(self, node):
-        # If the game is over, return the reward.
-        if node.is_terminal():
-            return node.reward
-
-        # Select the next action according to the tree.
-        action = node.select_best_action()
-
-        # Simulate the next state and reward.
-        next_state, reward = self._simulate_game(node.children[action])
-
-        # Return the reward from the simulation.
-        return reward
-
-    def _backpropagate(self, node, reward):
-        while node is not None:
-            node.reward += reward * self.c
-            node = node.parent
+        # Return the best action
+        return self.get_best_action(root)
 
 
 # Define the neural network architecture
@@ -463,81 +460,136 @@ def create_neural_network(input_shape, num_actions):
 
     return model
 
+class ResidualBlock(tf.keras.Model):
+    def __init__(self, filters):
+        super().__init__()
+        self.conv1 = layers.Conv2D(filters, 3, padding="same")
+        self.bn1 = layers.BatchNormalization()
+        self.relu1 = layers.Activation("relu")
 
-class MCTSChaseAgent():
+        self.conv2 = layers.Conv2D(filters, 3, padding="same")
+        self.bn2 = layers.BatchNormalization()
+        self.add = layers.Add()
+        self.relu2 = layers.Activation("relu")
 
-    def __init__(self, grid_size, num_iterations=1000, c=1.0):
-        self.num_iterations = num_iterations
-        self.c = c
+    def call(self, inputs):
+        x = self.conv1(inputs)
+        x = self.bn1(x)
+        x = self.relu1(x)
+        shortcut = x
 
-        # Initialize the MCTS tree.
-        self.tree = Node()
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.add([shortcut, x])
+        x = self.relu2(x)
+        return x
+    
+class AlphaZeroNetwork(tf.keras.Model):
+    def __init__(self, input_shape, num_actions):
+        super().__init__()
 
-        # Initialize the neural network.
-        self.model = create_neural_network((grid_size, grid_size, 3), 4) # with policy and value heads
+        self.input_layer = layers.InputLayer(input_shape=input_shape)
 
-        # Initialize the hyperparameters.
-        self.epsilon = 0.1
+        self.initial_conv = tf.keras.Sequential([
+            layers.Conv2D(128, 3, padding="same"),
+            layers.BatchNormalization(),
+            layers.Activation("relu")
+        ])
 
-    def act(self, state):
-        # Perform MCTS.
-        for _ in range(self.num_iterations):
-            reward = self._select_expand_and_simulate(state)
+        self.block1 = ResidualBlock(128)
+        self.block2 = ResidualBlock(128)
 
-        # Select the best action according to the tree.
-        best_action = self.tree.select_best_action()
+        # policy head
+        self.policy_head = tf.keras.Sequential([
+            layers.Conv2D(2, 1, padding="same", activation="relu"),
+            layers.BatchNormalization(),
+            layers.Flatten(),
+            layers.Dense(num_actions, activation="softmax")
+        ])
 
-        return best_action
+        # value head
+        self.value_head = tf.keras.Sequential([
+            layers.Conv2D(1, 1, padding="same", activation="relu"),
+            layers.BatchNormalization(),
+            layers.Flatten(),
+            layers.Dense(128, activation="relu"),
+            layers.Dense(1, activation="tanh")
+        ])
 
-    def _select_expand_and_simulate(self, state):
-        # Select a leaf node.
-        node = self.tree.select_leaf_node()
+        self.compile_model()
 
-        # Expand the node.
-        if not node.is_terminal():
-            node = node.expand()
+    def call(self, inputs):
+        x = self.input_layer(inputs)
+        x = self.initial_conv(x)
+        x = self.block1(x)
+        x = self.block2(x)
 
-        # Simulate a game from the node.
-        reward = self._simulate_game(node)
+        policy = self.policy_head(x)
+        value = self.value_head(x)
 
-        # Backpropagate the reward to the tree.
-        self._backpropagate(node, state, reward)
+        return policy, value
 
-        return reward
+    def compile_model(self):
+        self.compile(optimizer=optimizers.Adam(learning_rate=0.001),
+                     loss=['categorical_crossentropy', 'mse'],
+                     loss_weights=[1.0, 1.0])
 
-    def _simulate_game(self, node):
-        # If the game is over, return the reward.
-        if node.is_terminal():
-            return node.reward
+class AlphaZeroAgent:
+    def __init__(self, grid_size, num_actions, num_simulations=1000, exploration_weight=1.):
+        self.network = AlphaZeroNetwork(grid_size, num_actions)
+        self.num_simulations = num_simulations
+        self.exploration_weight = exploration_weight
+        self.mcts_agent = MCTSAgent(num_simulations, exploration_weight)
 
-        # Select the next action according to the policy network.
-        action_probs, value = self.model.predict(np.array([node.state]))
-        action = np.argmax(action_probs[0])
+    def get_action(self, state):
+        # Plan the action using MCTS
+        action = self.mcts_agent.plan(state)
 
-        # Simulate the next state and reward.
-        next_state, reward = self._simulate_game(node.children[action])
+        # Get the network's prediction
+        state_tensor = tf.convert_to_tensor(state._create_state())
+        policy, value = self.network(state_tensor[None, ...])
+        network_action = np.argmax(policy)
 
-        # Return the next state and reward.
-        return next_state, reward
+        # Balance between the network's prediction and MCTS
+        action = network_action if np.random.uniform() < 0.5 else action
+        return action
 
-    def _backpropagate(self, node, reward):
-        node.reward += reward
-        if node.parent is not None:
-            self._backpropagate(node.parent, reward)
+    def train(self, state, action, reward):
+        # Convert to tensors
+        state_tensor = tf.convert_to_tensor(state)
+        action_tensor = tf.convert_to_tensor(action)
+        reward_tensor = tf.convert_to_tensor(reward)
+
+        # Calculate loss
+        with tf.GradientTape() as tape:
+            policy, value = self.network(state_tensor[None, ...])
+            policy_loss = tf.keras.losses.sparse_categorical_crossentropy(action_tensor[None, ...], policy)
+            value_loss = tf.keras.losses.mean_squared_error(reward_tensor[None, ...], value)
+            loss = policy_loss + value_loss
+
+        # Get gradients
+        gradients = tape.gradient(loss, self.network.trainable_variables)
+
+        # Create optimizer
+        optimizer = tf.keras.optimizers.Adam()
+
+        # Apply gradients
+        optimizer.apply_gradients(zip(gradients, self.network.trainable_variables))
 
 
 env = ChaseEnvironment(grid_size=8, num_obstacles=5)
 env.reset()
 env._render()
 
-# Create the agent.
-agent = MinimaxAlphaBeta(depth=3)
-# agent = MCTSChaseAgent(grid_size=grid_size, num_iterations=10)
+# Create the agent
+# agent = MinimaxAlphaBeta(depth=3)
+# agent = MCTSAgent(num_simulations=10)
+agent = AlphaZeroAgent(grid_size=8, num_actions=4, num_simulations=10)
 
 # Run the environment
 pygame.init()
 running = True
-num_episodes = 2
+num_episodes = 10
 for _ in range(num_episodes):
     time_step = env.reset()
     while not time_step.is_last() and running:
@@ -545,8 +597,8 @@ for _ in range(num_episodes):
             if event.type == pygame.QUIT:
                 running = False
 
-        best_runner_move = agent.best_move_for_runner(env._runner, env._chaser, env, agent.depth, agent.tree_nodes)
-        # best_runner_move = agent.act(env._state)
+        # best_runner_move = agent.best_move_for_runner(env._runner, env._chaser, env, agent.depth, agent.tree_nodes)
+        best_runner_move = agent.get_action(env)
         time_step = env.step(best_runner_move)
         env._render()
         pygame.time.delay(500)
@@ -555,4 +607,18 @@ for _ in range(num_episodes):
 pygame.quit()
 
 
+"""
+The code implementation for AlphaZero and Monte Carlo Tree Search (MCTS) seems conceptually correct in structure. However, there are a few things missing or potentially wrong in the implementation:
 
+1. The `AlphaZeroAgent`'s `train` method should ideally be updated to account for batches of experiences rather than single instances for more effective training. Reinforcement learning typically benefits from experience replay, where the agent trains on batches of previous experiences.
+
+2. In the `AlphaZeroAgent`'s `train` method, it seems that the gradients are calculated based on a single example (`state`). However, the `state` passed in the `train` function should ideally be a batch of states from the replay buffer. It would be beneficial to check that this is the case in the calling code.
+
+3. In the AlphaZero paper, the MCTS uses the policy output of the network to guide the exploration process, but in your code, the `MCTSAgent` uses a uniform random policy. The `plan` method should ideally use the output of the neural network policy to guide the tree expansion.
+
+4. In the `AlphaZeroAgent`'s `get_action` method, you are mixing actions between MCTS and the policy network randomly. However, it's supposed to be MCTS that uses the policy network's output for more informed exploration, and finally, the action is selected based on MCTS output.
+
+5. It would be ideal to separate the concerns of the agent and environment. The `MCTSAgent` and `AlphaZeroAgent` should not directly manipulate the state of the environment. They should return actions, and the environment should change its state based on those actions.
+
+6. Training the `AlphaZeroNetwork` could potentially benefit from including an entropy term to encourage exploration. In your current implementation, it doesn't look like you're using entropy in your loss function.
+"""
