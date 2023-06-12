@@ -24,7 +24,6 @@ Monte Carlo methods can be computationally efficient and offer good performance 
 In summary, minimax is a deterministic approach that explores all possible moves to find the optimal solution in games with perfect information, while Monte Carlo methods, such as MCTS, rely on random sampling to estimate move values and are often used in games with stochastic elements or incomplete information.
 """
 
-import math
 
 import numpy as np
 import pygame
@@ -35,17 +34,6 @@ from tf_agents.environments import py_environment
 from tf_agents.specs import array_spec
 from tf_agents.trajectories import time_step as ts
 
-import math
-import random
-
-import numpy as np
-import pygame
-import tensorflow as tf
-import tensorflow_probability as tfp
-from keras import layers, models, optimizers
-from tf_agents.environments import py_environment
-from tf_agents.specs import array_spec
-from tf_agents.trajectories import time_step as ts
 
 class Runner:
     def __init__(self, position):
