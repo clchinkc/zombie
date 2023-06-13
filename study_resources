@@ -194,7 +194,7 @@ https://github.com/microsoft/AI-For-Beginners
 https://github.com/google-research/tuning_playbook
 
 Chart animation
-https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247486653&idx=1&sn=92128455c20ada46b355f5166ba5d4b5
+
 https://github.com/dexplo/bar_chart_race
 https://www.dunderdata.com/blog/create-a-bar-chart-race-animation-in-python-with-matplotlib
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247490218&idx=1&sn=19f061116f4939038b90aa18085505ad&chksm=fdcb2d8ccabca49ab88171cb16d641cc059506a5646766a5bc24ee0910140b92d4902aa8057c&scene=21#wechat_redirect
@@ -384,7 +384,6 @@ http://people.eecs.berkeley.edu/~pabbeel/nips-tutorial-policy-optimization-Schul
 finrl
 gym
 https://github.com/Farama-Foundation/Gymnasium
-PettingZoo
 https://github.com/openai/safety-gym
 https://github.com/deepmind/dm_control
 https://google.github.io/dopamine/
@@ -421,6 +420,7 @@ https://towardsdatascience.com/hyperbolic-deep-reinforcement-learning-b2de787cf2
 
 
 Multiagent Reinforcement Learning
+https://pettingzoo.farama.org/
 https://arxiv.org/abs/1711.02301
 https://arxiv.org/abs/1711.00832
 https://arxiv.org/abs/1511.06342
