@@ -183,6 +183,7 @@ https://github.com/ceobillionaire/WHAT-AI-CAN-DO-FOR-YOU
 深入理解計算機系統
 Unit Testing, Principles, Practices, and Patterns
 Essential Math for AI
+https://ywh1bkansf.feishu.cn/wiki/QPe5w5g7UisbEkkow8XcDmOpn8e
 
 Courses
 史丹福 cs230
@@ -192,14 +193,25 @@ https://github.com/jwasham/coding-interview-university
 https://microsoft.github.io/AI-For-Beginners/
 https://github.com/microsoft/AI-For-Beginners
 https://github.com/google-research/tuning_playbook
+Google Generative AI learning
+Microsoft Artificial Intelligence for Beginners
+Lightning AI Deep Learning Fundamentals
+MIT introtodeeplearning dot com
+UC Berkeley Designing, Visualizing and Understanding Deep Neural Networks
+Cornell Tech CS Introduction to Data Science
+Learn Prompting：learnpromptingdotorg
+Elements of AI：elementsofaidotcom
+IBM Courseradotorg IBM Applied AI
+atcold.githubdotio/pytorch-Deep-Learning/
+
 
 Chart animation
-
 https://github.com/dexplo/bar_chart_race
 https://www.dunderdata.com/blog/create-a-bar-chart-race-animation-in-python-with-matplotlib
-https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247490218&idx=1&sn=19f061116f4939038b90aa18085505ad&chksm=fdcb2d8ccabca49ab88171cb16d641cc059506a5646766a5bc24ee0910140b92d4902aa8057c&scene=21#wechat_redirect
 https://igoamazing.com/python-plotly/
+https://github.com/JackMcKew/pandas_alive
 https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247500033&idx=1&sn=79acaead7ea5106b9280ee7d65efc97a&chksm=fdc8f627cabf7f31e5aed380b11c535e3e54860e3800e341bb64099ad08828d3c16a859ced0a&scene=21#wechat_redirect
+https://github.com/imageio/imageio
 https://www.linkedin.com/feed/update/urn:li:activity:7032712854961045504/?utm_source=share&utm_medium=member_android
 
 Data visualization
@@ -417,7 +429,8 @@ https://github.com/openai/retro
 https://github.com/unixpickle/muniverse
 https://github.com/unixpickle/demoverse
 https://towardsdatascience.com/hyperbolic-deep-reinforcement-learning-b2de787cf2f7
-
+https://github.com/deepmind/alphadev
+https://www.marktechpost.com/2023/06/12/superhuman-performance-on-the-atari-100k-benchmark-the-power-of-bbf-a-new-value-based-rl-agent-from-google-deepmind-mila-and-universite-de-montreal/
 
 Multiagent Reinforcement Learning
 https://pettingzoo.farama.org/
@@ -503,6 +516,7 @@ https://www.youtube.com/watch?v=m8Icp_Cid5o&list=WL&index=106&pp=gAQBiAQB
 https://dev.to/javinpaul/my-favorite-free-courses-to-learn-design-patterns-in-depth-5dp5
 https://www.milanjovanovic.tech/blog/visualize-your-software-architecture-with-the-c4-model
 http://modernescpp.com/index.php/category/patterns
+https://zh.wikipedia.org/zh-hk/%E7%BB%93%E6%9E%84%E5%8C%96%E5%88%86%E6%9E%90
 
 data structure
 https://www.youtube.com/playlist?list=PLUl4u3cNGP61Oq3tWYp6V_F-5jb5L2iHb
@@ -932,6 +946,8 @@ https://github.com/nomic-ai/gpt4all
 https://github.com/ggerganov/ggml
 https://github.com/xtekky/gpt4free
 https://icloudnative.io/posts/completely-free-to-use-gpt4/
+https://www.51cto.com/article/756751.html
+https://arxiv.org/abs/2305.16334
 
 Openai API project
 https://arxiv.org/pdf/2304.03442.pdf
@@ -992,6 +1008,10 @@ https://github.com/gventuri/pandas-ai
 https://community.openai.com/t/i-built-an-llm-powered-tool-that-can-comprehend-any-website-structure-and-extract-the-desired-data-in-the-preferred-format/40987
 https://towardsdatascience.com/how-i-turned-my-companys-docs-into-a-searchable-database-with-openai-4f2d34bd8736
 https://github.com/goldboy225/Awesome-AI-One-Click-Deployment
+https://github.com/microsoft/JARVIS
+https://github.com/LAION-AI/Open-Assistant
+https://huggingface.co/tiiuae/falcon-7b-instruct
+https://github.com/billxbf/ReWOO
 
 bard api
 https://github.com/dsdanielpark/Bard-API
