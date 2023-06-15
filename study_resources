@@ -131,7 +131,6 @@ https://github.com/vicky002/1000_Projects
 https://www.crio.do/blog/python-projects-for-developers/
 Django 搭建简易博客
 Flask 开发轻博客
-https://github.com/zky001/fluent-python-translate
 https://zhuanlan.zhihu.com/p/95526617
 https://www.analyticsinsight.net/top-10-python-data-science-courses-and-boot-camps-to-know-in-2023/
 https://medium.com/pipeline-a-data-engineering-resource/creating-the-dashboard-that-got-me-a-data-analyst-job-offer-de3f0d6b1771
@@ -142,9 +141,6 @@ https://www.projectpro.io/projects/data-science-projects
 https://builtin.com/data-science/data-science-projects
 https://data-flair.training/blogs/data-science-project-ideas/
 https://www.interviewbit.com/blog/data-science-projects/
-https://www.coursera.org/search?topic=Data%20Science&index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlA3hcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
-https://www.coursera.org/search?index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&topic=Computer%20Science&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlFRRcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
-https://www.coursera.org/search?index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&topic=Business&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlFRRcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
 https://github.com/kiteco/python-youtube-code
 https://www.programcreek.com/python/?action=search_project
 tk text editor add textblob and pyspellchecker spellcheck, add autocomplete, add nltk sentiment analysis
@@ -185,7 +181,7 @@ Unit Testing, Principles, Practices, and Patterns
 Essential Math for AI
 https://ywh1bkansf.feishu.cn/wiki/QPe5w5g7UisbEkkow8XcDmOpn8e
 
-Courses
+Must learn courses
 史丹福 cs230
 https://www.newmobilelife.com/2023/06/08/google-11-free-ai-courses/
 https://coding-interview.kalan.dev/
@@ -194,6 +190,7 @@ https://microsoft.github.io/AI-For-Beginners/
 https://github.com/microsoft/AI-For-Beginners
 https://github.com/google-research/tuning_playbook
 Google Generative AI learning
+https://www.cloudskillsboost.google/journeys
 Microsoft Artificial Intelligence for Beginners
 Lightning AI Deep Learning Fundamentals
 MIT introtodeeplearning dot com
@@ -203,7 +200,7 @@ Learn Prompting：learnpromptingdotorg
 Elements of AI：elementsofaidotcom
 IBM Courseradotorg IBM Applied AI
 atcold.githubdotio/pytorch-Deep-Learning/
-
+https://github.com/mtdvio/every-programmer-should-know
 
 Chart animation
 https://github.com/dexplo/bar_chart_race
@@ -517,6 +514,7 @@ https://dev.to/javinpaul/my-favorite-free-courses-to-learn-design-patterns-in-de
 https://www.milanjovanovic.tech/blog/visualize-your-software-architecture-with-the-c4-model
 http://modernescpp.com/index.php/category/patterns
 https://zh.wikipedia.org/zh-hk/%E7%BB%93%E6%9E%84%E5%8C%96%E5%88%86%E6%9E%90
+https://github.com/zky001/fluent-python-translate
 
 data structure
 https://www.youtube.com/playlist?list=PLUl4u3cNGP61Oq3tWYp6V_F-5jb5L2iHb
@@ -560,6 +558,12 @@ https://www.youtube.com/watch?v=NI5IGAim8XU
 pytest vs unittest
 https://myapollo.com.tw/zh-tw/7-useful-pytest-plugins/
 patch
+
+git control
+https://learngitbranching.js.org/?locale=zh_TW
+https://github.com/pcottle/learnGitBranching
+https://github.com/k88hudson/git-flight-rules
+https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow
 
 Great repo
 free programming books
@@ -945,6 +949,7 @@ https://hazyresearch.stanford.edu/blog/2023-03-07-hyena
 https://github.com/nomic-ai/gpt4all
 https://github.com/ggerganov/ggml
 https://github.com/xtekky/gpt4free
+https://github.com/pengzhile/pandora
 https://icloudnative.io/posts/completely-free-to-use-gpt4/
 https://www.51cto.com/article/756751.html
 https://arxiv.org/abs/2305.16334
@@ -970,6 +975,7 @@ https://github.com/yoheinakajima/babyagi
 https://yoheinakajima.com/task-driven-autonomous-agent-utilizing-gpt-4-pinecone-and-langchain-for-diverse-applications/
 https://python.langchain.com/en/latest/use_cases/agents/baby_agi_with_agent.html
 https://python.langchain.com/en/latest/use_cases/agents/baby_agi.html
+https://github.com/vicuna-tools/vicuna-installation-guide
 https://github.com/alaeddine-13/thinkgpt#replay-agent-memory-and-infer-new-observations
 https://python.langchain.com/en/latest/modules/indexes/retrievers/examples/time_weighted_vectorstore.html
 https://github.com/logspace-ai/langflow
@@ -1012,6 +1018,8 @@ https://github.com/microsoft/JARVIS
 https://github.com/LAION-AI/Open-Assistant
 https://huggingface.co/tiiuae/falcon-7b-instruct
 https://github.com/billxbf/ReWOO
+https://twitter.com/Barret_China/status/1666459451195359233?t=5fb3rOpG1AU2MKPHYIQ3Fg&s=08
+https://huggingface.co/spaces/HuggingFaceH4/falcon-chat
 
 bard api
 https://github.com/dsdanielpark/Bard-API
@@ -1228,6 +1236,7 @@ https://datascience.fm/mega-guide-to-pandas-data-frame-for-data-scientists/
 https://www.cs.toronto.edu/~delve/data/boston/bostonDetail.html
 http://archive.ics.uci.edu/ml/datasets/turkiye+student+evaluation
 https://iamholumeedey007.medium.com/build-your-first-data-science-project-from-your-netflix-data-ba3f89ce83e
+https://towardsdatascience.com/building-interactive-data-visualizations-with-python-the-art-of-storytelling-ceb43db67488
 
 Data visualization
 https://github.com/tinahuangyt/Matplotlib_Pymaceuticals
@@ -1503,6 +1512,9 @@ https://www.datacamp.com/tracks/data-visualization-with-python
 https://www.udacity.com/course/data-analysis-and-visualization--ud404
 https://www.udemy.com/course/mastering-python-data-handling-analysis-and-visualization/
 https://www.udacity.com/course/programming-for-data-science-nanodegree--nd104
+https://www.coursera.org/search?topic=Data%20Science&index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlA3hcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
+https://www.coursera.org/search?index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&topic=Computer%20Science&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlFRRcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
+https://www.coursera.org/search?index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&topic=Business&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlFRRcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
 
 AI For Business
 https://www.coursera.org/specializations/ai-for-business-wharton
