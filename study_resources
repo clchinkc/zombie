@@ -80,9 +80,6 @@ Content writing is one of the most prolific online businesses. The market lacks 
 Expense Tracker
 As you can guess by the name, an expense tracker is a software application that lets you keep track of your expenses, and even analyze the expenses. In this python project, you will build a simple expense tracker that can keep track of the user’s expenses. Expense tracker is one of the trending python projects which should also be able to perform statistical analysis to give accurate insights to users on their expenses so that they can plan their expenses better. You can use PySimpleGUI to create the interface for this application, and even Python libraries like Pandas and Matplotlib can be handy tools for the project.
 
-Regex Query Tool
-Regular search tools often fail to produce the desired results for specific queries. In such events, what you need is a Regex Query Tool. In simple words, a regex is a set of strings, which means that when you enter a query in this tool, it will check the validity of your query. If the regex can match patterns in the text query entered by the user, it notifies the user by highlighting all the matching patterns. A Regex Query Tool is one of the trending python projects which allows users to quickly check the validity of their regex strings on the Web, thereby making the search process much easier. Python’s re library is the perfect tool for running the query strings on the user-inputted text.
-
 Faceted Search/Navigation. This is the advanced search/filter functionality available on many sites. It's a design pattern. Can read about it here : http://alistapart.com/article/design-patterns-faceted-navigation . Implement it on the back end and the front end if you're bored.
 
 Image Search - FreeCodeCamp calls this Image Search Abstraction Layer which sounds complicated. Instead of interfacing with a 3rd party, make it search a defined path on the local file system. FCC's description : https://www.freecodecamp.com/challenges/image-search-abstraction-layer
@@ -201,6 +198,8 @@ Elements of AI：elementsofaidotcom
 IBM Courseradotorg IBM Applied AI
 atcold.githubdotio/pytorch-Deep-Learning/
 https://github.com/mtdvio/every-programmer-should-know
+Deep learning in time series analysis
+Machine learning for algorithmic trading
 
 Chart animation
 https://github.com/dexplo/bar_chart_race
@@ -239,6 +238,7 @@ dashboards
 https://thinkinfi.com/make-interactive-dashboard-using-dash-with-python/
 https://github.com/3b1b/manim
 https://flowingdata.com/2023/02/27/100-visualizations-from-a-single-dataset-with-6-data-points/
+https://flowingdata.com/2023/05/02/one-day-chart-challenge/
 
 dashboard
 python dashboard
@@ -428,6 +428,9 @@ https://github.com/unixpickle/demoverse
 https://towardsdatascience.com/hyperbolic-deep-reinforcement-learning-b2de787cf2f7
 https://github.com/deepmind/alphadev
 https://www.marktechpost.com/2023/06/12/superhuman-performance-on-the-atari-100k-benchmark-the-power-of-bbf-a-new-value-based-rl-agent-from-google-deepmind-mila-and-universite-de-montreal/
+https://arxiv.org/abs/2206.08332
+https://github.com/deepmind/deepmind-research/blob/master/byol/byol_experiment.py
+https://danijar.com/project/dreamer/
 
 Multiagent Reinforcement Learning
 https://pettingzoo.farama.org/
@@ -1020,6 +1023,12 @@ https://huggingface.co/tiiuae/falcon-7b-instruct
 https://github.com/billxbf/ReWOO
 https://twitter.com/Barret_China/status/1666459451195359233?t=5fb3rOpG1AU2MKPHYIQ3Fg&s=08
 https://huggingface.co/spaces/HuggingFaceH4/falcon-chat
+https://github.com/imartinez/privateGPT
+https://github.com/Mintplex-Labs/anything-llm
+https://github.com/PromtEngineer/localGPT
+https://huggingface.co/CarperAI/stable-vicuna-13b-delta
+https://huggingface.co/spaces/CarperAI/StableVicuna
+https://github.com/Stability-AI/StableLM
 
 bard api
 https://github.com/dsdanielpark/Bard-API
