@@ -166,6 +166,7 @@ https://github.com/bradtraversy/50projects50days
 flutter
 https://youtu.be/RevQv_v_Fhc
 https://github.com/toeverything/AFFiNE
+https://p101s2.github.io/
 
 Must read books
 https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
@@ -239,6 +240,8 @@ https://thinkinfi.com/make-interactive-dashboard-using-dash-with-python/
 https://github.com/3b1b/manim
 https://flowingdata.com/2023/02/27/100-visualizations-from-a-single-dataset-with-6-data-points/
 https://flowingdata.com/2023/05/02/one-day-chart-challenge/
+https://simons.berkeley.edu/news/using-theory-design-better-interactions-visualized-data
+Folium
 
 dashboard
 python dashboard
@@ -384,6 +387,8 @@ How to connect Telegram bots to report orders or automatically report trading st
 https://mattschapman.github.io/
 
 Reinforcement learning
+https://www.marktechpost.com/2023/05/04/dream-first-learn-later-deckard-is-an-ai-approach-that-uses-llms-for-training-reinforcement-learning-rl-agents/
+https://voyager.minedojo.org/
 RL algorithms can be categorized as either model-based or model-free, and as either value-based or policy-based.
 https://en.wikipedia.org/wiki/Multi-objective_optimization
 https://blog.csdn.net/abcdefg90876/article/details/108459475
@@ -956,6 +961,7 @@ https://github.com/pengzhile/pandora
 https://icloudnative.io/posts/completely-free-to-use-gpt4/
 https://www.51cto.com/article/756751.html
 https://arxiv.org/abs/2305.16334
+https://til.simonwillison.net/llms/training-nanogpt-on-my-blog
 
 Openai API project
 https://arxiv.org/pdf/2304.03442.pdf
@@ -1029,6 +1035,12 @@ https://github.com/PromtEngineer/localGPT
 https://huggingface.co/CarperAI/stable-vicuna-13b-delta
 https://huggingface.co/spaces/CarperAI/StableVicuna
 https://github.com/Stability-AI/StableLM
+https://github.com/okisdev/ChatChat
+Alpaca
+llama.cpp
+Vicuna
+LLaMA-Adapter
+OpenAssistant Conversations - Democratizing Large Language Model Alignment
 
 bard api
 https://github.com/dsdanielpark/Bard-API
@@ -1246,6 +1258,8 @@ https://www.cs.toronto.edu/~delve/data/boston/bostonDetail.html
 http://archive.ics.uci.edu/ml/datasets/turkiye+student+evaluation
 https://iamholumeedey007.medium.com/build-your-first-data-science-project-from-your-netflix-data-ba3f89ce83e
 https://towardsdatascience.com/building-interactive-data-visualizations-with-python-the-art-of-storytelling-ceb43db67488
+https://github.com/suvoooo/Machine_Learning/blob/master/SklearnV1d2/Scikit_Pandas_Output.ipynb
+https://towardsdatascience.com/fast-load-data-to-sql-from-python-2d67aea946c0
 
 Data visualization
 https://github.com/tinahuangyt/Matplotlib_Pymaceuticals
@@ -1325,6 +1339,46 @@ KerasCV
 KerasNLP
 https://www.kaggle.com/models
 https://tfhub.dev/
+
+The Top 5 Python NLP Libraries
+Now that we have an understanding of what natural language processing can achieve and the purpose of Python NLP libraries, let’s take a look at some of the best options that are currently available.
+
+1. TextBlob
+TextBlob is a Python (2 and 3) library that is used to process textual data, with a primary focus on making common text-processing functions accessible via easy-to-use interfaces. Objects within TextBlob can be used as Python strings that can deliver NLP functionality to help build text analysis applications.
+
+TextBlob’s API is extremely intuitive and makes it easy to perform an array of NLP tasks, such as noun phrase extraction, language translation, part-of-speech tagging, sentiment analysis, WordNet integration, and more.
+
+This library is highly recommended for anyone relatively new to developing text analysis applications, as text can be processed with just a few lines of code.
+
+2. SpaCy
+This open source Python NLP library has established itself as the go-to library for production usage, simplifying the development of applications that focus on processing significant volumes of text in a short space of time.
+
+SpaCy can be used for the preprocessing of text in deep learning environments, building systems that understand natural language and for the creation of information extraction systems.
+
+Two of the key selling points of SpaCy are that it features many pre-trained statistical models and word vectors, and has tokenization support for 49 languages.
+SpaCy is also preferred by many Python developers for its extremely high speeds, parsing efficiency, deep learning integration, convolutional neural network modeling, and named entity recognition capabilities.
+
+3. Natural Language Toolkit (NLTK)
+NLTK consists of a wide range of text-processing libraries and is one of the most popular Python platforms for processing human language data and text analysis. Favored by experienced NLP developers and beginners, this toolkit provides a simple introduction to programming applications that are designed for language processing purposes.
+
+Some of the key features provided by Natural Language Toolkit’s libraries include sentence detection, POS tagging, and tokenization.
+Tokenization, for example, is used in NLP to split paragraphs and sentences into smaller components that can be assigned specific, more understandable, meanings.
+
+NLTK’s interface is very simple, with over 50 corpora and lexical resources. Thanks to a large number of libraries made available, NLTK offers all the crucial functionality to complete almost any type of NLP task within Python.
+
+4. Genism
+Genism is a bespoke Python library that has been designed to deliver document indexing, topic modeling and retrieval solutions, using a large number of Corpora resources. Algorithms within Genism depend on memory, concerning the Corpus size.
+This means it can process an input that exceeds the available RAM on a system.
+
+All the popular NLP algorithms can be implemented via the library’s user-friendly interfaces, including algorithms such as Hierarchical Dirichlet Process (HDP), Latent Dirichlet Allocation (LDA), Latent Semantic Analysis (LSA/LSI/SVD), and Random Projections (RP).
+
+Genism’s accessibility is further enhanced by the plethora of documentation available, in addition to Jupyter Notebook tutorials. However, it should be noted that to use Genism, the Python packages SciPy and NumPy must also be installed for scientific computing functionality.
+
+5. PyNLPl
+Last on our list is PyNLPl (Pineapple), a Python library that is made of several custom Python modules designed specifically for NLP tasks. The most notable feature of PyNLPl is its comprehensive library for developing Format for Linguistic Annotation (FoLiA) XML.
+
+The platform is segmented into different packages and modules that are capable of both basic and advanced tasks, from the extraction of things like n-grams to much more complex functions. This makes it a great option for any NLP developer, regardless of their experience level.
+
 
 Machine learning
 https://www.linkedin.com/feed/update/urn:li:activity:7037001701962215424/?utm_source=share&utm_medium=member_android
@@ -1524,6 +1578,8 @@ https://www.udacity.com/course/programming-for-data-science-nanodegree--nd104
 https://www.coursera.org/search?topic=Data%20Science&index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlA3hcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
 https://www.coursera.org/search?index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&topic=Computer%20Science&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlFRRcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
 https://www.coursera.org/search?index=prod_all_launched_products_term_optimization&entityTypeDescription=Guided%20Projects&topic=Business&irclickid=UItxB8RI4xyNTs0Wn2xe3Qw9UkAUlFRRcyHAVA0&irgwc=1&utm_medium=partners&utm_source=impact&utm_campaign=3637364&utm_content=b2c
+Data structure
+Data aggregation
 
 AI For Business
 https://www.coursera.org/specializations/ai-for-business-wharton
