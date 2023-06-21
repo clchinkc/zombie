@@ -26,8 +26,6 @@ query = "What did the president say about Justice Breyer"
 docs = docsearch.get_relevant_documents(query)
 
 
-
-
 from langchain.chains.summarize import load_summarize_chain
 
 prompt_template = """Write a concise summary of the following:
@@ -36,8 +34,30 @@ prompt_template = """Write a concise summary of the following:
 {text}
 
 
-CONCISE SUMMARY IN ITALIAN:"""
+CONCISE SUMMARY IN TRADITIONAL CHINESE:"""
 PROMPT = PromptTemplate(template=prompt_template, input_variables=["text"])
+
+
+map_prompt_template = """Extract the most important information from the following text:
+
+
+{text}
+
+
+EXTRACTED INFORMATION IN TRADITIONAL CHINESE:"""
+MAP_PROMPT = PromptTemplate(template=map_prompt_template, input_variables=["text"])
+
+
+combine_prompt_template = """Write a concise summary of the following:
+
+
+{text}
+
+
+CONCISE SUMMARY IN TRADITIONAL CHINESE:"""
+COMBINE_PROMPT = PromptTemplate(template=combine_prompt_template, input_variables=["text"])
+
+
 refine_template = (
     "Your job is to produce a final summary\n"
     "We have provided an existing summary up to a certain point: {existing_answer}\n"
@@ -46,12 +66,17 @@ refine_template = (
     "------------\n"
     "{text}\n"
     "------------\n"
-    "Given the new context, refine the original summary in Italian"
+    "Given the new context, refine the original summary in TRADITIONAL CHINESE"
     "If the context isn't useful, return the original summary."
 )
 refine_prompt = PromptTemplate(
     input_variables=["existing_answer", "text"],
     template=refine_template,
 )
+
+chain = load_summarize_chain(OpenAI(temperature=0), chain_type="stuff", prompt=PROMPT)
+chain = load_summarize_chain(OpenAI(temperature=0), chain_type="map_reduce", return_intermediate_steps=True, map_prompt=MAP_PROMPT, combine_prompt=COMBINE_PROMPT)
 chain = load_summarize_chain(OpenAI(temperature=0), chain_type="refine", return_intermediate_steps=True, question_prompt=PROMPT, refine_prompt=refine_prompt) # or "stuff" or "map_reduce"
+
+
 chain({"input_documents": docs}, return_only_outputs=True)

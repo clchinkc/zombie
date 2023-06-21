@@ -65,7 +65,7 @@ Use the following pieces of context to answer the question at the end. If you do
 {context}
 
 Question: {question}
-Answer in Italian:"""
+Answer in Traditional Chinese:"""
 PROMPT = PromptTemplate(
     template=prompt_template, input_variables=["context", "question"]
 )
