@@ -178,6 +178,7 @@ https://github.com/ceobillionaire/WHAT-AI-CAN-DO-FOR-YOU
 Unit Testing, Principles, Practices, and Patterns
 Essential Math for AI
 https://ywh1bkansf.feishu.cn/wiki/QPe5w5g7UisbEkkow8XcDmOpn8e
+线性代数可视化手册
 
 Must learn courses
 史丹福 cs230
@@ -242,6 +243,7 @@ https://flowingdata.com/2023/02/27/100-visualizations-from-a-single-dataset-with
 https://flowingdata.com/2023/05/02/one-day-chart-challenge/
 https://simons.berkeley.edu/news/using-theory-design-better-interactions-visualized-data
 Folium
+http://liyangbit.com/pythonvisualization/Plotly-Express-introduction-cn/
 
 dashboard
 python dashboard
@@ -272,6 +274,17 @@ https://towardsdatascience.com/time-series-forecasting-with-facebooks-prophet-in
 https://jadream1159.medium.com/mtgnn-kdd2020-connecting-the-dots-multivariate-time-series-forecasting-with-graph-neural-a66459f3af4a
 https://www.sarem-seitz.com/winning-with-simple-not-even-linear-time-series-models/
 https://huggingface.co/blog/autoformer
+https://www.zhihu.com/question/405169480/answer/2257390187
+https://zhuanlan.zhihu.com/p/444365030
+https://zhuanlan.zhihu.com/p/101126791
+https://zhuanlan.zhihu.com/p/51541755
+https://zhuanlan.zhihu.com/p/45736442
+https://zhuanlan.zhihu.com/p/137319451
+https://zhuanlan.zhihu.com/p/49200739
+https://zhuanlan.zhihu.com/p/85108128
+https://zhuanlan.zhihu.com/p/463629715
+https://zhuanlan.zhihu.com/p/441451881
+https://zhuanlan.zhihu.com/p/424195019
 
 financial analysis
 quantitative finance python
@@ -366,6 +379,7 @@ revenue forecasting
 https://redis.io/
 Market Wizards
 https://github.com/google/tf-quant-finance
+https://zhuanlan.zhihu.com/p/456528701
 
 Data Science
 The tutorial will cover the following topics:
@@ -575,6 +589,7 @@ https://learngitbranching.js.org/?locale=zh_TW
 https://github.com/pcottle/learnGitBranching
 https://github.com/k88hudson/git-flight-rules
 https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow
+https://www.cnblogs.com/chengxy-nds/p/17306115.html
 
 Great repo
 free programming books
@@ -625,6 +640,7 @@ https://medium.com/techtofreedom/10-remarkable-python-oop-tips-that-will-optimiz
 https://learnku.com/python
 https://www.udacity.com/course/intro-to-programming-nanodegree--nd000
 https://towardsdatascience.com/combining-traditional-thread-based-code-and-asyncio-in-python-dc162084756c
+Comprehensive Guide to Concurrency and Parallelism in Python
 
 c++
 “The Most Important C++ Books...Ever”
@@ -723,6 +739,7 @@ https://en.m.wikipedia.org/wiki/Pathfinding
 軍事戰略
 博弈論
 群動
+https://www.discount-courses.com/courses/unreal-engine-5-fundamentals
 
 Godot
 https://github.com/godotengine/godot-vscode-plugin
@@ -927,6 +944,7 @@ https://youtu.be/WXsD0ZgxjRw
 https://youtu.be/2JYT5f2isg4
 https://youtu.be/GDa8kZLNhJ4
 https://coolshell.cn/articles/18024.html
+https://towardsdatascience.com/fastapi-and-streamlit-the-python-duo-you-must-know-about-72825def1243
 
 Chatbot
 eliza
@@ -947,7 +965,6 @@ https://www.youtube.com/watch?v=Ea9jgBjQxEs
 https://github.com/togethercomputer/OpenChatKit
 https://huggingface.co/spaces/togethercomputer/OpenChatKit
 https://github.com/lm-sys/FastChat
-https://huggingface.co/spaces/trl-lib/stack-llama
 https://github.com/franklindyer/discord_nlp/tree/main
 https://huggingface.co/blog/rwkv
 https://github.com/csunny/DB-GPT
@@ -1044,6 +1061,25 @@ llama.cpp
 Vicuna
 LLaMA-Adapter
 OpenAssistant Conversations - Democratizing Large Language Model Alignment
+https://huggingface.co/spaces/trl-lib/stack-llama
+https://github.com/ggerganov/llama.cpp
+https://github.com/lxe/simple-llm-finetuner
+https://github.com/sahil280114/codealpaca
+https://github.com/jerryjliu/llama_index
+https://github.com/nomic-ai/gpt4all
+https://github.com/cocktailpeanut/dalai
+https://github.com/hpcaitech/ColossalAI
+https://llama-hub-ui.vercel.app/
+https://analyticsindiamag.com/metas-llama-leaked-to-the-public-thanks-to-4chan/
+https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard
+llama
+Alpaca
+Vicuna
+Dolly
+WizardLM
+Orca
+falcon
+phi-1
 
 bard api
 https://github.com/dsdanielpark/Bard-API
@@ -1360,6 +1396,7 @@ https://github.com/Qing93/anime_recommend
 https://zhuanlan.zhihu.com/p/22494721
 https://whuhan2013.github.io/blog/2016/11/07/flask-mysql-learn/
 https://github.com/yudong-94/My-Movie-Recommender
+https://zhuanlan.zhihu.com/p/365181933
 
 API
 Here are the summarized functions of each API mentioned:
@@ -1392,6 +1429,9 @@ https://github.com/tinahuangyt/SQLAlchemy_Climate-Analysis
 API + Data analysis + Data visualization
 https://github.com/tinahuangyt/Python-API_World-Weather
 
+API
+ravenpack sentiment score api
+
 NLP + machine learning
 https://github.com/tinahuangyt/Project-NatureGeneticsCitation
 https://course.spacy.io/en/p
@@ -1404,6 +1444,9 @@ KerasCV
 KerasNLP
 https://www.kaggle.com/models
 https://tfhub.dev/
+
+Kaggle
+https://zhuanlan.zhihu.com/p/472915303
 
 The Top 5 Python NLP Libraries
 Now that we have an understanding of what natural language processing can achieve and the purpose of Python NLP libraries, let’s take a look at some of the best options that are currently available.
@@ -1526,6 +1569,14 @@ https://colab.research.google.com/drive/1VyU-W4WcWqQzHSJF1BfdPo9YDBJ6ik8j?usp=sh
 https://www.youtube.com/watch?v=soqTT0o1ZKo
 https://github.com/mosaicml/llm-foundry
 https://github.com/openlm-research/open_llama
+
+neural network
+https://zhuanlan.zhihu.com/p/518189935
+https://zhuanlan.zhihu.com/p/461855995
+https://zhuanlan.zhihu.com/p/476654345
+https://zhuanlan.zhihu.com/p/472200933
+https://zhuanlan.zhihu.com/p/427480576
+https://zhuanlan.zhihu.com/p/410335242
 
 MCMC
 pymc3
@@ -1675,6 +1726,7 @@ icecream - debug print
 Job oriented courses
 https://careerhackers.io/chp-landing/
 https://tecky.io/en/courses/SMA/
+https://code.tecky.io/
 https://www.dataquest.io/plans/
 https://www.domestika.org/en/courses/64-introduction-to-data-visualization
 https://www.bootcamp.lejhro.com/
