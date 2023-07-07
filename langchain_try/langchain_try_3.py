@@ -125,12 +125,12 @@ INITIAL_QA_PROMPT = PromptTemplate(
 # chat_prompt.format_prompt(input_language="English", output_language="French", text="I love programming.").to_messages()
 
 
-# qa = RetrievalQA.from_chain_type(llm=ChatOpenAI(model="gpt-3.5-turbo", temperature=0., n=2, best_of=2), chain_type="stuff", retriever=compression_retriever, chain_type_kwargs={"prompt": QUESTION_PROMPT}, return_source_documents=True)
-# qa = RetrievalQA.from_chain_type(llm=OpenAI(model="text-davinci-003", temperature=0., n=2, best_of=2), chain_type="map_reduce", retriever=compression_retriever, chain_type_kwargs={"question_prompt": QUESTION_PROMPT, "combine_prompt": COMBINE_PROMPT, "return_map_steps": False}, return_source_documents=True)
-# qa = RetrievalQA.from_chain_type(llm=OpenAI(model="text-davinci-003", temperature=0., n=2, best_of=2), chain_type="refine", retriever=compression_retriever, chain_type_kwargs={"question_prompt": INITIAL_QA_PROMPT, "refine_prompt": REFINE_PROMPT, "return_refine_steps": False}, return_source_documents=True)
-qa = load_qa_chain(OpenAI(model="text-davinci-003", temperature=0, n=2, best_of=2), chain_type="stuff", prompt=PROMPT)
-# qa = load_qa_chain(OpenAI(model="text-davinci-003", temperature=0, n=2, best_of=2), chain_type="map_reduce", return_map_steps=True, question_prompt=QUESTION_PROMPT, combine_prompt=COMBINE_PROMPT)
-# qa = load_qa_chain(OpenAI(model="text-davinci-003", temperature=0, n=2, best_of=2), chain_type="refine", return_refine_steps=True, question_prompt=INITIAL_QA_PROMPT, refine_prompt=REFINE_PROMPT)
+# qa = RetrievalQA.from_chain_type(llm=ChatOpenAI(model="gpt-3.5-turbo", temperature=0., best_of=2), chain_type="stuff", retriever=compression_retriever, chain_type_kwargs={"prompt": QUESTION_PROMPT}, return_source_documents=True)
+# qa = RetrievalQA.from_chain_type(llm=OpenAI(model="text-davinci-003", temperature=0., best_of=2), chain_type="map_reduce", retriever=compression_retriever, chain_type_kwargs={"question_prompt": QUESTION_PROMPT, "combine_prompt": COMBINE_PROMPT, "return_map_steps": False}, return_source_documents=True)
+# qa = RetrievalQA.from_chain_type(llm=OpenAI(model="text-davinci-003", temperature=0., best_of=2), chain_type="refine", retriever=compression_retriever, chain_type_kwargs={"question_prompt": INITIAL_QA_PROMPT, "refine_prompt": REFINE_PROMPT, "return_refine_steps": False}, return_source_documents=True)
+qa = load_qa_chain(OpenAI(model="text-davinci-003", temperature=0, best_of=2), chain_type="stuff", prompt=PROMPT)
+# qa = load_qa_chain(OpenAI(model="text-davinci-003", temperature=0, best_of=2), chain_type="map_reduce", return_map_steps=True, question_prompt=QUESTION_PROMPT, combine_prompt=COMBINE_PROMPT)
+# qa = load_qa_chain(OpenAI(model="text-davinci-003", temperature=0, best_of=2), chain_type="refine", return_refine_steps=True, question_prompt=INITIAL_QA_PROMPT, refine_prompt=REFINE_PROMPT)
 
 
 query = "什麼是愛？"
