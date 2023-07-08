@@ -311,7 +311,7 @@ class Individual:
 
 class School:
 
-    __slots__ = "school_size", "grid", "strategy_factory", "grid_lock"
+    __slots__ = ("school_size", "grid", "strategy_factory", "grid_lock", "__dict__",)
 
     def __init__(self, school_size: int) -> None:
         self.school_size = school_size
