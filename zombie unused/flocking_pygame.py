@@ -39,8 +39,9 @@ Clear documentation should be provided explaining the implementation details, th
 Implement in python.
 """
 
-import pygame
 import random
+
+import pygame
 from pygame.math import Vector2
 
 # Window and Game Constants

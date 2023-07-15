@@ -424,13 +424,13 @@ class School:
         return legal_directions
 
     def legal_location(self, location: tuple[int, int]) -> bool:
-        return self.in_bounds(location) and self.is_occupied(location)
+        return self.in_bounds(location) and self.not_occupied(location)
 
     def in_bounds(self, location: tuple[int, int]) -> bool:
         # check if the location is in the grid
         return (0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size)
 
-    def is_occupied(self, location: tuple[int, int]) -> bool:
+    def not_occupied(self, location: tuple[int, int]) -> bool:
         # check if the location is empty
         return self.grid[location[0]][location[1]] == None
 
@@ -442,7 +442,7 @@ class School:
         new_location = tuple(np.add(individual.location, direction))
         
         with self.grid_lock:
-            if self.is_occupied(new_location):
+            if self.not_occupied(new_location):
                 return
         old_location = individual.location
         individual.move(direction)

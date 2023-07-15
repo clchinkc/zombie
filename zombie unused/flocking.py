@@ -1,10 +1,12 @@
 
-from pygame.sprite import Sprite, Group
 import sys
 from collections import deque
-import pygame
+
 import numpy as np
+import pygame
+from pygame.sprite import Group, Sprite
 from sklearn.neighbors import NearestNeighbors
+
 
 class Agent:
     def __init__(self, x, y, color):

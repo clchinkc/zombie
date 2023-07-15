@@ -687,63 +687,86 @@ class PSO:
         return x, y
 
 
-def draw_grid(screen, grid):
-    for y in range(grid.height):
-        for x in range(grid.width):
-            cell_color = WHITE
-            if grid.grid[y][x] == CellType.OBSTACLE:
-                cell_color = BLACK
-            elif grid.grid[y][x] == CellType.GOAL:
-                cell_color = YELLOW
+class Simulation:
+    def __init__(self, grid, agents, goal_x, goal_y, max_iterations=1000):
+        self.grid = grid
+        self.agents = agents
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+        self.max_iterations = max_iterations
+        self.iterations = 0
+        self.agents_reached_goal = set()
 
-            pygame.draw.rect(screen, cell_color, (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE), 0)
-            pygame.draw.rect(screen, BLACK, (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE), 1)
+        self.cell_size = 40
+        self.window_width = self.grid.width * self.cell_size
+        self.window_height = self.grid.height * self.cell_size
 
-def draw_agents(screen, agents):
-    for idx, agent in enumerate(agents):
-        agent_color = GREEN if idx % 2 == 0 else BLUE
-        pygame.draw.circle(screen, agent_color, (agent.x * CELL_SIZE + CELL_SIZE // 2, agent.y * CELL_SIZE + CELL_SIZE // 2), CELL_SIZE // 2)
+        self.white = (255, 255, 255)
+        self.black = (0, 0, 0)
+        self.green = (0, 255, 0)
+        self.blue = (0, 0, 255)
+        self.yellow = (255, 255, 0)
+        self.fps = 10
 
-def run_simulation(grid, agents, goal_x, goal_y, max_iterations=1000):
-    pygame.init()
-    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption("Grid-Based Simulation")
-    clock = pygame.time.Clock()
+        pygame.init()
+        self.screen = pygame.display.set_mode((self.window_width, self.window_height))
+        pygame.display.set_caption("Grid-Based Simulation")
+        self.clock = pygame.time.Clock()
 
-    iterations = 0
-    agents_reached_goal = set()
-
-    running = True
-    while running and iterations < max_iterations and len(agents_reached_goal) < len(agents):
-        screen.fill(WHITE)
-        draw_grid(screen, grid)
-        draw_agents(screen, agents)
-        pygame.display.flip()
-
-        for idx, agent in enumerate(agents):
-            if idx in agents_reached_goal:
-                continue
-
-            agent.move(grid)
-
-            if (agent.x, agent.y) == (goal_x, goal_y):
-                agents_reached_goal.add(idx)
-                print(f"Agent {idx} reached the goal at iteration {iterations}")
-
-        iterations += 1
-        clock.tick(FPS)
-
+    def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
-                break
+                pygame.quit()
 
-    if len(agents_reached_goal) == len(agents):
-        print("All agents reached the goal.")
-    else:
-        print("Simulation ended. Not all agents reached the goal.")
+    def draw_grid(self):
+        for y in range(self.grid.height):
+            for x in range(self.grid.width):
+                cell_color = self.white
+                if self.grid.grid[y][x] == CellType.OBSTACLE:
+                    cell_color = self.black
+                elif self.grid.grid[y][x] == CellType.GOAL:
+                    cell_color = self.yellow
 
-    pygame.quit()
+                pygame.draw.rect(self.screen, cell_color, (x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size), 0)
+                pygame.draw.rect(self.screen, self.black, (x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size), 1)
+
+    def draw_agents(self):
+        for idx, agent in enumerate(self.agents):
+            agent_color = self.green if idx % 2 == 0 else self.blue
+            pygame.draw.circle(self.screen, agent_color, (agent.x * self.cell_size + self.cell_size // 2, agent.y * self.cell_size + self.cell_size // 2), self.cell_size // 2)
+
+    def update(self):
+        for idx, agent in enumerate(self.agents):
+            if idx in self.agents_reached_goal:
+                continue
+
+            agent.move(self.grid)
+
+            if (agent.x, agent.y) == (self.goal_x, self.goal_y):
+                self.agents_reached_goal.add(idx)
+                print(f"Agent {idx} reached the goal at iteration {self.iterations}")
+
+        self.iterations += 1
+
+    def run(self):
+        running = True
+        while running and self.iterations < self.max_iterations and len(self.agents_reached_goal) < len(self.agents):
+            self.screen.fill(self.white)
+            self.draw_grid()
+            self.draw_agents()
+            pygame.display.flip()
+
+            self.update()
+            self.handle_events()
+
+            self.clock.tick(self.fps)
+
+        if len(self.agents_reached_goal) == len(self.agents):
+            print("All agents reached the goal.")
+        else:
+            print("Simulation ended. Not all agents reached the goal.")
+
+        pygame.quit()
 
 
 # Create and populate the grid environment
@@ -753,23 +776,8 @@ start_x, start_y = 0, 0
 goal_x, goal_y = 8, 8
 grid.generate_maze(start_x, start_y, goal_x, goal_y)
 
-
-# Pygame constants
-CELL_SIZE = 40
-WINDOW_WIDTH = width * CELL_SIZE
-WINDOW_HEIGHT = height * CELL_SIZE
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
-FPS = 10
-
 # Create agents
 agents = [
-    # Agent(0, 0, RandomWalk()),
-    # Agent(0, 0, Swarm(goal_x, goal_y)),
     Agent(0, 0, AStar(goal_x, goal_y)),
     Agent(0, 0, ThetaStar(goal_x, goal_y)),
     Agent(0, 0, JPS(goal_x, goal_y)),
@@ -780,7 +788,8 @@ agents = [
 ]
 
 # Run the simulation
-run_simulation(grid, agents, goal_x, goal_y)
+simulation = Simulation(grid, agents, goal_x, goal_y)
+simulation.run()
 
 
 # import random
