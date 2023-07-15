@@ -173,106 +173,6 @@ class RandomWalk:
                 return new_x, new_y
         return x, y
 
-class Swarm:
-    def __init__(self, goal_x, goal_y):
-        self.num_particles = 100
-        self.max_iter = 100
-        self.goal_x = goal_x
-        self.goal_y = goal_y
-        self.best_path = None
-
-    def move(self, x, y, grid):
-        if self.best_path is None:
-            self.find_best_path(x, y, grid)
-        if not self.best_path:
-            return x, y
-        return self.best_path.pop(0)
-
-    def find_best_path(self, x, y, grid):
-        # Initialize particles
-        particles = [self.create_particle(x, y, grid) for _ in range(self.num_particles)]
-
-        # Main loop
-        particle_history = []
-        for _ in range(self.max_iter):
-            for particle in particles:
-                # Choose direction
-                dx, dy = self.choose_direction(particle, grid)
-
-                # Update position
-                particle['x'], particle['y'] = self.constrain_position(particle['x'] + dx, particle['y'] + dy, grid)
-
-                # Update the personal best if needed
-                if self.distance(particle['x'], particle['y'], self.goal_x, self.goal_y) < self.distance(particle['p_best_x'], particle['p_best_y'], self.goal_x, self.goal_y):
-                    particle['p_best_x'] = particle['x']
-                    particle['p_best_y'] = particle['y']
-
-            # Store particle history
-            particle_history.append([p.copy() for p in particles])
-
-            # Update the global best
-            particles.sort(key=lambda p: self.distance(p['x'], p['y'], self.goal_x, self.goal_y))
-            g_best_x, g_best_y = particles[0]['x'], particles[0]['y']
-
-            # Check if the global best is the goal
-            if (g_best_x, g_best_y) == (self.goal_x, self.goal_y):
-                break
-
-        self.best_path = self.construct_path(particle_history)
-        return self.best_path
-
-    def step(self):
-        if self.best_path is None:
-            raise ValueError("You must find the best path first using find_best_path() method.")
-        if not self.best_path:
-            return None
-        return self.best_path.pop(0)
-
-    def construct_path(self, particle_history):
-        path = []
-        for particles in particle_history:
-            particles.sort(key=lambda p: self.distance(p['x'], p['y'], self.goal_x, self.goal_y))
-            path.append((particles[0]['x'], particles[0]['y']))
-        return path
-
-    def distance(self, x1, y1, x2, y2):
-        return np.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-
-    def constrain_position(self, x, y, grid):
-        new_x, new_y = int(round(x)), int(round(y))
-        if grid.is_valid_move(new_x, new_y):
-            return new_x, new_y
-        else:
-            return x, y
-
-    def create_particle(self, x, y, grid):
-        return {'x': x, 'y': y, 'p_best_x': x, 'p_best_y': y}
-
-    def choose_direction(self, particle, grid):
-        w = 0.5  # inertia weight
-        c1 = 1  # cognitive weight
-        c2 = 1  # social weight
-
-        moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]
-        move_scores = []
-
-        for dx, dy in moves:
-            new_x, new_y = self.constrain_position(particle['x'] + dx, particle['y'] + dy, grid)
-
-            if grid.is_valid_move(new_x, new_y):
-                inertia_score = w * self.distance(particle['x'], particle['y'], new_x, new_y)
-                cognitive_score = c1 * self.distance(particle['p_best_x'], particle['p_best_y'], new_x, new_y)
-                social_score = c2 * self.distance(self.goal_x, self.goal_y, new_x, new_y)
-
-                total_score = inertia_score + cognitive_score + social_score
-                move_scores.append(total_score)
-            else:
-                # Move is not valid, assign a high score to avoid it
-                move_scores.append(float('inf'))
-
-        # Choose the move with the lowest score
-        best_move_index = move_scores.index(min(move_scores))
-        return moves[best_move_index]
 
 class AStar:
     def __init__(self, goal_x, goal_y):
@@ -711,6 +611,82 @@ class DStarLite:
         return x, y
 
 
+class Particle:
+    def __init__(self, x, y, grid):
+        self.x = x
+        self.y = y
+        self.velocity = (random.choice([-1, 1]), random.choice([-1, 1]))  # Randomize initial velocity
+        self.p_best_x = x
+        self.p_best_y = y
+        self.grid = grid
+        self.path = [(x, y)]
+
+    def update_position(self):
+        directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        best_direction = None
+        best_dot_product = -np.inf
+        for direction in directions:
+            new_x, new_y = self.x + direction[0], self.y + direction[1]
+            if self.grid.is_valid_move(new_x, new_y) and (new_x, new_y) not in self.path:
+                dot_product = np.dot(direction, self.velocity)
+                if dot_product > best_dot_product:
+                    best_dot_product = dot_product
+                    best_direction = direction
+        if best_direction is not None:
+            self.x += best_direction[0]
+            self.y += best_direction[1]
+            self.path.append((self.x, self.y))
+
+    def update_velocity(self, g_best_x, g_best_y, w=0.5, c1=2, c2=2, randomness=0.1):
+        r1, r2 = np.random.rand(), np.random.rand()
+        self.velocity = (w * self.velocity[0] + c1 * r1 * (self.p_best_x - self.x) +
+                         c2 * r2 * (g_best_x - self.x) + randomness * np.random.randn(),
+                         w * self.velocity[1] + c1 * r1 * (self.p_best_y - self.y) +
+                         c2 * r2 * (g_best_y - self.y) + randomness * np.random.randn())
+        # Normalize the velocity to keep its magnitude within a reasonable range
+        magnitude = np.sqrt(self.velocity[0]**2 + self.velocity[1]**2)
+        self.velocity = (self.velocity[0]/magnitude, self.velocity[1]/magnitude)
+
+    def update_personal_best(self, goal_x, goal_y):
+        if self.distance_to_goal(goal_x, goal_y) < self.distance_to_goal(self.p_best_x, self.p_best_y):
+            self.p_best_x, self.p_best_y = self.x, self.y
+
+    def distance_to_goal(self, goal_x, goal_y):
+        return np.sqrt((goal_x - self.x) ** 2 + (goal_y - self.y) ** 2)
+
+
+class PSO:
+    def __init__(self, goal_x, goal_y, num_particles=10, max_iter=100):
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+        self.num_particles = num_particles
+        self.max_iter = max_iter
+        self.g_best_x = None
+        self.g_best_y = None
+
+    def distance_to_goal(self, x, y):
+        return np.sqrt((self.goal_x - x) ** 2 + (self.goal_y - y) ** 2)
+
+    def find_path(self, x, y, grid):
+        particles = [Particle(x, y, grid) for _ in range(self.num_particles)]
+        for _ in range(self.max_iter):
+            for particle in particles:
+                particle.update_position()
+                particle.update_personal_best(self.goal_x, self.goal_y)
+                if (self.g_best_x is None or self.g_best_y is None or
+                        self.distance_to_goal(particle.x, particle.y) < self.distance_to_goal(self.g_best_x, self.g_best_y)):
+                    self.g_best_x, self.g_best_y = particle.x, particle.y
+                particle.update_velocity(self.g_best_x, self.g_best_y)
+        return particles[np.argmin([p.distance_to_goal(self.goal_x, self.goal_y) for p in particles])].path
+
+    def move(self, x, y, grid):
+        path = self.find_path(x, y, grid)
+        if len(path) > 1:
+            next_step = path[1]
+            return next_step
+        return x, y
+
+
 def draw_grid(screen, grid):
     for y in range(grid.height):
         for x in range(grid.width):
@@ -800,6 +776,7 @@ agents = [
     Agent(0, 0, DFS(goal_x, goal_y)),
     Agent(0, 0, DStar(goal_x, goal_y)),
     Agent(0, 0, DStarLite(goal_x, goal_y)),
+    Agent(0, 0, PSO(goal_x, goal_y)),
 ]
 
 # Run the simulation
@@ -894,15 +871,7 @@ run_simulation(grid, agents, goal_x, goal_y)
 # print(f"DStar average time: {sum(dstar_times)/len(dstar_times):.6f} seconds")
 # print(f"DStarLite average time: {sum(dstarlite_times)/len(dstarlite_times):.6f} seconds")
 
-"""
-100 random grids of different sizes from 10x10 to 20x20
-AStar average time: 0.001272 seconds
-ThetaStar average time: 0.001804 seconds
-JPS average time: 0.000892 seconds
-DFS average time: 0.000445 seconds
-DStar average time: 0.001012 seconds
-DStarLite average time: 0.003286 seconds
-"""
+
 """
 100 random grids of different sizes from 50x50 to 100x100
 AStar average time: 0.017849 seconds
@@ -911,24 +880,6 @@ JPS average time: 0.012722 seconds
 DFS average time: 0.011744 seconds
 DStar average time: 0.018033 seconds
 DStarLite average time: 0.050464 seconds
-"""
-"""
-10 random grids of different sizes from 100x100 to 200x200
-AStar average time: 0.108244 seconds
-ThetaStar average time: 0.152231 seconds
-JPS average time: 0.054897 seconds
-DFS average time: 0.085088 seconds
-DStar average time: 0.100939 seconds
-DStarLite average time: 0.200560 seconds
-"""
-"""
-1 random grids of different sizes from 400x400 to 500x500
-AStar average time: 4.952447 seconds
-ThetaStar average time: 6.005916 seconds
-JPS average time: 1.408849 seconds
-DFS average time: 2.561519 seconds
-DStar average time: 5.609891 seconds
-DStarLite average time: 3.847868 seconds
 """
 """
 1 random grids of different sizes from 900x900 to 1000x1000
@@ -945,6 +896,7 @@ DStarLite average time: 15.427422 seconds
 # 1 change to grid.get_cost of that cell and neighbor
 # https://gamedev.stackexchange.com/questions/141688/how-to-optimize-pathfinding-on-a-very-large-dynamic-2d-grid
 # https://grail.cs.washington.edu/projects/crowd-flows/78-treuille.pdf
+# PSO also draw all particles
 
 """
 Multi-agent pathfinding

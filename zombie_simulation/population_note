@@ -679,6 +679,106 @@ Here are a few ways fuzzy logic can be applied in a zombie apocalypse simulation
 
 By incorporating fuzzy logic into a zombie apocalypse simulation, you can introduce a level of uncertainty, adaptability, and realistic decision-making, making the simulation more immersive and reflective of real-world scenarios.
 """
+"""
+Sure! We can incorporate fuzzy logic into the `MovementStrategyFactory` class to better model the uncertainty in decision-making processes. Let's modify the `create_strategy` method to include fuzzy logic for each decision-making scenario.
+
+Note: Below, I assume that we have a fuzzy logic module that includes methods for fuzzy inference. This is a pseudocode example and it may not be directly implementable.
+
+```python
+from FuzzyLogicModule import FuzzyInferenceSystem  # Assuming we have a fuzzy logic module
+
+class MovementStrategyFactory:
+    def create_strategy(self, individual, school):
+        # Instantiate fuzzy inference system
+        fuzzy_system = FuzzyInferenceSystem()
+        
+        # Get legal directions
+        legal_directions = school.get_legal_directions(individual)
+        # Get neighbors
+        neighbors = school.get_neighbors(individual.location, individual.sight_range)
+
+        # Calculate fuzzy rules based on factors such as number of zombies, number of survivors, and the individual's health state
+        for direction in legal_directions:
+            alive_neighbors = len([alive for alive in neighbors if alive.state == State.HEALTHY])
+            zombie_neighbors = len([zombies for zombies in neighbors if zombies.state == State.ZOMBIE])
+            fuzzy_system.add_rule(alive_neighbors, zombie_neighbors, individual.state)
+
+        # Determine the individual's movement strategy based on the output of the fuzzy inference system
+        strategy = fuzzy_system.infer_strategy()
+
+        # Based on the strategy inferred, return the corresponding Movement Strategy
+        if strategy == "NoMovement":
+            return NoMovementStrategy(individual, legal_directions, neighbors)
+        elif strategy == "RandomMovement":
+            return RandomMovementStrategy(individual, legal_directions, neighbors)
+        elif strategy == "FleeZombies":
+            return FleeZombiesStrategy(individual, legal_directions, neighbors)
+        elif strategy == "ChaseHumans":
+            return ChaseHumansStrategy(individual, legal_directions, neighbors)
+        elif strategy == "BrownianMovement":
+            return BrownianMovementStrategy(individual, legal_directions, neighbors)
+```
+
+In this modified method, the fuzzy inference system is used to model the uncertainty and imprecision in the decision-making processes. Each legal direction is associated with a fuzzy rule, which considers the number of alive neighbors, zombie neighbors, and the individual's health state. The fuzzy inference system then determines the most suitable strategy for the individual. 
+
+It's important to mention that the fuzzy rules, membership functions, and the inference system itself would need to be designed and implemented for this use-case. This would involve defining linguistic variables (like "few", "many"), membership functions (that map the input values to a membership value between 0 and 1), fuzzy rules (like "IF few humans AND many zombies THEN flee"), and the inference system (that evaluates the rules and determines the output).
+
+Note: Fuzzy Logic is a large field with several methods and techniques, this is just a simplified example that showcases how it can be applied. In reality, a lot of work would go into designing the fuzzy system itself, including defining the appropriate linguistic variables, membership functions, and fuzzy rules for the specific scenario, and validating the system through testing and optimization.
+"""
+"""
+To integrate fuzzy logic into the MovementStrategyFactory, you would need to modify each strategy to consider a range of possible behaviors, rather than definite ones. Here's how this might look:
+
+1. FleeZombiesStrategy: Rather than categorically fleeing from zombies, the strategy could consider factors like the individual's current health, available resources, proximity, and the number of zombies. Using fuzzy logic, the strategy might sometimes dictate that it is beneficial to move towards a solitary zombie if it's blocking the path to a vital resource.
+
+```python
+class FleeZombiesStrategy:
+    def __init__(self, individual, legal_directions, neighbors):
+        self.individual = individual
+        self.legal_directions = legal_directions
+        self.neighbors = neighbors
+
+    def get_movement(self):
+        # Apply fuzzy logic
+        closest_zombie_distance = min([self.individual.distance_to(zombie) for zombie in self.neighbors if zombie.state == State.ZOMBIE])
+        health = self.individual.health / 100.0
+        resource_availability = self.individual.resources / self.individual.max_resources
+        # Fuzzy rule
+        should_flee = fuzz.interp_membership([0, 0.5, 1], [closest_zombie_distance, health, resource_availability], 0.5)
+        if should_flee > 0.5:
+            return self._get_direction_away_from_closest_zombie()
+        else:
+            return self._get_direction_towards_closest_zombie()
+```
+
+2. ChaseHumansStrategy: This could factor in the group size, health status, and defenses of potential human targets, deciding whether or not chasing them is the best option. For example, a small, weakened group might be an attractive target, while a large, well-equipped group would not be.
+
+```python
+class ChaseHumansStrategy:
+    def __init__(self, individual, legal_directions, neighbors):
+        self.individual = individual
+        self.legal_directions = legal_directions
+        self.neighbors = neighbors
+
+    def get_movement(self):
+        # Apply fuzzy logic
+        closest_human_distance = min([self.individual.distance_to(human) for human in self.neighbors if human.state == State.HEALTHY])
+        human_health = min([human.health for human in self.neighbors if human.state == State.HEALTHY]) / 100.0
+        human_resources = min([human.resources for human in self.neighbors if human.state == State.HEALTHY]) / individual.max_resources
+        # Fuzzy rule
+        should_chase = fuzz.interp_membership([0, 0.5, 1], [closest_human_distance, human_health, human_resources], 0.5)
+        if should_chase > 0.5:
+            return self._get_direction_towards_closest_human()
+        else:
+            return self._get_direction_away_from_closest_human()
+```
+
+3. RandomMovementStrategy and BrownianMovementStrategy: These can take into account the environment and the individual's internal state (e.g., health, hunger) to determine a "wandering" behavior that isn't completely random, but rather biased towards certain directions depending on the circumstances.
+
+Remember that in these examples, we are using the `fuzz.interp_membership` function from the `scikit-fuzzy` library. This function computes the degree of membership of a given value within a fuzzy membership function defined by a set of points. The function takes three parameters: the x-axis array, the y-axis array, and the value to evaluate, and returns a float value between 0 and 1 representing the membership grade.
+
+You can use different membership functions and fuzzy rules depending on your needs. These examples use a simple linear membership function, but more complex situations might require non-linear functions or multiple rules that need to be aggregated using fuzzy logic operators.
+"""
+
 
 """
 The laws of thermodynamics can be used in a zombie apocalypse simulation in several ways. Here are a few examples:
