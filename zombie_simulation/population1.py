@@ -1,11 +1,11 @@
 
-from scipy.optimize import fsolve
-from scipy.integrate import solve_ivp
-import matplotlib.pyplot as plt
-import numpy as np
 import math
 import random
 
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.integrate import solve_ivp
+from scipy.optimize import fsolve
 
 """
 Matrix algebra: Another way to model population dynamics is to use matrix algebra, which allows you to represent the transitions between different states of the population (e.g. births, deaths, immigration) as matrix operations. For example, the Leslie matrix is a commonly used matrix model for population growth. Here is an example of how a Leslie matrix could be used to represent the change of population size during a zombie apocalypse:

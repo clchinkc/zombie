@@ -13,6 +13,7 @@ Finally, we would need a main simulate function that would set up the initial co
 from __future__ import annotations
 
 import concurrent.futures
+import copy
 import math
 import random
 import threading
@@ -218,32 +219,32 @@ class MovementStrategyFactory:
         legal_directions = school.get_legal_directions(individual)
         # early exit
         if not legal_directions:
-            return NoMovementStrategy(individual, legal_directions, [])
+            return NoMovementStrategy(copy.copy(individual), legal_directions, [])
         # get neighbors
         neighbors = school.get_neighbors(individual.location, individual.sight_range)
         # early exit
         # if no neighbors, random movement
         if not neighbors:
-            return RandomMovementStrategy(individual, legal_directions, neighbors)
+            return RandomMovementStrategy(copy.copy(individual), legal_directions, neighbors)
         # get number of human and zombies neighbors
         alive_number = len([alive for alive in neighbors if alive.state == State.HEALTHY])
         zombies_number = len([zombies for zombies in neighbors if zombies.state == State.ZOMBIE])
         # if no human neighbors, move away from the closest zombies
         if alive_number == 0 and zombies_number > 0:
-            return FleeZombiesStrategy(individual, legal_directions, neighbors)
+            return FleeZombiesStrategy(copy.copy(individual), legal_directions, neighbors)
         # if no zombies neighbors, move towards the closest human
         elif zombies_number == 0 and alive_number > 0:
-            return ChaseHumansStrategy(individual, legal_directions, neighbors)
+            return ChaseHumansStrategy(copy.copy(individual), legal_directions, neighbors)
         # if both human and zombies neighbors, zombies move towards the closest human and human move away from the closest zombies
         else:
             if individual.state == State.ZOMBIE and alive_number > 0:
-                return ChaseHumansStrategy(individual, legal_directions, neighbors)
+                return ChaseHumansStrategy(copy.copy(individual), legal_directions, neighbors)
             elif (individual.state == State.HEALTHY or individual.state == State.INFECTED) and zombies_number > 0:
-                return FleeZombiesStrategy(individual, legal_directions, neighbors)
+                return FleeZombiesStrategy(copy.copy(individual), legal_directions, neighbors)
             elif individual.state == State.DEAD:
-                return NoMovementStrategy(individual, legal_directions, neighbors)
+                return NoMovementStrategy(copy.copy(individual), legal_directions, neighbors)
             else:
-                return BrownianMovementStrategy(individual, legal_directions, neighbors)
+                return BrownianMovementStrategy(copy.copy(individual), legal_directions, neighbors)
 
     # may consider update the grid according to the individual's location
     # after assigning all new locations to the individuals
@@ -270,20 +271,18 @@ class Individual:
         return self.interact_range + 3
 
     # fluent interface
-    def add_connection(self, other: Individual) -> Individual:
+    def add_connection(self, other: Individual) -> None:
         self.connections.append(other)
-        return self
 
-    def move(self, direction: tuple[int, int]) -> Individual:
+    def move(self, direction: tuple[int, int]) -> None:
         self.location = tuple(np.add(self.location, direction))
         # self.location[0] += direction[0]
         # self.location[1] += direction[1]
-        return self
 
     def choose_direction(self, movement_strategy) -> tuple[int, int]:
         return movement_strategy.choose_direction()
 
-    def update_state(self, severity: float) -> Individual:
+    def update_state(self, severity: float) -> None:
         if self.state == State.HEALTHY:
             self.state_machine = HealthyMachine(self)
         elif self.state == State.INFECTED:
@@ -294,7 +293,6 @@ class Individual:
             pass
         # Update the state of the individual based on the current state and the interactions with other people
         self.state_machine.update_state(severity)
-        return self
 
     def get_info(self) -> str:
         return f"Individual {self.id} is {self.state.name} and is located at {self.location}, having connections with {self.connections}, infection severity {self.infection_severity}, interact range {self.interact_range}, and sight range {self.sight_range}."
@@ -374,8 +372,6 @@ class School:
             movement_strategy = self.strategy_factory.create_strategy(cell, self)
             direction = cell.choose_direction(movement_strategy)
             self.move_individual(cell, direction)
-        else:
-            return
 
     def update_grid(self, population: list[Individual], migration_probability: float, randomness=random.random(), max_workers=4) -> None:
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -433,10 +429,7 @@ class School:
     def not_occupied(self, location: tuple[int, int]) -> bool:
         # check if the location is empty
         return self.grid[location[0]][location[1]] == None
-
-    """
-        return any(agent.position == (x, y) for agent in self.agents)
-    """
+        # return any(agent.position == (x, y) for agent in self.agents)
 
     def move_individual(self, individual: Individual, direction: tuple[int, int]) -> None:
         new_location = tuple(np.add(individual.location, direction))
