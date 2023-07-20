@@ -12,7 +12,6 @@ Finally, we would need a main simulate function that would set up the initial co
 
 from __future__ import annotations
 
-import copy
 import math
 import random
 from abc import ABC, abstractmethod
@@ -59,24 +58,26 @@ class StateMachine(ABC):
     def update_state(self, severity: float) -> None:
         pass
 
-    def is_infected(self, severity: float, randomness=random.random()) -> bool:
+    def is_infected(self, context: Individual, severity: float, randomness=random.random()) -> bool:
         infection_probability = 1 / (1 + math.exp(-severity))
-        if any(other.state == State.ZOMBIE for other in self.context.connections):
-            if randomness < infection_probability:
-                return True
+        for other in context.connections:
+            if other.state == State.ZOMBIE:
+                if randomness < infection_probability:
+                    return True
         return False
 
-    def is_turned(self, severity: float, randomness=random.random()) -> bool:
-        turning_probability = self.context.infection_severity
+    def is_turned(self, context: Individual, severity: float, randomness=random.random()) -> bool:
+        turning_probability = context.infection_severity
         if randomness < turning_probability:
             return True
         return False
 
-    def is_died(self, severity: float, randomness=random.random()) -> bool:
+    def is_died(self, context: Individual, severity: float, randomness=random.random()) -> bool:
         death_probability = severity
-        if any(other.state == State.HEALTHY or other.state == State.INFECTED for other in self.context.connections):
-            if randomness < death_probability:
-                return True
+        for other in context.connections:
+            if other.state == State.HEALTHY or other.state == State.INFECTED:
+                if randomness < death_probability:
+                    return True
         return False
 
 
@@ -85,22 +86,22 @@ class StateMachine(ABC):
 class HealthyMachine(StateMachine):
     # cellular automaton
     def update_state(self, severity: float) -> None:
-        if self.is_infected(severity):
+        if self.is_infected(self.context, severity):
             self.context.state = State.INFECTED
 
 class InfectedMachine(StateMachine):
     # cellular automaton
     def update_state(self, severity: float) -> None:
         self.context.infection_severity += 0.1
-        if self.is_turned(severity):
+        if self.is_turned(self.context, severity):
             self.context.state = State.ZOMBIE
-        elif self.is_died(severity):
+        elif self.is_died(self.context, severity):
             self.context.state = State.DEAD
 
 class ZombieMachine(StateMachine):
     # cellular automaton
     def update_state(self, severity: float) -> None:
-        if self.is_died(severity):
+        if self.is_died(self.context, severity):
             self.context.state = State.DEAD
 
 
@@ -217,32 +218,32 @@ class MovementStrategyFactory:
         legal_directions = school.get_legal_directions(individual)
         # early exit
         if not legal_directions:
-            return NoMovementStrategy(copy.copy(individual), legal_directions, [])
+            return NoMovementStrategy(individual, legal_directions, [])
         # get neighbors
         neighbors = school.get_neighbors(individual.location, individual.sight_range)
         # early exit
         # if no neighbors, random movement
         if not neighbors:
-            return RandomMovementStrategy(copy.copy(individual), legal_directions, neighbors)
+            return RandomMovementStrategy(individual, legal_directions, neighbors)
         # get number of human and zombies neighbors
         alive_number = len([alive for alive in neighbors if alive.state == State.HEALTHY])
         zombies_number = len([zombies for zombies in neighbors if zombies.state == State.ZOMBIE])
         # if no human neighbors, move away from the closest zombies
         if alive_number == 0 and zombies_number > 0:
-            return FleeZombiesStrategy(copy.copy(individual), legal_directions, neighbors)
+            return FleeZombiesStrategy(individual, legal_directions, neighbors)
         # if no zombies neighbors, move towards the closest human
         elif zombies_number == 0 and alive_number > 0:
-            return ChaseHumansStrategy(copy.copy(individual), legal_directions, neighbors)
+            return ChaseHumansStrategy(individual, legal_directions, neighbors)
         # if both human and zombies neighbors, zombies move towards the closest human and human move away from the closest zombies
         else:
             if individual.state == State.ZOMBIE and alive_number > 0:
-                return ChaseHumansStrategy(copy.copy(individual), legal_directions, neighbors)
+                return ChaseHumansStrategy(individual, legal_directions, neighbors)
             elif (individual.state == State.HEALTHY or individual.state == State.INFECTED) and zombies_number > 0:
-                return FleeZombiesStrategy(copy.copy(individual), legal_directions, neighbors)
+                return FleeZombiesStrategy(individual, legal_directions, neighbors)
             elif individual.state == State.DEAD:
-                return NoMovementStrategy(copy.copy(individual), legal_directions, neighbors)
+                return NoMovementStrategy(individual, legal_directions, neighbors)
             else:
-                return BrownianMovementStrategy(copy.copy(individual), legal_directions, neighbors)
+                return BrownianMovementStrategy(individual, legal_directions, neighbors)
 
     # may consider update the grid according to the individual's location
     # after assigning all new locations to the individuals
@@ -310,7 +311,7 @@ class Individual:
 
 class School:
 
-    __slots__ = ("school_size", "grid", "strategy_factory", "__dict__",)
+    __slots__ = "school_size", "grid", "strategy_factory"
 
     def __init__(self, school_size: int) -> None:
         self.school_size = school_size
@@ -366,6 +367,7 @@ class School:
                 self.move_individual(cell, direction)
             else:
                 continue
+
                 # if right next to then don't move
                 # get neighbors with larger and larger range until there is a human
                 # sight range is different from interact range
@@ -404,13 +406,13 @@ class School:
         return legal_directions
 
     def legal_location(self, location: tuple[int, int]) -> bool:
-        return self.in_bounds(location) and self.not_occupied(location)
+        return self.in_bounds(location) and self.is_occupied(location)
 
     def in_bounds(self, location: tuple[int, int]) -> bool:
         # check if the location is in the grid
         return (0 <= location[0] < self.school_size and 0 <= location[1] < self.school_size)
 
-    def not_occupied(self, location: tuple[int, int]) -> bool:
+    def is_occupied(self, location: tuple[int, int]) -> bool:
         # check if the location is empty
         return self.grid[location[0]][location[1]] == None
 
@@ -579,7 +581,7 @@ class PopulationObserver(Observer):
             color=sns.color_palette("deep")
         )
         # Set axis range as maximum count states
-        plt.ylim(0, self.statistics[0]["population_size"])
+        plt.ylim(0, self.subject.population_size)
         # Put a legend to the right of the current axis
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         # Show the plot
@@ -645,7 +647,7 @@ class PopulationAnimator(Observer):
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         # Set axis range
-        ax.set_ylim(0, len(self.agent_history[0]))
+        ax.set_ylim(0, self.subject.population_size)
 
         # create the bar chart
         bars = ax.bar(x, y[0], tick_label=ticks, label=State.name_list(), color=sns.color_palette("deep"))
@@ -845,6 +847,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
 
 
 
