@@ -1021,6 +1021,7 @@ https://github.com/h2oai/h2o-llmstudio
 https://gpt-gm.h2o.ai/
 https://github.com/CarperAI/OpenELM
 https://github.com/microsoft/unilm
+CM3leon
 
 Openai API project
 https://arxiv.org/pdf/2304.03442.pdf
@@ -1119,6 +1120,7 @@ WizardLM
 Orca
 falcon
 phi-1
+https://github.com/pengbaolin/LLM-Augmenter
 
 bard api
 https://github.com/dsdanielpark/Bard-API
