@@ -457,21 +457,13 @@ https://github.com/opendilab/awesome-exploration-rl
 
 From this list, we can identify common properties that make learning easier. None of the properties below are required for learning, but satisfying more of them is definitively better.
 
-It is easy to generate near unbounded amounts of experience. It should be clear why this helps. The more data you have, the easier the learning problem is. This applies to Atari, Go, Chess, Shogi, and the simulated environments for the parkour bot. It likely applies to the power center project too, because in prior work (Gao, 2014), it was shown that neural nets can predict energy efficiency with high accuracy. That’s exactly the kind of simulated model you’d want for training an RL system.
+It is easy to generate near unbounded amounts of experience. It should be clear why this helps. The more data you have, the easier the learning problem is. This applies to Atari, Go, Chess, Shogi, and the simulated environments for the parkour bot. It likely applies to the power center project too, because in prior work (Gao, 2014), it was shown that neural nets can predict energy efficiency with high accuracy. That’s exactly the kind of simulated model you’d want for training an RL system. It might apply to the Dota 2 and SSBM work, but it depends on the throughput of how quickly the games can be run, and how many machines were available to run them.
 
-It might apply to the Dota 2 and SSBM work, but it depends on the throughput of how quickly the games can be run, and how many machines were available to run them.
-
-The problem is simplified into an easier form. One of the common errors I’ve seen in deep RL is to dream too big. Reinforcement learning can do anything! That doesn’t mean you have to do everything at once.
-
-The OpenAI Dota 2 bot only played the early game, only played Shadow Fiend against Shadow Fiend in a 1v1 laning setting, used hardcoded item builds, and presumably called the Dota 2 API to avoid having to solve perception. The SSBM bot acheived superhuman performance, but it was only in 1v1 games, with Captain Falcon only, on Battlefield only, in an infinite time match.
-
-This isn’t a dig at either bot. Why work on a hard problem when you don’t even know the easier one is solvable? The broad trend of all research is to demonstrate the smallest proof-of-concept first and generalize it later. OpenAI is extending their Dota 2 work, and there’s ongoing work to extend the SSBM bot to other characters.
+The problem is simplified into an easier form. One of the common errors I’ve seen in deep RL is to dream too big. Reinforcement learning can do anything! That doesn’t mean you have to do everything at once. The OpenAI Dota 2 bot only played the early game, only played Shadow Fiend against Shadow Fiend in a 1v1 laning setting, used hardcoded item builds, and presumably called the Dota 2 API to avoid having to solve perception. The SSBM bot acheived superhuman performance, but it was only in 1v1 games, with Captain Falcon only, on Battlefield only, in an infinite time match. This isn’t a dig at either bot. Why work on a hard problem when you don’t even know the easier one is solvable? The broad trend of all research is to demonstrate the smallest proof-of-concept first and generalize it later. OpenAI is extending their Dota 2 work, and there’s ongoing work to extend the SSBM bot to other characters.
 
 There is a way to introduce self-play into learning. This is a component of AlphaGo, AlphaZero, the Dota 2 Shadow Fiend bot, and the SSBM Falcon bot. I should note that by self-play, I mean exactly the setting where the game is competitive, and both players can be controlled by the same agent. So far, that setting seems to have the most stable and well-performing behavior.
 
-There’s a clean way to define a learnable, ungameable reward. Two player games have this: +1 for a win, -1 for a loss. The original neural architecture search paper from Zoph et al, ICLR 2017 had this: validation accuracy of the trained model. Any time you introduce reward shaping, you introduce a chance for learning a non-optimal policy that optimizes the wrong objective.
-
-If you’re interested in further reading on what makes a good reward, a good search term is “proper scoring rule”. See this Terrence Tao blog post for an approachable example.
+There’s a clean way to define a learnable, ungameable reward. Two player games have this: +1 for a win, -1 for a loss. The original neural architecture search paper from Zoph et al, ICLR 2017 had this: validation accuracy of the trained model. Any time you introduce reward shaping, you introduce a chance for learning a non-optimal policy that optimizes the wrong objective. If you’re interested in further reading on what makes a good reward, a good search term is “proper scoring rule”. See this Terrence Tao blog post for an approachable example.
 
 As for learnability, I have no advice besides trying it out to see if it works.
 
@@ -483,6 +475,11 @@ https://arxiv.org/abs/1711.02301
 https://arxiv.org/abs/1711.00832
 https://arxiv.org/abs/1511.06342
 https://github.com/deepmind/meltingpot
+
+optimization
+https://github.com/srivatsankrishnan/oss-arch-gym
+https://scikit-opt.github.io/
+https://scikit-optimize.github.io/stable/
 
 Software Design
 https://www.youtube.com/watch?v=tAuRQs_d9F8
@@ -1022,6 +1019,22 @@ https://gpt-gm.h2o.ai/
 https://github.com/CarperAI/OpenELM
 https://github.com/microsoft/unilm
 CM3leon
+https://github.com/camenduru/guanaco-colab
+https://github.com/nlpxucan/WizardLM
+https://github.com/jondurbin/airoboros/tree/main
+https://github.com/jondurbin/airoboros/blob/main/airoboros/self_instruct.py
+https://github.com/thunlp/UltraChat
+https://huggingface.co/openbmb/UltraLM-13b
+https://colab.research.google.com/drive/1VoYNfYDKcKRQRor98Zbf2-9VQTtGJ24k
+https://huggingface.co/learn/nlp-course/chapter7/6
+https://github.com/lm-sys/FastChat
+https://github.com/CarperAI/trlx
+https://huggingface.co/NousResearch/Nous-Hermes-13b
+https://huggingface.co/TheBloke/Nous-Hermes-13B-GGML
+https://huggingface.co/TheBloke/Nous-Hermes-13B-GPTQ
+https://huggingface.co/weqweasdas/hh_rlhf_rm_open_llama_3b
+https://github.com/OptimalScale/LMFlow
+https://github.com/eric-mitchell/direct-preference-optimization
 
 Openai API project
 https://arxiv.org/pdf/2304.03442.pdf

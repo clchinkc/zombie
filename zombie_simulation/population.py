@@ -161,12 +161,12 @@ class FleeZombiesStrategy(MovementStrategy):
         return self.direction_against_closest(self.individual, self.legal_directions, zombies_locations)
 
     # find the closest zombie and move away from it
-    def direction_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]],) -> tuple[int, int]:
+    def direction_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
         distances = [np.linalg.norm(np.subtract(individual.location, target)) for target in target_locations]
         closest_index = np.argmin(distances)
         closest_target = target_locations[closest_index]
         direction_distances = [np.linalg.norm(np.add(d, individual.location) - closest_target) for d in legal_directions]
-        max_distance = np.max(direction_distances)
+        max_distance: float = np.max(direction_distances)
         farthest_directions = np.where(direction_distances == max_distance)[0]
         return legal_directions[random.choice(farthest_directions)]
 
