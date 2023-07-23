@@ -12,7 +12,6 @@ Finally, we would need a main simulate function that would set up the initial co
 
 from __future__ import annotations
 
-import copy
 import math
 import random
 from abc import ABC, abstractmethod
@@ -166,7 +165,7 @@ class FleeZombiesStrategy(MovementStrategy):
         closest_index = np.argmin(distances)
         closest_target = target_locations[closest_index]
         direction_distances = [np.linalg.norm(np.add(d, individual.location) - closest_target) for d in legal_directions]
-        max_distance: float = np.max(direction_distances)
+        max_distance = np.max(direction_distances)
         farthest_directions = np.where(direction_distances == max_distance)[0]
         return legal_directions[random.choice(farthest_directions)]
 
@@ -184,13 +183,12 @@ class ChaseHumansStrategy(MovementStrategy):
 
     # find the closest human and move towards it
     def direction_towards_closest(self, individual: Individual,legal_directions: list[tuple[int, int]],target_locations: list[tuple[int, int]],) -> tuple[int, int]:
-        new_locations = [tuple(np.add(individual.location, direction)) for direction in legal_directions]
-        distance_matrix = np.linalg.norm(np.subtract(np.array(new_locations)[:, np.newaxis, :], np.array(target_locations)[np.newaxis, :, :]), axis=2)
+        current_location = np.array(individual.location)
+        new_locations = current_location + np.array(legal_directions)
+        distance_matrix = np.linalg.norm(new_locations[:, np.newaxis, :] - np.array(target_locations)[np.newaxis, :, :], axis=2)
         min_distance = np.min(distance_matrix[distance_matrix != 0])
         min_directions = np.where(distance_matrix == min_distance)[0]
         return legal_directions[random.choice(min_directions)]
-
-    # may use np.sign
 
     # If the closest person is closer than the closest zombie, move towards the person, otherwise move away from the zombie
     # or move away from zombie is the priority and move towards person is the secondary priority
@@ -217,32 +215,32 @@ class MovementStrategyFactory:
         legal_directions = school.get_legal_directions(individual)
         # early exit
         if not legal_directions:
-            return NoMovementStrategy(copy.copy(individual), legal_directions, [])
+            return NoMovementStrategy(individual, legal_directions, [])
         # get neighbors
         neighbors = school.get_neighbors(individual.location, individual.sight_range)
         # early exit
         # if no neighbors, random movement
         if not neighbors:
-            return RandomMovementStrategy(copy.copy(individual), legal_directions, neighbors)
+            return RandomMovementStrategy(individual, legal_directions, neighbors)
         # get number of human and zombies neighbors
         alive_number = len([alive for alive in neighbors if alive.state == State.HEALTHY])
         zombies_number = len([zombies for zombies in neighbors if zombies.state == State.ZOMBIE])
         # if no human neighbors, move away from the closest zombies
         if alive_number == 0 and zombies_number > 0:
-            return FleeZombiesStrategy(copy.copy(individual), legal_directions, neighbors)
+            return FleeZombiesStrategy(individual, legal_directions, neighbors)
         # if no zombies neighbors, move towards the closest human
         elif zombies_number == 0 and alive_number > 0:
-            return ChaseHumansStrategy(copy.copy(individual), legal_directions, neighbors)
+            return ChaseHumansStrategy(individual, legal_directions, neighbors)
         # if both human and zombies neighbors, zombies move towards the closest human and human move away from the closest zombies
         else:
             if individual.state == State.ZOMBIE and alive_number > 0:
-                return ChaseHumansStrategy(copy.copy(individual), legal_directions, neighbors)
+                return ChaseHumansStrategy(individual, legal_directions, neighbors)
             elif (individual.state == State.HEALTHY or individual.state == State.INFECTED) and zombies_number > 0:
-                return FleeZombiesStrategy(copy.copy(individual), legal_directions, neighbors)
+                return FleeZombiesStrategy(individual, legal_directions, neighbors)
             elif individual.state == State.DEAD:
-                return NoMovementStrategy(copy.copy(individual), legal_directions, neighbors)
+                return NoMovementStrategy(individual, legal_directions, neighbors)
             else:
-                return BrownianMovementStrategy(copy.copy(individual), legal_directions, neighbors)
+                return BrownianMovementStrategy(individual, legal_directions, neighbors)
 
     # may consider update the grid according to the individual's location
     # after assigning all new locations to the individuals
@@ -269,20 +267,18 @@ class Individual:
         return self.interact_range + 3
 
     # fluent interface
-    def add_connection(self, other: Individual) -> Individual:
+    def add_connection(self, other: Individual) -> None:
         self.connections.append(other)
-        return self
 
-    def move(self, direction: tuple[int, int]) -> Individual:
+    def move(self, direction: tuple[int, int]) -> None:
         self.location = tuple(np.add(self.location, direction))
         # self.location[0] += direction[0]
         # self.location[1] += direction[1]
-        return self
 
     def choose_direction(self, movement_strategy) -> tuple[int, int]:
         return movement_strategy.choose_direction()
 
-    def update_state(self, severity: float) -> Individual:
+    def update_state(self, severity: float) -> None:
         if self.state == State.HEALTHY:
             self.state_machine = HealthyMachine(self)
         elif self.state == State.INFECTED:
@@ -293,7 +289,6 @@ class Individual:
             pass
         # Update the state of the individual based on the current state and the interactions with other people
         self.state_machine.update_state(severity)
-        return self
 
     def get_info(self) -> str:
         return f"Individual {self.id} is {self.state.name} and is located at {self.location}, having connections with {self.connections}, infection severity {self.infection_severity}, interact range {self.interact_range}, and sight range {self.sight_range}."
@@ -357,7 +352,7 @@ class School:
             i, j = individuals.location
             cell = self.get_individual((i, j))
 
-            if cell is None:
+            if cell is None or cell.state == State.DEAD:
                 continue
 
             if randomness < migration_probability:
@@ -366,6 +361,7 @@ class School:
                 self.move_individual(cell, direction)
             else:
                 continue
+
                 # if right next to then don't move
                 # get neighbors with larger and larger range until there is a human
                 # sight range is different from interact range
@@ -412,11 +408,9 @@ class School:
 
     def not_occupied(self, location: tuple[int, int]) -> bool:
         # check if the location is empty
-        return self.grid[location[0]][location[1]] == None
+        return self.grid[location[0]][location[1]] is None
 
-    """
-        return any(agent.position == (x, y) for agent in self.agents)
-    """
+    # return any(agent.position == (x, y) for agent in self.agents)
 
     def move_individual(self, individual: Individual, direction: tuple[int, int]) -> None:
         old_location = individual.location
@@ -579,7 +573,7 @@ class PopulationObserver(Observer):
             color=sns.color_palette("deep")
         )
         # Set axis range as maximum count states
-        plt.ylim(0, self.statistics[0]["population_size"])
+        plt.ylim(0, self.statistics[0]["population_size"] + 1)
         # Put a legend to the right of the current axis
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         # Show the plot
@@ -604,8 +598,8 @@ class PopulationObserver(Observer):
         ax.scatter(x, y, c=cell_states_value, cmap=cmap)
 
         # Set axis range
-        ax.set_xlim(-1, self.subject.school.school_size)
-        ax.set_ylim(-1, self.subject.school.school_size)
+        ax.set_xlim(-1, self.subject.school.school_size + 1)
+        ax.set_ylim(-1, self.subject.school.school_size + 1)
 
         # Put a legend to the right of the current axis
         ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=State.name_list())
@@ -645,7 +639,7 @@ class PopulationAnimator(Observer):
         ax.set_xlabel("x")
         ax.set_ylabel("y")
         # Set axis range
-        ax.set_ylim(0, len(self.agent_history[0]))
+        ax.set_ylim(0, len(self.agent_history[0]) + 1)
 
         # create the bar chart
         bars = ax.bar(x, y[0], tick_label=ticks, label=State.name_list(), color=sns.color_palette("deep"))
@@ -683,6 +677,8 @@ class PopulationAnimator(Observer):
     def scatter_chart_animation(self, x, y, cell_states_value):
         # Create a figure
         fig, ax = plt.subplots(1, 1)
+        ax.set_xlim(-1, self.subject.school.school_size + 1)
+        ax.set_ylim(-1, self.subject.school.school_size + 1)
         
         # Create an animation function
         def animate(i, sc, label):
