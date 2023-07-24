@@ -1,5 +1,17 @@
 
 """
+Here are a few potential code smells I see in your simulation code:
+
+- Combining of multiple responsibilities in classes - The `Individual` class handles movement, state changes, connections, etc. It may be better to break out some of these responsibilities into separate classes.
+
+- Usage of global state - The simulation relies on some global shared state like the `Population` and `School` objects. This can make the code harder to understand and test.
+
+- Lack of abstraction - Some low level implementation details like directly accessing grid cells leak into the higher level classes. An abstraction layer could help.
+
+Overall the code is well-structured with good use of patterns like state machine, strategy, and observer. But applying some refactoring techniques could help improve readability, maintainability and extensibility. Let me know if any of those code smells need more clarification!
+"""
+
+"""
 # defense that will decrease the probability of infection and death
 
 Define the rules of the simulation
