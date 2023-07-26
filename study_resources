@@ -484,6 +484,18 @@ https://github.com/srivatsankrishnan/oss-arch-gym
 https://scikit-opt.github.io/
 https://scikit-optimize.github.io/stable/
 
+monte carlo alphazero
+https://web.engr.oregonstate.edu/~afern/classes/cs533/notes/mcp-trees.pdf
+- When you have a tough planning problem and a simulator, try Monte-Carlo planning.
+- Basic principles derive from the multi-arm bandit.
+- Policy rollout and switching are great ways to exploit existing policies and make them better.
+- If a good heuristic exists, then shallow sparse sampling can give good results.
+- UCT is often quite effective, especially when combined with domain knowledge.
+https://cmudeeprl.github.io/403_website/assets/lectures/s21/S21_lec17_MCTS_priorknowledge.pdf
+- Basic mcts pseudo code
+- Reduce search depth when we estimate the node value using value network
+- Reduce search breath when we expand the node using action network
+
 Software Design
 https://www.youtube.com/watch?v=tAuRQs_d9F8
 https://www.youtube.com/watch?v=qpOcRG3e9Q8
@@ -1141,6 +1153,10 @@ https://github.com/lamini-ai/lamini
 https://www.lamini.ai/
 https://colab.research.google.com/drive/1QMeGzR9FnhNJJFmcHtm9RhFP3vrwIkFn?usp=sharing
 https://www.marktechpost.com/2023/07/20/meet-lamini-ai-a-revolutionary-llm-engine-empowering-developers-to-train-chatgpt-level-language-models-with-ease/
+https://blog.streamlit.io/how-to-build-a-llama-2-chatbot/
+https://towardsdatascience.com/build-your-first-deep-learning-app-within-an-hour-4e80c120e99f
+https://lablab.ai/t/ai21-labs-tutorial-how-to-create-a-contextual-answers-app
+https://towardsdatascience.com/leveraging-llama-2-features-in-real-world-applications-building-scalable-chatbots-with-fastapi-406f1cbeb935
 
 bard api
 https://github.com/dsdanielpark/Bard-API
