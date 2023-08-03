@@ -8,19 +8,6 @@ from scipy.integrate import solve_ivp
 from scipy.optimize import fsolve
 
 """
-One potential advantage of using differential equations to model a zombie apocalypse is that they can provide a detailed, continuous description of the evolution of the system over time. This can allow for a more accurate prediction of the behavior of the population, as well as the identification of any critical thresholds or tipping points that might occur. However, solving differential equations can be mathematically challenging, and the model may be sensitive to changes in the assumptions or parameters that are used.
-Matrix algebra can also be used to model a zombie apocalypse, and has the advantage of being able to represent the system in a compact and easily manipulable form. Matrix algebra can also be used to analyze the stability and convergence of the system, which can be useful for predicting the long-term behavior of the population. However, matrix algebra is generally less detailed than differential equations, and may not be able to capture all of the nuances of the system.
-Computer simulations can be a powerful tool for modeling a zombie apocalypse, as they can allow for the incorporation of a wide range of factors and variables into the model. Computer simulations can also be run quickly and easily, allowing for the exploration of different scenarios and sensitivity analyses. However, computer simulations rely on the accuracy and validity of the underlying mathematical models, and may not always be able to capture all of the complexity of the system.
-
-The first approach for combining differential equations, matrix algebra, and computer simulations to model a zombie apocalypse would involve the following steps:
-Use differential equations to describe the detailed, continuous evolution of the system over time. This might involve defining a set of differential equations that represent the various factors that can affect the population, such as birth rates, death rates, immigration, and emigration.
-Use matrix algebra to analyze the stability and convergence of the system. This might involve representing the differential equations as a matrix equation, and using matrix operations to analyze the behavior of the system over time. This can help to identify any critical thresholds or tipping points that might occur, as well as the long-term behavior of the population.
-Incorporate the results of the matrix algebra analysis into a computer simulation. This might involve using the results of the matrix algebra analysis to specify the initial conditions and parameters of the simulation, as well as the rules for how the system evolves over time.
-Use the computer simulation to explore different scenarios and sensitivity analyses. This might involve running the simulation under different sets of assumptions and parameters, and analyzing the results to see how they compare to the predictions of the differential equations and matrix algebra.
-Overall, this approach combines the strengths of differential equations, matrix algebra, and computer simulations in order to provide a detailed, continuous description of the evolution of the system over time, as well as the ability to explore different scenarios and sensitivity analyses.
-"""
-
-"""
 Here is an example of how the first approach for combining differential equations, matrix algebra, and computer simulations could be implemented in Python:
 """
 
@@ -40,20 +27,31 @@ def find_equilibrium_points(growth_rate, carrying_capacity, death_rate, emigrati
     Find the equilibrium points of the differential equation, and identify stable and unstable equilibrium points and oscillations.
     """
     equilibrium_points = fsolve(dP_dt, [-1000, -100, -10, -1, 0, 1, 10, 100, 1000], args=(
-        growth_rate, carrying_capacity, death_rate, emigration_rate))
+        0, growth_rate, carrying_capacity, death_rate, emigration_rate)) # adding time t=0
     equilibrium_points = [point for point in equilibrium_points if np.isclose(
         dP_dt(point, 0, growth_rate, carrying_capacity, death_rate, emigration_rate), 0)]
     return equilibrium_points
+
 
 
 def analyze_stability(P, growth_rate, carrying_capacity, death_rate, emigration_rate):
     """
     Analyze the stability and convergence by representing the differential equation as a matrix equation and use matrix algebra to find eigenvalues and eigenvectors and analyze the behavior of the system over time.
     """
-    A = np.array(
-        [[-death_rate, -emigration_rate, growth_rate * (1 - P/carrying_capacity)]])
+    # Define the matrix
+    A = np.array([[-growth_rate + death_rate + emigration_rate, 0], [growth_rate, 0]])
+
+    # Find the eigenvalues and eigenvectors
     eigenvalues, eigenvectors = np.linalg.eig(A)
-    return eigenvalues, eigenvectors
+
+    # Find the eigenvector associated with the eigenvalue of 0
+    eigenvector = eigenvectors[:, np.isclose(eigenvalues, 0)]
+
+    # Find the equilibrium points
+    equilibrium_points = find_equilibrium_points(
+        growth_rate, carrying_capacity, death_rate, emigration_rate)
+
+    return eigenvalues, eigenvectors, eigenvector, equilibrium_points
 
 
 def perform_sensitivity_analysis(t0, t_final, P0, growth_rate, carrying_capacity, death_rate, emigration_rate, parameter_values):
@@ -65,7 +63,7 @@ def perform_sensitivity_analysis(t0, t_final, P0, growth_rate, carrying_capacity
         sensitivity_solution = solve_ivp(dP_dt, [t0, t_final], [P0], args=(
             growth_rate_list, carrying_capacity, death_rate, emigration_rate))
         sensitivity_results.append(sensitivity_solution.y[0])
-    return sensitivity_results
+    return sensitivity_solution.t, sensitivity_results
 
 
 def generate_numerical_solution(t0, t_final, P0, growth_rate, carrying_capacity, death_rate, emigration_rate):
@@ -111,6 +109,37 @@ def run_monte_carlo_simulation(t0, t_final, growth_rate, carrying_capacity, deat
   return t_values, P_values, mean_P, std_P
 
 
+def plot_equilibrium_points(equilibrium_points):
+    plt.scatter(equilibrium_points, np.zeros(len(equilibrium_points)))
+    plt.xlabel("Population size")
+    plt.show()
+
+def plot_sensitivity_analysis_results(t, sensitivity_results, parameter_values):
+    for i, sensitivity_result in enumerate(sensitivity_results):
+        plt.plot(t, sensitivity_result, label=f"growth rate = {parameter_values[i]}")
+    plt.xlabel("Time")
+    plt.ylabel("Population size")
+    plt.legend()
+    plt.show()
+
+def plot_numerical_solution(t, P):
+    plt.plot(t, P, label="Population size")
+    plt.xlabel("Time")
+    plt.ylabel("Population size")
+    plt.legend()
+    plt.show()
+
+def plot_monte_carlo_simulation(t_values, P_values, mean_P, std_P):
+    for P_value in P_values:
+        plt.plot(t_values[0], P_value, color="gray", alpha=0.1)
+    plt.plot(t_values[0], mean_P, label="Mean population size")
+    plt.fill_between(t_values[0], mean_P-std_P, mean_P+std_P, alpha=0.25, label="Standard deviation")
+    plt.xlabel("Time")
+    plt.ylabel("Population size")
+    plt.legend()
+    plt.show()
+
+
 
 # Define the initial conditions for the simulation
 P0 = 100
@@ -135,17 +164,18 @@ death_rate_bounds = (0.01, 0.1)
 emigration_rate_bounds = (0.01, 0.1)
 P0_bounds = (50, 150)
 
-# Find the equilibrium points
-equilibrium_points = find_equilibrium_points(
-    growth_rate, carrying_capacity, death_rate, emigration_rate)
-print("Equilibrium points:", equilibrium_points)
+
+# Find equilibrium points and perform analyses
+equilibrium_points = find_equilibrium_points(growth_rate, carrying_capacity, death_rate, emigration_rate)
+print("Equilibrium points are the population sizes at which the population neither grows nor shrinks. For this system, the equilibrium points are:", equilibrium_points)
 
 # Analyze the stability of the system
-eigenvalues, eigenvectors = analyze_stability(
+eigenvalues, eigenvectors, eigenvector, equilibrium_points = analyze_stability(
     P0, growth_rate, carrying_capacity, death_rate, emigration_rate)
-# Analyze the eigenvalues and eigenvectors to gain insights into the behavior of the system
+print("\n\nStability Analysis:\nEigenvalues and eigenvectors provide insights into the behavior of the system. Here are the results:")
+
 for i, (eigenvalue, eigenvector) in enumerate(zip(eigenvalues, eigenvectors)):
-    print(f"Eigenvalue {i}: {eigenvalue}")
+    print(f"\nEigenvalue {i}: {eigenvalue}")
     print(f"Eigenvector {i}: {eigenvector}")
 
     # Interpret the real part of the eigenvalue
@@ -163,56 +193,30 @@ for i, (eigenvalue, eigenvector) in enumerate(zip(eigenvalues, eigenvectors)):
     # Interpret the eigenvector
     print(f"Eigenvector {i} points in the direction {eigenvector}, indicating that this is the direction in which the system is most likely to change")
 
-"""
-# Set the equilibrium initial population size
-P_init = eigenvectors[:, np.argmax(eigenvalues)]
-# Generate a numerical solution of the equation
-t, P = generate_numerical_solution(t0, t_final, P_init, growth_rate, carrying_capacity, death_rate, emigration_rate)
-"""
+print("\nPlotting the equilibrium points:")
+plot_equilibrium_points(equilibrium_points)
 
-# Perform a sensitivity analysis
-sensitivity_results = perform_sensitivity_analysis(
+print("\nPerforming a sensitivity analysis to identify how sensitive the system is to changes in the growth rate:")
+t, sensitivity_results = perform_sensitivity_analysis(
     t0, t_final, P0, growth_rate, carrying_capacity, death_rate, emigration_rate, parameter_values)
-print("Sensitivity results:", sensitivity_results)
+print("\nSensitivity results:", sensitivity_results)
 
-# Plot the sensitivity analysis results
-for i, sensitivity_result in enumerate(sensitivity_results):
-    plt.plot(t, sensitivity_result, label=f"growth rate = {parameter_values[i]}")
-plt.xlabel("Time")
-plt.ylabel("Population size")
-plt.legend()
-plt.show()
+print("\nPlotting the results of the sensitivity analysis:")
+plot_sensitivity_analysis_results(t, sensitivity_results, parameter_values)
 
-# Generate a numerical solution of the equation
+print("\nGenerating a numerical solution of the differential equation to simulate the population over time:")
 t, P = generate_numerical_solution(
     t0, t_final, P0, growth_rate, carrying_capacity, death_rate, emigration_rate)
 print("Time points:", t)
 print("Population size:", P)
 
-# Plot the numerical solution of the simulation
-plt.plot(t, P, label="Population size")
-plt.xlabel("Time")
-plt.ylabel("Population size")
-plt.legend()
-plt.show()
+print("\nPlotting the numerical solution:")
+plot_numerical_solution(t, P)
 
-# Run the Monte Carlo simulation
+print("\nRunning a Monte Carlo simulation to observe the variability in the population size due to variability in the parameters and initial conditions:")
 t_values, P_values, mean_P, std_P = run_monte_carlo_simulation(t0, t_final, growth_rate, carrying_capacity, death_rate, emigration_rate, num_simulations, growth_rate_bounds, carrying_capacity_bounds, death_rate_bounds, emigration_rate_bounds, P0_bounds)
 
-# Plot the results of the monte carlo simulation
-plt.plot(t_values, mean_P, label="Mean population size")
-plt.plot(t_values, mean_P + std_P, label="Mean population size + standard deviation")
-plt.plot(t_values, mean_P - std_P, label="Mean population size - standard deviation")
-plt.xlabel("Time")
-plt.ylabel("Population size")
-plt.legend()
-plt.show()
+print("\nPlotting the results of the Monte Carlo simulation:")
+plot_monte_carlo_simulation(t_values, P_values, mean_P, std_P)
 
 
-"""
-The find_equilibrium_points function can help you identify the points at which the rate of change of the population size is zero, which can provide insight into the long-term behavior of the population.
-The analyze_stability function can help you identify any stable or unstable equilibrium points, which can provide insight into the sensitivity of the system to changes in the assumptions or parameters.
-The perform_sensitivity_analysis function can help you identify which factors have the greatest impact on the behavior of the population, and can provide insight into how the system might respond to different scenarios or interventions.
-And the generate_numerical_solution function can help you generate a prediction of the population size over time, which can help to identify any trends or patterns in the data.
-The run_monte_carlo_simulation function can be used to run a Monte Carlo simulation of the population size. This can help to incorporate uncertainty and randomness into the simulation, and can be especially useful for analyzing systems with complex behaviors or large numbers of interacting components.
-"""
