@@ -55,6 +55,8 @@ Check whether i encapsulated move prediction inside a function that can be inser
 Query system where movement of each agent is recorded and can be deal with all at the same time at each round
 
 The pygame observer need to take action every round as opposed to matplotlib observer
+
+group all agents that are linked, if all human or all zombie -> move as a group, otherwise -> fight
 """
 
 """
@@ -1164,4 +1166,23 @@ An Agent-Based Model (ABM) can be transformed into a macro-level model by aggreg
 
 Remember, the transformation from an ABM to a macro-level model implies a loss of detail in terms of individual-level interactions and heterogeneities. The macro-level model will provide an overview of the system-level dynamics but might fail to capture some nuances that an ABM could. The choice between using an ABM or a macro-level model should therefore be guided by the nature of the research question, the required level of detail, and the available data and computational resources.
 """
+
+"""
+Given the additional information, the implementation of a zombie apocalypse simulation can be refined further. The population growth of each group - humans, infected, zombies, and dead - will be modeled as follows:
+
+1. Humans:
+The human population would initially decline sharply due to the infection and transition of humans to zombies. This could be modelled with a negative exponential growth curve at the start of the simulation. However, as the simulation progresses, humans learn to defend themselves and possibly control the outbreak. The logistic growth model applies here with the carrying capacity now dependent on effective defense mechanisms, survival strategies, and containment measures. The new birth rate (net of natural deaths and infections) may stabilize or even increase over time.
+
+2. Infected:
+The infected population growth will also start with an exponential growth model, as more humans get infected, but at a slower rate than the zombie population. This is due to the incubation period of the virus before a human fully turns into a zombie. Over time, as effective containment measures are implemented and the interaction between infected and uninfected individuals reduces, the growth rate will start to level off. A logistic growth model could again be used here, where the carrying capacity depends on the effective containment measures and the available uninfected human population.
+
+3. Zombies:
+At the onset of the outbreak, the zombie population will grow exponentially due to a lack of defenses and rapid conversion of infected individuals to zombies. This can be modeled with an exponential growth function. But as humans start to defend themselves and fight back, the zombie growth rate will slow down and eventually level off, transitioning to a logistic growth model. The carrying capacity here would be determined by the combined total of the remaining human and infected populations, and the efficacy of the human defense mechanisms.
+
+4. Dead:
+The population of dead individuals, which includes both humans and zombies, will grow based on the conflict's intensity and the efficiency of containment efforts. Initially, you could use a steep positive exponential growth model due to the high death toll. As humans develop better defenses and containment strategies, the number of dead might decrease, indicating a need for a piecewise function to represent this group's growth model. Over the long run, the growth rate should level off, again represented by a logistic model, where the carrying capacity is a function of the total population and the success of human survival strategies.
+
+As a software engineer, you would use these models to define mathematical functions or methods in your code representing each group's growth rate. The growth rate functions would need to accept parameters for factors like human defenses, survival strategies, containment measures, and current population sizes. Adjusting these parameters allows for different simulation scenarios, from worst-case where the zombies overrun humanity, to best-case where humans effectively contain the outbreak.
+"""
+
 
