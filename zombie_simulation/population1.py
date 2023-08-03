@@ -8,55 +8,6 @@ from scipy.integrate import solve_ivp
 from scipy.optimize import fsolve
 
 """
-Matrix algebra: Another way to model population dynamics is to use matrix algebra, which allows you to represent the transitions between different states of the population (e.g. births, deaths, immigration) as matrix operations. For example, the Leslie matrix is a commonly used matrix model for population growth. Here is an example of how a Leslie matrix could be used to represent the change of population size during a zombie apocalypse:
-"""
-
-def model_population_size(P0, L, t0, t_final):
-    """
-    Model the population size during a zombie apocalypse using a matrix algebra model and a differential equation.
-    """
-    # Define the differential equation
-    def dP_dt(t, P, L):
-        return L @ P
-
-    # Generate a numerical solution of the differential equation
-    solution = solve_ivp(dP_dt, [t0, t_final], P0, args=(L,))
-
-    # Extract the population size at each time point
-    t = solution.t
-    P = solution.y
-
-    return t, P
-
-# Initial population size
-P0 = np.array([10000, 1000, 1000])
-
-# Transition matrix
-L = np.array([[0.9, 0.05, 0.05], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6]])
-
-# Initial time
-t0 = 0
-
-# Set the time period for the simulation (in days)
-t_final = 365
-
-# Model the population size
-t, P = model_population_size(P0, L, t0, t_final)
-
-print(P)
-
-
-"""
-This code defines an initial population size as a NumPy array of three values [10000, 1000, 1000], which represents the number of humans, zombies, and dead bodies in the population. It also defines a transition matrix as a 3x3 NumPy array [[0.9, 0.05, 0.05], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6]], which represents the probability of transitions between the different states (human, zombie, or dead).
-The code then uses a loop to compute the population size at each time point by iteratively multiplying the initial population size by the transition matrix. At the end of the simulation, the final population size will be printed to the console.
-This matrix algebra model is a simplified representation of the population size during a zombie apocalypse, but it can still provide insight into the behavior of the population over time. For example, you could use this model to understand how the number of humans, zombies, and dead bodies in the population changes over time, and to identify any trends or patterns in the data.
-"""
-
-"""
-Logistic growth can be used to model the zombie number growth. It grows exponentially at the start due to the lack of defence of the survivors and slows down when the number of survivors decreases and they get protection.
-"""
-
-"""
 One potential advantage of using differential equations to model a zombie apocalypse is that they can provide a detailed, continuous description of the evolution of the system over time. This can allow for a more accurate prediction of the behavior of the population, as well as the identification of any critical thresholds or tipping points that might occur. However, solving differential equations can be mathematically challenging, and the model may be sensitive to changes in the assumptions or parameters that are used.
 Matrix algebra can also be used to model a zombie apocalypse, and has the advantage of being able to represent the system in a compact and easily manipulable form. Matrix algebra can also be used to analyze the stability and convergence of the system, which can be useful for predicting the long-term behavior of the population. However, matrix algebra is generally less detailed than differential equations, and may not be able to capture all of the nuances of the system.
 Computer simulations can be a powerful tool for modeling a zombie apocalypse, as they can allow for the incorporation of a wide range of factors and variables into the model. Computer simulations can also be run quickly and easily, allowing for the exploration of different scenarios and sensitivity analyses. However, computer simulations rely on the accuracy and validity of the underlying mathematical models, and may not always be able to capture all of the complexity of the system.
