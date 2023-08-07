@@ -31,6 +31,8 @@ Ecommerce store and website
 Project ideas
 A website like quilbot that rephrase sentences where a population of text similar to input text is held and the best fit is optimised using genetic algorithm, fitness is document level text similarity, gene is word
 
+story writing app that emphasize both writing and reading, version control like github, final goal is that every reader can submit their own version of any part of the story and share their revised story based on their's story
+
 Task: Build a Wikipedia Explorer App
 Goal: Create a web or mobile application that displays a random Wikipedia page and allows users to navigate through articles based on their interests.
 Requirements:
@@ -581,6 +583,7 @@ Event-driven programming
 https://zh.wikipedia.org/zh-tw/%E6%BC%94%E5%91%98%E6%A8%A1%E5%9E%8B
 https://dev.to/paulasjes/series/19794
 https://juejin.cn/post/6844904083665453063
+https://hackernoon.com/the-7-software-architecture-books-experienced-developers-need-to-read
 
 data structure
 https://www.youtube.com/playlist?list=PLUl4u3cNGP61Oq3tWYp6V_F-5jb5L2iHb
@@ -1157,6 +1160,10 @@ https://blog.streamlit.io/how-to-build-a-llama-2-chatbot/
 https://towardsdatascience.com/build-your-first-deep-learning-app-within-an-hour-4e80c120e99f
 https://lablab.ai/t/ai21-labs-tutorial-how-to-create-a-contextual-answers-app
 https://towardsdatascience.com/leveraging-llama-2-features-in-real-world-applications-building-scalable-chatbots-with-fastapi-406f1cbeb935
+https://github.com/geekan/MetaGPT/tree/main
+https://github.com/geekan/MetaGPT/blob/main/docs/README_CN.md
+https://www.marktechpost.com/2023/07/31/meet-rap-and-llm-reasoners-two-frameworks-based-on-similar-concepts-for-advanced-reasoning-with-llms/
+https://hackaday.com/2023/07/30/self-hosted-chatbot-focuses-on-privacy/
 
 bard api
 https://github.com/dsdanielpark/Bard-API
