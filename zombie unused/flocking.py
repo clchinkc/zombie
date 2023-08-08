@@ -218,6 +218,43 @@ pygame.quit()
 # https://github.com/warownia1/PythonCollider
 
 """
+The code you provided is a simulation of a system of "zombies" and "humans" using Python's pygame library for rendering and scikit-learn's NearestNeighbors for managing the agents' behaviors. The agents (both humans and zombies) move in a 2D space with certain rules, and the simulation is visualized using pygame. Here's a description of the major components:
+
+Agents
+There are two types of agents: humans and zombies, both inheriting from the Agent class.
+
+Agent: Defines the basic attributes and methods that both human and zombie agents share. Agents have position, velocity, acceleration, color, and a history queue to keep track of the past positions for drawing trails.
+
+Human: Represents a human agent. Humans interact with other nearby humans and avoid zombies. Their movement is determined by cohesion (staying near other humans), alignment (matching velocity with nearby humans), separation (avoiding getting too close to other humans), and avoidance of zombies.
+
+Zombie: Represents a zombie agent. Zombies move towards the nearest human, trying to "turn" them into other zombies.
+
+Sprites
+There are two sprite classes for rendering:
+
+TrailSprite: Used to draw trails behind agents, showing their paths.
+AgentSprite: Renders the current positions of the agents (either human or zombie).
+Simulation Setup
+The window's width and height are defined, and a number of humans and zombies are created with random initial positions.
+
+Main Loop
+The main loop runs the simulation, including:
+
+Event Handling: Manages user inputs such as exiting the game or pausing/unpausing the simulation.
+Separation of Agents: Separates humans and zombies to process their behaviors differently.
+Neighbors Finding: For each human, finds neighboring humans using NearestNeighbors.
+State Update: Updates the state (position, velocity, etc.) of each agent based on the defined rules.
+Zombie Transformation: Checks if any human has been turned into a zombie and updates the agents accordingly.
+Rendering: Clears the screen and draws the trails and agents, and then updates the display.
+HUD: Displays the current count of humans and zombies.
+
+Concluding Remarks
+The code provides an interesting and illustrative example of how simple rules can lead to complex behaviors. Humans try to stay together and avoid zombies, while zombies chase after humans. The combination of cohesion, separation, alignment, and avoidance rules creates emergent flocking behavior among the human agents, while the zombies give an external stimulus that affects this behavior.
+
+This code can be further expanded or modified to create more complex simulations or games by adding additional behaviors, obstacles, or rules.
+"""
+
+"""
 Here are a few suggestions for optimizing this code:
 
 Use pygame.sprite.collide_circle() to check for collisions between circles.
