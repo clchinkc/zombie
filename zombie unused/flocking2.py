@@ -215,8 +215,6 @@ while running:
 pygame.quit()
 
 
-# https://github.com/warownia1/PythonCollider
-
 """
 The code you provided is a simulation of a system of "zombies" and "humans" using Python's pygame library for rendering and scikit-learn's NearestNeighbors for managing the agents' behaviors. The agents (both humans and zombies) move in a 2D space with certain rules, and the simulation is visualized using pygame. Here's a description of the major components:
 
@@ -253,6 +251,8 @@ The code provides an interesting and illustrative example of how simple rules ca
 
 This code can be further expanded or modified to create more complex simulations or games by adding additional behaviors, obstacles, or rules.
 """
+
+# https://github.com/warownia1/PythonCollider
 
 """
 Here are a few suggestions for optimizing this code:
