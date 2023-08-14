@@ -320,8 +320,6 @@ if __name__ == '__main__':
 
 
 
-# https://github.com/warownia1/PythonCollider
-
 """
 Here are a few suggestions for optimizing this code:
 
@@ -334,3 +332,4 @@ Use pygame.sprite.groupcollide() to check for collisions between two groups of s
 Please update the code according to these comments on pygame optimization.
 """
 
+# https://github.com/warownia1/PythonCollider
