@@ -59,14 +59,16 @@ ZOMBIE_COLOR = (255, 0, 0) # Zombies are red
 
 # Simulation Constants
 ZOMBIE_DETECTION_RADIUS = 50
-ZOMBIE_ATTRACTION_FACTOR = 0.125
+ZOMBIE_INFECTION_RADIUS = 10
+ZOMBIE_ATTRACTION_FACTOR = 1
 HUMAN_DETECTION_RADIUS = 50
-HUMAN_AVOIDANCE_RADIUS = 10
-HUMAN_AVOIDANCE_FACTOR = 0.75
+HUMAN_SEPARATION_RADIUS = 20
+HUMAN_AVOIDANCE_RADIUS = 50
+HUMAN_AVOIDANCE_FACTOR = 100
 
-SEPARATION_FACTOR = 0.125
-ALIGNMENT_FACTOR = 0.0125
-COHESION_FACTOR = 0.0125
+SEPARATION_FACTOR = 0.01
+ALIGNMENT_FACTOR = 0.125
+COHESION_FACTOR = 0.01
 
 # Agent Constants
 AGENT_RADIUS = 5
@@ -99,7 +101,6 @@ class Agent:
         
         self.history.append(self.position.copy()) # Store the current position in the history
 
-
     # General cohesion, alignment, and separation behaviors. To be overridden by specializations.
     @abstractmethod
     def calculate_forces(self, agents):
@@ -109,38 +110,41 @@ class Agent:
         return separation + alignment + cohesion
     
     def calculate_separation(self, agents):
-        steering = Vector2(0, 0)
-        count = 0
+        steering = np.array([0.0, 0.0])
+        total = 0
         for agent in agents:
-            if agent is self or not isinstance(agent, type(self)):
-                continue
-            diff = self.position - agent.position
-            diff /= self.position.distance_to(agent.position)
-            steering += diff
-            count += 1
-        return steering if count == 0 else steering / count
+            if agent is not self and isinstance(agent, type(self)):
+                distance = self.position.distance_to(agent.position)
+                if distance < HUMAN_SEPARATION_RADIUS:
+                    diff = self.position - agent.position
+                    steering += diff
+                    total += 1
+        if total:
+            steering /= total
+        return steering
 
     def calculate_alignment(self, agents):
         average_velocity = Vector2(0, 0)
-        if len(agents) <= 1:
-            return average_velocity
+        total = 0
         for agent in agents:
-            if agent is self:
-                continue
-            average_velocity += agent.velocity
-        average_velocity /= len(agents) - 1
+            if agent is not self:
+                average_velocity += agent.velocity
+                total += 1
+        if total:
+            average_velocity /= total
         return average_velocity - self.velocity
 
     def calculate_cohesion(self, agents):
         center_of_mass = Vector2(0, 0)
-        if len(agents) <= 1:
-            return center_of_mass
+        total = 0
         for agent in agents:
-            if agent is self:
-                continue
-            center_of_mass += agent.position
-        center_of_mass /= len(agents) - 1
+            if agent is not self:
+                center_of_mass += agent.position
+                total += 1
+        if total:
+            center_of_mass /= total
         return center_of_mass - self.position
+
 
 class Human(Agent):
     def __init__(self, x, y):
@@ -149,11 +153,16 @@ class Human(Agent):
     def calculate_forces(self, agents):
         humans = [a for a in agents if isinstance(a, Human)]
         zombies = [a for a in agents if isinstance(a, Zombie)]
+        
         separation = self.calculate_separation(humans) * SEPARATION_FACTOR
         alignment = self.calculate_alignment(humans) * ALIGNMENT_FACTOR
         cohesion = self.calculate_cohesion(humans) * COHESION_FACTOR
         avoidance = self.calculate_avoidance(zombies) * HUMAN_AVOIDANCE_FACTOR
-        return separation + alignment + cohesion + avoidance
+
+        friction = -0.01 * (separation + alignment + cohesion + avoidance)
+        noise = Vector2(random.uniform(-0.02, 0.02), random.uniform(-0.02, 0.02))
+        
+        return separation + alignment + cohesion + avoidance + friction + noise
 
     def calculate_avoidance(self, agents):
         steering = Vector2(0, 0)
@@ -161,8 +170,7 @@ class Human(Agent):
             distance = self.position.distance_to(agent.position)
             if distance < HUMAN_AVOIDANCE_RADIUS:  # Humans avoid zombies
                 diff = self.position - agent.position
-                diff /= distance ** 2 # Inverse square law for repulsion
-                steering -= diff
+                steering += diff
         return steering
 
 class Zombie(Agent):
@@ -171,9 +179,15 @@ class Zombie(Agent):
 
     def calculate_forces(self, agents):
         humans = [a for a in agents if isinstance(a, Human)]
-        attraction = self.calculate_attraction(humans) * ZOMBIE_ATTRACTION_FACTOR
-        return attraction
+        closest_human = min(humans, key=lambda human: self.position.distance_to(human.position), default=Human(self.position.x, self.position.y))
+        attraction = (closest_human.position - self.position) * ZOMBIE_ATTRACTION_FACTOR
+        
+        friction = -0.01 * attraction
+        noise = Vector2(random.uniform(-0.02, 0.02), random.uniform(-0.02, 0.02))
+        
+        return attraction + friction + noise
 
+    """
     def calculate_attraction(self, agents):
         steering = Vector2(0, 0)
         for agent in agents:
@@ -181,6 +195,7 @@ class Zombie(Agent):
             diff /= self.position.distance_to(agent.position)  # Attraction force grows with closeness
             steering += diff
         return steering
+    """
 
 
 class AgentSprite(Sprite):
@@ -215,7 +230,8 @@ class Simulation:
     def __init__(self, num_humans=80, num_zombies=20):
         pygame.init()
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
-        self.agents = [Human(random.randint(0, WIDTH), random.randint(0, HEIGHT)) for _ in range(num_humans)]
+        self.agents = []
+        self.agents += [Human(random.randint(0, WIDTH), random.randint(0, HEIGHT)) for _ in range(num_humans)]
         self.agents += [Zombie(random.randint(0, WIDTH), random.randint(0, HEIGHT)) for _ in range(num_zombies)]
         self.agent_sprites = Group(AgentSprite(agent) for agent in self.agents)
         self.trail_sprites = Group(TrailSprite(agent) for agent in self.agents)
@@ -253,7 +269,7 @@ class Simulation:
 
         # Fit the NearestNeighbors model to the agents' positions
         positions = np.array([agent.position for agent in self.agents])
-        nbrs = NearestNeighbors(n_neighbors=10, n_jobs=-1).fit(positions)
+        nbrs = NearestNeighbors(n_neighbors=20, n_jobs=-1).fit(positions)
 
         # Update agent states
         for human in humans:
@@ -263,6 +279,16 @@ class Simulation:
             forces = human.calculate_forces(neighbours)
             human.acceleration = forces
             human.move()
+            
+            # Check if human is infected
+            if any([human.position.distance_to(zombie.position) < ZOMBIE_INFECTION_RADIUS for zombie in neighbours if isinstance(zombie, Zombie)]):
+                self.agents.remove(human)
+                self.agent_sprites.remove([s for s in self.agent_sprites if s.agent == human][0])
+                self.trail_sprites.remove([s for s in self.trail_sprites if s.agent == human][0])
+                new_zombie = Zombie(human.position.x, human.position.y)
+                self.agents.append(new_zombie)
+                self.agent_sprites.add(AgentSprite(new_zombie))
+                self.trail_sprites.add(TrailSprite(new_zombie))
 
         for zombie in zombies:
             # Update based on neighbours
@@ -271,6 +297,7 @@ class Simulation:
             forces = zombie.calculate_forces(neighbours)
             zombie.acceleration = forces
             zombie.move()
+
 
     def render_agents(self):
         self.screen.fill(BACKGROUND_COLOR)
@@ -286,10 +313,24 @@ class Simulation:
         self.screen.blit(pygame.font.SysFont('Arial', 20).render(f'Humans: {humans_count}', False, WORD_COLOR), (10, 10))
         self.screen.blit(pygame.font.SysFont('Arial', 20).render(f'Zombies: {zombies_count}', False, WORD_COLOR), (10, 30))
         pygame.display.flip()
-        self.clock.tick(60)
+        self.clock.tick(120)
 
 if __name__ == '__main__':
     Simulation().run()
 
 
+
+# https://github.com/warownia1/PythonCollider
+
+"""
+Here are a few suggestions for optimizing this code:
+
+Use pygame.sprite.collide_circle() to check for collisions between circles.
+
+Use pygame.sprite.spritecollide() to check for collisions between a sprite and a group of sprites.
+
+Use pygame.sprite.groupcollide() to check for collisions between two groups of sprites.
+
+Please update the code according to these comments on pygame optimization.
+"""
 
