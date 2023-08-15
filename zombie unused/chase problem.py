@@ -574,3 +574,5 @@ if __name__ == '__main__':
 
 # https://towardsdatascience.com/hyperbolic-deep-reinforcement-learning-b2de787cf2f7
 
+# Multi-Agent PPO
+# https://github.com/marlbenchmark/on-policy

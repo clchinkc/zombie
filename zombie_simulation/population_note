@@ -1233,3 +1233,49 @@ Creating a world model for a zombie apocalypse simulation involves defining vari
 Once you've designed the world model, you can use simulation techniques like agent-based modeling or cellular automata to run scenarios and observe how the zombie apocalypse unfolds based on the rules you've defined. Researchers and enthusiasts can use such simulations to explore various strategies for survival, containment, or eradication of the zombie threat in a controlled virtual environment.
 """
 
+"""
+Github agent based simulation
+Github agent based modelling
+Github multi agent simulation
+"""
+
+"""
+https://github.com/topics/mason?l=java
+https://github.com/eclab/mason
+https://github.com/rlegendi/mason-examples
+https://github.com/BaguetteEater/panikabor-3000
+https://github.com/emanoelvianna/yellow-fever-simulation
+https://github.com/emanoelvianna/study-codes-mason-and-geomason
+https://github.com/justinnk/mason-ssa
+https://github.com/Chostakovitch/PicSimulator
+https://github.com/justinnk/mason-ssa
+https://github.com/NetLogo/models
+"""
+
+"""
+https://github.com/krABMaga/krABMaga
+https://github.com/orgs/krABMaga/repositories
+https://github.com/facorread/rust-agent-based-models
+"""
+
+"""
+https://www.techbang.com/posts/108675-game-engine-simulate
+https://bsarkar321.github.io/blog/overcooked_madrona/index.html
+https://madrona-engine.github.io/shacklett_siggraph23.pdf
+https://madrona-engine.github.io/
+https://github.com/shacklettbp/madrona
+"""
+
+"""
+!!! python
+https://github.com/JoelForamitti/agentpy
+https://github.com/proroklab/VectorizedMultiAgentSimulator
+"""
+
+"""
+There are three main approaches to implementing time-travel debugging:
+
+Record & Replay: Record all non-deterministic inputs to a program during its execution. Then, during the debug phase, the program can be deterministically replayed using the recorded inputs in order to reconstruct any prior state.
+Snapshotting: Periodically take snapshots of a program's entire state. During debugging, the program can be rolled back to these saved states. This method can be memory-intensive because it involves storing the entire state of the program at multiple points in time.
+Instrumentation: Add extra code to the program that logs changes in its state. This extra code allows the debugger to step the program backwards by reverting changes. However, this approach can significantly slow down the program's execution.
+"""

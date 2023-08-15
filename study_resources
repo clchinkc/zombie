@@ -92,6 +92,7 @@ Plagiarism Checker
 Content writing is one of the most prolific online businesses. The market lacks a free tool that can be used to check for plagiarism in documents. You can use a natural language processing library along with the Google search API to create a program that searches the first few pages of Google and checks for plagiarism.
 
 
+https://levelup.gitconnected.com/building-a-full-text-search-app-using-django-docker-and-elasticsearch-d1bc18504ca4
 **Title:** Text Search Program
 
 **Overview:**  
@@ -258,6 +259,7 @@ atcold.githubdotio/pytorch-Deep-Learning/
 https://github.com/mtdvio/every-programmer-should-know
 Deep learning in time series analysis
 Machine learning for algorithmic trading
+https://github.com/CyC2018/CS-Notes
 
 Chart animation
 https://github.com/dexplo/bar_chart_race
@@ -674,6 +676,14 @@ https://www.youtube.com/watch?v=zmWf_cHyo8s
 https://google.github.io/styleguide/pyguide.html
 https://www.youtube.com/watch?v=wgWwJSnhgDU
 https://www.youtube.com/watch?v=8OKTAedgFYg&ab_channel=PatrickLoeber
+https://github.com/Kristories/awesome-guidelines
+https://github.com/trekhleb/state-of-the-art-shitcode
+https://github.com/topics/code-review
+
+code review
+https://github.com/facebook/pyre-check
+https://github.com/analysis-tools-dev/static-analysis
+
 
 Unit test
 https://www.youtube.com/watch?v=ULxMQ57engo
@@ -839,6 +849,7 @@ https://en.m.wikipedia.org/wiki/Pathfinding
 博弈論
 群動
 https://www.discount-courses.com/courses/unreal-engine-5-fundamentals
+https://www.charlieintel.com/games/best-combos-in-game-dev-tycoon-212706/
 
 Godot
 https://github.com/godotengine/godot-vscode-plugin
@@ -1222,6 +1233,14 @@ https://huggingface.co/stabilityai/StableBeluga1-Delta
 https://huggingface.co/stabilityai/StableBeluga2
 stablechat
 WizardMath-70B-V1.0
+https://github.com/101dotxyz/GPTeam
+https://wandb.ai/ayush-thakur/llama-index-report/reports/Building-Advanced-Query-Engine-and-Evaluation-with-LlamaIndex-and-W-B--Vmlldzo0OTIzMjMy
+https://towardsdatascience.com/llamaindex-the-ultimate-llm-framework-for-indexing-and-retrieval-fa588d8ca03e
+https://gpt-index.readthedocs.io/en/stable/
+https://gpt-index.readthedocs.io/en/latest/core_modules/query_modules/query_engine/root.html
+https://github.com/jerryjliu/llama_index
+https://zhuanlan.zhihu.com/p/613155165
+https://huggingface.co/stabilityai/stablecode-instruct-alpha-3b
 
 bard api
 https://github.com/dsdanielpark/Bard-API
