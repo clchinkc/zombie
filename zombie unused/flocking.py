@@ -323,11 +323,11 @@ if __name__ == '__main__':
 """
 Here are a few suggestions for optimizing this code:
 
-Use pygame.sprite.collide_circle() to check for collisions between circles.
+Use pygame.sprite.collide_circle() to check for collisions between sprites.
 
-Use pygame.sprite.spritecollide() to check for collisions between a sprite and a group of sprites.
+Use pygame.sprite.spritecollide() to check for collisions between sprites and a group of sprites.
 
-Use pygame.sprite.groupcollide() to check for collisions between two groups of sprites.
+Use pygame.sprite.groupcollide() to check for collisions between humans and zombies more efficiently
 
 Please update the code according to these comments on pygame optimization.
 """

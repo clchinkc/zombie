@@ -28,59 +28,114 @@ Capstone projects: high complexity (put everything together, >500 lines, use int
 Social media clones, like twitter, discord, reddit, etc.
 Ecommerce store and website
 
+
+
 Project ideas
 A website like quilbot that rephrase sentences where a population of text similar to input text is held and the best fit is optimised using genetic algorithm, fitness is document level text similarity, gene is word
 
 story writing app that emphasize both writing and reading, version control like github, final goal is that every reader can submit their own version of any part of the story and share their revised story based on their's story
 
-Task: Build a Wikipedia Explorer App
-Goal: Create a web or mobile application that displays a random Wikipedia page and allows users to navigate through articles based on their interests.
-Requirements:
-- The app should be able to generate a random Wikipedia page upon user request.
-- The app should allow users to select categories they are interested in and display a random Wikipedia page within that category.
-- The app should have a rabbit hole mode that allows users to navigate from one article to another by clicking on links within the article. Each new article should be randomly selected from the links in the previous article.
-- The app should have a user-friendly interface that allows for easy navigation and exploration of Wikipedia articles.
-Suggested steps to complete the task:
-1. Plan the app architecture and decide on the programming language and framework you want to use.
-2. Use the Wikipedia API to retrieve articles and their categories.
-3. Implement a random page generator function that fetches a random Wikipedia page and displays it to the user.
-4. Implement a category selection feature that allows users to choose a category and generates a random Wikipedia page within that category.
-5. Implement the rabbit hole mode feature that enables users to navigate through articles by clicking on links in the current article.
-6. Create a user-friendly interface for the app that allows for easy navigation and exploration of Wikipedia articles.
-7. Test the app to ensure it is functioning correctly and make any necessary adjustments.
-8. Deploy the app to a web or mobile platform for users to access.
-Optional Enhancements:
-- Allow users to save their favorite articles and create a personalized library of Wikipedia pages.
-- Add a search feature that enables users to search for specific Wikipedia articles.
-- Incorporate a feature that allows users to share articles on social media platforms.
+
+**Wikipedia Explorer App**
+
+**Project Overview:**  
+Design and implement an intuitive application that enables users to delve into the vast content of Wikipedia in a fun and exploratory manner. Users should be able to unearth random Wikipedia articles, navigate through them based on preference, and immerse themselves in a chain of interconnected articles.
+
+**Primary Objectives:**  
+1. **Random Article Discovery:** At the tap of a button, present users with a random Wikipedia article.
+2. **Categorized Exploration:** Allow users to select specific categories of interest and present articles only from those categories.
+3. **Rabbit Hole Exploration:** Give users the thrill of a connected reading journey. Upon choosing this mode, every clicked link within an article should lead to another random article from within those linked articles.
+
+**Technical Requirements:**  
+1. **App Architecture Planning:** Chart out the app's structure, determining the most suitable programming language and framework.
+2. **Leverage Wikipedia API:** Harness the Wikipedia API to fetch articles, categories, and internal links.
+3. **Random Page Generator:** Develop a function that extracts a random Wikipedia article and showcases it.
+4. **Category-wise Article Generation:** Create a feature where users can cherry-pick their areas of interest, after which they'll be shown a random article from the chosen category.
+5. **Rabbit Hole Mode Development:** Implement the feature that offers users an exploratory journey through interconnected articles.
+6. **UI/UX Design:** Design an intuitive and engaging interface, ensuring smooth and straightforward navigation.
+7. **Quality Assurance:** Conduct thorough testing to guarantee flawless functionality, followed by iterations based on feedback.
+8. **Deployment:** Make the application accessible by deploying it on the web or as a mobile application.
+
+**Optional Features:**  
+1. **Personalized Libraries:** Equip users with the option to bookmark their adored articles, paving the way for a bespoke Wikipedia library.
+2. **Article Search:** Incorporate a search bar allowing users to hunt down specific articles effortlessly.
+3. **Social Sharing:** Integrate social media sharing capabilities, enabling users to share their findings across various platforms.
+
+**Final Thoughts:**  
+This project combines the information powerhouse of Wikipedia with the excitement of exploration. It offers users an educationally thrilling journey, whether they're diving into random discoveries, seeking specific categories, or embarking on a linked-article odyssey. Happy exploring!
 
 
-One project that could make use of your experience with the previously mentioned projects is a multi-player online card game. You could incorporate your knowledge of object-oriented programming, GUI design, and algorithm design to create a fun and engaging game that allows players to compete against each other in a virtual card game. The game could feature a variety of card games, including blackjack, poker, and other popular games, and could utilize a similar GUI and back-end design as the previous projects. Additionally, the game could include features such as real-time chat, leaderboards, and the ability to customize avatars and game settings. This project would be a great way to demonstrate your skills in Python and showcase your ability to build complex, interactive applications.
+Content Aggregator
+The internet is filled with websites, articles, and information. When we want to find something, it is tough to go through each of them. For this use, you can create a content aggregator that automatically searches popular websites and looks for relevant content and then complies with all the content and lets the user choose which content they want. It is very much like Google but unbiased. And this is the perfect idea for your next python project!
+
+
+YouTube video downloader
+One of the best ideas to start experimenting with your hands-on python projects for students is working on a YouTube video downloader. This is the best example of introducing python to beginners in a fun way. More than a billion people watch YouTube every month. Sometimes there are videos we like to download permanently. YouTube doesn’t give you that option, but you can create an app with a simple UI and the ability to download YouTube videos in different formats and video quality. This project looks tough, but it is straightforward when you start working on it.
+
+
+Expense Tracker
+As you can guess by the name, an expense tracker is a software application that lets you keep track of your expenses, and even analyze the expenses. In this python project, you will build a simple expense tracker that can keep track of the user’s expenses. Expense tracker is one of the trending python projects which should also be able to perform statistical analysis to give accurate insights to users on their expenses so that they can plan their expenses better. You can use PySimpleGUI to create the interface for this application, and even Python libraries like Pandas and Matplotlib can be handy tools for the project.
+
+
+One project ideda is a multi-player online card game. You could incorporate your knowledge of object-oriented programming, GUI design, and algorithm design to create a fun and engaging game that allows players to compete against each other in a virtual card game. The game could feature a variety of card games, including blackjack, poker, and other popular games, and could utilize a similar GUI and back-end design as the previous projects. Additionally, the game could include features such as real-time chat, leaderboards, and the ability to customize avatars and game settings. This project would be a great way to demonstrate your skills in Python and showcase your ability to build complex, interactive applications.
 
 Another project idea could be a text-based adventure game. This project would involve creating a story with multiple branching paths and choices for the player to make, and implementing a system for tracking the player's progress and displaying the appropriate outcomes based on their choices. This project would involve using object-oriented programming to create the various characters and objects in the game, as well as implementing a system for handling user input and displaying the game's text. Additionally, the game could include features such as a save/load system, multiple endings, and a scoring system. This project would be a great way to showcase your creativity and storytelling abilities, as well as your skills in Python and object-oriented programming.
 
 This Python project uses the tkinter library to create a simple text editor with a Graphical User Interface (GUI). The text editor allows users to open and save files, featuring standard GUI components such as labels, buttons, and entry fields. The code demonstrates how to use tkinter to build the interface, as well as how to implement file handling for opening and saving files. This project is a great way to learn about file handling and GUI programming, and can be further expanded by adding more features like a "find word" function.
 
-YouTube video downloader
-One of the best ideas to start experimenting with your hands-on python projects for students is working on a YouTube video downloader. This is the best example of introducing python to beginners in a fun way. More than a billion people watch YouTube every month. Sometimes there are videos we like to download permanently. YouTube doesn’t give you that option, but you can create an app with a simple UI and the ability to download YouTube videos in different formats and video quality. This project looks tough, but it is straightforward when you start working on it.
-
-Random Wikipedia Article
-This is a complicated yet straightforward program. The program searches Wikipedia and fetches a random article. Then it asks the user if he wants to read that article or not. If the answer is yes, the material is shown; otherwise, another random report is presented. This is an apt project for those developers at the intermediary level looking to further their careers by developing creative and complex Python programs. 
-
-Reddit Bot
-This is one of the excellent python project ideas for beginners. Reddit is a handy platform, and many people want to be online as much as they can. You can program a bot that monitors subreddits and reports whenever they find something useful. It will save Redditors a lot of time and provide helpful information with it.
 
 Post-it Notes
 Post-it notes are an excellent way to note down trivial chores so that you don’t forget to do them. In this project, we’ll make a virtual version of the physical, adhesive post-it notes. The main goal of building this application is to allow users to carry their post-it notes wherever they go (since it is on a digital platform). The application should have an option for account creation, different layouts for post-it notes, and a categorization feature to allow users to segment their notes. You can consider using Django for this project since it has an in-built user authentication feature.
 
-Content Aggregator
-The internet is filled with websites, articles, and information. When we want to find something, it is tough to go through each of them. For this use, you can create a content aggregator that automatically searches popular websites and looks for relevant content and then complies with all the content and lets the user choose which content they want. It is very much like Google but unbiased. And this is the perfect idea for your next python project!
 
 Plagiarism Checker
 Content writing is one of the most prolific online businesses. The market lacks a free tool that can be used to check for plagiarism in documents. You can use a natural language processing library along with the Google search API to create a program that searches the first few pages of Google and checks for plagiarism.
 
-Expense Tracker
-As you can guess by the name, an expense tracker is a software application that lets you keep track of your expenses, and even analyze the expenses. In this python project, you will build a simple expense tracker that can keep track of the user’s expenses. Expense tracker is one of the trending python projects which should also be able to perform statistical analysis to give accurate insights to users on their expenses so that they can plan their expenses better. You can use PySimpleGUI to create the interface for this application, and even Python libraries like Pandas and Matplotlib can be handy tools for the project.
+
+**Title:** Text Search Program
+
+**Overview:**  
+The Text Search Program is an advanced and versatile tool designed to empower users in efficiently locating specific text patterns within a document or dataset. It stands as a comprehensive software solution, integrating sophisticated search techniques, user-friendly interfaces, and customization options to maximize accuracy and productivity in text-based searches.
+
+**Key Features:**
+
+1. **Search Algorithms**: Harnessing cutting-edge search techniques, the program offers:
+   - **Exact Match**: Provides results that match the search query perfectly, ensuring precise data retrieval.
+   - **Regex (Regular Expression) Search**: Allows users to employ complex patterns, using symbols to match diverse string types.
+   - **Fuzzy Search**: Locates approximate matches, accommodating minor variations or typos in the search input.
+
+2. **Customizable Options**: Users can tailor their search process by modifying parameters such as case sensitivity, search depth, and search scope.
+
+3. **Spell Check Integration**: Integrated with a spell-check module, this feature proposes corrections for possible typing errors, ensuring users find the desired results even with misspelled input.
+
+4. **Autocomplete Suggestions**: The program predicts and suggests potential search terms in real-time, based on previous searches and a predefined dictionary, enhancing search speed and accuracy.
+
+5. **Search Result Preview**: Search outcomes are showcased with relevant excerpts, providing users with context to assess the relevance quickly.
+
+6. **User-Friendly Interface**: With an intuitive design, users can easily set their preferences and begin their search journey with minimal hassle.
+
+7. **Search History and Bookmarks**: Users can revisit past searches through a maintained history and can bookmark significant results for easier future access.
+
+8. **Document Handling and Efficiency**: Catering to a variety of formats such as plain text, PDFs, and Word documents, the program ensures swift results even for expansive volumes of text.
+
+9. **Export and Sharing Features**: Search outcomes, accompanied by their context, can be exported for later review or collaborative purposes.
+
+10. **Extensibility and Enhancements**: The program's architecture allows developers to integrate new search algorithms, plugins, and features as required.
+
+**Technical Insights:**  
+- To deliver rapid outcomes, efficient string matching algorithms are in place, making it feasible to search large text volumes swiftly.
+- The program relies on Python's re module or equivalent for implementing regular expressions.
+- Fuzzy searches leverage algorithms such as Levenshtein distance for optimal performance.
+- The autocomplete function utilizes a trie data structure or a suitable database for prompt input predictions.
+
+**Additional Features:**
+1. **Context Highlighting**: For enhanced clarity, matching text segments within results are highlighted.
+2. **Advanced Filters**: Users can refine results by factors like date, text origin, and other pertinent criteria.
+3. **Expandable Library**: Supports extensions like additional search algorithms or plugins for boosted capabilities.
+
+**Conclusion:**  
+The Text Search Program embodies the pinnacle of text-search solutions, catering to a broad spectrum of searching requirements, be it exact matches or approximate ones. Crafted with a user-centric mindset, it assures that individuals, irrespective of their searching needs, can locate their desired information seamlessly. Whether used for content exploration, data analytics, or academic research, this program stands as a cornerstone tool for any text-based endeavor.
+
 
 Faceted Search/Navigation. This is the advanced search/filter functionality available on many sites. It's a design pattern. Can read about it here : http://alistapart.com/article/design-patterns-faceted-navigation . Implement it on the back end and the front end if you're bored.
 
@@ -117,9 +172,7 @@ Build some Data Models - People of importance or historical, whichever you like.
 
 Workflow Application - Design a system which requires interaction between users. Simplest example would be author > editor with the object being passed is an article. Author submits article, editor approves or rejects it.
 
-The code is a Python implementation of the popular card game Blackjack. It includes a Card class that defines a card object with a face, numerical value, and symbol. Other functions include show_cards, which takes a list of cards and displays them, deal_card, which selects a random card from the deck and removes it, and play_blackjack, which runs a game of blackjack using the previously defined functions. The game deals two cards to the player and dealer, shows the player's cards and one of the dealer's cards, and continues until the player stands or busts. The winner is determined by comparing scores without going over 21. The code also includes an init_deck function that creates a new deck of 52 cards. When the code is executed, it creates a new deck and starts a game of blackjack.
 
-This Python program is a library management system built using object-oriented programming, showcasing a simple yet powerful example of how real-world systems can be created. It includes two classes, Library and Student, that interact with each other to simulate the library system. The Library class has methods to show available books, lend books to students, and return books, while the Student class has methods to view borrowed books, request books, and return books. Furthermore, the program features a user-friendly interface with a menu of options that allows users to display available books, borrow books, return books, view borrowed books, and exit the program. The system can be expanded to include additional features such as unique book IDs, multiple copies of the same book, return dates, and late fees, demonstrating the versatility and potential of object-oriented programming in building real-world applications.
 
 GUI programming, algorithm design, string manipulation, multi-thread, database management, and data processing
 
