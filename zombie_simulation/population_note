@@ -1279,3 +1279,120 @@ Record & Replay: Record all non-deterministic inputs to a program during its exe
 Snapshotting: Periodically take snapshots of a program's entire state. During debugging, the program can be rolled back to these saved states. This method can be memory-intensive because it involves storing the entire state of the program at multiple points in time.
 Instrumentation: Add extra code to the program that logs changes in its state. This extra code allows the debugger to step the program backwards by reverting changes. However, this approach can significantly slow down the program's execution.
 """
+
+
+"""
+Friedrich Schelling was a German philosopher from the late 18th and early 19th centuries. He had important contributions to German Idealism and the philosophy of nature. However, when people refer to "Schelling's model," they are often referring to the model of spatial segregation developed by economist Thomas Schelling, which describes how small individual preferences can lead to large-scale societal segregation.
+
+Here's a basic overview of Thomas Schelling's segregation model:
+
+**1. Basic Idea:** 
+Schelling sought to explain how racial segregation in urban areas might arise even if individual residents don't have an extreme preference for living among members of their own race. 
+
+**2. The Model Setup:** 
+- Imagine a checkerboard (or any regular grid) where each cell can be occupied by one of two types of agents (for simplicity, let's say red and blue) or remain empty.
+- Each agent prefers to be in a neighborhood where at least a certain percentage of their neighbors are of the same type.
+- However, this preference does not need to be strong. It might be that an agent is okay if just 30% or 40% of their neighbors are like them.
+
+**3. The Dynamics:** 
+- If an agent finds that less than their desired percentage of neighbors are like them, they will move to a random empty spot.
+- Over time, even though each agent might have a relatively mild preference for having like neighbors, large segregated clusters of the same type tend to form.
+
+**4. Surprising Outcome:** 
+Schelling's model demonstrates that even if individuals have only a slight preference for one type of neighbor over another, the outcome can be large-scale segregation. This is an emergent property of the system and can occur even if no individual agent desires such a high level of segregation.
+
+**5. Broader Implications:** 
+Schelling's model illustrates how small individual biases can lead to significant societal patterns. This idea has been applied beyond housing and racial segregation to understand other social phenomena as well.
+
+Schelling's model is a powerful reminder of how individual preferences and behaviors, even if they seem benign in isolation, can lead to potentially undesirable or unexpected collective outcomes when many such individuals interact.
+"""
+
+
+"""
+Testing
+
+
+Batch testing is about processing multiple tests automatically
+Control testing provides a reference point for expected behavior
+Data testing ensures the reliability and accuracy of data handling
+
+
+Unit Testing: Verifies the functionality of individual software units or modules.
+
+Integration Testing: Validates the interfaces between modules or components after integration.
+
+System Testing: Assesses the complete software system against its requirements.
+
+Regression Testing: Ensures that recent changes haven't disrupted existing functionalities.
+
+Smoke Testing: Preliminary check of a new build to identify basic issues and ensure stability.
+
+Acceptance Testing: Involves the customer to validate system's readiness and adherence to requirements.
+
+Static Testing: Reviews code without execution, includes walkthroughs, inspections, and reviews.
+
+Dynamic Testing: Evaluates the software through execution and result analysis.
+
+Manual Testing: Involves human testers manually inputting data and checking outputs against expectations.
+
+Automation Testing: Utilizes tools to run scripted tests and validate against expected results.
+
+Business Process Testing: Assesses workflows that imitate real-world business scenarios end-to-end.
+
+UI Testing: Examines the graphical user interface for its functionality and user-friendliness.
+
+Documentation Testing: Validates quality and accuracy of software-related documents.
+
+Compatibility Testing: Measures software's adaptability across various devices, browsers, and environments.
+
+Usability Testing: Gauges the software's ease of use and user experience.
+
+Performance Testing: Tests software's speed, responsiveness, and scalability under different workloads.
+
+Installation Testing: Evaluates the full process of installing and uninstalling the software.
+
+Security Testing: Probes for vulnerabilities and verifies security features like encryption and authentication.
+
+Memory Leak Testing: Monitors memory utilization and checks for unintended retention.
+
+API Testing: Validates the functionality, reliability, and performance of application programming interfaces.
+
+
+Software Testing Methods:
+
+- By execution phase: White box testing, black box testing, gray box testing
+
+- By execution state: Static testing, dynamic testing 
+
+- By execution behavior: Manual testing, automation testing
+
+White Box Testing: Also known as structural testing or code-based testing. Tests internal structures and workings of an application. Requires knowledge of internal logic and code. 
+
+Black Box Testing: Also known as functional testing. Tests functionality without knowledge of internal structures. Focuses on requirements and interfaces.
+
+Gray Box Testing: A combination of black box and white box testing. Partially isolates modules but has limited visibility into source code and internal workings. 
+
+Static Testing: Analyzing code without executing programs. Includes reviews, inspections and walkthroughs.
+
+Dynamic Testing: Testing by executing code and analyzing results.
+
+Manual Testing: Testing software manually by providing inputs and comparing expected vs actual results.
+
+Automation Testing: Using automation tools to execute pre-scripted tests and compare results against expected outcomes. 
+
+Equivalence Partitioning: Dividing inputs into groups that are expected to exhibit similar behavior - valid and invalid.
+
+Boundary Value Analysis: Testing boundary values of valid and invalid partitions.
+
+Decision Table Testing: Testing various combinations of conditions and actions. 
+
+Cause-Effect Graphing: Analyzing logical conditions and effects. Used to generate test cases.
+
+Orthogonal Array Testing: Selecting test cases from a large set using orthogonal arrays.
+
+Use Case Testing: Testing flows mimicking real-world business scenarios from end to end. 
+
+Error Guessing: Experience-based prediction of errors and targeted testcase design.
+""
+
+

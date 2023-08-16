@@ -236,6 +236,7 @@ Unit Testing, Principles, Practices, and Patterns
 Essential Math for AI
 https://ywh1bkansf.feishu.cn/wiki/QPe5w5g7UisbEkkow8XcDmOpn8e
 线性代数可视化手册
+https://towardsdatascience.com/130-ml-tricks-and-resources-curated-carefully-from-3-years-plus-free-ebook-7832ca4a37ef
 
 Must learn courses
 史丹福 cs230
@@ -346,6 +347,10 @@ https://zhuanlan.zhihu.com/p/85108128
 https://zhuanlan.zhihu.com/p/463629715
 https://zhuanlan.zhihu.com/p/441451881
 https://zhuanlan.zhihu.com/p/424195019
+
+time series database
+InfluxDB 3.0
+https://thenewstack.io/predictive-analytics-using-a-time-series-database/
 
 financial analysis
 quantitative finance python
@@ -514,6 +519,7 @@ https://arxiv.org/abs/2206.08332
 https://github.com/deepmind/deepmind-research/blob/master/byol/byol_experiment.py
 https://danijar.com/project/dreamer/
 https://github.com/opendilab/awesome-exploration-rl
+https://www.uber.com/en-HK/blog/deep-neuroevolution/
 
 From this list, we can identify common properties that make learning easier. None of the properties below are required for learning, but satisfying more of them is definitively better.
 
@@ -535,6 +541,7 @@ https://arxiv.org/abs/1711.02301
 https://arxiv.org/abs/1711.00832
 https://arxiv.org/abs/1511.06342
 https://github.com/deepmind/meltingpot
+https://arxiv.org/abs/2308.03526
 
 optimization
 https://github.com/srivatsankrishnan/oss-arch-gym
@@ -1241,6 +1248,13 @@ https://gpt-index.readthedocs.io/en/latest/core_modules/query_modules/query_engi
 https://github.com/jerryjliu/llama_index
 https://zhuanlan.zhihu.com/p/613155165
 https://huggingface.co/stabilityai/stablecode-instruct-alpha-3b
+https://huggingface.co/Qwen/Qwen-7B
+https://github.com/QwenLM/Qwen-7B/blob/main/tech_memo.md
+Chatglm
+https://towardsdatascience.com/how-to-chat-with-any-file-from-pdfs-to-images-using-large-language-models-with-code-4bcfd7e440bc
+https://blog.langchain.dev/gpt-researcher-x-langchain/
+https://github.com/chatchat-space/Langchain-Chatchat
+https://python.langchain.com/docs/integrations/llms/chatglm
 
 bard api
 https://github.com/dsdanielpark/Bard-API
