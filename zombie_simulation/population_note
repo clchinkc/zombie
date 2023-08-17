@@ -60,6 +60,16 @@ group all agents that are linked, if all human or all zombie -> move as a group,
 """
 
 """
+Performance of aggressive and defensive agents in the same scenario
+Resources system
+"""
+
+"""
+https://developers.redhat.com/articles/2023/07/27/how-use-python-multiprocessing-module#what_is_a_python_multiprocessing_module_
+use of serialization in python
+"""
+
+"""
 # defense that will decrease the probability of infection and death
 
 Define the rules of the simulation
@@ -1395,4 +1405,6 @@ Use Case Testing: Testing flows mimicking real-world business scenarios from end
 Error Guessing: Experience-based prediction of errors and targeted testcase design.
 ""
 
-
+"""
+https://vocus.cc/article/64d38e8cfd897800019af96b
+"""
