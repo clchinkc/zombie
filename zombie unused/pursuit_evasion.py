@@ -116,5 +116,12 @@ game.run()
 
 
 """
-Add obstacles: Introduce obstacles in the game environment that the pursuers and evader must navigate around. This will add complexity to the game and require the agents to plan their movements more carefully. The fitness function would also need to be adjusted accordingly.
+Future improvements:
+Introduce a vision range for Pursuer can only "see" Evader within a certain vision_range and move towards them.
+If a Pursuer is close enough to a Evader, the Pursuer "kills" the Evader.
+Introduce obstacles in the game environment that the pursuers and evader must navigate around and adjust the behaviour of both Pursuer and Evader to plan their movements. The fitness function would also need to be adjusted accordingly.
+Introduce pathfinding so that zombies and humans can navigate around obstacles.
+Make humans smarter, maybe group together or run away more strategically.
+Introduce a safe zone for humans. If humans reach this zone, they're safe.
+Maybe introduce a time factor. Humans win if they avoid zombies for a certain period. Zombies win if they infect all humans before time runs out.
 """
