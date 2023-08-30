@@ -378,6 +378,10 @@ if __name__ == "__main__":
 
 
 """
+show remaining health
+"""
+
+"""
 **Enhanced Zombie Apocalypse Simulation Using Agent-Based and Node Network Approaches**:
 
 1. **Node Representation**: Use the Node and NodeNetwork classes to signify cities or locations and their interconnections. Each node will host varying numbers of survivors, zombies, and potential resources.
@@ -498,4 +502,70 @@ Here are a few enhancements and fixes we can apply:
 After identifying the areas of enhancement, each can be approached step by step. Starting with pygame improvements could provide a better visualization tool, which then makes testing and tweaking the core logic easier.
 
 Would you like help with a specific section or enhancement?
+"""
+
+
+
+
+
+
+"""
+Node Network Simulation
+
+# https://networkit.github.io/dev-docs/notebooks.html
+# https://towardsdatascience.com/visualizing-networks-in-python-d70f4cbeb259
+# https://towardsdatascience.com/introducing-jaal-interacting-with-network-made-easy-124173bb4fa
+# https://www.geeksforgeeks.org/networkx-python-software-package-study-complex-networks/
+# https://wiki.python.org/moin/PythonGraphLibraries
+# https://www.analyticsvidhya.com/blog/2022/04/all-about-popular-graph-network-tools-in-natural-language-processing/
+
+
+A Node Network Simulation to simulate Zombie Apocalypse dynamics could be an exciting way to model complex interactions in a hypothetical environment. The system would encompass various types of nodes, each representing an entity in the world, such as humans, zombies, resources, and buildings. The relationships and interactions between these entities would be represented by edges in the graph.
+
+Here's an outline of how such a simulation might be designed:
+
+1. **Node Types**: The network will have several types of nodes, each representing a different entity in the system.
+
+    - **Human Nodes**: These nodes would represent individual humans. They would have properties such as health, speed, strength, and resources. They could also have a status property, which could be 'healthy', 'infected', or 'immune'.
+
+    - **Zombie Nodes**: Represent individual zombies. They would have properties like health, speed, and strength. Zombies could also have a status, which could be 'active' or 'inactive' (e.g., destroyed).
+
+    - **Resource Nodes**: Represent essential resources like food, water, medicine, and weapons. Humans can collect these resources to increase their survival chances.
+
+    - **Building Nodes**: These nodes could represent safe houses or zombie nests. Safe houses increase humans' survival chances, while zombie nests spawn new zombie nodes.
+
+2. **Edge Types**: The network will also have different types of edges, representing relationships and interactions between the nodes.
+
+    - **Human-Human Edges**: These could represent social connections between humans. The strength of the edge could indicate the likelihood of humans helping each other.
+
+    - **Human-Zombie Edges**: Represent the proximity of a human to a zombie. The closer a human is to a zombie, the higher the risk of infection.
+
+    - **Human-Resource Edges**: Represent the proximity of a human to a resource. The closer a resource, the easier it is for a human to acquire it.
+
+    - **Human-Building Edges**: Show how close a human is to a safe house or a zombie nest. This could influence the human's likelihood of finding shelter or encountering a horde of zombies.
+
+3. **Simulation Dynamics**: Here's how you might simulate the system over time.
+
+    - **Movement**: Each time step, nodes move around the map. Human nodes could use a search algorithm to find resource nodes or safe houses while avoiding zombie nodes. Zombie nodes could use a different algorithm to pursue human nodes.
+
+    - **Infection**: If a human node gets too close to a zombie node, there's a chance the human node will become infected and transform into a new zombie node after some time.
+
+    - **Resource Collection**: If a human node gets close enough to a resource node, they will collect the resource, which could improve their health, speed, strength, or provide immunity.
+
+    - **Survival and Destruction**: Humans could use resources to defend against zombies. If a zombie's health falls to zero due to human attack, the zombie node becomes inactive.
+
+4. **Simulation Metrics**: We could monitor various metrics to understand the simulation's progress.
+
+    - **Human Count**: The number of human nodes still in the simulation.
+    
+    - **Zombie Count**: The number of active zombie nodes.
+    
+    - **Resource Distribution**: The number and distribution of resources in the simulation.
+    
+    - **Infection Rate**: The rate at which human nodes become infected.
+    
+    - **Survival Rate**: The rate at which human nodes survive from time step to time step.
+
+With this setup, the simulation can be run for a certain number of time steps, or until all human nodes have been eliminated or have survived the zombie apocalypse. It can provide valuable insights into the behavior of complex systems and could even have real-world applications for understanding the spread of diseases or the dynamics of social networks.
+
 """
