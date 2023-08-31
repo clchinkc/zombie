@@ -84,20 +84,31 @@ class Agent:
         self.history = deque(maxlen=50)  # Stores the past positions for drawing trails
         
     def move(self):
+        
+        # Random direction change for unpredictability
+        if random.random() < 0.1:
+            self.acceleration += Vector2(random.uniform(-0.1, 0.1), random.uniform(-0.1, 0.1))
+        
+        # Update velocity
         self.velocity += self.acceleration
         if self.velocity.length() > AGENT_SPEED:
-            self.velocity.scale_to_length(AGENT_SPEED) # Limit speed to AGENT_SPEED
+            self.velocity.scale_to_length(AGENT_SPEED) # Normalize the velocity to the maximum speed
+        
+        # Update position
         self.position += self.velocity
         
         # Boundary conditions (use min/max to avoid going off the screen)
         self.position.x = min(max(self.position.x, 0), WIDTH)
         self.position.y = min(max(self.position.y, 0), HEIGHT)
         
-        # Adjust velocity if hitting the boundaries (stop and turn around)
+        # Adjust velocity if hitting the boundaries (bounce off the walls)
         if self.position.x == 0 or self.position.x == WIDTH:
             self.velocity.x = -self.velocity.x
         if self.position.y == 0 or self.position.y == HEIGHT:
             self.velocity.y = -self.velocity.y
+        
+        # Reset acceleration after each move
+        self.acceleration = Vector2(0, 0)
         
         self.history.append(self.position.copy()) # Store the current position in the history
 
@@ -110,7 +121,8 @@ class Agent:
         return separation + alignment + cohesion
     
     def calculate_separation(self, agents):
-        steering = np.array([0.0, 0.0])
+        """
+        steering = Vector2(0, 0)
         total = 0
         for agent in agents:
             if agent is not self and isinstance(agent, type(self)):
@@ -122,12 +134,30 @@ class Agent:
         if total:
             steering /= total
         return steering
+        """
+
+        steering = Vector2(0, 0)
+        total_weight = 0
+        epsilon = 1e-10  # small value to prevent division by zero
+
+        for agent in agents:
+            if agent is not self and isinstance(agent, type(self)):
+                distance = self.position.distance_to(agent.position)
+                if distance < HUMAN_SEPARATION_RADIUS:
+                    diff = self.position - agent.position
+                    weight = 1 / (distance + epsilon)
+                    steering += diff * weight
+                    total_weight += weight
+
+        if total_weight:
+            steering /= total_weight
+        return steering
 
     def calculate_alignment(self, agents):
         average_velocity = Vector2(0, 0)
         total = 0
         for agent in agents:
-            if agent is not self:
+            if agent is not self and isinstance(agent, type(self)):
                 average_velocity += agent.velocity
                 total += 1
         if total:
@@ -135,10 +165,10 @@ class Agent:
         return average_velocity - self.velocity
 
     def calculate_cohesion(self, agents):
-        center_of_mass = Vector2(0, 0)
+        center_of_mass = Vector2(self.position.x, self.position.y)
         total = 0
         for agent in agents:
-            if agent is not self:
+            if agent is not self and isinstance(agent, type(self)):
                 center_of_mass += agent.position
                 total += 1
         if total:
@@ -233,8 +263,8 @@ class Simulation:
         self.agents = []
         self.agents += [Human(random.randint(0, WIDTH), random.randint(0, HEIGHT)) for _ in range(num_humans)]
         self.agents += [Zombie(random.randint(0, WIDTH), random.randint(0, HEIGHT)) for _ in range(num_zombies)]
-        self.agent_sprites = Group(AgentSprite(agent) for agent in self.agents)
-        self.trail_sprites = Group(TrailSprite(agent) for agent in self.agents)
+        self.agent_sprites = Group([AgentSprite(agent) for agent in self.agents])
+        self.trail_sprites = Group([TrailSprite(agent) for agent in self.agents])
         self.clock = pygame.time.Clock()
         self.running = True
         self.paused = False
@@ -277,7 +307,7 @@ class Simulation:
             indices = nbrs.radius_neighbors(np.array([human.position]).reshape(1, -1), radius=HUMAN_DETECTION_RADIUS, return_distance=False)[0]
             neighbours = [self.agents[i] for i in indices]
             forces = human.calculate_forces(neighbours)
-            human.acceleration = forces
+            human.acceleration += forces
             human.move()
             
             # Check if human is infected
@@ -295,7 +325,7 @@ class Simulation:
             indices = nbrs.radius_neighbors(np.array([zombie.position]).reshape(1, -1), radius=ZOMBIE_DETECTION_RADIUS, return_distance=False)[0]
             neighbours = [self.agents[i] for i in indices]
             forces = zombie.calculate_forces(neighbours)
-            zombie.acceleration = forces
+            zombie.acceleration += forces
             zombie.move()
 
 
@@ -313,7 +343,7 @@ class Simulation:
         self.screen.blit(pygame.font.SysFont('Arial', 20).render(f'Humans: {humans_count}', False, WORD_COLOR), (10, 10))
         self.screen.blit(pygame.font.SysFont('Arial', 20).render(f'Zombies: {zombies_count}', False, WORD_COLOR), (10, 30))
         pygame.display.flip()
-        self.clock.tick(120)
+        self.clock.tick(60)
 
 if __name__ == '__main__':
     Simulation().run()
