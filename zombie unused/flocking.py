@@ -86,15 +86,10 @@ class Agent(ABC):
         
     # Basic Movement Methods
     def move(self):
-        self.random_jitter()
         self.update_velocity()
         self.update_position()
         self.bounce_off_boundaries()
         self.reset_acceleration()
-        
-    def random_jitter(self):
-        if random.random() < 0.1:
-            self.acceleration += Vector2(random.uniform(-0.1, 0.1), random.uniform(-0.1, 0.1))
         
     def update_velocity(self):
         self.velocity += self.acceleration
@@ -105,8 +100,8 @@ class Agent(ABC):
         self.history.append(self.position.copy())
     
     def bounce_off_boundaries(self):
-        self.position.x = min(max(self.position.x, 0), WIDTH)
-        self.position.y = min(max(self.position.y, 0), HEIGHT)
+        self.position.x = np.clip(self.position.x, 0, WIDTH)
+        self.position.y = np.clip(self.position.y, 0, HEIGHT)
         
         if self.position.x == 0 or self.position.x == WIDTH:
             self.velocity.x = -self.velocity.x
@@ -388,7 +383,70 @@ Use pygame.sprite.groupcollide() to check for collisions between humans and zomb
 
 Highlight agents not in sync with the flock (moving with large forces) by changing their color.
 
+Window size can be number of cell in each side of the grid times size of each cell in the grid.
+
 Please update the code according to these comments on pygame optimization.
+"""
+
+"""
+Future improvements:
+Introduce a vision range for Pursuer can only "see" Evader within a certain vision_range and move towards them.
+If a Pursuer is close enough to a Evader, the Pursuer "kills" the Evader.
+Introduce obstacles in the game environment that the pursuers and evader must navigate around and adjust the behaviour of both Pursuer and Evader to plan their movements. The fitness function would also need to be adjusted accordingly.
+Introduce pathfinding so that zombies and humans can navigate around obstacles.
+Make humans smarter, maybe group together or run away more strategically.
+Introduce a safe zone for humans. If humans reach this zone, they're safe. If there is no resources, then humans need to walk out of it.
+Maybe introduce a time factor. Humans win if they avoid zombies for a certain period. Zombies win if they infect all humans before time runs out.
+"""
+
+"""
+**Artificial Swarm Intelligence (ASI) in a Zombie Apocalypse Simulation**
+
+Artificial Swarm Intelligence (ASI) is a concept inspired by swarm behaviors observed in animals, like birds flocking and ants working together. In a zombie apocalypse simulation, ASI algorithms can model and manage the behavior of survivors, zombies, and other elements. Implementing this in Python involves creating specific algorithms to mimic these behaviors. Below is a comprehensive overview:
+
+**1. Survivor Group Dynamics and Movement:**
+- ASI can simulate the movement and decision-making of survivor groups, mimicking emergent behaviors seen in animals like flocks of birds.
+- Implement movement algorithms using techniques like random walk and flocking behavior.
+- Model how survivors collectively decide on resource allocation, defense strategies, and movement patterns.
+
+**2. Zombie Behavior Modeling and Interaction:**
+- ASI can realistically simulate zombies' behavior based on swarm intelligence.
+- Zombies might form hordes, coordinate attacks, and adapt to changes.
+- Define interactions between zombies and survivors, considering factors like how zombies target survivors.
+
+**3. Resource Distribution and Management:**
+- ASI algorithms can mimic ants' task allocation based on pheromone trails to simulate resource distribution.
+- Model the consumption and distribution of resources among survivor groups, ensuring efficient allocation.
+- Simulate how survivors gather essentials like food and water while evading threats.
+
+**4. Communication, Coordination, and Decision-Making:**
+- ASI can model communication networks among survivors.
+- Simulate information sharing and communication using messaging or signaling mechanisms.
+- Incorporate swarm intelligence principles to model how leaders weigh group feedback to make informed choices.
+
+**5. Adaptive Strategies and Learning:**
+- Allow survivors to adapt strategies based on new discoveries.
+- Implement mechanisms for entities to change behaviors according to the evolving conditions in the simulation.
+- Entities can learn from their experiences, such as survivors learning to avoid high-zombie activity areas.
+
+**6. Scavenging, Exploration, and Environment Dynamics:**
+- Guide survivor exploration with algorithms that mimic ants' exploration patterns.
+- The environment should adapt due to factors like weather, terrain, and zombie spread, influencing survivor behaviors.
+- Develop a dynamic environment that evolves and ensure entities can react accordingly.
+
+**7. Collaborative Defense:**
+- Model how survivors construct defensive structures, drawing inspiration from how termites build complex formations.
+
+**8. Visualization and Scenario Testing:**
+- Use visualization libraries like Pygame or Matplotlib to graphically display the simulation.
+- Render entities and environmental changes visually.
+- The ASI-driven simulation can also be a testing platform to develop and evaluate survival strategies.
+
+**9. Code Structure and Documentation:**
+- Organize the code modularly using classes and functions.
+- Clearly document the purpose of various components, algorithms, and parameters.
+
+It's imperative to remember that while ASI can enhance the realism and complexity of a simulation, its effectiveness depends on the quality of underlying models, data, and assumptions. Implementing ASI-driven simulations requires both a deep understanding of swarm intelligence principles and adept Python programming skills. Consider utilizing external libraries and tools to simplify the development process.
 """
 
 # https://github.com/warownia1/PythonCollider
