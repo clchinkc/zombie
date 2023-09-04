@@ -446,6 +446,7 @@ class Grid:
                     print("Z", end=" ")
             print()
 
+# Template method pattern
 class Game(ABC):
 
         # template method pattern

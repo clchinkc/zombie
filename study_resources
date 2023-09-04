@@ -547,6 +547,7 @@ https://arxiv.org/abs/1711.00832
 https://arxiv.org/abs/1511.06342
 https://github.com/deepmind/meltingpot
 https://arxiv.org/abs/2308.03526
+https://github.com/deepmind/mujoco
 
 optimization
 https://github.com/srivatsankrishnan/oss-arch-gym
@@ -652,6 +653,7 @@ https://dev.to/paulasjes/series/19794
 https://juejin.cn/post/6844904083665453063
 https://hackernoon.com/the-7-software-architecture-books-experienced-developers-need-to-read
 https://levelup.gitconnected.com/23-design-patterns-99-of-java-developers-should-learn-45573e076b69
+https://learning.oreilly.com/library/view/software-engineering-for/9781098136192/
 
 data structure
 https://www.youtube.com/playlist?list=PLUl4u3cNGP61Oq3tWYp6V_F-5jb5L2iHb
@@ -1271,8 +1273,14 @@ https://github.com/openchatai/OpenCopilot
 https://github.com/OpenBMB/ChatDev
 Llama 2
 https://huggingface.co/blog/codellama
+https://github.com/facebookresearch/codellama
+CodeLlama-Python and CodeLlama-Instruct
 DeciCoder
 SantaCoder
+Lemur-70B
+Chatgpt next web
+NotebookLM
+Project IDX
 
 bard api
 https://github.com/dsdanielpark/Bard-API
