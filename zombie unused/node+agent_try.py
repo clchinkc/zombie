@@ -1,318 +1,419 @@
+
 import math
 import random
-import sys
+from collections import deque
+from enum import Enum
 
-import numpy as np
 import pygame
-from pygame.math import Vector2
 
+# Initialize pygame
+pygame.init()
 
-# Flocking behavior for an agent
-class FlockingAgent:
-    def __init__(self, position, max_speed=2, max_force=0.03):
-        self.position = position
-        self.velocity = Vector2(random.uniform(-1, 1), random.uniform(-1, 1))
-        self.acceleration = Vector2()
-        self.max_speed = max_speed
-        self.max_force = max_force
+# Window
+WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
+FONT = pygame.font.SysFont(None, 25)
 
-    def seek(self, target):
-        desired = target - self.position
-        desired.normalize()
-        desired = desired * self.max_speed
-        steer = desired - self.velocity
-        steer = np.clip(steer, -self.max_force, self.max_force)
-        return steer
+# Window settings
+win = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+pygame.display.set_caption("Zombie Apocalypse Simulation")
 
-    def apply_force(self, force):
-        self.acceleration = self.acceleration + force
+# --- COLORS ---
+WHITE = (255, 255, 255)
+GREEN = (0, 255, 0)  # Survivor
+RED = (255, 0, 0)    # Zombie
+BLUE = (0, 0, 255)   # Node
 
-    def flock(self, agents):
-        sep = self.separate(agents)
-        ali = self.align(agents)
-        coh = self.cohesion(agents)
-        
-        sep = sep * 1.5
-        ali = ali * 1.0
-        coh = coh * 1.0
-        
-        self.apply_force(sep)
-        self.apply_force(ali)
-        self.apply_force(coh)
+# --- ENUMERATIONS ---
 
-    def separate(self, agents):
-        desired_separation = 25.0
-        steer = Vector2()
-        count = 0
-        for agent in agents:
-            d = math.sqrt((self.position.x - agent.position.x)**2 + (self.position.y - agent.position.y)**2)
-            if 0 < d < desired_separation:
-                diff = self.position - agent.position
-                diff.normalize()
-                diff = diff / d
-                steer = steer + diff
-                count += 1
-        if count > 0:
-            steer = steer / count
-        if steer.magnitude() > 0:
-            steer.normalize()
-            steer = steer * self.max_speed
-            steer = steer - self.velocity
-            steer = np.clip(steer, -self.max_force, self.max_force)
-        return steer
+class NodeType(Enum):
+    DEFAULT = 1
+    HOSPITAL = 2  # Acts as a safe house.
+    ARMORY = 3
+    RESOURCE = 4
+    ZOMBIE_NEST = 5
 
-    def align(self, agents):
-        neighbordist = 50
-        sum_vector = Vector2()
-        count = 0
-        for agent in agents:
-            d = math.sqrt((self.position.x - agent.position.x)**2 + (self.position.y - agent.position.y)**2)
-            if 0 < d < neighbordist:
-                sum_vector = sum_vector + agent.velocity
-                count += 1
-        if count > 0:
-            sum_vector = sum_vector / count
-            sum_vector.normalize()
-            sum_vector = sum_vector * self.max_speed
-            steer = sum_vector - self.velocity
-            steer = np.clip(steer, -self.max_force, self.max_force)
-            return steer
-        else:
-            return Vector2(0, 0)
+# --- AGENT BASE CLASS ---
 
-    def cohesion(self, agents):
-        neighbordist = 50
-        sum_vector = Vector2()
-        count = 0
-        for agent in agents:
-            d = math.sqrt((self.position.x - agent.position.x)**2 + (self.position.y - agent.position.y)**2)
-            if 0 < d < neighbordist:
-                sum_vector = sum_vector + agent.position
-                count += 1
-        if count > 0:
-            sum_vector = sum_vector / count
-            return self.seek(sum_vector)
-        else:
-            return Vector2(0, 0)
-
-    def update(self):
-        self.velocity = self.velocity + self.acceleration
-        self.velocity = np.clip(self.velocity, -self.max_speed, self.max_speed)
-        self.position = self.position + self.velocity
-        self.acceleration = self.acceleration * 0
-
-# Modified Agent class with flocking behavior
-class Agent(FlockingAgent):
-    def __init__(self, name, health, attack_power, position):
-        super().__init__(position)
+class Agent:
+    def __init__(self, name, health, attack_power):
         self.name = name
         self.health = health
         self.attack_power = attack_power
         self.is_alive = True
 
-# Modified Survivor class with flocking behavior
+    def attack(self):
+        return random.randint(1, self.attack_power)
+
+    def take_damage(self, damage):
+        self.health -= damage
+        if self.health <= 0:
+            self.is_alive = False
+            self.health = 0
+
+    def decide_movement(self, current_node):
+        return None
+
+# --- SURVIVOR CLASSES ---
+
 class Survivor(Agent):
     MAX_HEALTH = 100
 
-# Modified WarriorSurvivor class with flocking behavior
+    def __init__(self, name, health, attack_power, morale):
+        super().__init__(name, health, attack_power)
+        self.morale = morale
+
+    def heal(self, amount):
+        self.health += amount
+        self.health = min(self.health, self.MAX_HEALTH)
+
+    def collect_resources(self, amount):
+        self.morale += min(amount, 100 - self.morale)
+
+    def decide_movement(self, current_node):
+        if not self.is_alive:
+            return None
+
+        # If in a dangerous situation, decide based on morale
+        if len(current_node.zombies) > 2 * len(current_node.survivors):
+            if self.morale < 50: # Less confident survivors will try to flee
+                safest_node = min(current_node.connections, key=lambda node: len(node.zombies) / (len(node.survivors) + 1))
+                path = current_node.shortest_path_to(safest_node)
+                if path and len(path) > 1:
+                    return path[1]  # Return the next node on the path
+
+        # If no resources, find a node with resources
+        if current_node.resources == 0:
+            resource_nodes = [node for node in current_node.reachable_nodes() if node.resources > 0]
+            if resource_nodes:
+                closest_resource_node = min(resource_nodes, key=lambda node: len(current_node.shortest_path_to(node)))
+                path = current_node.shortest_path_to(closest_resource_node)
+                if path and len(path) > 1:
+                    return path[1]  # Return the next node on the path
+
+        return None
+
+
 class WarriorSurvivor(Survivor):
-    def __init__(self, name, position):
-        super().__init__(name, health=100, attack_power=10, position=position)
+    def __init__(self, name):
+        super().__init__(name, health=100, attack_power=10, morale=100)
         self.combat_bonus = 2
 
+    def attack(self):
+        return super().attack() + self.combat_bonus
+
+
 class ScavengerSurvivor(Survivor):
-    def __init__(self, name, position):
-        super().__init__(name, health=100, attack_power=10, position=position)
+    def __init__(self, name):
+        super().__init__(name, health=100, attack_power=10, morale=100)
         self.scavenging_bonus = 2
 
-# Redefining the Zombie class with a basic implementation
+    def collect_resources(self, amount):
+        super().collect_resources(amount + self.scavenging_bonus)
+
+
+# --- ZOMBIE CLASS ---
+
 class Zombie(Agent):
-    def __init__(self, name, health, attack_power, position):
-        super().__init__(name, health, attack_power, position)
 
+    def decide_movement(self, current_node):
+        if not self.is_alive:
+            return None
 
-# Implementing the Zombie class with flocking behavior
-class FlockingZombie(Zombie, FlockingAgent):
-    def __init__(self, name, health, attack_power, position):
-        Zombie.__init__(self, name, health, attack_power, position)
-        FlockingAgent.__init__(self, position)
-
-    def update(self, survivors):
-        self.flock(survivors)
-        self.velocity = np.clip(self.velocity, -self.max_speed, self.max_speed)
-        self.position = self.position + self.velocity
-        self.acceleration = self.acceleration * 0
+        # Zombies are attracted to survivors
+        if not current_node.survivors:
+            target_node = max(current_node.connections, key=lambda node: len(node.survivors))
+            if len(target_node.survivors) > 0:
+                return target_node
         
-        for survivor in survivors:
-            d = math.sqrt((self.position.x - survivor.position.x)**2 + (self.position.y - survivor.position.y)**2)
-            if d < 10:
-                survivor.health -= self.attack_power
-                if survivor.health <= 0:
-                    survivor.is_alive = False
-                    
-        return survivors
-    
-# Implement the simulation
+        return None
+
+# --- RESOURCE CLASS ---
+
+class Resource:
+    def __init__(self, resource_type, quantity):
+        self.resource_type = resource_type  # can be 'food', 'water', 'medicine', 'weapon'
+        self.quantity = quantity
+
+    def use(self, amount):
+        self.quantity -= amount
+        if self.quantity < 0:
+            self.quantity = 0
+        return amount
+
+# --- BUILDING CLASS ---
+
+class Building:
+    def __init__(self, building_type):
+        self.building_type = building_type  # can be 'safe_house' or 'zombie_nest'
+        if building_type == 'zombie_nest':
+            self.spawn_rate = 1  # Number of zombies spawned per iteration
+
+# --- NODE CLASS ---
+
+class Node:
+    def __init__(self, name, terrain, node_type=NodeType.DEFAULT, resources=None, building=None):
+        self.name = name
+        self.terrain = terrain
+        self.connections = []
+        self.survivors = []
+        self.zombies = []
+        self.node_type = node_type
+        self.resources = resources
+        self.building = building
+
+    def add_connection(self, node):
+        if node not in self.connections:
+            self.connections.append(node)
+            node.connections.append(self)
+
+    def add_survivor(self, survivor):
+        self.survivors.append(survivor)
+
+    def add_zombie(self, zombie):
+        self.zombies.append(zombie)
+
+    def terrain_impact(self, agent):
+        terrain_effects = {
+            ("Mountain", Survivor): 1.5,
+            ("Forest", Zombie): 0.75,
+            ("Forest", Survivor): 0.9,
+        }
+        return terrain_effects.get((self.terrain, type(agent)), 1)
+
+    def interact(self):
+        for survivor in self.survivors[:]:
+            move_to_node = survivor.decide_movement(self)
+            if move_to_node:
+                self.transfer_survivor(survivor, move_to_node)
+            elif self.resources and self.resources.quantity > 0:
+                resources_collected = min(self.resources.quantity, 10)
+                survivor.collect_resources(resources_collected)
+                self.resources.quantity = max(0, self.resources.quantity - resources_collected)
+                self.resolve_combat(survivor)
+
+        for zombie in self.zombies[:]:
+            move_to_node = zombie.decide_movement(self)
+            if move_to_node:
+                self.transfer_zombie(zombie, move_to_node)
+
+        self.apply_specialization_effects()
+        
+        if self.building and self.building.building_type == 'zombie_nest':
+            for _ in range(self.building.spawn_rate):
+                self.add_zombie(Zombie(f"Zombie{len(self.zombies) + 1}", 50, 8))
+
+        if self.resources and self.resources.quantity > 0:
+            for survivor in self.survivors:
+                if self.resources.resource_type == 'medicine':
+                    survivor.heal(self.resources.use(5))
+                elif self.resources.resource_type == 'weapon':
+                    survivor.attack_power = min(survivor.attack_power + self.resources.use(1), 20)
+                elif self.resources.resource_type == 'food':
+                    survivor.morale = min(100, survivor.morale + self.resources.use(5))
+
+    def resolve_combat(self, survivor):
+        for zombie in self.zombies[:]:
+            if not survivor.is_alive:
+                break
+            
+            damage_to_zombie = survivor.attack() * self.terrain_impact(survivor)
+            zombie.take_damage(damage_to_zombie)
+            
+            if not zombie.is_alive:
+                self.zombies.remove(zombie)
+                survivor.morale = min(100, survivor.morale + 10)
+                continue
+            
+            damage_to_survivor = zombie.attack() * self.terrain_impact(zombie)
+            survivor.take_damage(damage_to_survivor)
+            
+            if not survivor.is_alive:
+                self.survivors.remove(survivor)
+                for other_survivor in self.survivors:
+                    other_survivor.morale = max(0, other_survivor.morale - 10)
+
+    def apply_specialization_effects(self):
+        if self.node_type == NodeType.HOSPITAL:
+            for survivor in self.survivors:
+                survivor.heal(5)
+        elif self.node_type == NodeType.ARMORY:
+            for survivor in self.survivors:
+                survivor.attack_power = min(survivor.attack_power + 5, 20)
+
+    def transfer_survivor(self, survivor, to_node):
+        if survivor in self.survivors:
+            self.survivors.remove(survivor)
+            to_node.add_survivor(survivor)
+
+    def transfer_zombie(self, zombie, to_node):
+        if zombie in self.zombies:
+            self.zombies.remove(zombie)
+            to_node.add_zombie(zombie)
+
+    def reachable_nodes(self):
+        """Get all nodes reachable from the current node."""
+        visited = set()
+        to_visit = [self]
+        while to_visit:
+            current = to_visit.pop()
+            if current not in visited:
+                visited.add(current)
+                to_visit.extend([node for node in current.connections if node not in visited])
+        return visited
+
+    def shortest_path_to(self, target_node):
+        """Find shortest path from this node to target_node using BFS."""
+        visited = set()
+        queue = deque([(self, [])])  # Each entry is current_node, path_so_far
+
+        while queue:
+            current_node, path = queue.popleft()
+
+            if current_node == target_node:
+                return path + [current_node]
+
+            visited.add(current_node)
+
+            for neighbor in current_node.connections:
+                if neighbor not in visited:
+                    queue.append((neighbor, path + [current_node]))
+
+        return None  # If no path found, return None
+
+    def __str__(self):
+        return self.name
+
+
+# --- SIMULATION CLASS ---
+
 class Simulation:
-    def __init__(self, width=800, height=600, num_warriors=10, num_scavengers=10, num_zombies=10):
-        pygame.init()
-        self.width = width
-        self.height = height
-        self.screen = pygame.display.set_mode((self.width, self.height))
-        pygame.display.set_caption("Zombie Simulation")
-        self.clock = pygame.time.Clock()
-        self.background = pygame.Surface(self.screen.get_size()).convert()
-        self.background.fill((255, 255, 255))
-        self.agents = []
-        self.num_warriors = num_warriors
-        self.num_scavengers = num_scavengers
-        self.num_zombies = num_zombies
-        self.font = pygame.font.SysFont("monospace", 16)
-        self.font_bold = pygame.font.SysFont("monospace", 16, bold=True)
-        self.font_big = pygame.font.SysFont("monospace", 32)
-        self.font_huge = pygame.font.SysFont("monospace", 48)
-        self.font_color = (0, 0, 0)
-        self.game_over = False
-        self.wave = 1
-        self.score = 0
-        self.high_score = 0
-        self.initialize_simulation()
+    def __init__(self, nodes, num_survivors, num_zombies):
+        self.nodes = nodes
+        self.num_survivors_history = []
+        self.setup(num_survivors, num_zombies)
 
-    def initialize_simulation(self):
-        self.agents = []
-        self.game_over = False
-        self.wave = 1
-        self.score = 0
-        self.spawn_survivors()
-        self.spawn_zombies()
+    def setup(self, num_survivors, num_zombies):
+        for _ in range(num_survivors):
+            random.choice(self.nodes).add_survivor(Survivor(f"Survivor{_+1}", 100, 10, 100))
+        for _ in range(num_zombies):
+            random.choice(self.nodes).add_zombie(Zombie(f"Zombie{_+1}", 50, 8))
 
-    def spawn_survivors(self):
-        for i in range(self.num_warriors):
-            self.agents.append(WarriorSurvivor("Warrior " + str(i), Vector2(random.randint(0, self.width), random.randint(0, self.height))))
-        for i in range(self.num_scavengers):
-            self.agents.append(ScavengerSurvivor("Scavenger " + str(i), Vector2(random.randint(0, self.width), random.randint(0, self.height))))
+    def run(self, num_iterations):
+        for _ in range(num_iterations):
+            for node in self.nodes:
+                node.interact()
+            # Append to the list instead of assigning
+            self.num_survivors_history.append(sum(len(node.survivors) for node in self.nodes))
 
-    def spawn_zombies(self):
-        for i in range(self.num_zombies):
-            self.agents.append(FlockingZombie("Zombie " + str(i), 100, 10, Vector2(random.randint(0, self.width), random.randint(0, self.height))))
 
-    def run(self):
-        while True:
-            self.clock.tick(60)
-            self.handle_events()
-            self.update_simulation()
-            self.draw_simulation()
-            
-    def handle_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-                
-    def update_simulation(self):
-        if not self.game_over:
-            self.update_agents()
-            self.check_for_collisions()
-            self.check_for_game_over()
-        else:
-            self.check_for_restart()
-            
-    def update_agents(self):
-        survivors = []
-        zombies = []
-        for agent in self.agents:
-            if isinstance(agent, Survivor):
-                survivors.append(agent)
-            elif isinstance(agent, Zombie):
-                zombies.append(agent)
-        for agent in self.agents:
-            if isinstance(agent, Survivor):
-                agent.flock(survivors)
-                agent.update()
-            elif isinstance(agent, Zombie):
-                survivors = agent.update(survivors)
-        self.agents = survivors + zombies
-        self.check_for_new_wave()
+# Drawing Functions
+def draw_node(node, x, y):
+    size = 20 + 2 * node.resources.quantity if node.resources else 20
+    pygame.draw.circle(win, BLUE, (x, y), size)
+    text = FONT.render(node.name, True, WHITE)
+    win.blit(text, (x - text.get_width()//2, y - text.get_height()//2))
+
+def draw_agent(agent_color, x, y, offset=0, i=0, total=1):
+    angle = i * 2 * math.pi / total
+    distance = 50 + offset
+    dx = int(math.cos(angle) * distance)
+    dy = int(math.sin(angle) * distance)
+    pygame.draw.circle(win, agent_color, (x + dx, y + dy), 10)
+
+def draw_connection(pos1, pos2):
+    pygame.draw.line(win, WHITE, pos1, pos2, 3)
+
+def draw_metrics(num_survivors):
+    text = FONT.render(f"Survivors: {num_survivors}", True, WHITE)
+    win.blit(text, (10, 10))
+
+def print_state(nodes):
+    print("="*60)
+    for node in nodes:
+        print(f"{node.name} ({node.terrain}):")
+        print(f"  Survivors: [{' '.join([s.name + '(H:' + str(s.health) + ', M:' + str(s.morale) + ')' for s in node.survivors])}]")
+        print(f"  Zombies: [{' '.join([z.name + '(H:' + str(z.health) + ')' for z in node.zombies])}]")
+        print(f"  Resources: {node.resources}")
+        print('-'*50)
+
+
+# --- PYGAME MAIN LOOP FUNCTIONS ---
+
+def handle_events():
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            return False
+    return True
+
+def clear_screen():
+    win.fill((0, 0, 0))
+
+def draw_nodes_and_connections(node_positions):
+    for node, position in node_positions.items():
+        draw_node(node, *position)
+        for connection in node.connections:
+            draw_connection(position, node_positions[connection])
+
+def draw_agents(node_positions):
+    for node, position in node_positions.items():
+        num_agents = len(node.survivors) + len(node.zombies)
+        for i, survivor in enumerate(node.survivors):
+            draw_agent(GREEN, *position, offset=20, i=i, total=num_agents)
+        for i, zombie in enumerate(node.zombies):
+            draw_agent(RED, *position, offset=40, i=i, total=num_agents)
+
+def draw_simulation_metrics(sim):
+    if sim.num_survivors_history:
+        draw_metrics(sim.num_survivors_history[-1])
+
+
+# --- MAIN LOOP ---
+
+if __name__ == "__main__":
+    # Define resources
+    food_resource = Resource('food', 100)
+    medicine_resource = Resource('medicine', 50)
+
+    # Define buildings
+    zombie_nest = Building('zombie_nest')
+
+    # Define and connect nodes with resources and buildings
+    city_a = Node("City A", "Plains", resources=food_resource)
+    city_b = Node("City B", "Forest", NodeType.HOSPITAL)
+    city_c = Node("City C", "Mountain", NodeType.ARMORY, building=zombie_nest)
+
+    city_a.add_connection(city_b)
+    city_b.add_connection(city_c)
+
+    cities = [city_a, city_b, city_c]
+    sim = Simulation(cities, num_survivors=5, num_zombies=3)
+
+    # Define node positions
+    node_positions = {
+        city_a: (100, 100),
+        city_b: (300, 500),
+        city_c: (500, 100)
+    }
+
+    running = True
+    while running:
+        running = handle_events()
+
+        clear_screen()
         
-    def check_for_new_wave(self):
-        zombies = []
-        for agent in self.agents:
-            if isinstance(agent, Zombie):
-                zombies.append(agent)
-        if len(zombies) == 0:
-            self.wave += 1
-            self.num_zombies += 10
-            self.spawn_zombies()
-                
-    def check_for_collisions(self):
-        survivors = []
-        zombies = []
-        for agent in self.agents:
-            if isinstance(agent, Survivor):
-                survivors.append(agent)
-            elif isinstance(agent, Zombie):
-                zombies.append(agent)
-        for survivor in survivors:
-            for zombie in zombies:
-                d = math.sqrt((survivor.position.x - zombie.position.x)**2 + (survivor.position.y - zombie.position.y)**2)
-                if d < 10:
-                    survivor.health -= zombie.attack_power
-                    if survivor.health <= 0:
-                        survivor.is_alive = False
-                        
-    def check_for_game_over(self):
-        zombies = []
-        for agent in self.agents:
-            if isinstance(agent, Zombie):
-                zombies.append(agent)
-        if len(zombies) == 0:
-            self.game_over = True
-            
-    def check_for_restart(self):
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_r]:
-            self.initialize_simulation()
-            
-    def draw_simulation(self):
-        self.screen.blit(self.background, (0, 0))
-        self.draw_agents()
-        self.draw_game_info()
-        pygame.display.flip()
+        draw_nodes_and_connections(node_positions)
+        draw_agents(node_positions)
+        draw_simulation_metrics(sim)
         
-    def draw_agents(self):
-        for agent in self.agents:
-            if isinstance(agent, Survivor):
-                if isinstance(agent, WarriorSurvivor):
-                    color = (0, 0, 255)
-                elif isinstance(agent, ScavengerSurvivor):
-                    color = (0, 255, 0)
-                pygame.draw.circle(self.screen, color, (int(agent.position.x), int(agent.position.y)), 10)
-            elif isinstance(agent, Zombie):
-                pygame.draw.circle(self.screen, (255, 0, 0), (int(agent.position.x), int(agent.position.y)), 10)
-                
-    def draw_game_info(self):
-        if not self.game_over:
-            self.draw_game_stats()
-        else:
-            self.draw_game_over()
-            
-    def draw_game_stats(self):
-        self.draw_text("Wave: " + str(self.wave), self.font, self.font_color, 10, 10)
-        self.draw_text("Score: " + str(self.score), self.font, self.font_color, 10, 30)
-        self.draw_text("High Score: " + str(self.high_score), self.font, self.font_color, 10, 50)
+        pygame.display.update()
         
-    def draw_game_over(self):
-        self.draw_text("GAME OVER", self.font_huge, self.font_color, self.width/2, self.height/2 - 48)
-        self.draw_text("Score: " + str(self.score), self.font_big, self.font_color, self.width/2, self.height/2)
-        self.draw_text("Press R to restart", self.font, self.font_color, self.width/2, self.height/2 + 48)
+        print_state(cities)
+
+        sim.run(num_iterations=1)
         
-    def draw_text(self, text, font, color, x, y):
-        text_surface = font.render(text, True, color)
-        text_rect = text_surface.get_rect()
-        text_rect.center = (x, y)
-        self.screen.blit(text_surface, text_rect)
+        if not any(len(city.survivors) for city in cities) or not any(len(city.zombies) for city in cities):
+            running = False
         
-simulation = Simulation()
-simulation.run()
+        pygame.time.delay(1000)
 
 

@@ -325,10 +325,12 @@ def draw_nodes_and_connections(node_positions):
 
 def draw_agents(node_positions):
     for node, position in node_positions.items():
+        num_agents = len(node.survivors) + len(node.zombies)
         for i, survivor in enumerate(node.survivors):
-            draw_agent(GREEN, *position, offset=10, i=i, total=len(node.survivors))
+            draw_agent(GREEN, *position, offset=20, i=i, total=num_agents)
         for i, zombie in enumerate(node.zombies):
-            draw_agent(RED, *position, offset=30, i=i, total=len(node.zombies))
+            draw_agent(RED, *position, offset=40, i=i, total=num_agents)
+            
 
 def draw_simulation_metrics(sim):
     if sim.num_survivors_history:
