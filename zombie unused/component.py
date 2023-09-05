@@ -108,3 +108,11 @@ In addition to these components, an agent class may also interact with extra lib
 """
 A player class can be inherited from the agent class and override the control component to be controlled by the user input.
 """
+
+"""
+classes
+environment: logic, graphic, state
+agent: control(user, ml), perception, reasoning, action, learning, graphic, state
+ml
+game
+"""
