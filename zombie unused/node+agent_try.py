@@ -11,7 +11,7 @@ pygame.init()
 
 # Window
 WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
-FONT = pygame.font.SysFont(None, 25)
+FONT = pygame.font.SysFont("Arial", 20)
 
 # Window settings
 win = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -185,10 +185,11 @@ class Node:
             move_to_node = survivor.decide_movement(self)
             if move_to_node:
                 self.transfer_survivor(survivor, move_to_node)
-            elif self.resources and self.resources.quantity > 0:
-                resources_collected = min(self.resources.quantity, 10)
-                survivor.collect_resources(resources_collected)
-                self.resources.quantity = max(0, self.resources.quantity - resources_collected)
+            else:
+                if self.resources and self.resources.quantity > 0:
+                    resources_collected = min(self.resources.quantity, 10)
+                    survivor.collect_resources(resources_collected)
+                    self.resources.quantity = max(0, self.resources.quantity - resources_collected)
                 self.resolve_combat(survivor)
 
         for zombie in self.zombies[:]:
@@ -215,22 +216,27 @@ class Node:
         for zombie in self.zombies[:]:
             if not survivor.is_alive:
                 break
-            
+
             damage_to_zombie = survivor.attack() * self.terrain_impact(survivor)
+            print(f"Survivor {survivor.name} attacks Zombie {zombie.name} for {damage_to_zombie} damage.")  # Debug statement
             zombie.take_damage(damage_to_zombie)
-            
+
             if not zombie.is_alive:
+                print(f"Zombie {zombie.name} is defeated!")  # Debug statement
                 self.zombies.remove(zombie)
                 survivor.morale = min(100, survivor.morale + 10)
                 continue
-            
+
             damage_to_survivor = zombie.attack() * self.terrain_impact(zombie)
+            print(f"Zombie {zombie.name} attacks Survivor {survivor.name} for {damage_to_survivor} damage.")  # Debug statement
             survivor.take_damage(damage_to_survivor)
-            
+
             if not survivor.is_alive:
+                print(f"Survivor {survivor.name} is defeated!")  # Debug statement
                 self.survivors.remove(survivor)
                 for other_survivor in self.survivors:
                     other_survivor.morale = max(0, other_survivor.morale - 10)
+
 
     def apply_specialization_effects(self):
         if self.node_type == NodeType.HOSPITAL:
@@ -416,4 +422,14 @@ if __name__ == "__main__":
         
         pygame.time.delay(1000)
 
-
+    pygame.quit()
+    
+    if any(len(city.survivors) for city in cities):
+        print("Survivors win!")
+    else:
+        print("Zombies win!")
+        
+    print(f"Survivors remaining: {sum(len(city.survivors) for city in cities)}")
+    print(f"Zombies remaining: {sum(len(city.zombies) for city in cities)}")
+    print(f"Simulation history: {sim.num_survivors_history}")
+    

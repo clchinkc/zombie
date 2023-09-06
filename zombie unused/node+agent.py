@@ -10,12 +10,11 @@ pygame.init()
 
 # Window
 WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
-FONT = pygame.font.SysFont(None, 25)
+FONT = pygame.font.SysFont("Arial", 20)
 
 # Window settings
 win = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Zombie Apocalypse Simulation")
-
 
 # --- COLORS ---
 WHITE = (255, 255, 255)
@@ -23,15 +22,14 @@ GREEN = (0, 255, 0)  # Survivor
 RED = (255, 0, 0)    # Zombie
 BLUE = (0, 0, 255)   # Node
 
-
-
 # --- ENUMERATIONS ---
 
 class NodeType(Enum):
     DEFAULT = 1
-    HOSPITAL = 2
+    HOSPITAL = 2  # Acts as a safe house.
     ARMORY = 3
-
+    RESOURCE = 4
+    ZOMBIE_NEST = 5
 
 # --- AGENT BASE CLASS ---
 
@@ -53,7 +51,6 @@ class Agent:
 
     def decide_movement(self, current_node):
         return None
-
 
 # --- SURVIVOR CLASSES ---
 
@@ -94,6 +91,8 @@ class Survivor(Agent):
 
         return None
 
+    def __str__(self):
+        return f"{self.name} (Health: {round(self.health, 1)}, Morale: {round(self.morale, 1)})"
 
 class WarriorSurvivor(Survivor):
     def __init__(self, name):
@@ -128,19 +127,46 @@ class Zombie(Agent):
                 return target_node
         
         return None
+    
+    def __str__(self):
+        return f"{self.name} (Health: {round(self.health, 1)})"
 
+# --- RESOURCE CLASS ---
+
+class Resource:
+    def __init__(self, resource_type, quantity):
+        self.resource_type = resource_type  # can be 'food', 'water', 'medicine', 'weapon'
+        self.quantity = quantity
+
+    def use(self, amount):
+        self.quantity -= amount
+        if self.quantity < 0:
+            self.quantity = 0
+        return amount
+
+    def __str__(self):
+        return f"{self.resource_type}: {self.quantity}"
+
+# --- BUILDING CLASS ---
+
+class Building:
+    def __init__(self, building_type):
+        self.building_type = building_type  # can be 'safe_house' or 'zombie_nest'
+        if building_type == 'zombie_nest':
+            self.spawn_rate = 1  # Number of zombies spawned per iteration
 
 # --- NODE CLASS ---
 
 class Node:
-    def __init__(self, name, terrain, node_type=NodeType.DEFAULT):
+    def __init__(self, name, terrain, node_type=NodeType.DEFAULT, resources=None, building=None):
         self.name = name
         self.terrain = terrain
         self.connections = []
         self.survivors = []
         self.zombies = []
-        self.resources = random.randint(0, 10)
         self.node_type = node_type
+        self.resources = resources
+        self.building = building
 
     def add_connection(self, node):
         if node not in self.connections:
@@ -162,15 +188,15 @@ class Node:
         return terrain_effects.get((self.terrain, type(agent)), 1)
 
     def interact(self):
-
         for survivor in self.survivors[:]:
             move_to_node = survivor.decide_movement(self)
             if move_to_node:
                 self.transfer_survivor(survivor, move_to_node)
             else:
-                resources_collected = min(self.resources, 10)
-                survivor.collect_resources(resources_collected)
-                self.resources -= resources_collected
+                if self.resources and self.resources.quantity > 0:
+                    resources_collected = min(self.resources.quantity, 10)
+                    survivor.collect_resources(resources_collected)
+                    self.resources.quantity = max(0, self.resources.quantity - resources_collected)
                 self.resolve_combat(survivor)
 
         for zombie in self.zombies[:]:
@@ -179,27 +205,45 @@ class Node:
                 self.transfer_zombie(zombie, move_to_node)
 
         self.apply_specialization_effects()
+        
+        if self.building and self.building.building_type == 'zombie_nest':
+            for _ in range(self.building.spawn_rate):
+                self.add_zombie(Zombie(f"Zombie{len(self.zombies) + 1}", 50, 8))
+
+        if self.resources and self.resources.quantity > 0:
+            for survivor in self.survivors:
+                if self.resources.resource_type == 'medicine':
+                    survivor.heal(self.resources.use(5))
+                elif self.resources.resource_type == 'weapon':
+                    survivor.attack_power = min(survivor.attack_power + self.resources.use(1), 20)
+                elif self.resources.resource_type == 'food':
+                    survivor.morale = min(100, survivor.morale + self.resources.use(5))
 
     def resolve_combat(self, survivor):
         for zombie in self.zombies[:]:
             if not survivor.is_alive:
                 break
-            
+
             damage_to_zombie = survivor.attack() * self.terrain_impact(survivor)
+            print(f"Survivor {survivor.name} attacks Zombie {zombie.name} for {damage_to_zombie} damage.")  # Debug statement
             zombie.take_damage(damage_to_zombie)
-            
+
             if not zombie.is_alive:
+                print(f"Zombie {zombie.name} is defeated!")  # Debug statement
                 self.zombies.remove(zombie)
                 survivor.morale = min(100, survivor.morale + 10)
                 continue
-            
+
             damage_to_survivor = zombie.attack() * self.terrain_impact(zombie)
+            print(f"Zombie {zombie.name} attacks Survivor {survivor.name} for {damage_to_survivor} damage.")  # Debug statement
             survivor.take_damage(damage_to_survivor)
-            
+
             if not survivor.is_alive:
+                print(f"Survivor {survivor.name} is defeated!")  # Debug statement
                 self.survivors.remove(survivor)
                 for other_survivor in self.survivors:
                     other_survivor.morale = max(0, other_survivor.morale - 10)
+
 
     def apply_specialization_effects(self):
         if self.node_type == NodeType.HOSPITAL:
@@ -253,7 +297,8 @@ class Node:
         return self.name
 
 
-# Simulation class to handle setting up and running the game
+# --- SIMULATION CLASS ---
+
 class Simulation:
     def __init__(self, nodes, num_survivors, num_zombies):
         self.nodes = nodes
@@ -276,7 +321,7 @@ class Simulation:
 
 # Drawing Functions
 def draw_node(node, x, y):
-    size = 20 + 2 * node.resources
+    size = 20 + 2 * node.resources.quantity if node.resources else 20
     pygame.draw.circle(win, BLUE, (x, y), size)
     text = FONT.render(node.name, True, WHITE)
     win.blit(text, (x - text.get_width()//2, y - text.get_height()//2))
@@ -287,7 +332,6 @@ def draw_agent(agent_color, x, y, offset=0, i=0, total=1):
     dx = int(math.cos(angle) * distance)
     dy = int(math.sin(angle) * distance)
     pygame.draw.circle(win, agent_color, (x + dx, y + dy), 10)
-
 
 def draw_connection(pos1, pos2):
     pygame.draw.line(win, WHITE, pos1, pos2, 3)
@@ -300,8 +344,8 @@ def print_state(nodes):
     print("="*60)
     for node in nodes:
         print(f"{node.name} ({node.terrain}):")
-        print(f"  Survivors: [{' '.join([s.name + '(H:' + str(s.health) + ', M:' + str(s.morale) + ')' for s in node.survivors])}]")
-        print(f"  Zombies: [{' '.join([z.name + '(H:' + str(z.health) + ')' for z in node.zombies])}]")
+        print(f"  Survivors: [{' '.join(str(survivor) for survivor in node.survivors)}]")
+        print(f"  Zombies: [{' '.join(str(zombie) for zombie in node.zombies)}]")
         print(f"  Resources: {node.resources}")
         print('-'*50)
 
@@ -330,19 +374,26 @@ def draw_agents(node_positions):
             draw_agent(GREEN, *position, offset=20, i=i, total=num_agents)
         for i, zombie in enumerate(node.zombies):
             draw_agent(RED, *position, offset=40, i=i, total=num_agents)
-            
 
 def draw_simulation_metrics(sim):
     if sim.num_survivors_history:
         draw_metrics(sim.num_survivors_history[-1])
 
+
 # --- MAIN LOOP ---
 
 if __name__ == "__main__":
-    # Define and connect nodes
-    city_a = Node("City A", "Plains")
+    # Define resources
+    food_resource = Resource('food', 100)
+    medicine_resource = Resource('medicine', 50)
+
+    # Define buildings
+    zombie_nest = Building('zombie_nest')
+
+    # Define and connect nodes with resources and buildings
+    city_a = Node("City A", "Plains", resources=food_resource)
     city_b = Node("City B", "Forest", NodeType.HOSPITAL)
-    city_c = Node("City C", "Mountain", NodeType.ARMORY)
+    city_c = Node("City C", "Mountain", NodeType.ARMORY, building=zombie_nest)
 
     city_a.add_connection(city_b)
     city_b.add_connection(city_c)
@@ -377,6 +428,17 @@ if __name__ == "__main__":
             running = False
         
         pygame.time.delay(1000)
+
+    pygame.quit()
+    
+    if any(len(city.survivors) for city in cities):
+        print("Survivors win!")
+    else:
+        print("Zombies win!")
+        
+    print(f"Survivors remaining: {sum(len(city.survivors) for city in cities)}")
+    print(f"Zombies remaining: {sum(len(city.zombies) for city in cities)}")
+    print(f"Simulation history: {sim.num_survivors_history}")
 
 
 """
