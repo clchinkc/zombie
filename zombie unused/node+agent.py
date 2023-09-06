@@ -367,13 +367,25 @@ def draw_nodes_and_connections(node_positions):
         for connection in node.connections:
             draw_connection(position, node_positions[connection])
 
+def draw_agent_health(agent, x, y, offset=0, i=0, total=1):
+    angle = i * 2 * math.pi / total
+    distance = 50 + offset
+    dx = int(math.cos(angle) * distance)
+    dy = int(math.sin(angle) * distance)
+    
+    health_text = FONT.render(str(round(agent.health)), True, WHITE)
+    win.blit(health_text, (x + dx - health_text.get_width()//2, y + dy - health_text.get_height() - 15))
+
 def draw_agents(node_positions):
     for node, position in node_positions.items():
         num_agents = len(node.survivors) + len(node.zombies)
         for i, survivor in enumerate(node.survivors):
             draw_agent(GREEN, *position, offset=20, i=i, total=num_agents)
+            draw_agent_health(survivor, *position, offset=20, i=i, total=num_agents)
         for i, zombie in enumerate(node.zombies):
             draw_agent(RED, *position, offset=40, i=i, total=num_agents)
+            draw_agent_health(zombie, *position, offset=40, i=i, total=num_agents)
+
 
 def draw_simulation_metrics(sim):
     if sim.num_survivors_history:
@@ -441,9 +453,7 @@ if __name__ == "__main__":
     print(f"Simulation history: {sim.num_survivors_history}")
 
 
-"""
-show remaining health
-"""
+
 
 """
 **Enhanced Zombie Apocalypse Simulation Using Agent-Based and Node Network Approaches**:
@@ -569,7 +579,9 @@ Would you like help with a specific section or enhancement?
 """
 
 
-
+"""
+You can expand on this foundation by adding more features, mechanics, and elements, such as the ability for survivors to form groups, more complex terrains, the introduction of different types of zombies, building defenses, etc.
+"""
 
 
 
