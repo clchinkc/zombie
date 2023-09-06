@@ -1618,4 +1618,27 @@ In this example, depending on the scale of the simulation, the need for extensib
 https://github.com/patrykpalej/zombie-simulation
 """
 
+"""
+Event-driven programming is a programming paradigm that focuses on designing software by responding to various events or changes that occur within a system. In an event-driven programming model, the flow of the program is determined by events, such as user input, sensor readings, messages from other software components, and other external triggers. These events can be asynchronous and occur at different times during the execution of the program.
+
+Key concepts in event-driven programming include:
+
+1. *Events:* Events are occurrences or changes that require the program to respond. These can include user interactions like button clicks, mouse movements, keyboard input, or system events like timers, network communication, or sensor data.
+
+2. *Event Handlers:* An event handler is a piece of code that is executed when a specific event occurs. It contains the logic to respond to the event appropriately. Event handlers are often registered or attached to specific event sources, so they're triggered when the corresponding events happen.
+
+3. *Callbacks:* Callbacks are functions or methods that are passed as arguments to other functions or components. They are used to specify what should happen when a particular event occurs. When the event occurs, the callback is invoked, allowing the program to respond to the event dynamically.
+
+4. *Listeners or Observers:* These are components or mechanisms that "listen" or "observe" specific events. When the observed event occurs, the listener triggers the corresponding event handler or callback to execute the necessary logic.
+
+5. *Event Loop:* In event-driven programming, an event loop is a central component that continually checks for events and dispatches the corresponding event handlers or callbacks. The event loop ensures that the program remains responsive and can handle multiple events concurrently.
+
+6. *GUI Programming:* Event-driven programming is commonly used in graphical user interface (GUI) programming. Graphical elements like buttons, menus, and windows generate events when they are interacted with, and the application responds by executing the associated event handlers.
+
+7. *Non-Blocking Execution:* Event-driven programs are often designed to be non-blocking, meaning they can handle multiple events simultaneously without waiting for one event to complete before processing the next.
+
+Popular programming languages and frameworks that support event-driven programming include JavaScript (in the context of web browsers), Python (with libraries like tkinter and PyQt), Java (using Swing or JavaFX), and many more.
+
+Event-driven programming is particularly useful for developing responsive and interactive applications, where user interactions and external inputs play a significant role in determining the program's behavior.
+"""
 
