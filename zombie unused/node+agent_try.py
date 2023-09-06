@@ -92,6 +92,8 @@ class Survivor(Agent):
 
         return None
 
+    def __str__(self):
+        return f"{self.name} (Health: {round(self.health, 1)}, Morale: {round(self.morale, 1)})"
 
 class WarriorSurvivor(Survivor):
     def __init__(self, name):
@@ -126,6 +128,9 @@ class Zombie(Agent):
                 return target_node
         
         return None
+    
+    def __str__(self):
+        return f"{self.name} (Health: {round(self.health, 1)})"
 
 # --- RESOURCE CLASS ---
 
@@ -139,6 +144,9 @@ class Resource:
         if self.quantity < 0:
             self.quantity = 0
         return amount
+
+    def __str__(self):
+        return f"{self.resource_type}: {self.quantity}"
 
 # --- BUILDING CLASS ---
 
@@ -337,8 +345,8 @@ def print_state(nodes):
     print("="*60)
     for node in nodes:
         print(f"{node.name} ({node.terrain}):")
-        print(f"  Survivors: [{' '.join([s.name + '(H:' + str(s.health) + ', M:' + str(s.morale) + ')' for s in node.survivors])}]")
-        print(f"  Zombies: [{' '.join([z.name + '(H:' + str(z.health) + ')' for z in node.zombies])}]")
+        print(f"  Survivors: [{' '.join(str(survivor) for survivor in node.survivors)}]")
+        print(f"  Zombies: [{' '.join(str(zombie) for zombie in node.zombies)}]")
         print(f"  Resources: {node.resources}")
         print('-'*50)
 
@@ -360,13 +368,25 @@ def draw_nodes_and_connections(node_positions):
         for connection in node.connections:
             draw_connection(position, node_positions[connection])
 
+def draw_agent_health(agent, x, y, offset=0, i=0, total=1):
+    angle = i * 2 * math.pi / total
+    distance = 50 + offset
+    dx = int(math.cos(angle) * distance)
+    dy = int(math.sin(angle) * distance)
+    
+    health_text = FONT.render(str(round(agent.health)), True, WHITE)
+    win.blit(health_text, (x + dx - health_text.get_width()//2, y + dy - health_text.get_height() - 15))
+
 def draw_agents(node_positions):
     for node, position in node_positions.items():
         num_agents = len(node.survivors) + len(node.zombies)
         for i, survivor in enumerate(node.survivors):
             draw_agent(GREEN, *position, offset=20, i=i, total=num_agents)
+            draw_agent_health(survivor, *position, offset=20, i=i, total=num_agents)
         for i, zombie in enumerate(node.zombies):
             draw_agent(RED, *position, offset=40, i=i, total=num_agents)
+            draw_agent_health(zombie, *position, offset=40, i=i, total=num_agents)
+
 
 def draw_simulation_metrics(sim):
     if sim.num_survivors_history:
@@ -432,4 +452,6 @@ if __name__ == "__main__":
     print(f"Survivors remaining: {sum(len(city.survivors) for city in cities)}")
     print(f"Zombies remaining: {sum(len(city.zombies) for city in cities)}")
     print(f"Simulation history: {sim.num_survivors_history}")
+
+
     
