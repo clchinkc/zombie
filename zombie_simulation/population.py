@@ -704,7 +704,7 @@ class PopulationAnimator(Observer):
         ax.set_xlim(0, self.subject.school.school_size)
         ax.set_ylim(0, self.subject.school.school_size)
         # Create the animation object
-        anim = animation.FuncAnimation(fig, animate, frames=len(x), interval=1000, repeat=False, fargs=(sc, label))
+        anim = animation.FuncAnimation(fig, animate, frames=len(x), interval=1000, repeat=False, blit=True, fargs=(sc, label))
         # Put a legend to the right of the current axis
         plt.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=State.name_list())
         # Save the animation
@@ -712,6 +712,108 @@ class PopulationAnimator(Observer):
         # Show the plot
         plt.tight_layout()
         plt.show()
+
+
+class MatplotlibAnimator(Observer):
+    def __init__(self, population: Population, mode: str = "scatter"):
+        """Initialize the animator."""
+        self.subject = population
+        self.subject.attach_observer(self)
+        self.mode = mode  # "bar" or "scatter"
+        
+        self.fig, self.ax = plt.subplots()
+        self.scatter = None
+        self.bars = None
+
+        if self.mode == "scatter":
+            self.setup_scatter_plot()
+        else:
+            self.setup_bar_chart()
+
+    @property
+    def cell_states(self):
+        """Returns list of states for all individuals in the population."""
+        return [individual.state for individual in self.subject.agent_list]
+
+    @property
+    def cell_states_value(self):
+        """Returns list of state values for all individuals in the population."""
+        return [state.value for state in self.cell_states]
+
+    @property
+    def cell_x_coords(self):
+        """Returns list of x-coordinates for all individuals in the population."""
+        return [individual.location[0] for individual in self.subject.agent_list]
+
+    @property
+    def cell_y_coords(self):
+        """Returns list of y-coordinates for all individuals in the population."""
+        return [individual.location[1] for individual in self.subject.agent_list]
+
+    def setup_bar_chart(self):
+        """Set up the initial state of the bar chart."""
+        self.ax.set_title("Bar Chart Animation")
+        self.ax.set_xlabel("x")
+        self.ax.set_ylabel("y")
+        self.ax.set_ylim(0, len(self.subject.agent_list) + 1)
+        self.bars = None
+        self.setup_initial_bar_state()
+
+    def setup_scatter_plot(self):
+        """Set up the initial state of the scatter plot."""
+        self.ax.set_title("Scatter Chart Animation")
+        self.ax.set_xlim(-1, self.subject.school.school_size + 1)
+        self.ax.set_ylim(-1, self.subject.school.school_size + 1)
+        self.scatter = None
+        self.setup_initial_scatter_state()
+
+    def setup_initial_bar_state(self):
+        """Initialize the bars with starting data."""
+        counts = [self.cell_states.count(state) for state in list(State)]
+        self.bars = self.ax.bar(np.array(State.value_list()), counts, tick_label=State.name_list(), 
+                                label=State.name_list(), color=sns.color_palette("deep"))
+        self.ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+        plt.tight_layout()
+        plt.draw()
+
+    def setup_initial_scatter_state(self):
+        """Initialize the scatter plot with starting data."""
+        cmap = colors.ListedColormap(sns.color_palette("deep", n_colors=len(State)))
+        min_state_val = min(state.value for state in State)
+        max_state_val = max(state.value for state in State)
+        norm = colors.Normalize(vmin=min_state_val, vmax=max_state_val)
+        handles = [patches.Patch(color=cmap(norm(state.value)), label=state.name) for state in State]
+        self.scatter = self.ax.scatter(self.cell_x_coords, self.cell_y_coords, c=self.cell_states_value, cmap=cmap, norm=norm)
+        self.ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5))
+        plt.tight_layout()
+        plt.draw()
+
+    def update(self) -> None:
+        """Update the plot based on the mode."""
+        if self.mode == "scatter":
+            self.update_scatter_plot()
+        else:
+            self.update_bar_chart()
+
+    def update_bar_chart(self):
+        """Update and redraw the bar chart with new data."""
+        counts = [self.cell_states.count(state) for state in list(State)]
+        for bar, count in zip(self.bars, counts):
+            bar.set_height(count)
+        plt.draw()
+        plt.pause(0.5)
+
+    def update_scatter_plot(self):
+        """Update and redraw the scatter plot with new data."""
+        self.scatter.set_offsets(np.c_[self.cell_x_coords, self.cell_y_coords])
+        self.scatter.set_array(self.cell_states_value)
+        plt.draw()
+        plt.pause(1.5)
+
+    def display_observation(self):
+        """Display the final plot."""
+        plt.show()
+
 
 
 class Population:
@@ -825,23 +927,24 @@ def main():
     school_sim = Population(school_size=10, population_size=10)
 
     # create Observer objects
-    population_observer = PopulationObserver(school_sim)
-    population_animator = PopulationAnimator(school_sim)
+    # population_observer = PopulationObserver(school_sim)
+    # population_animator = PopulationAnimator(school_sim)
+    matplotlib_animator = MatplotlibAnimator(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
     
     print("Observers:")
-    print(population_observer.agent_list)
-    print(population_animator.agent_history[-1])
+    # print(population_observer.agent_list)
+    # print(population_animator.agent_history[-1])
 
     # observe the statistics of the population
     # population_observer.display_observation(format="statistics")
     # population_observer.display_observation(format="grid")
-    population_observer.display_observation(format="chart")
-    population_observer.display_observation(format="scatter")
-    population_animator.display_observation(format="chart")
-    population_animator.display_observation(format="scatter")
+    # population_observer.display_observation(format="chart")
+    # population_observer.display_observation(format="scatter")
+    # population_animator.display_observation(format="chart")
+    # population_animator.display_observation(format="scatter")
 
 
 if __name__ == "__main__":
