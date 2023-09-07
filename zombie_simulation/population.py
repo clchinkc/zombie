@@ -945,6 +945,7 @@ def main():
     # population_observer.display_observation(format="scatter")
     # population_animator.display_observation(format="chart")
     # population_animator.display_observation(format="scatter")
+    matplotlib_animator.display_observation()
 
 
 if __name__ == "__main__":
