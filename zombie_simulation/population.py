@@ -748,6 +748,10 @@ class Population:
         for i in range(population_size):
             individual = self.create_individual(i, school_size)
             self.add_individual(individual)
+            
+    def clear_population(self) -> None:
+        self.agent_list.clear()
+        self.school.grid = np.full((self.school.school_size, self.school.school_size), None, dtype=object)
 
     # a method to init using a grid of "A", "I", "Z", "D"
 
@@ -772,6 +776,7 @@ class Population:
             print("Got School Info")
             self.notify_observers()
             print("Notified Observers")
+        self.clear_population()
 
     def update_grid(self) -> None:
         self.school.update_grid(self.agent_list, self.migration_probability)
