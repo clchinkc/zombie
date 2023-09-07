@@ -697,7 +697,7 @@ class PopulationAnimator(Observer):
         handles = [patches.Patch(color=cmap(i), label=state.name) for i, state in enumerate(State)]
 
         # Create a scatter plot
-        sc = ax.scatter(x, y, c=cell_states_value, cmap=cmap)
+        sc = ax.scatter(x[0], y[0], c=cell_states_value[0], cmap=cmap)
         # Create a label
         label = ax.text(0.05, 0.9, "", transform=ax.transAxes)
         # Set axis range
