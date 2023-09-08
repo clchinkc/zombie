@@ -548,6 +548,8 @@ https://arxiv.org/abs/1511.06342
 https://github.com/deepmind/meltingpot
 https://arxiv.org/abs/2308.03526
 https://github.com/deepmind/mujoco
+https://github.com/ill-inc/biomes-game
+https://www.biomes.gg/
 
 optimization
 https://github.com/srivatsankrishnan/oss-arch-gym
@@ -1281,6 +1283,7 @@ Lemur-70B
 Chatgpt next web
 NotebookLM
 Project IDX
+https://github.com/KillianLucas/open-interpreter
 
 bard api
 https://github.com/dsdanielpark/Bard-API
