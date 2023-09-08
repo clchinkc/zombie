@@ -194,17 +194,31 @@ class AStar:
     def find_path(self, start_pos, grid):
         end_pos = (self.goal_x, self.goal_y)
 
+        # Use a priority queue to store nodes based on their f-score (total cost).
         open_list = PriorityQueue()
-        open_list.put((0, (start_pos, [start_pos])))
+        open_list.put((0, self.heuristic(*start_pos), start_pos))
+
+        # Use a set to check for membership in the open list efficiently.
+        open_set = set([start_pos])
+
         visited = set()
 
         g_scores = {start_pos: 0}
         f_scores = {start_pos: self.heuristic(*start_pos)}
 
+        paths = {start_pos: [start_pos]}  # Use a dictionary to store paths
+
         while not open_list.empty():
-            _, (current, path) = open_list.get()
+            _, _, current = open_list.get()
+            
+            # If the current node is not in the open set, skip processing it.
+            if current not in open_set:
+                continue
+
+            open_set.remove(current)
+
             if current == end_pos:
-                return path
+                return paths[current]
 
             neighbors = self.find_neighbors(grid, current)
             for neighbor in neighbors:
@@ -215,10 +229,20 @@ class AStar:
                 if neighbor not in g_scores or tentative_g_score < g_scores[neighbor]:
                     g_scores[neighbor] = tentative_g_score
                     f_scores[neighbor] = tentative_g_score + self.heuristic(*neighbor)
-                    open_list.put((f_scores[neighbor], (neighbor, path + [neighbor])))
-                    visited.add(neighbor)
+                    
+                    # If the neighbor isn't in the open set, add it.
+                    if neighbor not in open_set:
+                        open_set.add(neighbor)
+                        open_list.put((f_scores[neighbor], self.heuristic(*neighbor), neighbor))
+
+                    # Update the path leading to this neighbor.
+                    paths[neighbor] = paths[current] + [neighbor]
+                    
+                visited.add(neighbor)
 
         return []
+
+
 
     def move(self, x, y, grid):
         path = self.find_path((x, y), grid)
