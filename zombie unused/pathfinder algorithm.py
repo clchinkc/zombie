@@ -242,14 +242,13 @@ class AStar:
 
         return []
 
-
-
     def move(self, x, y, grid):
         path = self.find_path((x, y), grid)
         if len(path) > 1:
             next_step = path[1]
             return next_step
         return x, y
+
 
 class ThetaStar:
     def __init__(self, goal_x, goal_y):
@@ -263,47 +262,26 @@ class ThetaStar:
         return self.heuristic_cache[(x, y)]
 
     def line_of_sight(self, grid, start, end):
-        if not grid.is_valid_move(*start) or not grid.is_valid_move(*end):
-            return False
-        
         x0, y0 = start
         x1, y1 = end
-        dy = y1 - y0
-        dx = x1 - x0
-        sy = 1 if dy >= 0 else -1
-        sx = 1 if dx >= 0 else -1
-        dy = abs(dy)
-        dx = abs(dx)
-        f = 0
-        is_valid_move = grid.is_valid_move
-        offset_x = (1 ^ sx) >> 1
-        offset_y = (1 ^ sy) >> 1
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+        sx = 1 if x0 < x1 else -1
+        sy = 1 if y0 < y1 else -1
+        err = dx - dy
 
-        if dx > dy:
-            while x0 != x1:
+        while x0 != x1 or y0 != y1:
+            if not grid.is_valid_move(x0, y0):
+                return False
+            e2 = 2 * err
+            if e2 > -dy:
+                err -= dy
                 x0 += sx
-                f += dy
-                if f >= dx:
-                    y0 += sy
-                    f -= dx
-                    if not is_valid_move(x0 - offset_x, y0 - offset_y):
-                        return False
-                if not is_valid_move(x0 - offset_x, y0 - offset_y):
-                    return False
-        else:
-            while y0 != y1:
+            if e2 < dx:
+                err += dx
                 y0 += sy
-                f += dx
-                if f >= dy:
-                    x0 += sx
-                    f -= dy
-                    if not is_valid_move(x0 - offset_x, y0 - offset_y):
-                        return False
-                if not is_valid_move(x0 - offset_x, y0 - offset_y):
-                    return False
 
         return True
-
 
     def find_neighbors(self, grid, pos, came_from):
         x, y = pos
@@ -317,47 +295,68 @@ class ThetaStar:
 
         return valid_neighbors
 
+    def reconstruct_path(self, came_from, current):
+        path = [current]
+        while current in came_from:
+            next_node = came_from[current]
+            x0, y0 = current
+            x1, y1 = next_node
+            dx = abs(x1 - x0)
+            dy = abs(y1 - y0)
+            sx = 1 if x0 < x1 else -1
+            sy = 1 if y0 < y1 else -1
+            err = dx - dy
+
+            while x0 != x1 or y0 != y1:
+                e2 = 2 * err
+                if e2 > -dy:
+                    err -= dy
+                    x0 += sx
+                if e2 < dx:
+                    err += dx
+                    y0 += sy
+                path.append((x0, y0))
+            current = next_node
+        path.reverse()
+        return path
+
     def find_path(self, start_pos, grid):
         end_pos = (self.goal_x, self.goal_y)
 
         open_list = PriorityQueue()
-        open_list.put((0, (start_pos, [start_pos])))
+        open_list.put((0, start_pos))
         visited = set()
-
         g_scores = {start_pos: 0}
         f_scores = {start_pos: self.heuristic(*start_pos)}
         came_from = {}
 
         while not open_list.empty():
-            _, (current, path) = open_list.get()
+            _, current = open_list.get()
             if current == end_pos:
-                return path
+                return self.reconstruct_path(came_from, current)
 
+            visited.add(current)
             neighbors = self.find_neighbors(grid, current, came_from)
             for neighbor in neighbors:
                 if neighbor in visited:
                     continue
 
-                if self.line_of_sight(grid, current, neighbor):
-                    new_g_score = g_scores[current] + math.sqrt((neighbor[0] - current[0])**2 + (neighbor[1] - current[1])**2)
-                else:
-                    new_g_score = g_scores[current] + 1
-
-                if neighbor not in g_scores or new_g_score < g_scores[neighbor]:
+                tentative_g_score = g_scores[current] + (math.sqrt((neighbor[0] - current[0])**2 + (neighbor[1] - current[1])**2) if self.line_of_sight(grid, current, neighbor) else 1)
+                if neighbor not in g_scores or tentative_g_score < g_scores[neighbor]:
                     came_from[neighbor] = current
-                    g_scores[neighbor] = new_g_score
-                    f_scores[neighbor] = new_g_score + self.heuristic(*neighbor)
-                    open_list.put((f_scores[neighbor], (neighbor, path + [neighbor])))
-                    visited.add(neighbor)
-                    
+                    g_scores[neighbor] = tentative_g_score
+                    f_scores[neighbor] = tentative_g_score + self.heuristic(*neighbor)
+                    open_list.put((f_scores[neighbor], neighbor))
+
         return []
-    
+
     def move(self, x, y, grid):
         path = self.find_path((x, y), grid)
         if len(path) > 1:
             next_step = path[1]
             return next_step
         return x, y
+
 
 class JPS:
     def __init__(self, goal_x, goal_y):
@@ -381,39 +380,40 @@ class JPS:
         dx, dy = direction
 
         new_x, new_y = x + dx, y + dy
+
+        # If the next point isn't valid, return None
         if not grid.is_valid_move(new_x, new_y):
             return None
 
+        # If the next point is the goal, return it
         if (new_x, new_y) == (self.goal_x, self.goal_y):
             return (new_x, new_y)
 
+        # Check for forced neighbors
+        # If we're moving diagonally
         if dx != 0 and dy != 0:
             if (grid.is_valid_move(new_x - dx, new_y) and not grid.is_valid_move(x - dx, y)) or \
                (grid.is_valid_move(new_x, new_y - dy) and not grid.is_valid_move(x, y - dy)):
                 return (new_x, new_y)
+
+        # If we're moving horizontally or vertically
         else:
-            if dx != 0:
-                if (grid.is_valid_move(new_x, new_y - 1) and not grid.is_valid_move(x, y - 1)) or \
-                   (grid.is_valid_move(new_x, new_y + 1) and not grid.is_valid_move(x, y + 1)):
-                    return (new_x, new_y)
-            else:
-                if (grid.is_valid_move(new_x - 1, new_y) and not grid.is_valid_move(x - 1, y)) or \
-                   (grid.is_valid_move(new_x + 1, new_y) and not grid.is_valid_move(x + 1, y)):
+            neighbors = self.find_neighbors(grid, (new_x, new_y))
+            for neighbor in neighbors:
+                if neighbor != (x, y) and abs(neighbor[0] - new_x) != abs(neighbor[1] - new_y):
                     return (new_x, new_y)
 
+        # Continue in the current direction
         return self.jump(grid, (new_x, new_y), direction)
 
     def find_jump_points(self, grid, current):
         jump_points = []
         neighbors = self.find_neighbors(grid, current)
-
         for neighbor in neighbors:
             direction = (neighbor[0] - current[0], neighbor[1] - current[1])
             jump_point = self.jump(grid, current, direction)
-
-            if jump_point is not None:
+            if jump_point:
                 jump_points.append(jump_point)
-
         return jump_points
 
     def reconstruct_path(self, path):
@@ -442,21 +442,23 @@ class JPS:
 
         while not open_list.empty():
             _, (current, path) = open_list.get()
+
+            # This is where we'll correct the visited set usage
+            if current in visited:
+                continue
+            visited.add(current)
+
             if current == end_pos:
                 return self.reconstruct_path(path)
 
             jump_points = self.find_jump_points(grid, current)
             for jump_point in jump_points:
-                if jump_point in visited:
-                    continue
-
                 tentative_g_score = g_scores[current] + math.sqrt((jump_point[0] - current[0])**2 + (jump_point[1] - current[1])**2)
                 if jump_point not in g_scores or tentative_g_score < g_scores[jump_point]:
                     g_scores[jump_point] = tentative_g_score
                     f_scores[jump_point] = tentative_g_score + self.heuristic(*jump_point)
                     open_list.put((f_scores[jump_point], (jump_point, path + [jump_point])))
-                    visited.add(jump_point)
-                    
+
         return []
 
     def move(self, x, y, grid):
@@ -465,6 +467,7 @@ class JPS:
             next_step = path[1]
             return next_step
         return x, y
+
 
 class DFS:
     def __init__(self, goal_x, goal_y):
@@ -501,6 +504,7 @@ class DFS:
             next_step = path[1]
             return next_step
         return x, y
+
 
 class DStar:
     def __init__(self, goal_x, goal_y):
@@ -562,6 +566,7 @@ class DStar:
             return next_step
         return x, y
 
+
 class DStarLite:
     def __init__(self, goal_x, goal_y):
         self.goal_x = goal_x
@@ -583,49 +588,49 @@ class DStarLite:
     def calculate_key(self, node, g, rhs):
         return (min(g[node], rhs[node]) + self.heuristic(*node), min(g[node], rhs[node]))
 
-    def update_vertex(self, node, grid, g, rhs, open_list, visited):
+    def update_vertex(self, node, grid, g, rhs, open_list):
         if node != (self.goal_x, self.goal_y):
             rhs[node] = min(g[neighbor] + 1 for neighbor in self.find_neighbors(grid, node))
-        if node in visited:
-            open_list.remove((self.calculate_key(node, g, rhs), node))
+        open_list = [item for item in open_list if item[1] != node]
         if g[node] != rhs[node]:
-            open_list.add((self.calculate_key(node, g, rhs), node))
-            visited.add(node)
+            heapq.heappush(open_list, (self.calculate_key(node, g, rhs), node))
+        return open_list
 
     def find_path(self, start_pos, grid):
         g = {(x, y): self.INFINITY for x in range(grid.width) for y in range(grid.height)}
         rhs = g.copy()
         rhs[(self.goal_x, self.goal_y)] = 0
 
-        open_list = set()
-        visited = set()
-
-        open_list.add((self.calculate_key((self.goal_x, self.goal_y), g, rhs), (self.goal_x, self.goal_y)))
-        visited.add((self.goal_x, self.goal_y))
+        open_list = []
+        heapq.heappush(open_list, (self.calculate_key((self.goal_x, self.goal_y), g, rhs), (self.goal_x, self.goal_y)))
 
         while open_list:
-            current = min(open_list, key=lambda x: x[0])
-            open_list.remove(current)
-            current_key, current_node = current
-
-            if g[current_node] > rhs[current_node]:
+            current_key, current_node = heapq.heappop(open_list)
+            if self.calculate_key(current_node, g, rhs) < current_key:
+                heapq.heappush(open_list, (self.calculate_key(current_node, g, rhs), current_node))
+            elif g[current_node] > rhs[current_node]:
                 g[current_node] = rhs[current_node]
+                for neighbor in self.find_neighbors(grid, current_node):
+                    open_list = self.update_vertex(neighbor, grid, g, rhs, open_list)
             else:
                 g[current_node] = self.INFINITY
-                self.update_vertex(current_node, grid, g, rhs, open_list, visited)
+                self.update_vertex(current_node, grid, g, rhs, open_list)
+                for neighbor in self.find_neighbors(grid, current_node):
+                    open_list = self.update_vertex(neighbor, grid, g, rhs, open_list)
 
-            for neighbor in self.find_neighbors(grid, current_node):
-                if neighbor not in visited:
-                    self.update_vertex(neighbor, grid, g, rhs, open_list, visited)
-
-        path = []
-        current = (start_pos)
+        # Reconstruct the path using g-values
+        path = [start_pos]
+        current = start_pos
         while current != (self.goal_x, self.goal_y) and g[current] != self.INFINITY:
+            neighbors = self.find_neighbors(grid, current)
+            current = min(neighbors, key=lambda x: g.get(x, self.INFINITY))
             path.append(current)
-            current = min(self.find_neighbors(grid, current), key=lambda x: g[x] + 1)
-        path.append((self.goal_x, self.goal_y))
 
-        return path if g[current] != self.INFINITY else []
+        # If we couldn't reach the goal, return an empty path
+        if current != (self.goal_x, self.goal_y):
+            return []
+
+        return path
 
     def move(self, x, y, grid):
         path = self.find_path((x, y), grid)
@@ -1057,4 +1062,8 @@ A quadtree is a tree data structure that can be used to represent two-dimensiona
 The hierarchical pathfinding algorithm can start by searching for a path between the start and end points on the highest level of the quadtree. If the path is blocked by an obstacle or the terrain is difficult to traverse, the algorithm can move down to a lower level of the quadtree and search for a path between smaller areas of the map. Each leaf node of the quadtree represents a small area of the map and contains information about the terrain or obstacles in that area. This process can be repeated until the algorithm reaches the lowest level of the quadtree, where it can perform a detailed search to find the exact path between the start and end points.
 
 Quadtree operations can also be used to solve other problems, such as quickly determining the nearest neighbor of a point in a set of points or efficiently storing and querying spatial data. By using a quadtree for hierarchical pathfinding, the algorithm can efficiently search large areas of the map and avoid the need to perform detailed searches on areas of the map that are easy to traverse or do not contain obstacles, significantly reducing the computational cost of the pathfinding algorithm and improving its performance.
+"""
+
+"""
+https://zhuanlan.zhihu.com/p/349074802
 """
