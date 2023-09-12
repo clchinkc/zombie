@@ -614,7 +614,8 @@ class Particle:
                          c2 * r2 * (g_best_y - self.y) + randomness * np.random.randn())
         # Normalize the velocity to keep its magnitude within a reasonable range
         magnitude = np.sqrt(self.velocity[0]**2 + self.velocity[1]**2)
-        self.velocity = (self.velocity[0]/magnitude, self.velocity[1]/magnitude)
+        if magnitude > 0:
+            self.velocity = (self.velocity[0] / magnitude, self.velocity[1] / magnitude)
 
     def update_personal_best(self, goal_x, goal_y):
         if self.distance_to_goal(goal_x, goal_y) < self.distance_to_goal(self.p_best_x, self.p_best_y):
@@ -638,6 +639,9 @@ class PSO:
 
     def find_path(self, x, y, grid):
         particles = [Particle(x, y, grid) for _ in range(self.num_particles)]
+        prev_g_best_x, prev_g_best_y = None, None
+        stagnant_iters = 0  # Track number of iterations without change in g_best
+        
         for _ in range(self.max_iter):
             for particle in particles:
                 particle.update_position()
@@ -645,7 +649,24 @@ class PSO:
                 if (self.g_best_x is None or self.g_best_y is None or
                         self.distance_to_goal(particle.x, particle.y) < self.distance_to_goal(self.g_best_x, self.g_best_y)):
                     self.g_best_x, self.g_best_y = particle.x, particle.y
+            
+            # Check for convergence
+            if prev_g_best_x == self.g_best_x and prev_g_best_y == self.g_best_y:
+                stagnant_iters += 1
+            else:
+                stagnant_iters = 0
+
+            # Update previous g_best values
+            prev_g_best_x, prev_g_best_y = self.g_best_x, self.g_best_y
+            
+            # Break loop if convergence is detected (e.g., no change for 10 iterations)
+            if stagnant_iters >= 10:
+                break
+
+            # Update particle velocities
+            for particle in particles:
                 particle.update_velocity(self.g_best_x, self.g_best_y)
+        
         return particles[np.argmin([p.distance_to_goal(self.goal_x, self.goal_y) for p in particles])].path
 
     def move(self, x, y, grid):
@@ -751,8 +772,8 @@ agents = [
     #Agent(0, 0, ThetaStar(goal_x, goal_y)),
     #Agent(0, 0, JPS(goal_x, goal_y)),
     #Agent(0, 0, DFS(goal_x, goal_y)),
-    Agent(0, 0, DStarLite(goal_x, goal_y)),
-    #Agent(0, 0, PSO(goal_x, goal_y)),
+    #Agent(0, 0, DStarLite(goal_x, goal_y)),
+    Agent(0, 0, PSO(goal_x, goal_y)),
 ]
 
 # Run the simulation
