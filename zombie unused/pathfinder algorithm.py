@@ -506,73 +506,15 @@ class DFS:
         return x, y
 
 
-class DStar:
-    def __init__(self, goal_x, goal_y):
-        self.goal_x = goal_x
-        self.goal_y = goal_y
-        self.heuristic_cache = {}
-
-    def heuristic(self, x, y):
-        if (x, y) not in self.heuristic_cache:
-            self.heuristic_cache[(x, y)] = abs(x - self.goal_x) + abs(y - self.goal_y)
-        return self.heuristic_cache[(x, y)]
-
-    def find_neighbors(self, grid, pos):
-        x, y = pos
-        neighbors = [(x + dy, y + dx) for dy, dx in [(1, 0), (-1, 0), (0, 1), (0, -1)]]
-        valid_neighbors = [neighbor for neighbor in neighbors if grid.is_valid_move(*neighbor)]
-        return valid_neighbors
-
-    def update_graph(self, grid, changes):
-        for pos, cost in changes:
-            grid.update_cost(pos, cost)
-
-    def find_path(self, start_pos, grid, changes=None):
-        if changes:
-            self.update_graph(grid, changes)
-
-        end_pos = (self.goal_x, self.goal_y)
-
-        open_list = PriorityQueue()
-        open_list.put((0, (start_pos, [start_pos])))
-        visited = set()
-
-        g_scores = {start_pos: 0}
-        f_scores = {start_pos: self.heuristic(*start_pos)}
-
-        while not open_list.empty():
-            _, (current, path) = open_list.get()
-            if current == end_pos:
-                return path
-
-            neighbors = self.find_neighbors(grid, current)
-            for neighbor in neighbors:
-                if neighbor in visited:
-                    continue
-
-                tentative_g_score = g_scores[current] + 1
-                if neighbor not in g_scores or tentative_g_score < g_scores[neighbor]:
-                    g_scores[neighbor] = tentative_g_score
-                    f_scores[neighbor] = tentative_g_score + self.heuristic(*neighbor)
-                    open_list.put((f_scores[neighbor], (neighbor, path + [neighbor])))
-                    visited.add(neighbor)
-
-        return []
-
-    def move(self, x, y, grid, changes=None):
-        path = self.find_path((x, y), grid, changes)
-        if len(path) > 1:
-            next_step = path[1]
-            return next_step
-        return x, y
-
-
 class DStarLite:
     def __init__(self, goal_x, goal_y):
         self.goal_x = goal_x
         self.goal_y = goal_y
         self.heuristic_cache = {}
         self.INFINITY = float('inf')
+        self.g = {}
+        self.rhs = {}
+        self.open_list = []
 
     def heuristic(self, x, y):
         if (x, y) not in self.heuristic_cache:
@@ -585,45 +527,43 @@ class DStarLite:
         valid_neighbors = [neighbor for neighbor in neighbors if grid.is_valid_move(*neighbor)]
         return valid_neighbors
 
-    def calculate_key(self, node, g, rhs):
-        return (min(g[node], rhs[node]) + self.heuristic(*node), min(g[node], rhs[node]))
+    def calculate_key(self, node):
+        g_value = self.g.get(node, self.INFINITY)
+        rhs_value = self.rhs.get(node, self.INFINITY)
+        return (min(g_value, rhs_value) + self.heuristic(*node), min(g_value, rhs_value))
 
-    def update_vertex(self, node, grid, g, rhs, open_list):
+    def update_vertex(self, node, grid):
         if node != (self.goal_x, self.goal_y):
-            rhs[node] = min(g[neighbor] + 1 for neighbor in self.find_neighbors(grid, node))
-        open_list = [item for item in open_list if item[1] != node]
-        if g[node] != rhs[node]:
-            heapq.heappush(open_list, (self.calculate_key(node, g, rhs), node))
-        return open_list
+            self.rhs[node] = min(self.g.get(neighbor, self.INFINITY) + 1 for neighbor in self.find_neighbors(grid, node))
+        self.open_list = [item for item in self.open_list if item[1] != node]
+        if self.g.get(node, self.INFINITY) != self.rhs.get(node, self.INFINITY):
+            heapq.heappush(self.open_list, (self.calculate_key(node), node))
+
+    def compute_shortest_path(self, grid):
+        while self.open_list and (self.open_list[0][0] < self.calculate_key(self.open_list[0][1]) or self.rhs[self.open_list[0][1]] != self.g.get(self.open_list[0][1], self.INFINITY)):
+            _, current_node = heapq.heappop(self.open_list)
+            if self.g.get(current_node, self.INFINITY) > self.rhs[current_node]:
+                self.g[current_node] = self.rhs[current_node]
+                for neighbor in self.find_neighbors(grid, current_node):
+                    self.update_vertex(neighbor, grid)
+            else:
+                self.g[current_node] = self.INFINITY
+                self.update_vertex(current_node, grid)
+                for neighbor in self.find_neighbors(grid, current_node):
+                    self.update_vertex(neighbor, grid)
 
     def find_path(self, start_pos, grid):
-        g = {(x, y): self.INFINITY for x in range(grid.width) for y in range(grid.height)}
-        rhs = g.copy()
-        rhs[(self.goal_x, self.goal_y)] = 0
+        self.rhs[(self.goal_x, self.goal_y)] = 0
 
-        open_list = []
-        heapq.heappush(open_list, (self.calculate_key((self.goal_x, self.goal_y), g, rhs), (self.goal_x, self.goal_y)))
+        if not self.open_list:
+            heapq.heappush(self.open_list, (self.calculate_key((self.goal_x, self.goal_y)), (self.goal_x, self.goal_y)))
 
-        while open_list:
-            current_key, current_node = heapq.heappop(open_list)
-            if self.calculate_key(current_node, g, rhs) < current_key:
-                heapq.heappush(open_list, (self.calculate_key(current_node, g, rhs), current_node))
-            elif g[current_node] > rhs[current_node]:
-                g[current_node] = rhs[current_node]
-                for neighbor in self.find_neighbors(grid, current_node):
-                    open_list = self.update_vertex(neighbor, grid, g, rhs, open_list)
-            else:
-                g[current_node] = self.INFINITY
-                self.update_vertex(current_node, grid, g, rhs, open_list)
-                for neighbor in self.find_neighbors(grid, current_node):
-                    open_list = self.update_vertex(neighbor, grid, g, rhs, open_list)
+        self.compute_shortest_path(grid)
 
-        # Reconstruct the path using g-values
         path = [start_pos]
         current = start_pos
-        while current != (self.goal_x, self.goal_y) and g[current] != self.INFINITY:
-            neighbors = self.find_neighbors(grid, current)
-            current = min(neighbors, key=lambda x: g.get(x, self.INFINITY))
+        while current != (self.goal_x, self.goal_y) and self.g.get(current, self.INFINITY) != self.INFINITY:
+            current = min(self.find_neighbors(grid, current), key=lambda x: self.g.get(x, self.INFINITY))
             path.append(current)
 
         # If we couldn't reach the goal, return an empty path
@@ -807,13 +747,12 @@ grid.generate_maze(start_x, start_y, goal_x, goal_y)
 
 # Create agents
 agents = [
-    Agent(0, 0, AStar(goal_x, goal_y)),
-    Agent(0, 0, ThetaStar(goal_x, goal_y)),
-    Agent(0, 0, JPS(goal_x, goal_y)),
-    Agent(0, 0, DFS(goal_x, goal_y)),
-    Agent(0, 0, DStar(goal_x, goal_y)),
+    #Agent(0, 0, AStar(goal_x, goal_y)),
+    #Agent(0, 0, ThetaStar(goal_x, goal_y)),
+    #Agent(0, 0, JPS(goal_x, goal_y)),
+    #Agent(0, 0, DFS(goal_x, goal_y)),
     Agent(0, 0, DStarLite(goal_x, goal_y)),
-    Agent(0, 0, PSO(goal_x, goal_y)),
+    #Agent(0, 0, PSO(goal_x, goal_y)),
 ]
 
 # Run the simulation
@@ -835,7 +774,6 @@ simulation.run()
 # thetastar = ThetaStar(goal_x, goal_y)
 # jps = JPS(goal_x, goal_y)
 # dfs = DFS(goal_x, goal_y)
-# dstar = DStar(goal_x, goal_y)
 # dstarlite = DStarLite(goal_x, goal_y)
 
 # # measure the time it takes for each algorithm to find a path on each grid
@@ -843,7 +781,6 @@ simulation.run()
 # thetastar_times = []
 # jps_times = []
 # dfs_times = []
-# dstar_times = []
 # dstarlite_times = []
 # for grid in grids:
 #     # set the starting position and goal position for each grid
@@ -856,7 +793,6 @@ simulation.run()
 #     thetastar.goal_x, thetastar.goal_y = goal_x, goal_y
 #     jps.goal_x, jps.goal_y = goal_x, goal_y
 #     dfs.goal_x, dfs.goal_y = goal_x, goal_y
-#     dstar.goal_x, dstar.goal_y = goal_x, goal_y
 #     dstarlite.goal_x, dstarlite.goal_y = goal_x, goal_y
 
 #     # measure AStar time
@@ -887,13 +823,6 @@ simulation.run()
 #     dfs_time = end_time - start_time
 #     dfs_times.append(dfs_time)
     
-#     # measure DStar time
-#     start_time = time.time()
-#     path = dstar.find_path((start_x, start_y), grid)
-#     end_time = time.time()
-#     dstar_time = end_time - start_time
-#     dstar_times.append(dstar_time)
-    
 #     # measure DStarLite time
 #     start_time = time.time()
 #     path = dstarlite.find_path((start_x, start_y), grid)
@@ -906,7 +835,6 @@ simulation.run()
 # print(f"ThetaStar average time: {sum(thetastar_times)/len(thetastar_times):.6f} seconds")
 # print(f"JPS average time: {sum(jps_times)/len(jps_times):.6f} seconds")
 # print(f"DFS average time: {sum(dfs_times)/len(dfs_times):.6f} seconds")
-# print(f"DStar average time: {sum(dstar_times)/len(dstar_times):.6f} seconds")
 # print(f"DStarLite average time: {sum(dstarlite_times)/len(dstarlite_times):.6f} seconds")
 
 
@@ -916,7 +844,6 @@ AStar average time: 0.017849 seconds
 ThetaStar average time: 0.029060 seconds
 JPS average time: 0.012722 seconds
 DFS average time: 0.011744 seconds
-DStar average time: 0.018033 seconds
 DStarLite average time: 0.050464 seconds
 """
 """
@@ -925,7 +852,6 @@ AStar average time: 26.007051 seconds
 ThetaStar average time: 28.495731 seconds
 JPS average time: 2.713599 seconds
 DFS average time: 224.046146 seconds
-DStar average time: 35.168455 seconds
 DStarLite average time: 15.427422 seconds
 """
 
