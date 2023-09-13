@@ -91,6 +91,8 @@ class InfectedMachine(StateMachine):
     # cellular automaton
     def update_state(self, severity: float) -> None:
         self.context.infection_severity += 0.1
+        self.context.infection_severity = round(self.context.infection_severity, 1)
+        self.context.infection_severity = min(self.context.infection_severity, 1.0)
         if self.is_turned(severity):
             self.context.state = State.ZOMBIE
         elif self.is_died(severity):
@@ -620,8 +622,8 @@ class PopulationAnimator(Observer):
             self.print_chart_animation()
         elif format == "scatter":
             self.print_scatter_animation()
-
-        # table
+        elif format == "table":
+            self.print_table_animation()
 
     def print_chart_animation(self):
         counts = []
@@ -712,6 +714,48 @@ class PopulationAnimator(Observer):
         # Show the plot
         plt.tight_layout()
         plt.show()
+        
+    def print_table_animation(self):
+        cell_states_name = [[individual.state.name for individual in agent_list] for agent_list in self.agent_history]
+        x = [[individual.location[0] for individual in agent_list] for agent_list in self.agent_history]
+        y = [[individual.location[1] for individual in agent_list] for agent_list in self.agent_history]
+        
+        # Build the grid
+        cell_states = []
+        for i in range(len(cell_states_name)):
+            cell_states.append([["" for j in range(self.subject.school.school_size)] for i in range(self.subject.school.school_size)])
+            for j in range(len(cell_states_name[i])):
+                cell_states[i][x[i][j]][y[i][j]] = cell_states_name[i][j]
+                
+        self.table_animation(cell_states)
+        
+    def table_animation(self, cell_states):
+        # Create a figure
+        fig, ax = plt.subplots(1, 1, figsize=(7, 7))
+        # Set axis range
+        ax.set_xlim(-1, len(cell_states[0])+1)
+        ax.set_ylim(-1, len(cell_states[0])+1)
+        # Create an animation function
+        def animate(i, table, label):
+            # Update the table content for each cell
+            for row_num, row in enumerate(cell_states[i]):
+                for col_num, cell_value in enumerate(row):
+                    table[row_num, col_num].get_text().set_text(cell_value)
+            # Set the label
+            label.set_text("t = {}".format(i))
+            # Return the artists set
+            return table, label
+        # Create a table
+        table = ax.table(cellText=cell_states[0], loc="center", bbox=[0, 0, 1, 1])
+        # Create a label
+        label = ax.text(0.05, 0.9, "", transform=ax.transAxes)
+        # Create the animation object
+        anim = animation.FuncAnimation(fig, animate, frames=len(cell_states), interval=1000, repeat=False, blit=True, fargs=(table, label))
+        # Show the plot
+        plt.tight_layout()
+        plt.show()
+        
+
 
 
 class MatplotlibAnimator(Observer):
@@ -719,16 +763,16 @@ class MatplotlibAnimator(Observer):
         """Initialize the animator."""
         self.subject = population
         self.subject.attach_observer(self)
-        self.mode = mode  # "bar" or "scatter"
+        self.mode = mode  # "bar" or "scatter" or "table"
         
-        self.fig, self.ax = plt.subplots()
-        self.scatter = None
-        self.bars = None
+        self.fig, self.ax = plt.subplots(1, 1, figsize=(7, 7))
 
-        if self.mode == "scatter":
-            self.setup_scatter_plot()
-        else:
+        if self.mode == "bar":
             self.setup_bar_chart()
+        elif self.mode == "scatter":
+            self.setup_scatter_plot()
+        elif self.mode == "table":
+            self.setup_table()
 
     @property
     def cell_states(self):
@@ -787,13 +831,34 @@ class MatplotlibAnimator(Observer):
         self.ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.tight_layout()
         plt.draw()
+        
+    def setup_table(self):
+        """Set up the initial state of the table."""
+        self.ax.set_title("Table Animation")
+        self.ax.set_xlim(-1, self.subject.school.school_size + 1)
+        self.ax.set_ylim(-1, self.subject.school.school_size + 1)
+        self.table = None
+        self.setup_initial_table_state()
+        
+    def setup_initial_table_state(self):
+        """Initialize the table with starting data."""
+        cell_states = []
+        for i in range(self.subject.school.school_size):
+            cell_states.append([["" for j in range(self.subject.school.school_size)] for i in range(self.subject.school.school_size)])
+            for j in range(self.subject.school.school_size):
+                cell_states[i][self.cell_x_coords[j]][self.cell_y_coords[j]] = self.cell_states[j].name
+        self.table = self.ax.table(cellText=cell_states[0], loc="center", bbox=[0, 0, 1, 1])
+        plt.tight_layout()
+        plt.draw()
 
     def update(self) -> None:
         """Update the plot based on the mode."""
-        if self.mode == "scatter":
-            self.update_scatter_plot()
-        else:
+        if self.mode == "bar":
             self.update_bar_chart()
+        elif self.mode == "scatter":
+            self.update_scatter_plot()
+        elif self.mode == "table":
+            self.update_table()
 
     def update_bar_chart(self):
         """Update and redraw the bar chart with new data."""
@@ -809,11 +874,21 @@ class MatplotlibAnimator(Observer):
         self.scatter.set_array(self.cell_states_value)
         plt.draw()
         plt.pause(1.5)
+        
+    def update_table(self):
+        """Update and redraw the table with new data."""
+        cell_states = []
+        for i in range(self.subject.school.school_size):
+            cell_states.append([["" for j in range(self.subject.school.school_size)] for i in range(self.subject.school.school_size)])
+            for j in range(self.subject.school.school_size):
+                cell_states[i][self.cell_x_coords[j]][self.cell_y_coords[j]] = self.cell_states[j].name
+        self.table = self.ax.table(cellText=cell_states[0], loc="center", bbox=[0, 0, 1, 1])
+        plt.draw()
+        plt.pause(1.5)
 
     def display_observation(self):
         """Display the final plot."""
         plt.show()
-
 
 
 class Population:
@@ -929,7 +1004,7 @@ def main():
     # create Observer objects
     # population_observer = PopulationObserver(school_sim)
     # population_animator = PopulationAnimator(school_sim)
-    matplotlib_animator = MatplotlibAnimator(school_sim)
+    matplotlib_animator = MatplotlibAnimator(school_sim, mode="table")
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
@@ -945,6 +1020,7 @@ def main():
     # population_observer.display_observation(format="scatter")
     # population_animator.display_observation(format="chart")
     # population_animator.display_observation(format="scatter")
+    # population_animator.display_observation(format="table")
     matplotlib_animator.display_observation()
 
 
