@@ -1286,6 +1286,9 @@ NotebookLM
 Project IDX
 https://github.com/KillianLucas/open-interpreter
 https://github.com/n4ze3m/dialoqbase
+Code Llama in Poe and Perplexity
+run code llama on colab
+https://github.com/vllm-project/vllm
 
 bard api
 https://github.com/dsdanielpark/Bard-API
