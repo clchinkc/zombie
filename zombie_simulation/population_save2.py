@@ -766,6 +766,9 @@ class MatplotlibAnimator(Observer):
         self.mode = mode  # "bar" or "scatter" or "table"
         
         self.fig, self.ax = plt.subplots(1, 1, figsize=(7, 7))
+        self.scatter = None
+        self.bars = None
+        self.table = None
 
         if self.mode == "bar":
             self.setup_bar_chart()
@@ -889,6 +892,7 @@ class MatplotlibAnimator(Observer):
     def display_observation(self):
         """Display the final plot."""
         plt.show()
+
 
 
 class Population:
