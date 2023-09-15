@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 import re
 
@@ -25,7 +24,7 @@ client = chromadb.PersistentClient(path="chroma.db", settings=Settings(allow_res
 
 # client.reset() # reset the database
 
-sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="distiluse-base-multilingual-cased-v1")
+sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="paraphrase-multilingual-mpnet-base-v2")
 
 # Create collection. get_collection, get_or_create_collection, delete_collection also available!
 # collection = client.create_collection(name="all-my-documents", embedding_function=sentence_transformer_ef, metadata={"hnsw:space": "cosine"}) # Valid options for hnsw:space are "l2", "ip, "or "cosine". The default is "l2".
@@ -40,9 +39,7 @@ collection.add(
     ], # we handle tokenization, embedding, and indexing automatically. You can skip that and add your own embeddings as well
     # embeddings=[get_word_embeddings(doc).tolist() for doc in sample_text.split("\n") if doc], # optional
     metadatas=[
-        {"title": "Sample text 1"},
-        {"title": "Sample text 2"},
-        {"title": "Sample text 3"},
+        {"metadata_field": "metadata_value"} for doc in sample_text.split("\n") if doc
     ], # filter by metadata
     ids=[
         "sample-text-1",
@@ -51,16 +48,6 @@ collection.add(
     ], # unique for each doc
 )
 
-# Search for docs
-# results = collection.query(
-#     query_texts=["searches"],
-#     # query_embeddings=[get_word_embeddings("searches").tolist()], # optional
-#     n_results=3,
-#     # where={"metadata_field": "is_equal_to_this"}, # optional filter
-#     # where_document={"$contains":"search_string"}, # optional filter
-#     include=["documents", "distances"], # specify what to return. Default is ["documents", "metadatas", "distances", "ids"]
-# )
-# print(results)
 
 def get_word_embeddings(sentence: str) -> torch.Tensor:
     """Get BERT embedding for a given sentence."""
@@ -84,12 +71,14 @@ def get_word_embeddings(sentence: str):
     # msmarco-MiniLM-L12-cos-v5
     # msmarco-distilbert-cos-v5
     # multi-qa-MiniLM-L6-cos-v1
-    # multi-qa-distilbert-cos-v1
-    # multi-qa-mpnet-base-cos-v1
     # sentence-t5-base
     # gtr-t5-base
     # multi-qa-mpnet-base-cos-v1
+    # all-mpnet-base-v2
+    # all-MiniLM-L6-v2
     # all-MiniLM-L12-v2
+    # all-roberta-large-v1
+    # all-distilroberta-v1
     return model.encode(sentence)
 
 
@@ -138,6 +127,7 @@ def semantic_search(keyword: str, text: str, threshold: float = 0.8) -> list[str
     )
     # print cosine similarity which is 1 - cosine distance, cosine distance is a list at results["distances"][0]
     print([1 - cosine_distance for cosine_distance in results["distances"][0]])
+    print(results["metadatas"][0])
     return results["documents"][0]
 
 def search_text(keyword: str, mode: str, text: str = sample_text) -> list[str]:
@@ -155,3 +145,14 @@ def search_text(keyword: str, mode: str, text: str = sample_text) -> list[str]:
 
 # Example usage:
 print(search_text("searches", "semantic"))
+
+# https://www.sbert.net/docs/pretrained_models.html
+
+# https://www.sbert.net/examples/applications/cross-encoder/README.html
+# https://www.sbert.net/docs/pretrained_cross-encoders.html
+
+# https://www.sbert.net/docs/usage/semantic_textual_similarity.html
+# https://www.sbert.net/examples/applications/retrieve_rerank/README.html
+# https://www.sbert.net/examples/applications/semantic-search/README.html
+
+# Trie or inverted indexes
