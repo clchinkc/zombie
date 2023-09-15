@@ -25,7 +25,7 @@ client = chromadb.PersistentClient(path="chroma.db", settings=Settings(allow_res
 
 # client.reset() # reset the database
 
-sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="paraphrase-xlm-r-multilingual-v1")
+sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="distiluse-base-multilingual-cased-v1")
 
 # Create collection. get_collection, get_or_create_collection, delete_collection also available!
 # collection = client.create_collection(name="all-my-documents", embedding_function=sentence_transformer_ef, metadata={"hnsw:space": "cosine"}) # Valid options for hnsw:space are "l2", "ip, "or "cosine". The default is "l2".
@@ -52,16 +52,15 @@ collection.add(
 )
 
 # Search for docs
-results = collection.query(
-    query_texts=["searches"],
-    # query_embeddings=[get_word_embeddings("searches").tolist()], # optional
-    n_results=3,
-    # where={"metadata_field": "is_equal_to_this"}, # optional filter
-    # where_document={"$contains":"search_string"}, # optional filter
-    include=["documents", "distances"], # specify what to return. Default is ["documents", "metadatas", "distances", "ids"]
-)
-
-print(results)
+# results = collection.query(
+#     query_texts=["searches"],
+#     # query_embeddings=[get_word_embeddings("searches").tolist()], # optional
+#     n_results=3,
+#     # where={"metadata_field": "is_equal_to_this"}, # optional filter
+#     # where_document={"$contains":"search_string"}, # optional filter
+#     include=["documents", "distances"], # specify what to return. Default is ["documents", "metadatas", "distances", "ids"]
+# )
+# print(results)
 
 def get_word_embeddings(sentence: str) -> torch.Tensor:
     """Get BERT embedding for a given sentence."""
@@ -87,14 +86,12 @@ def get_word_embeddings(sentence: str):
     # multi-qa-MiniLM-L6-cos-v1
     # multi-qa-distilbert-cos-v1
     # multi-qa-mpnet-base-cos-v1
+    # sentence-t5-base
+    # gtr-t5-base
+    # multi-qa-mpnet-base-cos-v1
+    # all-MiniLM-L12-v2
     return model.encode(sentence)
 
-def cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
-    """Compute the cosine similarity between two vectors."""
-    dot_product = sum(a * b for a, b in zip(vec1, vec2))
-    magnitude1 = sum(a * a for a in vec1) ** 0.5
-    magnitude2 = sum(b * b for b in vec2) ** 0.5
-    return dot_product / (magnitude1 * magnitude2)
 
 def exact_search(keyword: str, text: str) -> list[str]:
     """Search for the exact keyword in the text."""
@@ -122,13 +119,26 @@ def semantic_search(keyword: str, text: str, threshold: float = 0.8) -> list[str
     matches = []
     for line in [line for line in text.split("\n") if line]:
         line_embedding = get_word_embeddings(line)
-        # similarity = cosine_similarity(keyword_embedding.numpy().flatten(), line_embedding.numpy().flatten())
         similarity = util.cos_sim(torch.tensor(keyword_embedding), torch.tensor(line_embedding))
         # similarity = util.dot_score(torch.tensor(keyword_embedding), torch.tensor(line_embedding))
         print(similarity)
         if similarity > threshold:
             matches.append(line)
     return matches
+
+def semantic_search(keyword: str, text: str, threshold: float = 0.8) -> list[str]:
+    """Search for sentences that are semantically similar to the keyword using chroma"""
+    results = collection.query(
+        query_texts=["searches"],
+        # query_embeddings=[get_word_embeddings("searches").tolist()], # optional
+        n_results=3,
+        # where={"metadata_field": "is_equal_to_this"}, # optional filter
+        # where_document={"$contains":"search_string"}, # optional filter
+        include=["documents", "distances"], # specify what to return. Default is ["documents", "metadatas", "distances", "ids"]
+    )
+    # print cosine similarity which is 1 - cosine distance, cosine distance is a list at results["distances"][0]
+    print([1 - cosine_distance for cosine_distance in results["distances"][0]])
+    return results["documents"][0]
 
 def search_text(keyword: str, mode: str, text: str = sample_text) -> list[str]:
     """Unified search function."""
@@ -144,4 +154,4 @@ def search_text(keyword: str, mode: str, text: str = sample_text) -> list[str]:
         raise ValueError("Invalid search mode")
 
 # Example usage:
-# print(search_text("searches", "semantic"))
+print(search_text("searches", "semantic"))
