@@ -1850,3 +1850,67 @@ Determining the optimal granularity for microservices isn't just about breaking 
 """
 https://www.geeksforgeeks.org/g-fact-34-class-or-static-variables-in-python/
 """
+
+"""
+What is minimum spanning tree?
+
+A minimum spanning tree (MST) is a subgraph of a connected, undirected graph that connects all the vertices together with the minimum possible total edge weight. It has (V-1) edges where V is the number of vertices in the graph. There shouldn't be any cycles in the MST. Two popular algorithms for finding an MST are Kruskal's algorithm and Prim's algorithm.
+
+What is the use of implementing it in a zombie apocalypse simulation?
+
+Implementing a minimum spanning tree (MST) in a zombie apocalypse simulation can have several uses:
+
+1. *Resource Allocation*: If there are multiple safe zones or supply points, you'd want to ensure that they're connected with the shortest possible paths to minimize travel time and exposure. An MST can help design these paths.
+
+2. *Optimal Evacuation Routes*: In case of an outbreak in one of the safe zones, you'd want to evacuate people to other safe zones using the shortest possible route. An MST can help in determining these routes, potentially saving lives.
+
+3. *Setting up Communication Lines*: If survivors need to establish communication links (like walkie-talkies with limited range or physical communication lines), using an MST ensures they use the minimum amount of resources while reaching all necessary points.
+
+4. *Surveillance and Defense*: By determining the shortest paths between settlements or safe zones, one can effectively place surveillance equipment or defensive positions to monitor and fend off zombie movements.
+
+5. *Energy Distribution*: If there are power generators or other energy sources that need to be connected to different locations, using an MST can ensure the shortest and most efficient distribution network.
+
+6. *Exploration and Scouting*: If survivors need to scout or explore various locations to find resources, using the MST can provide a guideline for the shortest paths to take, conserving energy and minimizing time spent outside safe zones.
+
+In summary, the MST can be a tool to optimize resource usage, movement, and safety in a zombie apocalypse simulation by providing a structure for the most efficient paths and connections between important points.
+"""
+
+"""
+What is search tree?
+
+A search tree is a tree data structure used for various search and retrieval operations. Each node of the tree represents a possible state, and the edges represent transitions between states. Search trees are used in various algorithms to explore possible solutions or states in an efficient manner. Some common types of search trees include:
+
+1. *Binary Search Tree (BST):* Used for maintaining a sorted list of numbers. It ensures that for each node, all values in the left subtree are less than the node's value, and all values in the right subtree are greater than the node's value.
+
+2. *Balanced Trees (e.g., AVL, Red-Black Trees):* These are BSTs that maintain their balance (i.e., ensure that the tree remains approximately balanced) to guarantee that operations like insertion, deletion, and search can be done in O(log n) time.
+
+3. *Trie (or Prefix Tree):* Used mainly for searching among strings. Each node represents a character, and a path from the root to a node forms a prefix or a whole word.
+
+4. *B-trees and B+ trees:* Often used in databases and file systems because they are optimized for systems that read and write large blocks of data.
+
+5. *Game Trees:* Used in game theory and artificial intelligence for games like chess and tic-tac-toe. Each node represents a game state, and children represent possible moves.
+
+6. *Backtracking Trees:* Used in problems where you need to search for all possible solutions, like the N-queens puzzle.
+
+These trees help in organizing data or potential solutions in a structured manner, which allows for efficient search, insertion, and deletion operations.
+
+What is the use of implementing it in a zombie apocalypse simulation?
+
+Implementing search trees in a zombie apocalypse simulation can provide several benefits, depending on the simulation's goals and requirements:
+
+1. *Pathfinding:* If zombies or survivors need to find the shortest or most efficient path to a destination (like safety zones, resources, or targets), search trees can help in algorithms like A* or Dijkstra's to find the best path.
+
+2. *Decision Making:* Game trees can represent possible actions and their outcomes. For instance, if a survivor encounters zombies, the simulation could use a game tree to determine the best course of action (e.g., fight, flee, hide) based on potential outcomes and probabilities.
+
+3. *Resource Searching:* A trie or other search tree could help survivors search for resources in a database quickly. For instance, if they have a digital map or database of safe houses, medical supplies, or weapon caches, a search tree can help locate the nearest or most valuable resource efficiently.
+
+4. *Simulating Spread:* If the simulation tracks the spread of the zombie infection, a tree structure can represent the spread from one individual to another, helping visualize and analyze the rate and pattern of the outbreak.
+
+5. *Group Dynamics:* Decision trees could be used to simulate the decisions made by groups of survivors, weighing the pros and cons of various choices such as staying put, migrating, seeking supplies, or interacting with other groups.
+
+6. *Scenario Exploration:* If you want to explore various "what if" scenarios in the simulation, search trees can help enumerate and evaluate each possibility. For instance, "What if the group found a car?" or "What if the safe zone was breached?"
+
+7. *Optimization Problems:* In scenarios where survivors have to make optimal decisions, such as allocating limited resources among various tasks (fortifying a base, searching for food, curing the infected), search trees can help find the best allocation strategy.
+
+Implementing search trees in a zombie apocalypse simulation can make it more detailed, realistic, and versatile, enabling more complex scenarios and outcomes to be explored.
+"""

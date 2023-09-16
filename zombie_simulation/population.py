@@ -716,41 +716,60 @@ class PopulationAnimator(Observer):
         plt.show()
         
     def print_table_animation(self):
-        cell_states_name = [[individual.state.name for individual in agent_list] for agent_list in self.agent_history]
+        cell_states_name = [[individual.state for individual in agent_list] for agent_list in self.agent_history]
         x = [[individual.location[0] for individual in agent_list] for agent_list in self.agent_history]
         y = [[individual.location[1] for individual in agent_list] for agent_list in self.agent_history]
-        
+
         # Build the grid
         cell_states = []
         for i in range(len(cell_states_name)):
             cell_states.append([["" for j in range(self.subject.school.school_size)] for i in range(self.subject.school.school_size)])
             for j in range(len(cell_states_name[i])):
                 cell_states[i][x[i][j]][y[i][j]] = cell_states_name[i][j]
-                
+
         self.table_animation(cell_states)
-        
+
     def table_animation(self, cell_states):
         # Create a figure
         fig, ax = plt.subplots(1, 1, figsize=(7, 7))
         # Set axis range
         ax.set_xlim(-1, len(cell_states[0])+1)
         ax.set_ylim(-1, len(cell_states[0])+1)
+
+        # Create a dictionary to map state to colors
+        state_colors = {
+            State.HEALTHY: "green",
+            State.INFECTED: "orange",
+            State.ZOMBIE: "red",
+            State.DEAD: "black",
+        }
+
         # Create an animation function
         def animate(i, table, label):
             # Update the table content for each cell
             for row_num, row in enumerate(cell_states[i]):
                 for col_num, cell_value in enumerate(row):
+                    # Set the cell color based on the state
+                    cell_color = state_colors.get(cell_value, "white")  # default to white if state is unknown
+                    table[row_num, col_num].set_facecolor(cell_color)
                     table[row_num, col_num].get_text().set_text(cell_value)
             # Set the label
             label.set_text("t = {}".format(i))
             # Return the artists set
             return table, label
+
         # Create a table
         table = ax.table(cellText=cell_states[0], loc="center", bbox=[0, 0, 1, 1])
+
         # Create a label
         label = ax.text(0.05, 0.9, "", transform=ax.transAxes)
+
         # Create the animation object
         anim = animation.FuncAnimation(fig, animate, frames=len(cell_states), interval=1000, repeat=False, blit=True, fargs=(table, label))
+
+        # Hide the axes
+        ax.axis('off')
+
         # Show the plot
         plt.tight_layout()
         plt.show()
@@ -845,12 +864,26 @@ class MatplotlibAnimator(Observer):
         
     def setup_initial_table_state(self):
         """Initialize the table with starting data."""
-        cell_states = []
+        cell_states = [["" for _ in range(self.subject.school.school_size)] for _ in range(self.subject.school.school_size)]
+        for j in range(self.subject.school.school_size):
+            cell_states[self.cell_x_coords[j]][self.cell_y_coords[j]] = self.cell_states[j].name
+
+        state_colors = {
+            State.HEALTHY.name: "green",
+            State.INFECTED.name: "orange",
+            State.ZOMBIE.name: "red",
+            State.DEAD.name: "black",
+        }
+
+        self.table = self.ax.table(cellText=cell_states, loc="center", bbox=[0, 0, 1, 1])
+
         for i in range(self.subject.school.school_size):
-            cell_states.append([["" for j in range(self.subject.school.school_size)] for i in range(self.subject.school.school_size)])
             for j in range(self.subject.school.school_size):
-                cell_states[i][self.cell_x_coords[j]][self.cell_y_coords[j]] = self.cell_states[j].name
-        self.table = self.ax.table(cellText=cell_states[0], loc="center", bbox=[0, 0, 1, 1])
+                cell_state = cell_states[i][j]
+                color = state_colors.get(cell_state, "white")  # Default to white if state is unknown
+                self.table[i, j].set_facecolor(color)
+                self.table[i, j].get_text().set_text('')  # Clear the text
+
         plt.tight_layout()
         plt.draw()
 
@@ -880,12 +913,24 @@ class MatplotlibAnimator(Observer):
         
     def update_table(self):
         """Update and redraw the table with new data."""
-        cell_states = []
+        cell_states = [["" for _ in range(self.subject.school.school_size)] for _ in range(self.subject.school.school_size)]
+        for j in range(self.subject.school.school_size):
+            cell_states[self.cell_x_coords[j]][self.cell_y_coords[j]] = self.cell_states[j].name
+
+        state_colors = {
+            State.HEALTHY.name: "green",
+            State.INFECTED.name: "orange",
+            State.ZOMBIE.name: "red",
+            State.DEAD.name: "black",
+        }
+
         for i in range(self.subject.school.school_size):
-            cell_states.append([["" for j in range(self.subject.school.school_size)] for i in range(self.subject.school.school_size)])
             for j in range(self.subject.school.school_size):
-                cell_states[i][self.cell_x_coords[j]][self.cell_y_coords[j]] = self.cell_states[j].name
-        self.table = self.ax.table(cellText=cell_states[0], loc="center", bbox=[0, 0, 1, 1])
+                cell_state = cell_states[i][j]
+                color = state_colors.get(cell_state, "white")  # Default to white if state is unknown
+                self.table[i, j].set_facecolor(color)
+                self.table[i, j].get_text().set_text('')  # Clear the text
+
         plt.draw()
         plt.pause(1.5)
 
