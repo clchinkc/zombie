@@ -28,6 +28,29 @@ client.reset() # reset the database
 
 sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="paraphrase-multilingual-MiniLM-L12-v2")
 
+
+# Available models for SentenceTransformer('model_name'), return model.encode(sentence)
+# paraphrase-xlm-r-multilingual-v1
+# distiluse-base-multilingual-cased-v1
+# paraphrase-multilingual-MiniLM-L12-v2
+# paraphrase-multilingual-mpnet-base-v2
+# msmarco-MiniLM-L6-cos-v5
+# msmarco-MiniLM-L12-cos-v5
+# msmarco-distilbert-cos-v5
+# multi-qa-MiniLM-L6-cos-v1
+# sentence-t5-base
+# gtr-t5-base
+# multi-qa-mpnet-base-cos-v1
+# all-mpnet-base-v2
+# all-MiniLM-L6-v2
+# all-MiniLM-L12-v2
+# all-roberta-large-v1
+# all-distilroberta-v1
+
+tokenizer = BertTokenizer.from_pretrained('google/bert_uncased_L-2_H-128_A-2')
+model = BertModel.from_pretrained('google/bert_uncased_L-2_H-128_A-2')
+
+
 # Create collection. get_collection, get_or_create_collection, delete_collection also available!
 # collection = client.create_collection(name="all-my-documents", embedding_function=sentence_transformer_ef, metadata={"hnsw:space": "cosine"}) # Valid options for hnsw:space are "l2", "ip, "or "cosine". The default is "l2".
 # collection = client.get_collection(name="all-my-documents")
@@ -49,67 +72,89 @@ collection.add(
 )
 
 
+def get_ngrams(text: str, n: int) -> list[str]:
+    """Generate n-grams from the text."""
+    words = text.split()
+    return [' '.join(words[i:i+n]) for i in range(len(words) - n + 1)]
+
+def get_all_ngrams(text: str) -> list[tuple[str, int]]:
+    """Generate all n-grams from the text."""
+    words = text.split()
+    num_words = len(words)
+    ngrams = [(gram, n) for n in range(1, num_words) for gram in get_ngrams(text, n)]
+    return ngrams
+
 def get_word_embeddings(sentence: str) -> torch.Tensor:
     """Get BERT embedding for a given sentence."""
-    # Initialize BERT tokenizer and model
-    tokenizer = BertTokenizer.from_pretrained('google/bert_uncased_L-2_H-128_A-2')
-    model = BertModel.from_pretrained('google/bert_uncased_L-2_H-128_A-2')
     inputs = tokenizer(sentence, return_tensors="pt", truncation=True, padding=True, max_length=512)
     with torch.no_grad():
         outputs = model(**inputs)
-    return outputs['last_hidden_state'][:,0,:]
+    return outputs['last_hidden_state'][:, 0, :]
 
-def get_word_embeddings(sentence: str):
-    """Get Sentence Transformer embedding for a given sentence."""
-    model = SentenceTransformer('paraphrase-xlm-r-multilingual-v1')
-    # Available models:
-    # paraphrase-xlm-r-multilingual-v1
-    # distiluse-base-multilingual-cased-v1
-    # paraphrase-multilingual-MiniLM-L12-v2
-    # paraphrase-multilingual-mpnet-base-v2
-    # msmarco-MiniLM-L6-cos-v5
-    # msmarco-MiniLM-L12-cos-v5
-    # msmarco-distilbert-cos-v5
-    # multi-qa-MiniLM-L6-cos-v1
-    # sentence-t5-base
-    # gtr-t5-base
-    # multi-qa-mpnet-base-cos-v1
-    # all-mpnet-base-v2
-    # all-MiniLM-L6-v2
-    # all-MiniLM-L12-v2
-    # all-roberta-large-v1
-    # all-distilroberta-v1
-    return model.encode(sentence)
+def word_embedding_similarity(word1_embedding: torch.Tensor, word2_embedding: torch.Tensor) -> float:
+    similarity = torch.nn.functional.cosine_similarity(word1_embedding, word2_embedding)
+    return similarity.item()
 
-def semantic_search(keyword: str, text: str, threshold: float = 0.8) -> list[str]:
-    """Search for sentences that are semantically similar to the keyword."""
-    keyword_embedding = get_word_embeddings(keyword)
-    matches = []
-    for line in [line for line in text.split("\n") if line]:
-        line_embedding = get_word_embeddings(line)
-        similarity = util.cos_sim(torch.tensor(keyword_embedding), torch.tensor(line_embedding))
-        # similarity = util.dot_score(torch.tensor(keyword_embedding), torch.tensor(line_embedding))
-        print("Semantic similarity:", similarity)
-        if similarity > threshold:
-            matches.append(line)
-    return matches
+
 
 
 
 def exact_search(keyword: str, text: str) -> list[tuple[str, float]]:
     """Search for the exact keyword in the text and return score according to number of occurrences."""
     lines = [line for line in text.split("\n") if line]
-    scores = [1000.0 * line.count(keyword) for line in lines]
+    scores = [1.0 * line.count(keyword) for line in lines]
     print("Exact search scores:", scores)
     return [(line, score) for line, score in zip(lines, scores)]
 
+
+def ngram_search(keyword: str, text: str) -> list[tuple[str, float]]:
+    """Search for n-grams in the text and return score according to the number of occurrences and n-gram size."""
+
+    # Extract all n-grams from the keyword
+    keyword_ngrams = get_all_ngrams(keyword)
+    
+    lines = [line for line in text.split("\n") if line]
+    scores = []
+
+    # Define a weight for each n-gram size
+    # This can be changed to any other weight assignment logic
+    ngram_weights = {n: n*0.5 for n in range(1, 11)}
+
+    for line in lines:
+        line_ngrams = get_all_ngrams(line)
+
+        # Calculate the score for this line based on matching n-grams and their weights
+        line_score = 0.0
+        for k_gram, k_n in keyword_ngrams:
+            for l_gram, l_n in line_ngrams:
+                if k_gram == l_gram:
+                    # Add the score for this n-gram, weighted by its size
+                    line_score += ngram_weights.get(k_n, 0)
+        
+        scores.append(line_score)
+
+    print("Ngram search scores:", scores)
+    return [(line, score) for line, score in zip(lines, scores)]
+
+
 def regex_search(keyword: str, text: str) -> list[tuple[str, float]]:
     """Search using regular expressions and return score according to number of occurrences."""
-    pattern = re.compile(keyword)
+    pattern_str = re.escape(keyword)
+    # Replace spaces with \s+ to match any number of spaces
+    pattern_str = pattern_str.replace(r"\ ", r"\s+")
+    # Replace hyphens with optional hyphens
+    pattern_str = pattern_str.replace(r"\-", r"\-?")
+    # Replace underscores with optional underscores
+    pattern_str = pattern_str.replace(r"\_", r"\_?")
+    # Replace vowels with optional vowels
+    if any(vowel in pattern_str for vowel in ['a', 'e', 'i', 'o', 'u']):
+        pattern_str = re.sub(r"(a|e|i|o|u)", r"\1u?", pattern_str)
+    pattern = re.compile(pattern_str, re.IGNORECASE)
     lines = [line for line in text.split("\n") if line]
-    scores = [900.0 * len(pattern.findall(line)) for line in lines]
+    scores = [1.0 * len(pattern.findall(line)) for line in lines]
     print("Regex search scores:", scores)
     return [(line, score) for line, score in zip(lines, scores)]
+
 
 def fuzzy_search(keyword: str, text: str) -> list[tuple[str, float]]:
     """Search for words similar to the keyword using fuzzy matching and return score."""
@@ -121,16 +166,61 @@ def fuzzy_search(keyword: str, text: str) -> list[tuple[str, float]]:
             ratio = fuzz.ratio(keyword, word)
             if ratio > max_ratio:
                 max_ratio = ratio
-        scores.append(float(max_ratio))
+        score = float(max_ratio) / 100
+        scores.append(score)
     print("Fuzzy search scores:", scores)
     return [(line, score) for line, score in zip(lines, scores)]
+
+
+def word_embedding_search(keyword: str, text: str) -> list[tuple[str, float]]:
+    """Search for words similar to the keyword using word embeddings and return score."""
+    line_list = [line for line in text.split("\n") if line]
+    word_list = [[word for word in line.split()] for line in line_list]
+    
+    # Creating a dictionary to store embeddings with associated words
+    word_embedding_dict = {}
+    for line_words in word_list:
+        for word in line_words:
+            word_embedding_dict[word] = get_word_embeddings(word)
+            
+    keyword_embedding = get_word_embeddings(keyword)
+    
+    embedding_scores = []
+    for line_words in word_list:
+        max_similarity = 0
+        for word in line_words:
+            similarity = word_embedding_similarity(keyword_embedding, word_embedding_dict[word])
+            if similarity > max_similarity:
+                max_similarity = similarity
+                print(max_similarity, word)
+        embedding_scores.append(max_similarity)
+    
+    print("Word embedding search scores:", embedding_scores)
+    return [(line, score) for line, score in zip(line_list, embedding_scores)]
+
+def word_embedding_search(keyword: str, text: str) -> list[tuple[str, float]]:
+    line_list = [line for line in text.split("\n") if line]
+    keyword_embedding = get_word_embeddings(keyword)
+
+    scores = []
+    for line in line_list:
+        line_embeddings = [get_word_embeddings(word) for word in line.split()]
+        max_similarity = 0
+        for idx, word in enumerate(line.split()):
+            similarity = word_embedding_similarity(keyword_embedding, line_embeddings[idx])
+            max_similarity = max(max_similarity, similarity)
+        scores.append(max_similarity)
+
+    print("Word embedding search scores:", scores)
+    return [(line, score) for line, score in zip(line_list, scores)]
+
 
 def semantic_search(keyword: str, text: str) -> list[tuple[str, float]]:
     """Search for sentences that are semantically similar to the keyword using chroma"""
     results = collection.query(
-        query_texts=["searches"],
+        query_texts=keyword,
         # query_embeddings=[get_word_embeddings("searches").tolist()], # optional
-        n_results=4,
+        n_results=3,
         # where={"metadata_field": "is_equal_to_this"}, # optional filter
         # where_document={"$contains":"search_string"}, # optional filter
         include=["documents", "distances"], # specify what to return. Default is ["documents", "metadatas", "distances", "ids"]
@@ -139,6 +229,7 @@ def semantic_search(keyword: str, text: str) -> list[tuple[str, float]]:
     scores = [1 - dist for dist in results["distances"][0]]
     print("Semantic score:", scores)
     return list(zip(results["documents"][0], scores))
+
 
 def translate_multilanguage(sentence):
     translator = Translator()
@@ -171,43 +262,44 @@ def translate_multilanguage(sentence):
 
     return translations['en'], translations['zh-TW'], translations['zh-CN']
 
-def search_and_rank(keyword, text=sample_text):
+
+def search_and_rank(keyword, text=sample_text, weights={'exact': 1, 'ngram': 0.8, 'regex': 0.8, 'fuzzy': 0.6, 'word_embedding': 0.6, 'semantic': 0.4}):
     # Get translations of the keyword into the three languages
     english_keyword, traditional_keyword, simplified_keyword = translate_multilanguage(keyword)
+    keywords = [english_keyword, traditional_keyword, simplified_keyword]
     print("English keyword:", english_keyword)
     print("Traditional Chinese keyword:", traditional_keyword)
     print("Simplified Chinese keyword:", simplified_keyword)
 
-    # Combine the keywords for all languages
-    keywords = [english_keyword, traditional_keyword, simplified_keyword]
-
-    all_texts = set()
     scores = {}
 
     for kw in keywords:
-        exact_matches = dict(exact_search(kw, text))
-        regex_matches = dict(regex_search(kw, text))
-        fuzzy_matches = dict(fuzzy_search(kw, text))
-        semantic_matches = dict(semantic_search(kw, text))
-        
-        all_texts |= set(exact_matches) | set(regex_matches) | set(fuzzy_matches) | set(semantic_matches)
+        search_methods = {
+            'exact': exact_search(kw, text),
+            'ngram': ngram_search(kw, text),
+            'regex': regex_search(kw, text),
+            'fuzzy': fuzzy_search(kw, text),
+            'word_embedding': word_embedding_search(kw, text),
+            'semantic': semantic_search(kw, text)
+        }
 
-        for match_dict in [exact_matches, regex_matches, fuzzy_matches, semantic_matches]:
-            for matched_text, score in match_dict.items():
-                if matched_text not in scores:
-                    scores[matched_text] = score
-                else:
-                    scores[matched_text] += score
+        for method, matches in search_methods.items():
+            if not matches:  # Handle case where no matches are found
+                continue
+
+            max_score = max([score for _, score in matches])
+            normalized_matches = {text: score / (max_score + 1e-6) for text, score in matches}
+
+            for matched_text, norm_score in normalized_matches.items():
+                weighted_score = norm_score * weights[method]
+                scores[matched_text] = scores.get(matched_text, 0) + weighted_score
 
     # Sort the results by the accumulated scores
-    ranked_results = sorted(list(all_texts), key=lambda x: scores[x], reverse=True)
+    ranked_results = sorted(scores.keys(), key=lambda x: scores[x], reverse=True)
     return [[text, scores[text]] for text in ranked_results]
 
-# Note: This updated function assumes that the provided search functions (e.g., exact_search, regex_search) 
-# return a dictionary where keys are the matched texts and values are the respective scores.
 
-
-print(search_and_rank("searches"))
+print(search_and_rank("search for"))
 
 # https://www.sbert.net/docs/pretrained_models.html
 
