@@ -24,7 +24,7 @@ This is the end of the sample text.
 # setup Chroma with persistence, for production use. Can also use a remote database
 client = chromadb.PersistentClient(path="chroma.db", settings=Settings(allow_reset=True))
 
-client.reset() # reset the database
+# client.reset() # reset the database
 
 sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="paraphrase-multilingual-MiniLM-L12-v2")
 
