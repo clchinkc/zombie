@@ -26,7 +26,7 @@ client = chromadb.PersistentClient(path="chroma.db", settings=Settings(allow_res
 
 # client.reset() # reset the database
 
-sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="paraphrase-multilingual-MiniLM-L12-v2")
+sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="distiluse-base-multilingual-cased-v1")
 
 
 # Available models for SentenceTransformer('model_name'), return model.encode(sentence)
@@ -157,48 +157,18 @@ def regex_search(keyword: str, text: str) -> list[tuple[str, float]]:
 
 
 def fuzzy_search(keyword: str, text: str) -> list[tuple[str, float]]:
-    """Search for words similar to the keyword using fuzzy matching and return score."""
+    """Search for words similar to the keyword using fuzzy matching."""
     lines = [line for line in text.split("\n") if line]
-    scores = []
-    for line in lines:
-        max_ratio = 0
-        for word in line.split():
-            ratio = fuzz.ratio(keyword, word)
-            if ratio > max_ratio:
-                max_ratio = ratio
-        score = float(max_ratio) / 100
-        scores.append(score)
+    scores = [
+        max(fuzz.ratio(keyword, word) for word in line.split()) / 100.0
+        for line in lines
+    ]
     print("Fuzzy search scores:", scores)
     return [(line, score) for line, score in zip(lines, scores)]
 
 
 def word_embedding_search(keyword: str, text: str) -> list[tuple[str, float]]:
-    """Search for words similar to the keyword using word embeddings and return score."""
-    line_list = [line for line in text.split("\n") if line]
-    word_list = [[word for word in line.split()] for line in line_list]
-    
-    # Creating a dictionary to store embeddings with associated words
-    word_embedding_dict = {}
-    for line_words in word_list:
-        for word in line_words:
-            word_embedding_dict[word] = get_word_embeddings(word)
-            
-    keyword_embedding = get_word_embeddings(keyword)
-    
-    embedding_scores = []
-    for line_words in word_list:
-        max_similarity = 0
-        for word in line_words:
-            similarity = word_embedding_similarity(keyword_embedding, word_embedding_dict[word])
-            if similarity > max_similarity:
-                max_similarity = similarity
-                print(max_similarity, word)
-        embedding_scores.append(max_similarity)
-    
-    print("Word embedding search scores:", embedding_scores)
-    return [(line, score) for line, score in zip(line_list, embedding_scores)]
-
-def word_embedding_search(keyword: str, text: str) -> list[tuple[str, float]]:
+    """Search for words similar to the keyword using word embeddings."""
     line_list = [line for line in text.split("\n") if line]
     keyword_embedding = get_word_embeddings(keyword)
 
@@ -325,6 +295,15 @@ print(search_and_rank("search for"))
 
 # https://github.com/ssut/py-googletrans
 # https://github.com/suqingdong/googletranslatepy
+
+# Elmo
+# InferSent
+# Universal sentence encoder multilingual
+# Sentence-BERT
+# https://huggingface.co/shibing624/text2vec-base-chinese
+# https://huggingface.co/GanymedeNil/text2vec-large-chinese
+# https://pypi.org/project/transvec/
+# https://stackoverflow.com/questions/62385002/latest-pre-trained-multilingual-word-embedding
 
 """
 Discuss how a text search program can use several matching algorithms to retrieve and rank the results.
