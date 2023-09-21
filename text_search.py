@@ -1,13 +1,20 @@
 
 import re
+from functools import lru_cache
 
 import chromadb
+import jieba
+import nltk
 import torch
 from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 from fuzzywuzzy import fuzz
 from googletrans import Translator
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
 from sentence_transformers import SentenceTransformer, util
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
 from transformers import BertModel, BertTokenizer
 
 # Sample text for demonstration
@@ -50,6 +57,8 @@ sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFuncti
 # all-roberta-large-v1
 # all-distilroberta-v1
 
+vectorizer = TfidfVectorizer(analyzer='word')
+
 tokenizer = BertTokenizer.from_pretrained('google/bert_uncased_L-2_H-128_A-2')
 model = BertModel.from_pretrained('google/bert_uncased_L-2_H-128_A-2')
 # bert-base-uncased
@@ -79,18 +88,21 @@ collection.add(
 )
 
 
+
 def get_ngrams(text: str, n: int) -> list[str]:
     """Generate n-grams from the text."""
     words = text.split()
     return [' '.join(words[i:i+n]) for i in range(len(words) - n + 1)]
 
+@lru_cache(maxsize=100)
 def get_all_ngrams(text: str) -> list[tuple[str, int]]:
     """Generate all n-grams from the text."""
     words = text.split()
     num_words = len(words)
-    ngrams = [(gram, n) for n in range(1, num_words) for gram in get_ngrams(text, n)]
+    ngrams = [(gram, n) for n in range(1, num_words + 1) for gram in get_ngrams(text, n)]
     return ngrams
 
+@lru_cache(maxsize=100)
 def get_word_embeddings(sentence: str) -> torch.Tensor:
     """Get BERT embedding for a given sentence."""
     inputs = tokenizer(sentence, return_tensors="pt", truncation=True, padding=True, max_length=512)
@@ -98,10 +110,36 @@ def get_word_embeddings(sentence: str) -> torch.Tensor:
         outputs = model(**inputs)
     return outputs['last_hidden_state'][:, 0, :]
 
+@lru_cache(maxsize=100)
 def word_embedding_similarity(word1_embedding: torch.Tensor, word2_embedding: torch.Tensor) -> float:
     similarity = torch.nn.functional.cosine_similarity(word1_embedding, word2_embedding)
     return similarity.item()
 
+def fullwidth_to_halfwidth(s: str) -> str:
+    """Convert full-width characters to half-width characters."""
+    return ''.join(chr(ord(char) - 0xfee0 if 0xFF01 <= ord(char) <= 0xFF5E else ord(char) if ord(char) != 0x3000 else 32) for char in s)
+
+def preprocess_chinese_text(text: str) -> str:
+    """Tokenize Chinese text."""
+    return ' '.join(list(jieba.cut(fullwidth_to_halfwidth(text))))
+
+def preprocess_english_text(text: str) -> str:
+    """Preprocess English text - removal of non-alphanumeric characters, conversion to lowercase, tokenization, and lemmatization."""
+    text = re.sub(r"[^a-zA-Z0-9\s]", "", text).lower()
+    lemmatizer = WordNetLemmatizer()
+    return ' '.join(lemmatizer.lemmatize(token) for token in word_tokenize(text))
+
+def preprocess_text(text):
+    """Detect the language of the text and preprocess accordingly."""
+    detected_lang = translator.detect(text).lang
+    if detected_lang == 'zh-CN' or detected_lang == 'zh-TW':
+    # Simple heuristic: If the text contains any Chinese characters, use the Chinese preprocessing
+    # if re.search("[\u4e00-\u9FFF]", text):
+        return preprocess_chinese_text(text)
+    elif detected_lang == 'en':
+        return preprocess_english_text(text)
+    else:
+        return text
 
 
 
@@ -109,39 +147,29 @@ def word_embedding_similarity(word1_embedding: torch.Tensor, word2_embedding: to
 def exact_search(keyword: str, text: str) -> list[tuple[str, float]]:
     """Search for the exact keyword in the text and return score according to number of occurrences."""
     lines = [line for line in text.split("\n") if line]
-    scores = [1.0 * line.count(keyword) for line in lines]
+    scores = [line.count(keyword) for line in lines]
     print("Exact search scores:", scores)
-    return [(line, score) for line, score in zip(lines, scores)]
+    return list(zip(lines, scores))
 
 
 def ngram_search(keyword: str, text: str) -> list[tuple[str, float]]:
     """Search for n-grams in the text and return score according to the number of occurrences and n-gram size."""
-
-    # Extract all n-grams from the keyword
     keyword_ngrams = get_all_ngrams(keyword)
-    
     lines = [line for line in text.split("\n") if line]
     scores = []
 
-    # Define a weight for each n-gram size
-    # This can be changed to any other weight assignment logic
-    ngram_weights = {n: n*0.5 for n in range(1, 11)}
-
+    ngram_weights = {n: n /  len(keyword.split()) for n in range(1, len(keyword.split()) + 1)}
     for line in lines:
         line_ngrams = get_all_ngrams(line)
-
-        # Calculate the score for this line based on matching n-grams and their weights
-        line_score = 0.0
-        for k_gram, k_n in keyword_ngrams:
-            for l_gram, l_n in line_ngrams:
-                if k_gram == l_gram:
-                    # Add the score for this n-gram, weighted by its size
-                    line_score += ngram_weights.get(k_n, 0)
-        
+        matched_ngrams = set(keyword_ngrams) & set(line_ngrams)
+        if not matched_ngrams:
+            scores.append(0)
+            continue
+        line_score = max(ngram_weights[n] for _, n in matched_ngrams)
         scores.append(line_score)
 
     print("Ngram search scores:", scores)
-    return [(line, score) for line, score in zip(lines, scores)]
+    return list(zip(lines, scores))
 
 
 def regex_search(keyword: str, text: str) -> list[tuple[str, float]]:
@@ -158,9 +186,9 @@ def regex_search(keyword: str, text: str) -> list[tuple[str, float]]:
     pattern = re.compile(pattern_str, re.IGNORECASE)
 
     lines = [line for line in text.split("\n") if line]
-    scores = [1.0 * len(pattern.findall(line)) for line in lines]
+    scores = [len(pattern.findall(line)) for line in lines]
     print("Regex search scores:", scores)
-    return [(line, score) for line, score in zip(lines, scores)]
+    return list(zip(lines, scores))
 
 
 def fuzzy_search(keyword: str, text: str) -> list[tuple[str, float]]:
@@ -171,16 +199,27 @@ def fuzzy_search(keyword: str, text: str) -> list[tuple[str, float]]:
         for line in lines
     ]
     print("Fuzzy search scores:", scores)
-    return [(line, score) for line, score in zip(lines, scores)]
+    return list(zip(lines, scores))
+
+
+def tfidf_search(keyword: str, text: str) -> list[tuple[str, float]]:
+    """Search for the query in the text using TF-IDF weighted n-grams."""
+    lines = [line for line in text.split("\n") if line]
+    vectorizer.set_params(ngram_range=(1, len(keyword.split())))
+    line_vectors = vectorizer.fit_transform(lines)
+    query_vector = vectorizer.transform([keyword])
+    cosine_similarities = linear_kernel(query_vector, line_vectors).flatten()
+    print("TF-IDF search scores:", cosine_similarities)
+    return list(zip(lines, cosine_similarities))
 
 
 def word_embedding_search(keyword: str, text: str) -> list[tuple[str, float]]:
     """Search for words similar to the keyword using word embeddings."""
-    line_list = [line for line in text.split("\n") if line]
+    lines = [line for line in text.split("\n") if line]
     keyword_embedding = get_word_embeddings(keyword)
 
     scores = []
-    for line in line_list:
+    for line in lines:
         line_embeddings = [get_word_embeddings(word) for word in line.split()]
         max_similarity = 0
         for idx, word in enumerate(line.split()):
@@ -189,7 +228,7 @@ def word_embedding_search(keyword: str, text: str) -> list[tuple[str, float]]:
         scores.append(max_similarity)
 
     print("Word embedding search scores:", scores)
-    return [(line, score) for line, score in zip(line_list, scores)]
+    return list(zip(lines, scores))
 
 
 def semantic_search(keyword: str, text: str) -> list[tuple[str, float]]:
@@ -238,7 +277,7 @@ def translate_multilanguage(sentence):
     return translations['en'], translations['zh-TW'], translations['zh-CN']
 
 
-def search_and_rank(keyword, text=sample_text, weights={'exact': 1, 'ngram': 0.8, 'regex': 0.8, 'fuzzy': 0.6, 'word_embedding': 0.6, 'semantic': 0.4}):
+def search_and_rank(keyword, text=sample_text, weights={'exact': 1, 'ngram': 0.8, 'regex': 0.8, 'fuzzy': 0.8, 'tfidf': 0.8, 'word_embedding': 0.8, 'semantic': 0.8}):
     # Get translations of the keyword into the three languages
     english_keyword, traditional_keyword, simplified_keyword = translate_multilanguage(keyword)
     keywords = [english_keyword, traditional_keyword, simplified_keyword]
@@ -254,6 +293,7 @@ def search_and_rank(keyword, text=sample_text, weights={'exact': 1, 'ngram': 0.8
             'ngram': ngram_search(kw, text),
             'regex': regex_search(kw, text),
             'fuzzy': fuzzy_search(kw, text),
+            'tfidf': tfidf_search(kw, text),
             'word_embedding': word_embedding_search(kw, text),
             'semantic': semantic_search(kw, text)
         }
@@ -270,11 +310,15 @@ def search_and_rank(keyword, text=sample_text, weights={'exact': 1, 'ngram': 0.8
                 scores[matched_text] = scores.get(matched_text, 0) + weighted_score
 
     # Sort the results by the accumulated scores
-    ranked_results = sorted(scores.keys(), key=lambda x: scores[x], reverse=True)
-    return [[text, scores[text]] for text in ranked_results]
+    ranked_results = sorted(scores, key=lambda x: scores[x], reverse=True)
+    return list(zip(ranked_results, [scores[x] for x in ranked_results]))
 
 
-print(search_and_rank("search for"))
+results = search_and_rank("search for")
+
+print("Results:")
+for line, score in results:
+    print(f"Line: {line:<{max(len(line) for line, _ in results)}} | Score: {score:>7.3f}")
 
 # https://www.sbert.net/docs/pretrained_models.html
 
@@ -341,9 +385,9 @@ Certainly! When a text search program needs to retrieve and rank results, it typ
 To effectively retrieve and rank results:
 
 - The search program first identifies potentially relevant documents using techniques like exact string matching, regular expression matching, or n-gram matching.
-  
+
 - Next, it refines and ranks these results using more sophisticated algorithms like TF-IDF, vector space models, or word embeddings.
-  
+
 - Finally, meta-information like user behavior, click-through rates, or external factors like PageRank might be considered to further fine-tune the rankings.
 
 By using a combination of these matching and ranking algorithms, a text search program can deliver relevant and accurate results to users.
