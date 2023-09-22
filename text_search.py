@@ -10,12 +10,17 @@ from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 from fuzzywuzzy import fuzz
 from googletrans import Translator
+from nltk.corpus import wordnet
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from sentence_transformers import SentenceTransformer, util
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 from transformers import BertModel, BertTokenizer
+
+# nltk.download('punkt')
+# nltk.download('averaged_perceptron_tagger')
+# nltk.download('wordnet')
 
 # Sample text for demonstration
 sample_text = """
@@ -228,7 +233,7 @@ def fullwidth_to_halfwidth(s: str) -> str:
 
 def clean_chinese_text(text: str) -> str:
     """Tokenize Chinese text."""
-    return ' '.join(list(jieba.cut(fullwidth_to_halfwidth(text))))
+    return ' '.join(jieba.lcut(fullwidth_to_halfwidth(text)))
 
 def clean_english_text(text: str) -> str:
     """Remove non-alphanumeric characters and tokenize."""
@@ -252,11 +257,26 @@ def preprocess_chinese_text(text: str) -> str:
     text = re.sub(r"[^\u4e00-\u9FFF\s\n]", " ", text)
     return text
 
+def get_wordnet_pos(treebank_tag):
+    """Map treebank POS tag to first character used by WordNetLemmatizer."""
+    if treebank_tag.startswith('J'):
+        return wordnet.ADJ
+    elif treebank_tag.startswith('V'):
+        return wordnet.VERB
+    elif treebank_tag.startswith('N'):
+        return wordnet.NOUN
+    elif treebank_tag.startswith('R'):
+        return wordnet.ADV
+    else:
+        return wordnet.NOUN  # Default to noun
+
 def preprocess_english_text(text: str) -> str:
     """Lemmatize English text and convert to lowercase."""
-    text = text.lower()
     lemmatizer = WordNetLemmatizer()
-    return '\n'.join(lemmatizer.lemmatize(token) for token in text.split('\n'))
+    tokens = nltk.word_tokenize(text)
+    pos_tags = nltk.pos_tag(tokens)
+    lemmatized_tokens = [lemmatizer.lemmatize(token, get_wordnet_pos(pos)) for token, pos in pos_tags]
+    return ' '.join(lemmatized_tokens)
 
 def preprocess_text(text):
     """Detect the language of the text and refine accordingly."""
@@ -300,44 +320,54 @@ def translate_multilanguage(sentence):
 
 
 def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact': 1, 'ngram': 0.8, 'regex': 0.8, 'fuzzy': 0.8, 'tfidf': 0.8, 'word_embedding': 0.8, 'semantic': 0.8}):
-    # Clean the text and keyword
-    original_text = '\n'.join([line for line in text.split("\n") if line])
-    cleaned_text = '\n'.join([clean_text(line) for line in text.split("\n") if line])
 
-    keyword = clean_text(keyword)
-    print("Cleaned text:", cleaned_text)
-    print("Cleaned keywords:", keyword)
+    # Split the text once
+    lines = [line for line in text.split("\n") if line]
     
-    # Get translations of the keyword into the three languages
+    # Get translations of the keyword using translate_multilanguage
     english_keyword, traditional_keyword, simplified_keyword = translate_multilanguage(keyword)
-    keywords = [english_keyword, traditional_keyword, simplified_keyword]
-    print("English keyword:", english_keyword)
-    print("Traditional Chinese keyword:", traditional_keyword)
-    print("Simplified Chinese keyword:", simplified_keyword)
     
-    if preprocess:
-        preprocessed_text = preprocess_text(cleaned_text)
-        preprocessed_keywords = [preprocess_text(keyword) for keyword in keywords]
-        print("Preprocessed text:", preprocessed_text)
-        print("Preprocessed keywords:", keywords)
+    translations = {
+        'english': english_keyword,
+        'traditional': traditional_keyword,
+        'simplified': simplified_keyword
+    }
 
-    text_to_search = preprocessed_text if preprocess else cleaned_text
+    for lang, trans_keyword in translations.items():
+        print(f"{lang.capitalize()} keyword:", trans_keyword)
+
+    # Clean the translated keywords
+    cleaned_translations = {lang: clean_text(kw) for lang, kw in translations.items()}
     
-    # Store the mapping of the text to search to the original text
-    cleaned_to_original_mapping = {cleaned_line: original_line for cleaned_line, original_line in zip(text_to_search.split("\n"), original_text.split("\n"))}
+    for lang, kw in cleaned_translations.items():
+        print(f"Cleaned {lang.capitalize()} keyword:", kw)
+    
+    cleaned_lines = [clean_text(line) for line in lines]
+
+    if preprocess:
+        preprocessed_lines = [preprocess_text(line) for line in cleaned_lines]
+        preprocessed_keywords = {lang: preprocess_text(kw) for lang, kw in cleaned_translations.items()}
+    else:
+        preprocessed_lines = cleaned_lines
+        preprocessed_keywords = cleaned_translations
+
+    for lang, kw in preprocessed_keywords.items():
+        print(f"Preprocessed {lang.capitalize()} keyword:", kw)
+    
+    # Create a mapping between processed and original text
+    cleaned_to_original_mapping = dict(zip(preprocessed_lines, lines))
 
     scores = {}
 
-    for kw in keywords:
-
+    for lang, kw in preprocessed_keywords.items():
         search_methods = {
-            'exact': exact_search(kw, text_to_search),
-            'ngram': ngram_search(kw, text_to_search),
-            'regex': regex_search(kw, text_to_search),
-            'fuzzy': fuzzy_search(kw, text_to_search),
-            'tfidf': tfidf_search(kw, text_to_search),
-            'word_embedding': word_embedding_search(kw, text_to_search),
-            'semantic': semantic_search(kw, text_to_search),
+            'exact': exact_search(kw, "\n".join(preprocessed_lines)),
+            'ngram': ngram_search(kw, "\n".join(preprocessed_lines)),
+            'regex': regex_search(kw, "\n".join(preprocessed_lines)),
+            'fuzzy': fuzzy_search(kw, "\n".join(preprocessed_lines)),
+            'tfidf': tfidf_search(kw, "\n".join(preprocessed_lines)),
+            'word_embedding': word_embedding_search(kw, "\n".join(preprocessed_lines)),
+            'semantic': semantic_search(kw, "\n".join(preprocessed_lines)),
         }
 
         for method, matches in search_methods.items():
@@ -358,7 +388,8 @@ def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact
 
 
 
-results = search_and_rank("search for", sample_text, preprocess=True)
+
+results = search_and_rank("It is used to search for words that are similar in meaning.", sample_text, preprocess=True)
 
 print("Results:")
 for line, score in results:
