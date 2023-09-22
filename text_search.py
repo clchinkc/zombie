@@ -34,7 +34,7 @@ translator = Translator()
 # setup Chroma with persistence, for production use. Can also use a remote database
 client = chromadb.PersistentClient(path="chroma.db", settings=Settings(allow_reset=True))
 
-# client.reset() # reset the database
+client.reset() # reset the database
 
 sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="distiluse-base-multilingual-cased-v1")
 
@@ -114,32 +114,6 @@ def get_word_embeddings(sentence: str) -> torch.Tensor:
 def word_embedding_similarity(word1_embedding: torch.Tensor, word2_embedding: torch.Tensor) -> float:
     similarity = torch.nn.functional.cosine_similarity(word1_embedding, word2_embedding)
     return similarity.item()
-
-def fullwidth_to_halfwidth(s: str) -> str:
-    """Convert full-width characters to half-width characters."""
-    return ''.join(chr(ord(char) - 0xfee0 if 0xFF01 <= ord(char) <= 0xFF5E else ord(char) if ord(char) != 0x3000 else 32) for char in s)
-
-def preprocess_chinese_text(text: str) -> str:
-    """Tokenize Chinese text."""
-    return ' '.join(list(jieba.cut(fullwidth_to_halfwidth(text))))
-
-def preprocess_english_text(text: str) -> str:
-    """Preprocess English text - removal of non-alphanumeric characters, conversion to lowercase, tokenization, and lemmatization."""
-    text = re.sub(r"[^a-zA-Z0-9\s]", "", text).lower()
-    lemmatizer = WordNetLemmatizer()
-    return ' '.join(lemmatizer.lemmatize(token) for token in word_tokenize(text))
-
-def preprocess_text(text):
-    """Detect the language of the text and preprocess accordingly."""
-    detected_lang = translator.detect(text).lang
-    if detected_lang == 'zh-CN' or detected_lang == 'zh-TW':
-    # Simple heuristic: If the text contains any Chinese characters, use the Chinese preprocessing
-    # if re.search("[\u4e00-\u9FFF]", text):
-        return preprocess_chinese_text(text)
-    elif detected_lang == 'en':
-        return preprocess_english_text(text)
-    else:
-        return text
 
 
 
@@ -247,6 +221,53 @@ def semantic_search(keyword: str, text: str) -> list[tuple[str, float]]:
     return list(zip(results["documents"][0], scores))
 
 
+
+def fullwidth_to_halfwidth(s: str) -> str:
+    """Convert full-width characters to half-width characters."""
+    return ''.join(chr(ord(char) - 0xfee0 if 0xFF01 <= ord(char) <= 0xFF5E else ord(char) if ord(char) != 0x3000 else 32) for char in s)
+
+def clean_chinese_text(text: str) -> str:
+    """Tokenize Chinese text."""
+    return ' '.join(list(jieba.cut(fullwidth_to_halfwidth(text))))
+
+def clean_english_text(text: str) -> str:
+    """Remove non-alphanumeric characters and tokenize."""
+    text = re.sub(r"[^a-zA-Z0-9\s\n]", "", text)
+    return ' '.join(token for token in word_tokenize(text))
+
+def clean_text(text):
+    """Detect the language of the text and clean accordingly."""
+    detected_lang = translator.detect(text).lang
+    if detected_lang in ['zh-CN', 'zh-TW']:
+    # Simple heuristic: If the text contains any Chinese characters, use the Chinese cleaning
+    # if re.search("[\u4e00-\u9FFF]", text):
+        return clean_chinese_text(text)
+    elif detected_lang == 'en':
+        return clean_english_text(text)
+    else:
+        return text
+
+def preprocess_chinese_text(text: str) -> str:
+    """Remove non-Chinese characters from Chinese text."""
+    text = re.sub(r"[^\u4e00-\u9FFF\s\n]", " ", text)
+    return text
+
+def preprocess_english_text(text: str) -> str:
+    """Lemmatize English text and convert to lowercase."""
+    text = text.lower()
+    lemmatizer = WordNetLemmatizer()
+    return '\n'.join(lemmatizer.lemmatize(token) for token in text.split('\n'))
+
+def preprocess_text(text):
+    """Detect the language of the text and refine accordingly."""
+    detected_lang = translator.detect(text).lang
+    if detected_lang == 'en':
+        return preprocess_english_text(text)
+    elif detected_lang in ['zh-CN', 'zh-TW']:
+        return preprocess_chinese_text(text)
+    else:
+        return text
+
 def translate_multilanguage(sentence):
     # Detect the language of the sentence
     detection = translator.detect(sentence)
@@ -277,44 +298,67 @@ def translate_multilanguage(sentence):
     return translations['en'], translations['zh-TW'], translations['zh-CN']
 
 
-def search_and_rank(keyword, text=sample_text, weights={'exact': 1, 'ngram': 0.8, 'regex': 0.8, 'fuzzy': 0.8, 'tfidf': 0.8, 'word_embedding': 0.8, 'semantic': 0.8}):
+
+def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact': 1, 'ngram': 0.8, 'regex': 0.8, 'fuzzy': 0.8, 'tfidf': 0.8, 'word_embedding': 0.8, 'semantic': 0.8}):
+    # Clean the text and keyword
+    original_text = '\n'.join([line for line in text.split("\n") if line])
+    cleaned_text = '\n'.join([clean_text(line) for line in text.split("\n") if line])
+
+    keyword = clean_text(keyword)
+    print("Cleaned text:", cleaned_text)
+    print("Cleaned keywords:", keyword)
+    
     # Get translations of the keyword into the three languages
     english_keyword, traditional_keyword, simplified_keyword = translate_multilanguage(keyword)
     keywords = [english_keyword, traditional_keyword, simplified_keyword]
     print("English keyword:", english_keyword)
     print("Traditional Chinese keyword:", traditional_keyword)
     print("Simplified Chinese keyword:", simplified_keyword)
+    
+    if preprocess:
+        preprocessed_text = preprocess_text(cleaned_text)
+        preprocessed_keywords = [preprocess_text(keyword) for keyword in keywords]
+        print("Preprocessed text:", preprocessed_text)
+        print("Preprocessed keywords:", keywords)
+
+    text_to_search = preprocessed_text if preprocess else cleaned_text
+    
+    # Store the mapping of the text to search to the original text
+    cleaned_to_original_mapping = {cleaned_line: original_line for cleaned_line, original_line in zip(text_to_search.split("\n"), original_text.split("\n"))}
 
     scores = {}
 
     for kw in keywords:
+
         search_methods = {
-            'exact': exact_search(kw, text),
-            'ngram': ngram_search(kw, text),
-            'regex': regex_search(kw, text),
-            'fuzzy': fuzzy_search(kw, text),
-            'tfidf': tfidf_search(kw, text),
-            'word_embedding': word_embedding_search(kw, text),
-            'semantic': semantic_search(kw, text)
+            'exact': exact_search(kw, text_to_search),
+            'ngram': ngram_search(kw, text_to_search),
+            'regex': regex_search(kw, text_to_search),
+            'fuzzy': fuzzy_search(kw, text_to_search),
+            'tfidf': tfidf_search(kw, text_to_search),
+            'word_embedding': word_embedding_search(kw, text_to_search),
+            'semantic': semantic_search(kw, text_to_search),
         }
 
         for method, matches in search_methods.items():
-            if not matches:  # Handle case where no matches are found
+            if not matches:
                 continue
 
-            max_score = max([score for _, score in matches])
-            normalized_matches = {text: score / (max_score + 1e-6) for text, score in matches}
+            for matched_text, score in matches:
+                # Map the matched text back to the original text
+                matching_line_original = cleaned_to_original_mapping.get(matched_text, matched_text)
 
-            for matched_text, norm_score in normalized_matches.items():
-                weighted_score = norm_score * weights[method]
-                scores[matched_text] = scores.get(matched_text, 0) + weighted_score
+                weighted_score = score * weights[method]
+                scores[matching_line_original] = scores.get(matching_line_original, 0) + weighted_score
 
-    # Sort the results by the accumulated scores
+    # Sort results by the accumulated scores
     ranked_results = sorted(scores, key=lambda x: scores[x], reverse=True)
+
     return list(zip(ranked_results, [scores[x] for x in ranked_results]))
 
 
-results = search_and_rank("search for")
+
+results = search_and_rank("search for", sample_text, preprocess=True)
 
 print("Results:")
 for line, score in results:
@@ -385,9 +429,9 @@ Certainly! When a text search program needs to retrieve and rank results, it typ
 To effectively retrieve and rank results:
 
 - The search program first identifies potentially relevant documents using techniques like exact string matching, regular expression matching, or n-gram matching.
-
+  
 - Next, it refines and ranks these results using more sophisticated algorithms like TF-IDF, vector space models, or word embeddings.
-
+  
 - Finally, meta-information like user behavior, click-through rates, or external factors like PageRank might be considered to further fine-tune the rankings.
 
 By using a combination of these matching and ranking algorithms, a text search program can deliver relevant and accurate results to users.
