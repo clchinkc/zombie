@@ -430,9 +430,11 @@ for line, score in results:
 # https://pypi.org/project/transvec/
 # https://stackoverflow.com/questions/62385002/latest-pre-trained-multilingual-word-embedding
 
+# https://blog.csdn.net/FontThrone/article/details/72782499
 # https://github.com/fxsjy/jieba
 # https://github.com/fxsjy/jieba/issues/7
 # https://github.com/ckiplab/ckiptagger
+# LLM 分词
 
 """
 Discuss how a text search program can use several matching algorithms to retrieve and rank the results.
