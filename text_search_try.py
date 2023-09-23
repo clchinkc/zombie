@@ -436,6 +436,8 @@ for line, score in results:
 # https://github.com/ckiplab/ckiptagger
 # LLM 分词
 
+# https://levelup.gitconnected.com/building-a-full-text-search-app-using-django-docker-and-elasticsearch-d1bc18504ca4
+
 """
 Discuss how a text search program can use several matching algorithms to retrieve and rank the results.
 
@@ -472,4 +474,57 @@ To effectively retrieve and rank results:
 - Finally, meta-information like user behavior, click-through rates, or external factors like PageRank might be considered to further fine-tune the rankings.
 
 By using a combination of these matching and ranking algorithms, a text search program can deliver relevant and accurate results to users.
+"""
+
+
+"""
+**Title:** Text Search Program
+
+**Overview:**  
+The Text Search Program is an advanced and versatile tool designed to empower users in efficiently locating specific text patterns within a document or dataset. It stands as a comprehensive software solution, integrating sophisticated search techniques, user-friendly interfaces, and customization options to maximize accuracy and productivity in text-based searches.
+
+**Key Features:**
+
+1. **Search Algorithms**: Harnessing cutting-edge search techniques, the program offers:
+   - **Exact Match**: Provides results that match the search query perfectly, ensuring precise data retrieval.
+   - **Regex (Regular Expression) Search**: Allows users to employ complex patterns, using symbols to match diverse string types.
+   - **Fuzzy Search**: Locates approximate matches, accommodating minor variations or typos in the search input.
+
+2. **Customizable Options**: Users can tailor their search process by modifying parameters such as case sensitivity, search depth, and search scope.
+
+3. **Spell Check Integration**: Integrated with a spell-check module, this feature proposes corrections for possible typing errors, ensuring users find the desired results even with misspelled input.
+
+4. **Autocomplete Suggestions**: The program predicts and suggests potential search terms in real-time, based on previous searches and a predefined dictionary, enhancing search speed and accuracy.
+
+5. **Search Result Preview**: Search outcomes are showcased with relevant excerpts, providing users with context to assess the relevance quickly.
+
+6. **User-Friendly Interface**: With an intuitive design, users can easily set their preferences and begin their search journey with minimal hassle.
+
+7. **Search History and Bookmarks**: Users can revisit past searches through a maintained history and can bookmark significant results for easier future access.
+
+8. **Document Handling and Efficiency**: Catering to a variety of formats such as plain text, PDFs, and Word documents, the program ensures swift results even for expansive volumes of text.
+
+9. **Export and Sharing Features**: Search outcomes, accompanied by their context, can be exported for later review or collaborative purposes.
+
+10. **Extensibility and Enhancements**: The program's architecture allows developers to integrate new search algorithms, plugins, and features as required.
+
+**Technical Insights:**  
+- To deliver rapid outcomes, efficient string matching algorithms are in place, making it feasible to search large text volumes swiftly.
+- The program relies on Python's re module or equivalent for implementing regular expressions.
+- Fuzzy searches leverage algorithms such as Levenshtein distance for optimal performance.
+- The autocomplete function utilizes a trie data structure or a suitable database for prompt input predictions.
+
+**Additional Features:**
+1. **Context Highlighting**: For enhanced clarity, matching text segments within results are highlighted.
+2. **Advanced Filters**: Users can refine results by factors like date, text origin, and other pertinent criteria.
+3. **Expandable Library**: Supports extensions like additional search algorithms or plugins for boosted capabilities.
+
+**Conclusion:**  
+The Text Search Program embodies the pinnacle of text-search solutions, catering to a broad spectrum of searching requirements, be it exact matches or approximate ones. Crafted with a user-centric mindset, it assures that individuals, irrespective of their searching needs, can locate their desired information seamlessly. Whether used for content exploration, data analytics, or academic research, this program stands as a cornerstone tool for any text-based endeavor.
+"""
+
+"""
+Faceted Search/Navigation. This is the advanced search/filter functionality available on many sites. It's a design pattern. Can read about it here : http://alistapart.com/article/design-patterns-faceted-navigation . Implement it on the back end and the front end if you're bored.
+
+Image Search - FreeCodeCamp calls this Image Search Abstraction Layer which sounds complicated. Instead of interfacing with a 3rd party, make it search a defined path on the local file system. FCC's description : https://www.freecodecamp.com/challenges/image-search-abstraction-layer
 """
