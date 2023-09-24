@@ -45,6 +45,8 @@ sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFuncti
 
 
 # Available models for SentenceTransformer('model_name'), return model.encode(sentence)
+# flax-sentence-embeddings/all_datasets_v3_mpnet-base (update from q&a platform)
+# bert-base-nli-mean-tokens (original SBERT)
 # paraphrase-xlm-r-multilingual-v1
 # distiluse-base-multilingual-cased-v1
 # paraphrase-multilingual-MiniLM-L12-v2
@@ -96,8 +98,14 @@ collection.add(
 
 def get_ngrams(text: str, n: int) -> list[str]:
     """Generate n-grams from the text."""
+    lang = translator.detect(text).lang
     words = text.split()
-    return [' '.join(words[i:i+n]) for i in range(len(words) - n + 1)]
+    if lang == 'en':
+        return [' '.join(words[i:i+n]) for i in range(len(words) - n + 1)]
+    elif lang == 'zh-TW' or lang == 'zh-CN':
+        return [''.join(words[i:i+n]) for i in range(len(words) - n + 1)]
+    else:
+        raise ValueError(f"Unsupported language: {lang}")
 
 @lru_cache(maxsize=100)
 def get_all_ngrams(text: str) -> list[tuple[str, int]]:
@@ -171,12 +179,15 @@ def regex_search(keyword: str, text: str) -> list[tuple[str, float]]:
 
 
 def fuzzy_search(keyword: str, text: str) -> list[tuple[str, float]]:
-    """Search for words similar to the keyword using fuzzy matching."""
+    """Search for n-grams similar to the keyword using fuzzy matching."""
+    keyword_ngrams = get_all_ngrams(keyword)
     lines = [line for line in text.split("\n") if line]
-    scores = [
-        max(fuzz.ratio(keyword, word) for word in line.split()) / 100.0
-        for line in lines
-    ]
+    scores = []
+    
+    for line in lines:
+        max_ratio = max(fuzz.ratio(key_ngram[0], line) for key_ngram in keyword_ngrams) / 100
+        scores.append(max_ratio)
+        
     print("Fuzzy search scores:", scores)
     return list(zip(lines, scores))
 
@@ -193,17 +204,13 @@ def tfidf_search(keyword: str, text: str) -> list[tuple[str, float]]:
 
 
 def word_embedding_search(keyword: str, text: str) -> list[tuple[str, float]]:
-    """Search for words similar to the keyword using word embeddings."""
+    """Search for n-grams similar to the keyword using word embeddings."""
+    keyword_ngrams = get_all_ngrams(keyword)
     lines = [line for line in text.split("\n") if line]
-    keyword_embedding = get_word_embeddings(keyword)
-
     scores = []
+
     for line in lines:
-        line_embeddings = [get_word_embeddings(word) for word in line.split()]
-        max_similarity = 0
-        for idx, word in enumerate(line.split()):
-            similarity = word_embedding_similarity(keyword_embedding, line_embeddings[idx])
-            max_similarity = max(max_similarity, similarity)
+        max_similarity = max(word_embedding_similarity(get_word_embeddings(key_ngram[0]), get_word_embeddings(line)) for key_ngram in keyword_ngrams)
         scores.append(max_similarity)
 
     print("Word embedding search scores:", scores)
@@ -389,7 +396,7 @@ def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact
 
 
 
-results = search_and_rank("It is used to search for words that are similar in meaning.", sample_text, preprocess=True)
+results = search_and_rank("search for", sample_text, preprocess=True)
 
 print("Results:")
 for line, score in results:
@@ -437,6 +444,11 @@ for line, score in results:
 # LLM 分词
 
 # https://levelup.gitconnected.com/building-a-full-text-search-app-using-django-docker-and-elasticsearch-d1bc18504ca4
+
+# https://developers.google.com/cloud-search/docs/guides/improve-search-quality?hl=zh-tw
+
+# https://www.pinecone.io/learn/series/nlp/sentence-embeddings/
+
 
 """
 Discuss how a text search program can use several matching algorithms to retrieve and rank the results.
@@ -527,4 +539,11 @@ The Text Search Program embodies the pinnacle of text-search solutions, catering
 Faceted Search/Navigation. This is the advanced search/filter functionality available on many sites. It's a design pattern. Can read about it here : http://alistapart.com/article/design-patterns-faceted-navigation . Implement it on the back end and the front end if you're bored.
 
 Image Search - FreeCodeCamp calls this Image Search Abstraction Layer which sounds complicated. Instead of interfacing with a 3rd party, make it search a defined path on the local file system. FCC's description : https://www.freecodecamp.com/challenges/image-search-abstraction-layer
+"""
+
+"""
+from transformers import CLIPProcessor, CLIPModel
+
+model = CLIPModel.from_pretrained('openai/clip-vit-base-patch32')
+processor = CLIPProcessor.from_pretrained('openai/clip-vit-base-patch32')
 """

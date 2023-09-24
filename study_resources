@@ -508,6 +508,36 @@ https://github.com/deepmind/mujoco
 https://github.com/ill-inc/biomes-game
 https://www.biomes.gg/
 
+Multiagent Reinforcement Learning (MARL) is a subfield of artificial intelligence and reinforcement learning that focuses on scenarios where multiple agents interact within a shared environment. In this setting, each agent aims to make decisions that maximize their cumulative rewards, while taking into account the actions and strategies of other agents.
+
+Key concepts and challenges in MARL include:
+
+1. *Agent Types and Multiagent Environment:* There are various types of agents operating in a shared environment. These agents can be cooperative (working together to achieve a common goal), competitive (competing for limited resources), or a mixture of both.
+
+2. *Partial Observability:* Agents often have limited or partial observations of the environment. This incomplete information can make decision-making more challenging as agents must infer hidden states or predict the actions of others.
+
+3. *Non-Stationarity:* Due to the adaptive nature of agents, the environment is non-stationary. As agents learn and change their strategies, the dynamics of the environment shift, making it a moving target for each agent.
+
+4. *Multiagent Policies:* Each agent can have its own policy that dictates its actions based on its observations. Policies can be influenced by beliefs about other agents' behaviors.
+
+5. *Exploration vs. Exploitation:* Balancing the need to explore new strategies with the desire to exploit known successful strategies is crucial for effective learning in MARL.
+
+6. *Learning Algorithms and Value Function Approximation:* Various algorithms, such as Q-learning, Deep Q-Networks (DQN), Proximal Policy Optimization (PPO), and others, are employed in MARL. Some of these, like deep neural networks, help in approximating policies and value functions, making learning scalable.
+
+7. *Communication:* Agents may have the ability to communicate, allowing them to coordinate actions or share information. This communication can introduce both complexity and opportunities for improved collaboration.
+
+8. *Emergent Behavior:* Interactions in MARL can lead to emergent behaviors, where agents develop strategies that weren't explicitly programmed but arise from their interactions.
+
+Some approaches used in MARL include:
+
+- *Independent Q-Learning (IQL):* Each agent learns independently, treating others as part of its environment.
+- *Centralized Training and Decentralized Execution:* Agents learn together in a central framework but act independently during execution.
+- *Multiagent Actor-Critic (MAAC):* This merges actor-critic methods with centralized learning to develop joint policies.
+
+Applications of MARL span a wide range of domains, such as robotics, autonomous vehicles, game playing, traffic management, and economics. As a dynamic research area, new algorithms and methodologies continue to emerge to handle the intricacies of multiagent environments.
+
+
+
 optimization
 https://github.com/srivatsankrishnan/oss-arch-gym
 https://scikit-opt.github.io/
@@ -1681,6 +1711,9 @@ https://towardsdatascience.com/how-to-use-monte-carlo-simulation-to-help-decisio
 Bayesian neural networks
 https://github.com/Friedrich94326/AI_and_Data_Science/tree/Python/Machine%20Learning
 https://github.com/Friedrich94326/AI_and_Data_Science/tree/Python/Deep%20Learning
+https://ai.plainenglish.io/revolutionizing-machine-learning-with-weak-supervision-snorkel-8c319865d6bf
+https://medium.com/tide-engineering-team/how-snorkel-a-semi-supervised-learning-technique-solved-invoice-accounting-at-tide-f4a300b8021d
+https://github.com/snorkel-team/snorkel
 
 Visualizing map
 https://zhuanlan.zhihu.com/p/388573380
