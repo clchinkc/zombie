@@ -26,7 +26,7 @@ def bm25_search(keyword: str, text: str) -> list[tuple[str, float]]:
     return list(zip(lines, normalized_scores))
 
 
-def search(text: str, query: str) -> list[tuple[str, int]]:
+def search(text: str, query: str):
     """Search for the query in the text using the BM25 algorithm."""
     # Search for the query in the text using the BM25 algorithm
     bm25_results = bm25_search(query, text)

@@ -421,7 +421,7 @@ default_weights = {
 }
 
 
-results = search_and_rank("searches for", sample_text, preprocess=True, weights=default_weights)
+results = search_and_rank("搜尋 for", sample_text, preprocess=True, weights=default_weights)
 
 print("Results:")
 for line, score in results:
@@ -453,7 +453,12 @@ for line, score in results:
 # https://github.com/ssut/py-googletrans
 # https://github.com/suqingdong/googletranslatepy
 
+# https://github.com/saffsd/langid.py
+# https://github.com/fedelopez77/langdetect
+# https://github.com/pemistahl/lingua-py
+
 # https://github.com/dorianbrown/rank_bm25/blob/master/rank_bm25.py
+# Pivoted normalization
 
 # Elmo
 # InferSent
@@ -505,6 +510,106 @@ for line, score in results:
 # https://www.cs.cmu.edu/~jgc/publication/The_Use_MMR_Diversity_Based_LTMIR_1998.pdf
 
 """
+Methods to improve the representation (dimension instantiation) of text data for similarity or search applications, as well as methods to improve the way we measure the similarity between these representations.
+
+### Improved Instantiation of Dimension:
+2. *Stop Word Removal*: Common words such as "and", "the", "is", etc., that don't provide significant meaning in many contexts are removed to reduce noise and dimensionality.
+4. **Latent Semantic Indexing (LSI)**: A technique that identifies patterns in relationships between terms and concepts in unstructured text. It's often used to uncover the latent structure (topics or themes) in a large collection of text.
+
+### Improved Instantiation of Similarity Function:
+1. *Cosine of Angle Between Two Vectors*: Cosine similarity measures the cosine of the angle between two non-zero vectors. It determines how similar two documents are irrespective of their size.
+3. *Dot Product*: This measures the sum of the product of corresponding entries of the two sequences of numbers. When appropriately normalized, the dot product can be very effective, especially when combined with term weighting (like TF-IDF weights).
+"""
+
+"""
+**TextRank** and **RAKE** are methodologies used in natural language processing (NLP) to extract keywords or key phrases from documents:
+
+1. **TextRank**:
+    - **Overview**: An unsupervised graph-based ranking algorithm, inspired by Google's PageRank, used for keyword and sentence extraction.
+    - **Working**: Constructs a graph where vertices are words and edges represent co-occurrence between words. The importance of a word is determined based on the importance of its neighboring words.
+    - **Keyword Extraction**: Keywords with higher scores are more important, and by sorting words based on their scores, top keywords are identified. It can also extract key phrases by merging adjacent keywords.
+
+2. **RAKE (Rapid Automatic Keyword Extraction)**:
+    - **Overview**: An unsupervised method for extracting keywords.
+    - **Working**: It splits the text using delimiters, assigns scores to words based on frequency and co-occurrence, and constructs key phrases using adjacent words.
+    - **Keyword Extraction**: Determines key phrases based on word scores and co-occurrences.
+
+While both TextRank and RAKE primarily serve as keyword and keyphrase extraction algorithms, they can also complement text search in the following ways:
+
+1. **Document Indexing**:
+    - Enhancing the indexing process by highlighting main themes or topics of a document.
+    - Creating metadata or tags for documents, aiding in categorization and faceted search.
+
+2. **Query Expansion**:
+    - Extracting important keywords from user queries to refine search parameters.
+
+3. **Search Result Summarization**:
+    - Offering a quick overview of search results through extracted keywords and keyphrases.
+
+4. **Improving Relevance Ranking**:
+    - Giving higher relevance scores to documents that match extracted keywords or keyphrases from a user's query.
+
+5. **Semantic Search**:
+    - Facilitating better matches based on document themes or topics, even if there isn't a word-for-word match with the user's query.
+
+**Considerations**:
+- **Efficiency and Application**: While enhancing search, TextRank and RAKE should be applied judiciously. They're best suited for the document indexing phase rather than real-time search to maintain efficiency.
+- **Complementary Use**: They should be used in conjunction with established search engines or platforms like Elasticsearch or Solr.
+- **Relevance**: For deeper semantic understanding, it might be necessary to integrate additional NLP models or techniques.
+
+In essence, while TextRank and RAKE are primarily designed for keyword extraction, they can play a valuable role in enhancing various aspects of text search systems.
+"""
+
+"""
+Query expansion is a technique used in information retrieval and database systems to improve search results. The primary aim is to include additional terms in the search to fetch more relevant results, especially when the initial query is too ambiguous or brief. This technique is beneficial because users often provide search terms that might not directly match the terms in the documents or databases.
+
+Several methods are used for query expansion:
+
+1. *Thesaurus-based Expansion*: This involves adding synonyms or related terms to the original query. For example, if someone searches for "automobile", a thesaurus-based expansion might add "car", "vehicle", or "motorcar" to the search.
+
+2. *Relevance Feedback*: After the user gets initial search results, they mark some documents as relevant. The terms from these documents are then added to the query to refine the search. This relies on the user's input about which results are actually relevant.
+
+3. **Pseudo-Relevance Feedback (or Blind Relevance Feedback)**: In this approach, the system assumes that the top-k documents from the initial query are relevant. It then extracts terms from these documents to refine the query automatically. This is done without explicit feedback from the user.
+
+4. *Global Analysis*: This technique analyzes the entire corpus or a significant portion of it to discover co-occurring terms or patterns that can be used for expansion. For example, if the term "apple" frequently co-occurs with "fruit" in the corpus, then a query containing "apple" might be expanded to include "fruit".
+
+5. *Local Context Analysis*: The system expands the query based on the context in which the query terms appear within individual documents.
+
+6. *Bigram Expansion*: This method involves using two-word phrases (bigrams) rather than individual words for expansion. For instance, a search for "heart" might be expanded to "heart attack" or "heart disease" if those bigrams are common in the dataset.
+
+7. *Morphological Expansion*: This entails adding morphological variants of the query term. For example, expanding "run" might include "running", "runner", and "ran".
+
+8. *Spell Correction and Fuzzy Matching*: If a term in the query might be misspelled, the system can suggest or automatically include potential correct spellings.
+
+Advantages of Query Expansion:
+- Improves recall of the search system.
+- Helps fetch relevant results when the original query is vague or underspecified.
+
+Disadvantages of Query Expansion:
+- Can decrease precision, i.e., you might get more irrelevant results.
+- Automatically expanded queries might not always align with the user's intent.
+
+In practice, getting the balance right in query expansion is tricky. If done excessively, it might decrease the quality of search results. But when done right, it can greatly enhance the search experience.
+"""
+
+"""
+Multi-Hop Query
+Typically, when we use LLM to retrieve information from documents, we divide them into chunks and then convert them into vector embeddings. Using this approach, we might not be able to find information that spans multiple documents. This is known as the problem of multi-hop question answering.
+This issue can be solved using a knowledge graph. We can construct a structured representation of the information by processing each document separately and connecting them in a knowledge graph. This makes it easier to move around and explore connected documents, making it possible to answer complex questions that require multiple steps.
+"""
+
+"""
+Relevance feedback
+Relevance feedback is a technique where the search engine presents a results list to the user who selects relevant (and sometimes irrelevant) documents. This input is then used to produce a new list of results. The investigation finds that relevance feedback is effective in improving precision and recall.
+"""
+
+"""
+Two approaches to pseudo-relevance feedback: query expansion using KL-divergence and query re-ranking using truncated model-based feedback.
+1. Query expansion using KL-divergence: This approach generates a new query by adding to the old query the top n terms from the top k documents, computed using KL-divergence from the document collection. KL-divergence is a measure of how the frequencies in one distribution diverge from the frequencies in a second. When used for relevance feedback, the technique is used to find terms occurring (in the top k documents) more frequently than predicted by collection statistics. This can result in the same term occurring in the feedback query multiple times, but that is assumed to be taken care of by the ranking function. As new terms can be added to the query, this is query expansion.
+2. Query re-ranking using truncated model-based feedback: This approach suggests re-computing the query frequency of each term as a linear interpolation of the language model of the top k documents and the language model of the document. As this method does not add new terms to the query, it is query re-ranking (albeit by performing a second search). For efficiency reasons, the model uses only the top k documents and only terms present in the query. Both strategies are common with pseudo-relevance feedback for language models.
+"""
+
+"""
 Discuss how a text search program can use several matching algorithms to retrieve and rank the results.
 
 Certainly! When a text search program needs to retrieve and rank results, it typically employs a combination of different matching algorithms to ensure accuracy and relevance. Here's a brief overview:
@@ -542,6 +647,23 @@ To effectively retrieve and rank results:
 By using a combination of these matching and ranking algorithms, a text search program can deliver relevant and accurate results to users.
 """
 
+"""
+The process of summarizing search content in our current system involves six different areas where we can make adjustments to enhance the summarization results. These areas, or “tuning knobs”, each play a crucial role in the process.
+
+The first knob is Semantic search quality. This is the starting point of the process, where we retrieve posts that we believe will contain useful answers based on your query. We continually improve our algorithm and data analysis to retrieve better results.
+
+The second knob is the Question selection strategy. Once we have a number of questions that fit your query, we need to decide on the parameters we use to select amongst those questions. For example, we might prioritize questions that are non-deleted, non-closed, and have an accepted answer.
+
+The third knob is the Answer selection strategy. This involves deciding how we should select answers from the set of questions. Should we consider them per-question or as a whole?
+
+The fourth knob is the Answer ranking strategy. This involves deciding how we rank the selected answers from the most relevant to your query to the least relevant, and how many answers we should summarize. For instance, we might prioritize accepted answers first, then by highest score, etc.
+
+The fifth knob is Prompt engineering. Once we have the answers, we need to decide how we communicate to the LLM how it should summarize those answers into one concise response, possibly with examples.
+
+The final knob is Temperature. This refers to how random the LLM results should be. We generally operate on a very low temperature, but it could make sense to leverage the LLM more here.
+
+All of these tuning knobs are already implemented and functional in our backend. They will be our first attempt at providing better results as we gather more info from your alpha experience.
+"""
 
 """
 **Title:** Text Search Program
