@@ -13,6 +13,8 @@ from googletrans import Translator
 from nltk.corpus import wordnet
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
+from rank_bm25 import BM25L
+from scipy.special import softmax
 from sentence_transformers import SentenceTransformer, util
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
@@ -133,7 +135,7 @@ def word_embedding_similarity(word1_embedding: torch.Tensor, word2_embedding: to
 
 def exact_search(keyword: str, text: str) -> list[tuple[str, float]]:
     """Search for the exact keyword in the text and return score according to number of occurrences."""
-    lines = [line for line in text.split("\n") if line]
+    lines = [line for line in text.split("\n") if line.strip()]
     scores = [line.count(keyword) for line in lines]
     print("Exact search scores:", scores)
     return list(zip(lines, scores))
@@ -142,7 +144,7 @@ def exact_search(keyword: str, text: str) -> list[tuple[str, float]]:
 def ngram_search(keyword: str, text: str) -> list[tuple[str, float]]:
     """Search for n-grams in the text and return score according to the number of occurrences and n-gram size."""
     keyword_ngrams = get_all_ngrams(keyword)
-    lines = [line for line in text.split("\n") if line]
+    lines = [line for line in text.split("\n") if line.strip()]
     scores = []
 
     ngram_weights = {n: n /  len(keyword.split()) for n in range(1, len(keyword.split()) + 1)}
@@ -172,7 +174,7 @@ def regex_search(keyword: str, text: str) -> list[tuple[str, float]]:
 
     pattern = re.compile(pattern_str, re.IGNORECASE)
 
-    lines = [line for line in text.split("\n") if line]
+    lines = [line for line in text.split("\n") if line.strip()]
     scores = [len(pattern.findall(line)) for line in lines]
     print("Regex search scores:", scores)
     return list(zip(lines, scores))
@@ -181,7 +183,7 @@ def regex_search(keyword: str, text: str) -> list[tuple[str, float]]:
 def fuzzy_search(keyword: str, text: str) -> list[tuple[str, float]]:
     """Search for n-grams similar to the keyword using fuzzy matching."""
     keyword_ngrams = get_all_ngrams(keyword)
-    lines = [line for line in text.split("\n") if line]
+    lines = [line for line in text.split("\n") if line.strip()]
     scores = []
     
     for line in lines:
@@ -194,7 +196,7 @@ def fuzzy_search(keyword: str, text: str) -> list[tuple[str, float]]:
 
 def tfidf_search(keyword: str, text: str) -> list[tuple[str, float]]:
     """Search for the query in the text using TF-IDF weighted n-grams."""
-    lines = [line for line in text.split("\n") if line]
+    lines = [line for line in text.split("\n") if line.strip()]
     vectorizer.set_params(ngram_range=(1, len(keyword.split())))
     line_vectors = vectorizer.fit_transform(lines)
     query_vector = vectorizer.transform([keyword])
@@ -203,10 +205,21 @@ def tfidf_search(keyword: str, text: str) -> list[tuple[str, float]]:
     return list(zip(lines, cosine_similarities))
 
 
+def bm25_search(keyword: str, text: str) -> list[tuple[str, float]]:
+    """Search for the n-gram query in the text using the BM25 algorithm."""
+    lines = [line for line in text.split("\n") if line.strip()]
+    words = [line.split() for line in lines]
+    bm25 = BM25L(words, k1=1.5, b=0.75, delta=0.5)  # default: k1=1.5, b=0.75, delta=0.5 (k1 controls term saturation (higher = slower saturation), b adjusts length normalization (closer to 1 = more penalty for longer docs), and delta diminishes term saturation in longer documents (higher = less saturation))
+    raw_scores = bm25.get_scores(keyword.split())
+    scores = softmax(raw_scores)
+    print("BM25 search scores:", scores)
+    return list(zip(lines, scores))
+
+
 def word_embedding_search(keyword: str, text: str) -> list[tuple[str, float]]:
     """Search for n-grams similar to the keyword using word embeddings."""
     keyword_ngrams = get_all_ngrams(keyword)
-    lines = [line for line in text.split("\n") if line]
+    lines = [line for line in text.split("\n") if line.strip()]
     scores = []
 
     for line in lines:
@@ -326,10 +339,10 @@ def translate_multilanguage(sentence):
 
 
 
-def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact': 1, 'ngram': 0.8, 'regex': 0.8, 'fuzzy': 0.8, 'tfidf': 0.8, 'word_embedding': 0.8, 'semantic': 0.8}):
+def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact': 0.9, 'ngram': 0.6, 'regex': 0.7, 'fuzzy': 0.8, 'tfidf': 0.7, 'bm25': 0.7, 'word_embedding': 0.8, 'semantic': 1.0}):
 
     # Split the text once
-    lines = [line for line in text.split("\n") if line]
+    lines = [line for line in text.split("\n") if line.strip()]
     
     # Get translations of the keyword using translate_multilanguage
     english_keyword, traditional_keyword, simplified_keyword = translate_multilanguage(keyword)
@@ -373,6 +386,7 @@ def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact
             'regex': regex_search(kw, "\n".join(preprocessed_lines)),
             'fuzzy': fuzzy_search(kw, "\n".join(preprocessed_lines)),
             'tfidf': tfidf_search(kw, "\n".join(preprocessed_lines)),
+            'bm25': bm25_search(kw, "\n".join(preprocessed_lines)),
             'word_embedding': word_embedding_search(kw, "\n".join(preprocessed_lines)),
             'semantic': semantic_search(kw, "\n".join(preprocessed_lines)),
         }
@@ -395,8 +409,19 @@ def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact
 
 
 
+default_weights = {
+    'exact': 0.9,          # Full weight for precise matches.
+    'ngram': 0.6,          # Useful for broader matches.
+    'regex': 0.7,          # Flexible search with moderate precision.
+    'fuzzy': 0.8,          # Useful for variations in spellings.
+    'tfidf': 0.7,          # Weighs importance of words in a dataset.
+    'bm25': 0.7,           # Weighs importance of words in a dataset.
+    'word_embedding': 0.8, # Finds semantically similar terms.
+    'semantic': 1.0        # High weight for context and meaning.
+}
 
-results = search_and_rank("search for", sample_text, preprocess=True)
+
+results = search_and_rank("searches for", sample_text, preprocess=True, weights=default_weights)
 
 print("Results:")
 for line, score in results:
@@ -428,6 +453,8 @@ for line, score in results:
 # https://github.com/ssut/py-googletrans
 # https://github.com/suqingdong/googletranslatepy
 
+# https://github.com/dorianbrown/rank_bm25/blob/master/rank_bm25.py
+
 # Elmo
 # InferSent
 # Universal sentence encoder multilingual
@@ -449,6 +476,33 @@ for line, score in results:
 
 # https://www.pinecone.io/learn/series/nlp/sentence-embeddings/
 
+# http://norvig.com/spell-correct.html
+
+# Dense Passage Retrievers
+# https://www.searchenginejournal.com/generative-retrieval-for-conversational-question-answering/496373/
+
+# https://arxiv.org/pdf/1511.08198.pdf
+# https://people.cs.umass.edu/~miyyer/pubs/2015_acl_dan.pdf
+# https://arxiv.org/abs/1502.03520v4
+# https://aclanthology.org/W18-3012.pdf
+# https://openreview.net/pdf?id=SyK00v5xx
+# https://blogs.nlmatics.com/nlp/sentence-embeddings/2020/08/07/Smooth-Inverse-Frequency-Frequency-(SIF)-Embeddings-in-Golang.html
+# https://blog.dataiku.com/how-deep-does-your-sentence-embedding-model-need-to-be
+
+# https://yxkemiya.github.io/2016/06/05/coursera-TextRetrievalAndSearchEngines-week1/#more
+# https://yxkemiya.github.io/2016/06/08/coursera-TextRetrievalAndSearchEngines-week2-implement-TR/#more
+# https://yxkemiya.github.io/2016/06/20/coursera-TextRetrievalAndSearchEngines-week3/#more
+
+# Query Likelihood Retrieval Model
+# Divergence-from-randomness model
+# PL2 retrieval model
+# Boolean vs Vector vs Probabilistic vs Language Models
+
+# siamese network text similarity
+# https://zhuanlan.zhihu.com/p/75366208
+
+# https://medium.com/tech-that-works/maximal-marginal-relevance-to-rerank-results-in-unsupervised-keyphrase-extraction-22d95015c7c5
+# https://www.cs.cmu.edu/~jgc/publication/The_Use_MMR_Diversity_Based_LTMIR_1998.pdf
 
 """
 Discuss how a text search program can use several matching algorithms to retrieve and rank the results.

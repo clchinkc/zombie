@@ -2049,3 +2049,241 @@ For a comprehensive zombie apocalypse simulation:
 - Use reinforcement learning for adaptive strategy evolution.
 - Adopt Optimal Control for precise vehicular movements.
 """
+
+"""
+Likelihood Function for the Zombie Apocalypse Model:
+
+Given the SIZ model, you're interested in the number of infected (zombie) individuals, 
+�
+(
+�
+)
+I(t), over time. Suppose you have data on the number of new zombies at various time points. This data will guide your estimation of the model parameters 
+�
+β and 
+�
+α.
+
+Assuming the observed number of new zombies at each time step follows a Poisson distribution (a common assumption for count data), the likelihood function for a single observation 
+�
+(
+�
+)
+I(t) is:
+
+�
+(
+�
+(
+�
+)
+=
+�
+)
+=
+�
+−
+�
+�
+(
+�
+,
+�
+)
+�
+�
+(
+�
+,
+�
+)
+�
+�
+!
+P(I(t)=k)= 
+k!
+e 
+−λ 
+t
+​
+ (β,α)
+ λ 
+t
+​
+ (β,α) 
+k
+ 
+​
+ 
+
+Where:
+
+�
+�
+(
+�
+,
+�
+)
+λ 
+t
+​
+ (β,α) is the expected number of new zombies at time 
+�
+t given the parameters 
+�
+β and 
+�
+α.
+�
+k is the observed number of new zombies at time 
+�
+t.
+Given data at multiple time points, the joint likelihood function is the product of the likelihoods at each time point:
+
+�
+(
+�
+,
+�
+∣
+�
+�
+�
+�
+)
+=
+∏
+�
+�
+−
+�
+�
+(
+�
+,
+�
+)
+�
+�
+(
+�
+,
+�
+)
+�
+(
+�
+)
+�
+(
+�
+)
+!
+L(β,α∣data)=∏ 
+t
+​
+  
+I(t)!
+e 
+−λ 
+t
+​
+ (β,α)
+ λ 
+t
+​
+ (β,α) 
+I(t)
+ 
+​
+ 
+
+To make computations more manageable, it's common to work with the log-likelihood:
+
+log
+⁡
+�
+(
+�
+,
+�
+∣
+�
+�
+�
+�
+)
+=
+∑
+�
+[
+−
+�
+�
+(
+�
+,
+�
+)
++
+�
+(
+�
+)
+log
+⁡
+�
+�
+(
+�
+,
+�
+)
+−
+log
+⁡
+�
+(
+�
+)
+!
+]
+logL(β,α∣data)=∑ 
+t
+​
+ [−λ 
+t
+​
+ (β,α)+I(t)logλ 
+t
+​
+ (β,α)−logI(t)!]
+
+Estimating Parameters:
+
+The goal is to find the values of 
+�
+β and 
+�
+α that maximize the likelihood (or log-likelihood). This can be accomplished using optimization methods.
+
+Gradient Descent: Iteratively adjust 
+�
+β and 
+�
+α in the direction that increases the log-likelihood until convergence.
+Newton-Raphson Method: A more advanced iterative method that uses both the first and second derivatives of the log-likelihood to update the parameter estimates.
+You can utilize optimization libraries in Python, like scipy.optimize, to find the maximum likelihood estimates.
+
+Challenges and Considerations:
+
+Initial Values: Optimization algorithms usually require starting values. Choosing poor initial values can lead to convergence to local maxima. Sometimes, it's helpful to run the optimization multiple times with different starting values.
+Overfitting: If you have a lot of parameters or your model is very flexible, you might fit your data too closely and predict future events poorly. Regularization or simpler models can help.
+Model Misspecification: Always keep in mind the possibility that your underlying model may not be a good representation of reality, no matter how well it fits the data.
+Finally, once you have estimates for 
+�
+β and 
+�
+α, you can use them to simulate the progression of the zombie apocalypse under various scenarios or to assess potential interventions' effectiveness.
+"""
