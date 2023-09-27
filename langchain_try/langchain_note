@@ -31,7 +31,7 @@ criticize -> refinement (character or story) -> criticize -> refinement
 character development -> plot
 
 
-an I make data persistent in faiss and chroma?
+Can I make data persistent in faiss and chroma?
 
 Here is an example of how to persist a ChromaDB instance:
 

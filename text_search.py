@@ -427,6 +427,15 @@ print("Results:")
 for line, score in results:
     print(f"Line: {line:<{max(len(line) for line, _ in results)}} | Score: {score:>7.3f}")
 
+
+# mixed language in keyword or line
+# eg Cleaned Traditional keyword: 搜尋   for
+# added space after cleaning
+# Save computation if some method only execute if same language
+# store two version of corpus, original and processed corpus, but return original one only
+# divide the process back to retrieval and rank two part (retrieval can be done in parallel)
+# change back to return score over threshold when in production
+
 # https://www.sbert.net/docs/pretrained_models.html
 
 # https://www.sbert.net/examples/applications/cross-encoder/README.html
@@ -442,7 +451,10 @@ for line, score in results:
 # bert-large-nli-stsb-mean-tokens - STSb performance: 85.29
 # distilbert-base-nli-stsb-mean-tokens - STSb performance: 85.16
 
-# Trie or inverted indexes
+# siamese network text similarity
+
+# Spelling correction using nltk / character n-gram / fuzzy
+# http://norvig.com/spell-correct.html
 
 # https://github.com/Friedrich94326/IR_using_chunking
 
@@ -481,7 +493,12 @@ for line, score in results:
 
 # https://www.pinecone.io/learn/series/nlp/sentence-embeddings/
 
-# http://norvig.com/spell-correct.html
+# https://www.cnblogs.com/Xiaoyan-Li/p/13477253.html
+# https://www.nltk.org/howto/wordnet.html
+
+# https://www.elastic.co/guide/cn/elasticsearch/guide/current/practical-scoring-function.html
+# hybrid Elasticsearch and semantic search
+# Elasticsearch or Apache Lucene
 
 # Dense Passage Retrievers
 # https://www.searchenginejournal.com/generative-retrieval-for-conversational-question-answering/496373/
@@ -493,6 +510,7 @@ for line, score in results:
 # https://openreview.net/pdf?id=SyK00v5xx
 # https://blogs.nlmatics.com/nlp/sentence-embeddings/2020/08/07/Smooth-Inverse-Frequency-Frequency-(SIF)-Embeddings-in-Golang.html
 # https://blog.dataiku.com/how-deep-does-your-sentence-embedding-model-need-to-be
+# https://zhuanlan.zhihu.com/p/107471078?utm_id=0
 
 # https://yxkemiya.github.io/2016/06/05/coursera-TextRetrievalAndSearchEngines-week1/#more
 # https://yxkemiya.github.io/2016/06/08/coursera-TextRetrievalAndSearchEngines-week2-implement-TR/#more
@@ -519,6 +537,43 @@ Methods to improve the representation (dimension instantiation) of text data for
 ### Improved Instantiation of Similarity Function:
 1. *Cosine of Angle Between Two Vectors*: Cosine similarity measures the cosine of the angle between two non-zero vectors. It determines how similar two documents are irrespective of their size.
 3. *Dot Product*: This measures the sum of the product of corresponding entries of the two sequences of numbers. When appropriately normalized, the dot product can be very effective, especially when combined with term weighting (like TF-IDF weights).
+"""
+
+"""
+Trie (or Prefix Tree):
+
+Definition: A trie is a tree-like data structure that is used to store a dynamic set of strings, where the keys are usually strings.
+Nodes: Each node of a trie typically represents a character of a string, and paths from the root to a node represent a prefix of strings.
+Use cases: They are especially useful for:
+Autocomplete features (like Google's search suggestions).
+Implementing dictionaries with efficient insert, search, and delete operations.
+IP routing (Longest prefix matching).
+Advantages:
+Lookup time for a string is O(m), where m is the length of the word.
+Efficient in terms of memory when dealing with a large number of strings with shared prefixes.
+Drawbacks:
+Can still be space-consuming if there aren't many shared prefixes.
+More complex than basic data structures like hash tables.
+Inverted Index:
+
+Definition: An inverted index is a data structure used to store a mapping from words or terms to their locations in a set of documents.
+Structure: Usually consists of:
+A list of all unique words from a set of documents.
+For each word, a list of document IDs (or references) where that word appears.
+Use cases:
+The backbone of many search engines. When you type a query, the search engine uses an inverted index to find the documents where the terms appear.
+Text analysis and natural language processing tasks.
+Advantages:
+Enables fast full-text searches.
+More space efficient than forward indexes (that map from documents to the words they contain).
+Drawbacks:
+Can take time and space to build, especially for large datasets.
+Maintenance and updates can be challenging in dynamic datasets.
+Which to use? The choice between a trie and an inverted index depends on the problem you're trying to solve:
+
+If you're trying to build a feature where you need to suggest completions for a prefix (like search suggestions), a trie might be more appropriate.
+If you're indexing a set of documents to quickly retrieve all documents containing a particular word or set of words, then an inverted index is more suitable.
+In some complex systems, such as search engines, a combination of multiple data structures, including tries and inverted indexes, might be used to achieve desired performance characteristics.
 """
 
 """
@@ -558,6 +613,128 @@ While both TextRank and RAKE primarily serve as keyword and keyphrase extraction
 - **Relevance**: For deeper semantic understanding, it might be necessary to integrate additional NLP models or techniques.
 
 In essence, while TextRank and RAKE are primarily designed for keyword extraction, they can play a valuable role in enhancing various aspects of text search systems.
+"""
+
+"""
+1. **WordNet**:
+   - **Origin**: Developed by the Cognitive Science Laboratory at Princeton University.
+   - **Content**: It focuses on the English language and represents words as synsets (sets of synonymous words) that express a distinct concept. It interlinks these synsets using semantic relationships, like hypernyms, hyponyms, meronyms, holonyms, and antonyms.
+   - **Use**: Widely used for various NLP tasks, including word sense disambiguation, semantic similarity measures, and text classification.
+   - **Structure**: Hierarchical (tree-like), focusing on the "is-a" relationships between concepts.
+
+2. **HowNet**:
+   - **Origin**: Developed in China by Zhendong Dong.
+   - **Content**: Focuses on the semantic relationships between Chinese and English words. HowNet defines concepts using sememes, which are the smallest semantic units in language.
+   - **Use**: Especially valuable for research involving Chinese NLP and cross-lingual tasks.
+   - **Structure**: It emphasizes "deep" semantic descriptions using sememes to detail the inherent qualities and relationships of words and phrases.
+
+3. **FrameNet**:
+   - **Origin**: Initiated at the International Computer Science Institute in Berkeley, California.
+   - **Content**: Based on the theory of Frame Semantics by Charles Fillmore, it represents the meaning of lexical items in terms of semantic frames, which are schematic representations of events, relations, or entities and their participants. Each frame is defined by a description and contains a set of frame elements (roles that participants play in the event or relation).
+   - **Use**: Commonly used for semantic role labeling and understanding events in text.
+   - **Structure**: Not hierarchical like WordNet. It emphasizes the relationships between words, their semantic roles, and the scenarios or "frames" they typically evoke.
+
+4. **ConceptNet**:
+   - **Origin**: Emerged from the Open Mind Common Sense (OMCS) project at the Massachusetts Institute of Technology Media Lab.
+   - **Content**: A semantic network that connects words and phrases of natural language with labeled edges. It focuses on general knowledge facts, representing them as relations between concepts (e.g., "is a", "used for", "part of").
+   - **Use**: Boosting common sense reasoning in AI, improving word embeddings, and building knowledge graphs.
+   - **Structure**: Graph-like. The focus is on a broad range of relationships between concepts, not limited to just "is-a" or hierarchical relations.
+
+**Summary**:
+- **WordNet** provides a hierarchical representation of English word meanings.
+- **HowNet** offers deep semantic descriptions, especially for Chinese.
+- **FrameNet** is based on frame semantics, detailing how words relate to the frames or scenarios they evoke.
+- **ConceptNet** emphasizes general knowledge and common sense relations in a graph-like structure.
+"""
+
+"""
+If you're using a transformer model like BERT in the Sentence Transformers library (or similar libraries), you may encounter a limitation where the model can only handle a specific maximum number of tokens (e.g., 128, 512, etc.). When performing semantic search or other applications, longer sentences or paragraphs might get truncated, leading to potential loss of context and accuracy.
+
+Here are a few strategies to overcome this limitation:
+
+1. **Chunking**:
+    * Break down the content into smaller chunks or sentences that fit within the token limit.
+    * Embed each chunk separately.
+    * During the search, compare the query embedding with the embeddings of all chunks.
+  
+2. **Sliding Window**:
+    * Create overlapping chunks of your text, for example, the first chunk might be tokens 1-128, the second could be tokens 50-178, and so on.
+    * This ensures that even if a relevant piece of information is at the boundary of two chunks, it's still captured in one of the embeddings.
+
+3. **Pooling Strategy**:
+    * Instead of just truncating, you can consider using pooling strategies. For instance, mean-pooling of embeddings of all tokens in the content to get one fixed-size vector.
+
+4. **Hierarchical Approach**:
+    * Use a hierarchical approach where you first embed sentences and then combine sentence embeddings to represent a paragraph or a document.
+
+5. **Using Longformer or Other Long-Document Models**:
+    * Models like Longformer are designed to handle longer sequences, up to tens of thousands of tokens.
+    * Incorporate such models into your pipeline for documents that are considerably longer.
+
+6. **Document Summarization**:
+    * Use extractive or abstractive summarization techniques to condense long documents.
+    * Then, create embeddings for these summaries rather than the full text.
+
+7. **Hybrid Systems**:
+    * Combine traditional search techniques (like TF-IDF, BM25) with semantic search. Use traditional methods to narrow down potential candidates, and then use the transformer model to rank or re-rank the shortlisted documents.
+
+8. **Optimization and Filtering**:
+    * Preprocess and filter out irrelevant parts of the content, so that the most meaningful sections are embedded and considered during the search.
+
+9. **Handling Truncation**:
+    * If you must truncate, ensure that you're truncating in a way that retains the most contextually relevant information. For instance, for a long document, the introduction and conclusion might hold the essence of the content.
+
+10. **Custom Training**:
+    * Consider fine-tuning your model on a domain-specific corpus where you teach it to understand and prioritize the most relevant parts of longer texts.
+
+When you use these techniques, always ensure to validate and test the effectiveness of your approach using relevant benchmarks or evaluation datasets to ensure the quality of your semantic search system.
+"""
+
+"""
+Handling mixed language content in a text search program can be challenging but rewarding, as it can provide a richer user experience. Here's how you can approach this:
+
+1. **Language Detection**:
+   - Use libraries like `langdetect` or `langid.py` to identify the language of each word or phrase.
+   - For larger corpora, you can segment the text into paragraphs or sentences and then detect the language for each segment.
+   - Keep in mind that language detection on very short texts (like single words or short phrases) can be inaccurate.
+
+2. **Tokenization**:
+   - Tokenization splits a text into words, phrases, symbols, or other meaningful elements (tokens). Since different languages have different tokenization rules, use a tokenizer that can handle multiple languages. Libraries like `spaCy` or the `Natural Language Toolkit (NLTK)` offer multi-language tokenization.
+
+3. **Indexing**:
+   - Build separate indexes for different languages if feasible. This way, when a search is conducted in a particular language, the corresponding index can be queried for faster results.
+   - Use a standard inverted index with an additional layer that includes language metadata.
+
+4. **Stemming and Lemmatization**:
+   - Different languages have different morphology. Use stemming and lemmatization tools tailored for each language to reduce words to their base or root form.
+   - Libraries like `spaCy` and `NLTK` provide stemming and lemmatization tools for various languages.
+
+5. **Handling Transliterations**:
+   - In mixed-language scenarios, especially with languages that use non-Latin scripts, content might be transliterated. Consider using tools or libraries that can detect and convert transliterations.
+
+6. **Cross-Language Search**:
+   - If you want users to search in one language and get results in another, consider implementing cross-language information retrieval (CLIR) techniques.
+   - One way is to translate the query into all supported languages, search, and then present the results. Tools like `Google Cloud Translation API` can be used for this.
+
+7. **Query Expansion**:
+   - Use query expansion techniques to include synonyms, translations, or related terms in multiple languages.
+   - This can be especially useful for niche terms or phrases that might not have direct translations.
+
+8. **Feedback and User Preferences**:
+   - Allow users to filter results by language or to specify their preferred languages.
+   - Collect feedback on search results to continuously improve accuracy.
+
+9. **Training Custom Models**:
+   - If you have sufficient labeled data, consider training custom models that understand the context and semantics of mixed-language content. 
+
+10. **Regularly Update Language Models**:
+   - Languages evolve, and new terms, slang, or phrases can emerge. Keep your language models and tools updated to ensure the search program remains relevant.
+
+11. **Testing**:
+   - Regularly test the search functionality with mixed language queries and content.
+   - Use A/B testing or other techniques to gauge user satisfaction and to identify areas of improvement.
+
+By ensuring your text search program is equipped to handle mixed language content, you can provide a more comprehensive and satisfying experience for users who navigate multilingual environments.
 """
 
 """
