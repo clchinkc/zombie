@@ -451,8 +451,6 @@ for line, score in results:
 # bert-large-nli-stsb-mean-tokens - STSb performance: 85.29
 # distilbert-base-nli-stsb-mean-tokens - STSb performance: 85.16
 
-# Trie or inverted indexes
-
 # siamese network text similarity
 
 # Spelling correction using nltk / character n-gram / fuzzy
@@ -539,6 +537,43 @@ Methods to improve the representation (dimension instantiation) of text data for
 ### Improved Instantiation of Similarity Function:
 1. *Cosine of Angle Between Two Vectors*: Cosine similarity measures the cosine of the angle between two non-zero vectors. It determines how similar two documents are irrespective of their size.
 3. *Dot Product*: This measures the sum of the product of corresponding entries of the two sequences of numbers. When appropriately normalized, the dot product can be very effective, especially when combined with term weighting (like TF-IDF weights).
+"""
+
+"""
+Trie (or Prefix Tree):
+
+Definition: A trie is a tree-like data structure that is used to store a dynamic set of strings, where the keys are usually strings.
+Nodes: Each node of a trie typically represents a character of a string, and paths from the root to a node represent a prefix of strings.
+Use cases: They are especially useful for:
+Autocomplete features (like Google's search suggestions).
+Implementing dictionaries with efficient insert, search, and delete operations.
+IP routing (Longest prefix matching).
+Advantages:
+Lookup time for a string is O(m), where m is the length of the word.
+Efficient in terms of memory when dealing with a large number of strings with shared prefixes.
+Drawbacks:
+Can still be space-consuming if there aren't many shared prefixes.
+More complex than basic data structures like hash tables.
+Inverted Index:
+
+Definition: An inverted index is a data structure used to store a mapping from words or terms to their locations in a set of documents.
+Structure: Usually consists of:
+A list of all unique words from a set of documents.
+For each word, a list of document IDs (or references) where that word appears.
+Use cases:
+The backbone of many search engines. When you type a query, the search engine uses an inverted index to find the documents where the terms appear.
+Text analysis and natural language processing tasks.
+Advantages:
+Enables fast full-text searches.
+More space efficient than forward indexes (that map from documents to the words they contain).
+Drawbacks:
+Can take time and space to build, especially for large datasets.
+Maintenance and updates can be challenging in dynamic datasets.
+Which to use? The choice between a trie and an inverted index depends on the problem you're trying to solve:
+
+If you're trying to build a feature where you need to suggest completions for a prefix (like search suggestions), a trie might be more appropriate.
+If you're indexing a set of documents to quickly retrieve all documents containing a particular word or set of words, then an inverted index is more suitable.
+In some complex systems, such as search engines, a combination of multiple data structures, including tries and inverted indexes, might be used to achieve desired performance characteristics.
 """
 
 """
