@@ -1,3 +1,99 @@
+
+
+"""
+Feature Stores in ML Workflows: Text Search Program Example
+"""
+
+import sqlite3
+
+# Libraries for Text Processing
+import string
+
+import pandas as pd
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neighbors import NearestNeighbors
+
+# Step 1: Feature Identification
+# For a text search program, features related to the text itself, frequency of terms, 
+# and contextual information can be vital for enhancing search results.
+features = [
+    "term_frequency",
+    "document_frequency",
+    "user_search_history",
+    "contextual_information"
+]
+
+# Step 2: Data Collection & Preprocessing
+
+# Load data from CSV file
+document_data = pd.read_csv("feature_store_data.csv")
+
+# Preprocess text: lowercase, remove punctuation, tokenization, and remove stop words
+def preprocess_text(text):
+    text = text.lower()
+    text = text.translate(str.maketrans('', '', string.punctuation))
+    tokens = word_tokenize(text)
+    tokens = [word for word in tokens if word not in stopwords.words('english')]
+    return tokens
+
+document_data["content"] = document_data["content"].apply(preprocess_text)
+
+# Step 3: Feature Engineering
+
+# Use TF-IDF to convert document content into numerical vectors representing term importance
+vectorizer = TfidfVectorizer(stop_words='english', max_features=5000)
+tfidf_matrix = vectorizer.fit_transform(document_data["content"].apply(lambda x: ' '.join(x)))
+
+# Step 4: Feature Storage
+
+# Store the TF-IDF matrix in an SQLite database for persistent storage and faster querying
+conn = sqlite3.connect("feature_store.db")
+tfidf_df = pd.DataFrame(tfidf_matrix.toarray(), columns=vectorizer.get_feature_names_out())
+tfidf_df.to_sql("document_features", conn, if_exists="replace", index=False)
+
+# Step 5: ML Model Training
+
+# Fetch the TF-IDF matrix from the SQLite feature store
+conn = sqlite3.connect("feature_store.db")
+tfidf_df_from_store = pd.read_sql("SELECT * FROM document_features", conn)
+tfidf_matrix_from_store = tfidf_df_from_store.values
+
+# Train a Nearest Neighbors model on the TF-IDF matrix retrieved from the feature store
+model = NearestNeighbors(n_neighbors=5, metric="cosine")
+model.fit(tfidf_matrix_from_store)
+
+# Step 6: Real-time Inference
+
+# Take a user query and find the most relevant documents
+user_query = "How does photosynthesis work?"
+preprocessed_query = ' '.join(preprocess_text(user_query))
+query_vector = vectorizer.transform([preprocessed_query])
+
+# Retrieve the top 5 similar documents
+distances, indices = model.kneighbors(query_vector)
+
+print(f"Top 5 documents for the query '{user_query}':")
+for dist, index in zip(distances[0], indices[0]):
+    truncated_content = document_data.iloc[index]["content"][:20]
+    print(f"Relevance Score: {(1 - dist):.2f} | Content Snippet: {' '.join(truncated_content)}...")
+
+
+# Here, we could add an option for the user to provide feedback on the relevance of results.
+# This feedback can be used to train a model to predict relevance based on the features in the feature store.
+
+# Step 7: Feature Monitoring & Updation
+
+# Here, one might implement techniques to update the feature store based on new documents,
+# monitor the click-through rate of the presented documents, retrain models based on updated data,
+# or even refine the feature engineering process itself.
+
+
+
+# Depending on the scale of your application, SQLite might not be the best choice for feature storage. Distributed databases or data warehouses might be more suitable for larger-scale applications.
+# A more sophisticated text search system might utilize deep learning embeddings, update features regularly based on the entire corpus, or consider other contextual information.
+
 """
 
 Components Of Feature Store In Machine Learning
@@ -37,122 +133,39 @@ Together, these components form the backbone of a robust and efficient feature s
 
 
 """
-Let us now understand the implementation of feature stores in ML workflows with the help of a relevant example use case.
+A feature store is a centralized repository for storing, sharing, and accessing machine learning features. It ensures that the features used during training are the same as those used in serving or prediction. Although feature stores are primarily designed for machine learning use-cases, they can be leveraged in a text search program to maintain consistent feature extraction, storage, and retrieval.
 
-How To Implement Feature Stores In ML?
-This section will walk you through the steps to implement a feature store in machine learning using a real-world example of building a personalized e-commerce recommendation system. 
+Here's a step-by-step guide on how to use a feature store in a text search program:
 
-1. Identify Relevant Features
-The first step involves identifying the relevant features that can contribute to personalized recommendations. In this case, features could include customer demographics, purchase history, browsing behavior, product attributes, and ratings. You can create a list of features in Python, as shown in the code below-
-"""
+1. **Feature Extraction**:
+    - Depending on your search program, extract relevant features from the text. This could be anything from tokenized words, named entity recognition (NER) tags, sentiment scores, TF-IDF values, embeddings, etc.
+    
+2. **Storing Features in the Feature Store**:
+    - Instead of directly indexing the text (as in traditional search engines like Elasticsearch), index the extracted features in the feature store. This ensures a consistent set of features across training and serving.
 
+3. **Text Search**:
+    - When a query comes in, extract the same set of features from the query text as you did for your documents.
+    - Query the feature store for relevant matches based on the extracted query features. This could involve:
+        - Looking up feature values or embeddings that closely match the query features.
+        - Using pre-trained models to score and rank documents based on these features.
+    - Return the matched documents or information to the user.
 
-features = [
-    "customer_id",
-    "purchase_history",
-    "product_ratings",
-    "product_attributes",
-]
+4. **Continuous Learning**:
+    - As users interact with your search system, collect feedback on which results are relevant and which aren't.
+    - Use this feedback as labeled data to train (or fine-tune) a model to predict relevance based on the features in the feature store.
+    - Update the model periodically to reflect new data and insights.
 
+5. **Serving with Consistency**:
+    - Whenever your search program is updated, or a new model is trained, you can ensure that the features it uses for making predictions are the same as those used during training by sourcing them from the feature store.
+    - This ensures consistency and reproducibility in your search program.
 
-"""
-2. Data Collection And Preprocessing
-The second step involves collecting and transforming data to prepare it for feature engineering. For instance, you can collect customer data, transaction records, and product information from data lakes. For data preprocessing, you will clean and transform the data by handling missing values and converting categorical variables into numerical representations. The code below shows how you can fetch data from the central repository and data lake and then preprocess it using the Pandas library-
-"""
+6. **Monitoring and Maintenance**:
+    - Periodically monitor the features for drift or changes. If the way features are extracted or the nature of the data changes, it may be necessary to update the feature definitions in the feature store.
+    - Use tools provided by the feature store for monitoring and managing the lifecycle of features.
 
+Some popular feature store options include AWS SageMaker Feature Store, Tecton, Feast, among others. Each of these solutions comes with its own set of APIs and utilities, so the implementation details might vary. However, the general concept outlined above will remain the same.
 
-import itertools
-
-import pandas as pd
-
-# Load customer data
-customer_data = pd.read_csv("customer_data.csv")
-
-# Clean the data and handle missing values
-customer_data = customer_data.dropna()
-
-# Convert categorical variables into numerical representations
-customer_data["gender"] = pd.factorize(customer_data["gender"])[0]
-
-
-"""
-3. Feature Engineering
-In this step, you will use the collected data to extract meaningful features. For example, you can create features like customer purchase frequency, average rating, recent purchases, popular categories, or similarity scores based on user preferences. The below code will show you how to perform feature engineering on aggregate data using Pandas-
-"""
-
-
-# Calculate customer purchase frequency
-customer_data["purchase_frequency"] = customer_data.groupby(
-    "customer_id"
-)["customer_id"].transform("count")
-
-# Calculate average product rating
-customer_data["average_rating"] = customer_data.groupby(
-    "customer_id"
-)["product_ratings"].transform("mean")
-
-# Create a feature for recent purchases
-customer_data["recent_purchases"] = (
-    customer_data["purchase_history"] > "2020-01-01").astype(int)
-
-
-"""
-4. Feature Storage
-Once the features are engineered, you must store them in the feature store for easy access and management. You can use a relational database or a specialized feature store tool. In this example use case, you will use an SQLite database to store the features and feature definitions-
-"""
-
-
-import sqlite3
-
-# Connect to the feature store database
-conn = sqlite3.connect("feature_store.db")
-
-# Store the customer features in the database
-customer_data.to_sql("customer_features", conn, if_exists="replace")
-
-
-"""
-5. ML Model Training
-The next step is to use the stored features from the feature store to train ML models for the recommendation. In this example, you will train a collaborative filtering model using the Surprise library and the training data-
-"""
-
-
-from surprise import Dataset, KNNBasic
-from surprise.model_selection import train_test_split
-
-# Load the customer features from the feature store
-data = Dataset.load_from_df(customer_data[["customer_id", "product_id", "product_ratings"]], reader)
-
-# Split the data into training and test sets
-trainset, testset = train_test_split(data, test_size=0.2)
-
-# Train a collaborative filtering model
-model = KNNBasic()
-model.fit(trainset)
-
-
-"""
-6. Serve Features For Real-time Inference
-The next step is to deploy the trained models and connect them to the feature value store for real-time inference. The models can retrieve the required feature values from the offline/online store during inference to make personalized user recommendations. In this example use case, you will generate real-time recommendations using the trained model and the feature store-
-"""
-
-
-# Load a customer's feature from the feature store
-customer_features = pd.read_sql(
-    "SELECT * FROM customer_features WHERE customer_id = ?", conn, params=(123,)
-)
-
-# Retrieve the required feature values for the customer
-customer_purchase_history = customer_features["purchase_history"]
-customer_product_ratings = customer_features["product_ratings"]
-
-# Make personalized recommendations using the trained model and retrieved features
-recommend_products = model.test([(customer_id, product_id, 0) for product_id in product_ids])
-
-
-"""
-7. Feature Monitoring And Updation
-Once you have your model ready and it starts generating recommendations, you must continuously monitor the performance of the recommendation system, feature pipelines, feature groups, and the quality of features. You must update the online/offline store with new data, track changes in feature pipelines, make feature transformations, and iterate on feature engineering to improve the accuracy and relevance of recommendations over time.
+By integrating a feature store into your text search program, you can ensure consistency in feature extraction and usage across different stages of your application, potentially leading to more accurate and reproducible search results.
 """
 
 
