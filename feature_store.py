@@ -5,8 +5,6 @@ Feature Stores in ML Workflows: Text Search Program Example
 """
 
 import sqlite3
-
-# Libraries for Text Processing
 import string
 
 import pandas as pd
@@ -15,22 +13,8 @@ from nltk.tokenize import word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 
-# Step 1: Feature Identification
-# For a text search program, features related to the text itself, frequency of terms, 
-# and contextual information can be vital for enhancing search results.
-features = [
-    "term_frequency",
-    "document_frequency",
-    "user_search_history",
-    "contextual_information"
-]
 
-# Step 2: Data Collection & Preprocessing
-
-# Load data from CSV file
-document_data = pd.read_csv("feature_store_data.csv")
-
-# Preprocess text: lowercase, remove punctuation, tokenization, and remove stop words
+# Utilities
 def preprocess_text(text):
     text = text.lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
@@ -38,56 +22,80 @@ def preprocess_text(text):
     tokens = [word for word in tokens if word not in stopwords.words('english')]
     return tokens
 
+# Load data from CSV file
+document_data = pd.read_csv("feature_store_data.csv")
 document_data["content"] = document_data["content"].apply(preprocess_text)
 
-# Step 3: Feature Engineering
-
-# Use TF-IDF to convert document content into numerical vectors representing term importance
+# Feature Engineering using TF-IDF
 vectorizer = TfidfVectorizer(stop_words='english', max_features=5000)
 tfidf_matrix = vectorizer.fit_transform(document_data["content"].apply(lambda x: ' '.join(x)))
 
-# Step 4: Feature Storage
-
-# Store the TF-IDF matrix in an SQLite database for persistent storage and faster querying
+# Store the TF-IDF matrix in SQLite
 conn = sqlite3.connect("feature_store.db")
 tfidf_df = pd.DataFrame(tfidf_matrix.toarray(), columns=vectorizer.get_feature_names_out())
 tfidf_df.to_sql("document_features", conn, if_exists="replace", index=False)
 
-# Step 5: ML Model Training
-
-# Fetch the TF-IDF matrix from the SQLite feature store
-conn = sqlite3.connect("feature_store.db")
-tfidf_df_from_store = pd.read_sql("SELECT * FROM document_features", conn)
-tfidf_matrix_from_store = tfidf_df_from_store.values
-
-# Train a Nearest Neighbors model on the TF-IDF matrix retrieved from the feature store
+# Initial Model Training
 model = NearestNeighbors(n_neighbors=5, metric="cosine")
-model.fit(tfidf_matrix_from_store)
+model.fit(tfidf_df.values)
 
-# Step 6: Real-time Inference
+def train_model_based_on_feedback(conn, model, vectorizer):
+    try:
+        feedback_data = pd.read_sql("SELECT * FROM user_feedback", conn)
+    except:
+        feedback_data = pd.DataFrame(columns=["document_index", "user_query", "relevance_score"])
+    
+    if not feedback_data.empty:
+        # Handle duplicate feedback by averaging feedback scores for the same document
+        feedback_data = feedback_data.groupby("document_index").agg({
+            "relevance_score": "mean"
+        }).reset_index()
+        
+        training_data = tfidf_df.iloc[feedback_data["document_index"]].reset_index(drop=True)
+        targets = feedback_data["relevance_score"]
+        weighted_data = training_data.multiply(targets, axis=0)
 
-# Take a user query and find the most relevant documents
-user_query = "How does photosynthesis work?"
-preprocessed_query = ' '.join(preprocess_text(user_query))
-query_vector = vectorizer.transform([preprocessed_query])
+        # Fill NaN values with 0
+        weighted_data = weighted_data.fillna(0)
 
-# Retrieve the top 5 similar documents
-distances, indices = model.kneighbors(query_vector)
-
-print(f"Top 5 documents for the query '{user_query}':")
-for dist, index in zip(distances[0], indices[0]):
-    truncated_content = document_data.iloc[index]["content"][:20]
-    print(f"Relevance Score: {(1 - dist):.2f} | Content Snippet: {' '.join(truncated_content)}...")
+        # Re-fit model with the same feature names
+        model.fit(weighted_data.values)
+    
+    return model
 
 
-# Here, we could add an option for the user to provide feedback on the relevance of results.
-# This feedback can be used to train a model to predict relevance based on the features in the feature store.
+# Continuous Feedback Loop
+for iteration in range(5):  # Example of 5 iterations
+    print(f"\nFeedback Loop Iteration {iteration + 1}")
 
-# Step 7: Feature Monitoring & Updation
+    # Refine Model based on feedback before processing the new query
+    model = train_model_based_on_feedback(conn, model, vectorizer)
 
-# Here, one might implement techniques to update the feature store based on new documents,
-# monitor the click-through rate of the presented documents, retrain models based on updated data,
-# or even refine the feature engineering process itself.
+    # user_query = input("Enter your search query: ")
+    user_query = "How does photosynthesis work?"
+    preprocessed_query = ' '.join(preprocess_text(user_query))
+    query_vector = vectorizer.transform([preprocessed_query])
+    distances, indices = model.kneighbors(query_vector)
+    
+    print(f"Top 5 documents for the query '{user_query}':")
+    for dist, index in zip(distances[0], indices[0]):
+        truncated_content = document_data.iloc[index]["content"][:20]
+        print(f"Relevance Score: {(1 - dist):.2f} | Content Snippet: {' '.join(truncated_content)}...")
+    
+    # Collect feedback from the user
+    feedback = []
+    for dist, index in zip(distances[0], indices[0]):
+        truncated_content = document_data.iloc[index]["content"][:20]
+        relevance_score = float(input(f"Rate the relevance of document '{' '.join(truncated_content)}...' for your query '{user_query}' (0 to 1): "))
+        feedback.append(relevance_score)
+    feedback_df = pd.DataFrame({
+        "document_index": indices[0],
+        "user_query": [user_query] * 5,
+        "relevance_score": feedback
+    })
+    feedback_df.to_sql("user_feedback", conn, if_exists="append", index=False)
+
+print("Feedback loop completed.")
 
 
 
