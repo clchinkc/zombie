@@ -1,12 +1,9 @@
 
 
-"""
-Feature Stores in ML Workflows: Text Search Program Example
-"""
-
 import sqlite3
 import string
 
+import numpy as np
 import pandas as pd
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -15,38 +12,40 @@ from sklearn.neighbors import NearestNeighbors
 
 
 # Utilities
-def preprocess_text(text):
-    text = text.lower()
-    text = text.translate(str.maketrans('', '', string.punctuation))
+def preprocess_text(text, stop_words):
+    """Preprocess a text by lowercasing, removing punctuations and stopwords."""
+    text = text.lower().translate(str.maketrans('', '', string.punctuation))
     tokens = word_tokenize(text)
-    tokens = [word for word in tokens if word not in stopwords.words('english')]
-    return tokens
+    return [word for word in tokens if word not in stop_words]
 
-# Load data from CSV file
-document_data = pd.read_csv("feature_store_data.csv")
-document_data["content"] = document_data["content"].apply(preprocess_text)
 
-# Feature Engineering using TF-IDF
-vectorizer = TfidfVectorizer(stop_words='english', max_features=5000)
-tfidf_matrix = vectorizer.fit_transform(document_data["content"].apply(lambda x: ' '.join(x)))
+def initialize_feedback_table(conn):
+    """Initialize user feedback table if it doesn't exist."""
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS user_feedback (
+            document_index INTEGER,
+            user_query TEXT,
+            relevance_score REAL
+        )
+    ''')
+    conn.commit()
 
-# Store the TF-IDF matrix in SQLite
-conn = sqlite3.connect("feature_store.db")
-tfidf_df = pd.DataFrame(tfidf_matrix.toarray(), columns=vectorizer.get_feature_names_out())
-tfidf_df.to_sql("document_features", conn, if_exists="replace", index=False)
 
-# Initial Model Training
-model = NearestNeighbors(n_neighbors=5, metric="cosine")
-model.fit(tfidf_df.values)
-
-def train_model_based_on_feedback(conn, model, vectorizer):
+def retrieve_feedback_data(conn):
+    """Retrieve user feedback data from the SQLite database."""
     try:
-        feedback_data = pd.read_sql("SELECT * FROM user_feedback", conn)
-    except:
-        feedback_data = pd.DataFrame(columns=["document_index", "user_query", "relevance_score"])
+        return pd.read_sql("SELECT * FROM user_feedback", conn)
+    except Exception as e:
+        print(f"Error retrieving feedback data: {e}")
+        return pd.DataFrame(columns=["document_index", "user_query", "relevance_score"])
+
+
+def train_model_based_on_feedback(conn, model, tfidf_df):
+    """Refine model based on user feedback."""
+    feedback_data = retrieve_feedback_data(conn)
     
     if not feedback_data.empty:
-        # Handle duplicate feedback by averaging feedback scores for the same document
         feedback_data = feedback_data.groupby("document_index").agg({
             "relevance_score": "mean"
         }).reset_index()
@@ -54,40 +53,89 @@ def train_model_based_on_feedback(conn, model, vectorizer):
         training_data = tfidf_df.iloc[feedback_data["document_index"]].reset_index(drop=True)
         targets = feedback_data["relevance_score"]
         weighted_data = training_data.multiply(targets, axis=0)
-
-        # Fill NaN values with 0
-        weighted_data = weighted_data.fillna(0)
-
-        # Re-fit model with the same feature names
         model.fit(weighted_data.values)
     
     return model
+
+
+# Load data and preprocess
+stop_words = set(stopwords.words('english'))
+document_data = pd.read_csv("feature_store_data.csv")
+document_data["content"] = document_data["content"].apply(lambda x: preprocess_text(x, stop_words))
+
+# Feature Engineering using TF-IDF
+vectorizer = TfidfVectorizer(stop_words='english', max_features=5000)
+tfidf_matrix = vectorizer.fit_transform(document_data["content"].apply(' '.join))
+
+# Store the TF-IDF matrix in SQLite
+conn = sqlite3.connect("feature_store.db")
+tfidf_df = pd.DataFrame(tfidf_matrix.toarray(), columns=vectorizer.get_feature_names_out())
+tfidf_df.to_sql("document_features", conn, if_exists="replace", index=False)
+initialize_feedback_table(conn)
+
+# Initial Model Training
+model = NearestNeighbors(n_neighbors=5, metric="cosine")
+model.fit(tfidf_df.values)
+
+def adjust_query_vector(query_vector, feedback_data, tfidf_df):
+    """Adjust the query vector based on user feedback."""
+    
+    # If feedback data is empty, return the original query_vector
+    if feedback_data.empty:
+        return query_vector
+
+    alpha = 0.5  # Scaling factor for positive feedback
+    beta = 0.25  # Scaling factor for negative feedback
+
+    # Retrieve vectors of the docs mentioned in feedback
+    feedback_vectors = tfidf_df.iloc[feedback_data['document_index'].values].values
+
+    # Calculate positive and negative adjustments
+    positive_adjustments = np.where(feedback_data['relevance_score'].values[:, None] >= 0.5,
+                                    feedback_vectors, 0)
+    negative_adjustments = np.where(feedback_data['relevance_score'].values[:, None] < 0.5,
+                                    feedback_vectors, 0)
+
+    # Aggregate the adjustments
+    positive_feedback_vector = alpha * positive_adjustments.sum(axis=0)
+    negative_feedback_vector = beta * negative_adjustments.sum(axis=0)
+
+    # Apply adjustments
+    adjusted_query_vector = query_vector + positive_feedback_vector - negative_feedback_vector
+
+    # Normalize the adjusted query vector to have unit length
+    adjusted_query_vector /= np.linalg.norm(adjusted_query_vector)
+
+    return adjusted_query_vector
 
 
 # Continuous Feedback Loop
 for iteration in range(5):  # Example of 5 iterations
     print(f"\nFeedback Loop Iteration {iteration + 1}")
 
-    # Refine Model based on feedback before processing the new query
-    model = train_model_based_on_feedback(conn, model, vectorizer)
-
-    # user_query = input("Enter your search query: ")
-    user_query = "How does photosynthesis work?"
-    preprocessed_query = ' '.join(preprocess_text(user_query))
-    query_vector = vectorizer.transform([preprocessed_query])
-    distances, indices = model.kneighbors(query_vector)
+    model = train_model_based_on_feedback(conn, model, tfidf_df)
     
+    user_query = "How does photosynthesis work?"
+    preprocessed_query = ' '.join(preprocess_text(user_query, stop_words))
+    query_vector = vectorizer.transform([preprocessed_query]).toarray()[0]
+
+    # Adjust the query vector based on past feedback
+    feedback_data = retrieve_feedback_data(conn)
+    adjusted_query_vector = adjust_query_vector(query_vector, feedback_data, tfidf_df)
+
+    distances, indices = model.kneighbors([adjusted_query_vector])
+
     print(f"Top 5 documents for the query '{user_query}':")
     for dist, index in zip(distances[0], indices[0]):
         truncated_content = document_data.iloc[index]["content"][:20]
         print(f"Relevance Score: {(1 - dist):.2f} | Content Snippet: {' '.join(truncated_content)}...")
-    
-    # Collect feedback from the user
+
     feedback = []
     for dist, index in zip(distances[0], indices[0]):
         truncated_content = document_data.iloc[index]["content"][:20]
-        relevance_score = float(input(f"Rate the relevance of document '{' '.join(truncated_content)}...' for your query '{user_query}' (0 to 1): "))
+        relevance_score = float(input(f"Rate the relevance of document '{' '.join(truncated_content)}...' (0 to 1): "))
         feedback.append(relevance_score)
+    
     feedback_df = pd.DataFrame({
         "document_index": indices[0],
         "user_query": [user_query] * 5,
@@ -96,6 +144,7 @@ for iteration in range(5):  # Example of 5 iterations
     feedback_df.to_sql("user_feedback", conn, if_exists="append", index=False)
 
 print("Feedback loop completed.")
+
 
 
 
