@@ -483,6 +483,8 @@ https://danijar.com/project/dreamer/
 https://github.com/opendilab/awesome-exploration-rl
 https://www.uber.com/en-HK/blog/deep-neuroevolution/
 https://techxplore.com/news/2023-09-learning-based-method-coverage-path-recharging.html
+https://sites.google.com/view/meta-reward-net
+https://jmlr.org/papers/volume18/16-634/16-634.pdf
 
 From this list, we can identify common properties that make learning easier. None of the properties below are required for learning, but satisfying more of them is definitively better.
 
@@ -1278,6 +1280,8 @@ run code llama on colab
 https://github.com/vllm-project/vllm
 https://www.helpnetsecurity.com/2023/09/19/llm-guard-open-source-securing-large-language-models/
 https://huggingface.co/spaces/Deci/DeciLM-6b-instruct
+https://github.com/jerryjliu/llama_index
+https://analyticsindiamag.com/now-build-software-engineering-teams-using-ai-in-minutes/
 
 bard api
 https://github.com/dsdanielpark/Bard-API
@@ -1601,6 +1605,7 @@ https://zhuanlan.zhihu.com/p/22494721
 https://whuhan2013.github.io/blog/2016/11/07/flask-mysql-learn/
 https://github.com/yudong-94/My-Movie-Recommender
 https://zhuanlan.zhihu.com/p/365181933
+https://github.com/jc-LeeHub/Recommend-System-tf2.0
 
 API
 Here are the summarized functions of each API mentioned:

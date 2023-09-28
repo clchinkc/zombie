@@ -499,6 +499,7 @@ for line, score in results:
 # https://www.elastic.co/guide/cn/elasticsearch/guide/current/practical-scoring-function.html
 # hybrid Elasticsearch and semantic search
 # Elasticsearch or Apache Lucene
+# https://blog.csdn.net/UbuntuTouch/article/details/132979480
 
 # Dense Passage Retrievers
 # https://www.searchenginejournal.com/generative-retrieval-for-conversational-question-answering/496373/
@@ -959,6 +960,10 @@ The Text Search Program embodies the pinnacle of text-search solutions, catering
 Faceted Search/Navigation. This is the advanced search/filter functionality available on many sites. It's a design pattern. Can read about it here : http://alistapart.com/article/design-patterns-faceted-navigation . Implement it on the back end and the front end if you're bored.
 
 Image Search - FreeCodeCamp calls this Image Search Abstraction Layer which sounds complicated. Instead of interfacing with a 3rd party, make it search a defined path on the local file system. FCC's description : https://www.freecodecamp.com/challenges/image-search-abstraction-layer
+"""
+
+"""
+https://simonwillison.net/2023/Sep/12/llm-clip-and-chat/
 """
 
 """
