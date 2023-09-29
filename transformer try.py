@@ -1,25 +1,4 @@
 
-import sys
-
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, GenerationConfig
-
-model_name = 'google/flan-t5-large' # sys.argv[1]
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-config = GenerationConfig(max_new_tokens=100, num_beams=5, no_repeat_ngram_size=2, early_stopping=True)
-model = AutoModelForSeq2SeqLM.from_pretrained(model_name, config=config)
-
-def generate(text):
-    input_ids = tokenizer.encode(text, return_tensors="pt")
-    outputs = model.generate(input_ids)
-    return tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-def main():
-    for line in sys.stdin:
-        print(generate(line.strip()))
-        
-if __name__ == '__main__':
-    main()
-
 
 """
 from transformers import pipeline, set_seed
