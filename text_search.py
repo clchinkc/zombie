@@ -451,7 +451,8 @@ for line, score in results:
 # bert-large-nli-stsb-mean-tokens - STSb performance: 85.29
 # distilbert-base-nli-stsb-mean-tokens - STSb performance: 85.16
 
-# siamese network text similarity
+# weaviate vector database
+# qdrant vector database
 
 # Spelling correction using nltk / character n-gram / fuzzy
 # http://norvig.com/spell-correct.html
