@@ -481,6 +481,13 @@ for line, score in results:
 # https://huggingface.co/GanymedeNil/text2vec-large-chinese
 # https://pypi.org/project/transvec/
 # https://stackoverflow.com/questions/62385002/latest-pre-trained-multilingual-word-embedding
+# https://gist.github.com/dbasch/73e3882bcfd10c485cf7f91c81074064
+# Instructor Embeddings XL
+# Universal Sentence Encoder
+# https://huggingface.co/spaces/mteb/leaderboard
+# https://huggingface.co/google/flan-t5-xxl
+# https://github.com/lakshaybhushan/Flan-T5-XXL-LangchainTest
+# https://medium.com/google-cloud/deploy-flan-t5-xxl-on-vertex-ai-prediction-579953afdc88
 
 # https://blog.csdn.net/FontThrone/article/details/72782499
 # https://github.com/fxsjy/jieba
@@ -527,6 +534,9 @@ for line, score in results:
 
 # https://medium.com/tech-that-works/maximal-marginal-relevance-to-rerank-results-in-unsupervised-keyphrase-extraction-22d95015c7c5
 # https://www.cs.cmu.edu/~jgc/publication/The_Use_MMR_Diversity_Based_LTMIR_1998.pdf
+# if the goal is to improve the model until the correct answer goes up to the top-1, then consider evaluating the model in terms of rank reciprocal, e.g. MRR, NDCG, see https://scikit-learn.org/stable/modules/model_evaluation.html#label-ranking-average-precision
+
+# rouge score for evaluating the ability of text summarization
 
 """
 Methods to improve the representation (dimension instantiation) of text data for similarity or search applications, as well as methods to improve the way we measure the similarity between these representations.
