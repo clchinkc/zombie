@@ -367,12 +367,11 @@ def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact
     if preprocess:
         preprocessed_lines = [preprocess_text(line) for line in cleaned_lines]
         preprocessed_keywords = {lang: preprocess_text(kw) for lang, kw in cleaned_translations.items()}
+        for lang, kw in preprocessed_keywords.items():
+            print(f"Preprocessed {lang.capitalize()} keyword:", kw)
     else:
         preprocessed_lines = cleaned_lines
         preprocessed_keywords = cleaned_translations
-
-    for lang, kw in preprocessed_keywords.items():
-        print(f"Preprocessed {lang.capitalize()} keyword:", kw)
     
     # Create a mapping between processed and original text
     cleaned_to_original_mapping = dict(zip(preprocessed_lines, lines))
@@ -381,17 +380,22 @@ def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact
 
     for lang, kw in preprocessed_keywords.items():
         search_methods = {
-            'exact': exact_search(kw, "\n".join(preprocessed_lines)),
-            'ngram': ngram_search(kw, "\n".join(preprocessed_lines)),
-            'regex': regex_search(kw, "\n".join(preprocessed_lines)),
-            'fuzzy': fuzzy_search(kw, "\n".join(preprocessed_lines)),
-            'tfidf': tfidf_search(kw, "\n".join(preprocessed_lines)),
-            'bm25': bm25_search(kw, "\n".join(preprocessed_lines)),
-            'word_embedding': word_embedding_search(kw, "\n".join(preprocessed_lines)),
-            'semantic': semantic_search(kw, "\n".join(preprocessed_lines)),
+            'exact': exact_search if 'exact' in weights else None,
+            'ngram': ngram_search if 'ngram' in weights else None,
+            'regex': regex_search if 'regex' in weights else None,
+            'fuzzy': fuzzy_search if 'fuzzy' in weights else None,
+            'tfidf': tfidf_search if 'tfidf' in weights else None,
+            'bm25': bm25_search if 'bm25' in weights else None,
+            'word_embedding': word_embedding_search if 'word_embedding' in weights else None,
+            'semantic': semantic_search if 'semantic' in weights else None,
         }
 
-        for method, matches in search_methods.items():
+        for method, search_function in search_methods.items():
+            if not search_function:
+                continue
+            
+            matches = search_function(kw, "\n".join(preprocessed_lines))
+            
             if not matches:
                 continue
 
@@ -431,6 +435,8 @@ for line, score in results:
 # mixed language in keyword or line
 # eg Cleaned Traditional keyword: 搜尋   for
 # added space after cleaning
+
+
 # Save computation if some method only execute if same language
 # store two version of corpus, original and processed corpus, but return original one only
 # divide the process back to retrieval and rank two part (retrieval can be done in parallel)
@@ -451,8 +457,7 @@ for line, score in results:
 # bert-large-nli-stsb-mean-tokens - STSb performance: 85.29
 # distilbert-base-nli-stsb-mean-tokens - STSb performance: 85.16
 
-# weaviate vector database
-# qdrant vector database
+# siamese network text similarity
 
 # Spelling correction using nltk / character n-gram / fuzzy
 # http://norvig.com/spell-correct.html
@@ -481,13 +486,6 @@ for line, score in results:
 # https://huggingface.co/GanymedeNil/text2vec-large-chinese
 # https://pypi.org/project/transvec/
 # https://stackoverflow.com/questions/62385002/latest-pre-trained-multilingual-word-embedding
-# https://gist.github.com/dbasch/73e3882bcfd10c485cf7f91c81074064
-# Instructor Embeddings XL
-# Universal Sentence Encoder
-# https://huggingface.co/spaces/mteb/leaderboard
-# https://huggingface.co/google/flan-t5-xxl
-# https://github.com/lakshaybhushan/Flan-T5-XXL-LangchainTest
-# https://medium.com/google-cloud/deploy-flan-t5-xxl-on-vertex-ai-prediction-579953afdc88
 
 # https://blog.csdn.net/FontThrone/article/details/72782499
 # https://github.com/fxsjy/jieba
@@ -507,6 +505,7 @@ for line, score in results:
 # https://www.elastic.co/guide/cn/elasticsearch/guide/current/practical-scoring-function.html
 # hybrid Elasticsearch and semantic search
 # Elasticsearch or Apache Lucene
+# https://blog.csdn.net/UbuntuTouch/article/details/132979480
 
 # Dense Passage Retrievers
 # https://www.searchenginejournal.com/generative-retrieval-for-conversational-question-answering/496373/
@@ -548,6 +547,73 @@ Methods to improve the representation (dimension instantiation) of text data for
 ### Improved Instantiation of Similarity Function:
 1. *Cosine of Angle Between Two Vectors*: Cosine similarity measures the cosine of the angle between two non-zero vectors. It determines how similar two documents are irrespective of their size.
 3. *Dot Product*: This measures the sum of the product of corresponding entries of the two sequences of numbers. When appropriately normalized, the dot product can be very effective, especially when combined with term weighting (like TF-IDF weights).
+"""
+
+"""
+The way you're combining the results from the different search methods in the code is through a weighted sum, which is a common approach. However, there are several other ways to combine results, depending on the use case, the nature of your data, and the desired outcome. Here are some alternatives:
+
+1. **Weighted Average**:
+   - Instead of adding up the scores, you can compute an average. This approach might be more suitable if you're looking for an "overall" similarity measure.
+
+2. **Max Score**:
+   - For each line of text, retain only the highest score obtained across all methods. This approach highlights the strongest match method for each line.
+
+3. **Voting System**:
+   - Each search method can "vote" for a line. The lines with the most votes get ranked higher. This approach works best when considering binary matches (a line either matches or doesn't), rather than a continuous score.
+
+4. **Normalization**:
+   - Before combining scores, normalize each score to have a range between 0 and 1. This ensures that no particular method dominates the results due to scale differences.
+
+5. **Statistical Combination**:
+   - If you have training data where you know the best matches, you can use statistical methods or machine learning models to learn the optimal weights or combination mechanism. Methods could include linear regression, decision trees, or neural networks.
+
+6. **Probabilistic Fusion**:
+   - Treat the scores from each method as probabilities and combine them using Bayes' theorem or other probabilistic models.
+
+7. **Reciprocal Rank Fusion**:
+   - This approach focuses on the rank of results rather than their scores. For each line, calculate its rank in each search method. Then, compute the reciprocal rank and aggregate these for a final rank.
+
+8. **Meta-search**:
+   - Use the results of one method to refine or guide the search of another. For instance, you might use a fast method like 'exact' to filter out lines, and then apply a more computationally intensive method like 'semantic' on the filtered results.
+
+9. **Threshold-based Combination**:
+   - Only consider scores above a certain threshold for each method. This can help in ignoring low-relevance matches.
+
+10. **Intersection of Results**:
+   - Instead of combining scores, you can combine lines that appear as results in multiple methods. This ensures that the final results are validated by more than one method.
+
+When selecting or designing a combination strategy, it's essential to test and validate it against real-world data or use cases to ensure that the combined results meet your objectives.
+
+
+
+Certainly! Here's a comparison of the four methods: Reciprocal Rank Fusion, Condorcet Fuse, Borda Fuse, and OWA model:
+
+### Reciprocal Rank Fusion (RRF):
+- **Purpose**: Primarily used in information retrieval, especially in meta-search and the fusion of multiple search result lists.
+- **Method**: Combines the ranks of items (e.g., documents) from multiple lists using the reciprocal of their ranks. The formula is typically `1 / (k + rank)`, where `k` is a constant.
+- **Strengths**: Gives higher importance to top-ranked items and diminishes the importance of lower-ranked items. Effective in combining results from search engines with different ranking algorithms.
+
+### Condorcet Fuse:
+- **Purpose**: Used in voting systems and decision-making processes.
+- **Method**: Based on the Condorcet principle, which states that if an option (or candidate) would win a majority of the vote against every other option in head-to-head competitions, then that option should be the winner.
+- **Strengths**: Ensures that the winning option has broad support and can win against any other option in one-on-one comparisons. It's a method that aims to find the most agreeable option among a group.
+
+### Borda Fuse:
+- **Purpose**: Used in decision-making and voting systems.
+- **Method**: Based on the Borda Count, where voters rank options in order of preference. Points are assigned to each option based on its ranking by each voter, with the highest-ranked option getting the most points.
+- **Strengths**: Takes into account the collective preference of voters, ensuring that even options that are consistently ranked second or third can win if they have broad support.
+
+### OWA (Ordered Weighted Averaging) Model:
+- **Purpose**: Used in decision-making processes, especially in multi-criteria decision analysis.
+- **Method**: Values are sorted in a specific order, and then a set of predefined weights is applied to these ordered values, resulting in a weighted average.
+- **Strengths**: Offers flexibility in aggregation, allowing for a range of decision-making attitudes from optimistic to pessimistic. Can represent different scenarios by adjusting the weights.
+
+### Comparison:
+- **Scope of Application**: While RRF is primarily used in information retrieval, Condorcet Fuse, Borda Fuse, and OWA are more general and can be applied in various decision-making scenarios.
+- **Flexibility**: OWA offers the most flexibility due to its weighted averaging approach, allowing for different decision-making attitudes. Borda Fuse and Condorcet Fuse are more rigid but can provide clear outcomes in voting scenarios.
+- **Complexity**: RRF and Borda Fuse are relatively straightforward in their calculations. In contrast, Condorcet Fuse can be more complex due to the need to consider head-to-head comparisons, and OWA requires careful selection of weights.
+
+In summary, the choice of method depends on the specific application and the desired outcome. Each method has its strengths and is best suited for particular scenarios.
 """
 
 """
@@ -903,6 +969,10 @@ The Text Search Program embodies the pinnacle of text-search solutions, catering
 Faceted Search/Navigation. This is the advanced search/filter functionality available on many sites. It's a design pattern. Can read about it here : http://alistapart.com/article/design-patterns-faceted-navigation . Implement it on the back end and the front end if you're bored.
 
 Image Search - FreeCodeCamp calls this Image Search Abstraction Layer which sounds complicated. Instead of interfacing with a 3rd party, make it search a defined path on the local file system. FCC's description : https://www.freecodecamp.com/challenges/image-search-abstraction-layer
+"""
+
+"""
+https://simonwillison.net/2023/Sep/12/llm-clip-and-chat/
 """
 
 """

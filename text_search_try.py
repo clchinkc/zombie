@@ -367,12 +367,11 @@ def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact
     if preprocess:
         preprocessed_lines = [preprocess_text(line) for line in cleaned_lines]
         preprocessed_keywords = {lang: preprocess_text(kw) for lang, kw in cleaned_translations.items()}
+        for lang, kw in preprocessed_keywords.items():
+            print(f"Preprocessed {lang.capitalize()} keyword:", kw)
     else:
         preprocessed_lines = cleaned_lines
         preprocessed_keywords = cleaned_translations
-
-    for lang, kw in preprocessed_keywords.items():
-        print(f"Preprocessed {lang.capitalize()} keyword:", kw)
     
     # Create a mapping between processed and original text
     cleaned_to_original_mapping = dict(zip(preprocessed_lines, lines))
@@ -381,17 +380,22 @@ def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact
 
     for lang, kw in preprocessed_keywords.items():
         search_methods = {
-            'exact': exact_search(kw, "\n".join(preprocessed_lines)),
-            'ngram': ngram_search(kw, "\n".join(preprocessed_lines)),
-            'regex': regex_search(kw, "\n".join(preprocessed_lines)),
-            'fuzzy': fuzzy_search(kw, "\n".join(preprocessed_lines)),
-            'tfidf': tfidf_search(kw, "\n".join(preprocessed_lines)),
-            'bm25': bm25_search(kw, "\n".join(preprocessed_lines)),
-            'word_embedding': word_embedding_search(kw, "\n".join(preprocessed_lines)),
-            'semantic': semantic_search(kw, "\n".join(preprocessed_lines)),
+            'exact': exact_search if 'exact' in weights else None,
+            'ngram': ngram_search if 'ngram' in weights else None,
+            'regex': regex_search if 'regex' in weights else None,
+            'fuzzy': fuzzy_search if 'fuzzy' in weights else None,
+            'tfidf': tfidf_search if 'tfidf' in weights else None,
+            'bm25': bm25_search if 'bm25' in weights else None,
+            'word_embedding': word_embedding_search if 'word_embedding' in weights else None,
+            'semantic': semantic_search if 'semantic' in weights else None,
         }
 
-        for method, matches in search_methods.items():
+        for method, search_function in search_methods.items():
+            if not search_function:
+                continue
+            
+            matches = search_function(kw, "\n".join(preprocessed_lines))
+            
             if not matches:
                 continue
 
@@ -431,6 +435,8 @@ for line, score in results:
 # mixed language in keyword or line
 # eg Cleaned Traditional keyword: 搜尋   for
 # added space after cleaning
+
+
 # Save computation if some method only execute if same language
 # store two version of corpus, original and processed corpus, but return original one only
 # divide the process back to retrieval and rank two part (retrieval can be done in parallel)
@@ -527,6 +533,9 @@ for line, score in results:
 
 # https://medium.com/tech-that-works/maximal-marginal-relevance-to-rerank-results-in-unsupervised-keyphrase-extraction-22d95015c7c5
 # https://www.cs.cmu.edu/~jgc/publication/The_Use_MMR_Diversity_Based_LTMIR_1998.pdf
+# if the goal is to improve the model until the correct answer goes up to the top-1, then consider evaluating the model in terms of rank reciprocal, e.g. MRR, NDCG, see https://scikit-learn.org/stable/modules/model_evaluation.html#label-ranking-average-precision
+
+# rouge score for evaluating the ability of text summarization
 
 """
 Methods to improve the representation (dimension instantiation) of text data for similarity or search applications, as well as methods to improve the way we measure the similarity between these representations.
