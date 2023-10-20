@@ -408,9 +408,9 @@ def search_and_rank(keyword, text=sample_text, preprocess=True, weights={'exact'
     for lang, kw in preprocessed_keywords.items():
         search_methods = {
             'exact': exact_search if 'exact' in weights else None,
-            'ngram': ngram_search if 'ngram' in weights else None,
             'regex': regex_search if 'regex' in weights else None,
             'fuzzy': fuzzy_search if 'fuzzy' in weights else None,
+            'ngram': ngram_search if 'ngram' in weights else None,
             'tfidf': tfidf_search if 'tfidf' in weights else None,
             'bm25': bm25_search if 'bm25' in weights else None,
             'word_embedding': word_embedding_search if 'word_embedding' in weights else None,
@@ -440,15 +440,16 @@ def search_and_rank(keyword, text=sample_text, preprocess=True, weights={'exact'
 
 
 
+
 default_weights = {
     'exact': 0.9,          # Full weight for precise matches.
-    #'ngram': 0.6,          # Useful for broader matches.
-    #'regex': 0.7,          # Flexible search with moderate precision.
-    #'fuzzy': 0.8,          # Useful for variations in spellings.
-    #'tfidf': 0.7,          # Weighs importance of words in a dataset.
-    #'bm25': 0.7,           # Weighs importance of words in a dataset.
-    #'word_embedding': 0.8, # Finds semantically similar terms.
-    #'semantic': 1.0        # High weight for context and meaning.
+    'regex': 0.7,          # Flexible search with moderate precision.
+    'fuzzy': 0.8,          # Useful for variations in spellings.
+    'ngram': 0.6,          # Useful for broader matches.
+    'tfidf': 0.7,          # Weighs importance of words in a dataset.
+    'bm25': 0.7,           # Weighs importance of words in a dataset.
+    'word_embedding': 0.8, # Finds semantically similar terms.
+    'semantic': 1.0        # High weight for context and meaning.
 }
 
 

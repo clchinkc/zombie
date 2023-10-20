@@ -247,35 +247,60 @@ def semantic_search(keyword: str, text: str) -> list[tuple[str, float]]:
 
 
 
+
+# ---------------------------------- SEGMENTATION ---------------------------------- #
+
+def segment_languages(sentence: str):
+    """Segment a sentence into different language sections."""
+    pattern = re.compile(r"([a-zA-Z\s]+|[\u4e00-\u9FFF]+)")
+    return pattern.findall(sentence)
+
+
+# ---------------------------------- TEXT CLEANING ---------------------------------- #
+
+def clean_english_text(text: str) -> str:
+    """Remove non-alphanumeric characters and tokenize English text."""
+    text = re.sub(r"[^a-zA-Z0-9\s\n]", "", text)
+    return ' '.join(token for token in word_tokenize(text))
+
 def fullwidth_to_halfwidth(s: str) -> str:
     """Convert full-width characters to half-width characters."""
     return ''.join(chr(ord(char) - 0xfee0 if 0xFF01 <= ord(char) <= 0xFF5E else ord(char) if ord(char) != 0x3000 else 32) for char in s)
 
 def clean_chinese_text(text: str) -> str:
-    """Tokenize Chinese text."""
+    """Tokenize Chinese text and convert full-width characters."""
     return ' '.join(jieba.lcut(fullwidth_to_halfwidth(text), cut_all=False))
 
-def clean_english_text(text: str) -> str:
-    """Remove non-alphanumeric characters and tokenize."""
-    text = re.sub(r"[^a-zA-Z0-9\s\n]", "", text)
-    return ' '.join(token for token in word_tokenize(text))
-
-def clean_text(text):
-    """Detect the language of the text and clean accordingly."""
-    detected_lang = translator.detect(text).lang
-    if detected_lang in ['zh-CN', 'zh-TW']:
-    # Simple heuristic: If the text contains any Chinese characters, use the Chinese cleaning
-    # if re.search("[\u4e00-\u9FFF]", text):
-        return clean_chinese_text(text)
-    elif detected_lang == 'en':
+def clean_text_based_on_language(text: str, detected_lang: str) -> str:
+    """Clean text based on the specific provided language."""
+    if detected_lang == 'en':
         return clean_english_text(text)
+    elif detected_lang in ['zh-CN', 'zh-TW']:
+        return clean_chinese_text(text)
     else:
         return text
+
+def clean_text(sentence: str) -> str:
+    """Clean a mixed-language sentence."""
+    segments = segment_languages(sentence)
+    
+    cleaned_segments = []
+    for segment in segments:
+        # Skip whitespace segments
+        if segment.strip() == '':
+            continue
+        cleaned_segment = clean_text_based_on_language(segment, translator.detect(segment).lang)
+        cleaned_segments.append(cleaned_segment.strip())  # Stripping to ensure no leading or trailing spaces
+    
+    return ' '.join(cleaned_segments)
+
+
+# ---------------------------------- TEXT PREPROCESSING ---------------------------------- #
 
 def preprocess_chinese_text(text: str) -> str:
     """Remove non-Chinese characters from Chinese text."""
     text = re.sub(r"[^\u4e00-\u9FFF\s\n]", " ", text)
-    return text
+    return ' '.join(text.split())
 
 def get_wordnet_pos(treebank_tag):
     """Map treebank POS tag to first character used by WordNetLemmatizer."""
@@ -298,56 +323,58 @@ def preprocess_english_text(text: str) -> str:
     lemmatized_tokens = [lemmatizer.lemmatize(token, get_wordnet_pos(pos)) for token, pos in pos_tags]
     return ' '.join(lemmatized_tokens)
 
-def preprocess_text(text):
-    """Detect the language of the text and refine accordingly."""
-    detected_lang = translator.detect(text).lang
+def preprocess_text_based_on_language(text: str, detected_lang: str) -> str:
+    """Preprocess text based on the specific provided language."""
     if detected_lang == 'en':
         return preprocess_english_text(text)
     elif detected_lang in ['zh-CN', 'zh-TW']:
         return preprocess_chinese_text(text)
     else:
-        return text
+        return text  # leave other languages unchanged
 
-def translate_multilanguage(sentence):
-    # Detect the language of the sentence
-    detection = translator.detect(sentence)
-    detected_lang = detection.lang
+def preprocess_text(text: str) -> str:
+    """Preprocess mixed-language text."""
+    segments = segment_languages(text)
+    preprocessed_segments = []
+    for segment in segments:
+        # Skip whitespace segments
+        if segment.strip() == '':
+            continue
+        preprocessed_segment = preprocess_text_based_on_language(segment, translator.detect(segment).lang)
+        preprocessed_segments.append(preprocessed_segment.strip())
+    return ' '.join(preprocessed_segments)
+
+
+# ---------------------------------- LANGUAGE TRANSLATION ---------------------------------- #
+
+def translate_segment(segment: str, target_lang: str):
+    """Translate a segment to the desired target language."""
+    detected_lang = translator.detect(segment).lang
+    if detected_lang != target_lang:
+        return translator.translate(segment, dest=target_lang).text
+    return segment
+
+def translate_multilanguage(sentence: str):
+    """Translate mixed-language sentences."""
+    segments = segment_languages(sentence)
+    english_translation = ' '.join([translate_segment(segment, 'en').strip() for segment in segments])
+    traditional_translation = ' '.join([translate_segment(segment, 'zh-TW').strip() for segment in segments])
+    simplified_translation = ' '.join([translate_segment(segment, 'zh-CN').strip() for segment in segments])
     
-    translations = {
-        'en': None,
-        'zh-TW': None,
-        'zh-CN': None
-    }
-    
-    # Translate the sentence to the missing languages
-    if detected_lang == 'en':
-        translations['en'] = sentence
-        translations['zh-TW'] = translator.translate(sentence, dest='zh-TW').text
-        translations['zh-CN'] = translator.translate(sentence, dest='zh-CN').text
-    elif detected_lang in ['zh-TW', 'zh-CN']:
-        translations['en'] = translator.translate(sentence, dest='en').text
-        if detected_lang == 'zh-TW':
-            translations['zh-CN'] = translator.translate(sentence, dest='zh-CN').text
-            translations['zh-TW'] = sentence
-        else:
-            translations['zh-TW'] = translator.translate(sentence, dest='zh-TW').text
-            translations['zh-CN'] = sentence
-    else:
-        raise ValueError("Input sentence is neither in English nor Chinese.")
-
-    return translations['en'], translations['zh-TW'], translations['zh-CN']
+    return sentence, english_translation, traditional_translation, simplified_translation
 
 
 
-def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact': 0.9, 'ngram': 0.6, 'regex': 0.7, 'fuzzy': 0.8, 'tfidf': 0.7, 'bm25': 0.7, 'word_embedding': 0.8, 'semantic': 1.0}):
+def search_and_rank(keyword, text=sample_text, preprocess=True, weights={'exact': 0.9, 'ngram': 0.6, 'regex': 0.7, 'fuzzy': 0.8, 'tfidf': 0.7, 'bm25': 0.7, 'word_embedding': 0.8, 'semantic': 1.0}):
 
     # Split the text once
     lines = [line for line in text.split("\n") if line.strip()]
     
     # Get translations of the keyword using translate_multilanguage
-    english_keyword, traditional_keyword, simplified_keyword = translate_multilanguage(keyword)
+    original_keyword, english_keyword, traditional_keyword, simplified_keyword = translate_multilanguage(keyword)
     
     translations = {
+        'original': original_keyword,
         'english': english_keyword,
         'traditional': traditional_keyword,
         'simplified': simplified_keyword
@@ -381,9 +408,9 @@ def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact
     for lang, kw in preprocessed_keywords.items():
         search_methods = {
             'exact': exact_search if 'exact' in weights else None,
-            'ngram': ngram_search if 'ngram' in weights else None,
             'regex': regex_search if 'regex' in weights else None,
             'fuzzy': fuzzy_search if 'fuzzy' in weights else None,
+            'ngram': ngram_search if 'ngram' in weights else None,
             'tfidf': tfidf_search if 'tfidf' in weights else None,
             'bm25': bm25_search if 'bm25' in weights else None,
             'word_embedding': word_embedding_search if 'word_embedding' in weights else None,
@@ -413,11 +440,12 @@ def search_and_rank(keyword, text=sample_text, preprocess=False, weights={'exact
 
 
 
+
 default_weights = {
     'exact': 0.9,          # Full weight for precise matches.
-    'ngram': 0.6,          # Useful for broader matches.
     'regex': 0.7,          # Flexible search with moderate precision.
     'fuzzy': 0.8,          # Useful for variations in spellings.
+    'ngram': 0.6,          # Useful for broader matches.
     'tfidf': 0.7,          # Weighs importance of words in a dataset.
     'bm25': 0.7,           # Weighs importance of words in a dataset.
     'word_embedding': 0.8, # Finds semantically similar terms.
