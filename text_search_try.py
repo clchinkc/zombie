@@ -357,9 +357,9 @@ def translate_segment(segment: str, target_lang: str):
 def translate_multilanguage(sentence: str):
     """Translate mixed-language sentences."""
     segments = segment_languages(sentence)
-    english_translation = ' '.join([translate_segment(segment, 'en') for segment in segments])
-    traditional_translation = ' '.join([translate_segment(segment, 'zh-TW') for segment in segments])
-    simplified_translation = ' '.join([translate_segment(segment, 'zh-CN') for segment in segments])
+    english_translation = ' '.join([translate_segment(segment, 'en').strip() for segment in segments])
+    traditional_translation = ' '.join([translate_segment(segment, 'zh-TW').strip() for segment in segments])
+    simplified_translation = ' '.join([translate_segment(segment, 'zh-CN').strip() for segment in segments])
     
     return sentence, english_translation, traditional_translation, simplified_translation
 
