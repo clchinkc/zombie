@@ -466,9 +466,16 @@ for line, score in results:
 
 
 # Save computation if some method only execute if same language
+# The adaptive search will be based on score improvement. If the score improvement of a search method compared to previous ones is not significant, we can skip the subsequent, more computationally intensive methods.
+# Parallel Processing: Since many of the search methods are independent of each other, run them in parallel to speed up the search process.
 # store two version of corpus, original and processed corpus, but return original one only
 # divide the process back to retrieval and rank two part (retrieval can be done in parallel)
 # change back to return score over threshold when in production
+# Batch Processing: Instead of processing one line at a time, consider vectorized operations or batch processing, especially for methods like word_embedding or semantic, which can handle batches of data and benefit from parallelization.
+# Handling of translations: We're currently translating the same text segment for every language. This can be inefficient. Instead, we can cache the translations or use batch translation.
+# Memory Management: Storing and manipulating multiple versions of the text can be memory-intensive. Using efficient data structures and clearing unused variables can be considered.
+# Parallel Processing: For tasks that can be parallelized, using multithreading or multiprocessing can significantly speed up the process.
+
 
 # https://www.sbert.net/docs/pretrained_models.html
 
@@ -564,6 +571,8 @@ for line, score in results:
 # if the goal is to improve the model until the correct answer goes up to the top-1, then consider evaluating the model in terms of rank reciprocal, e.g. MRR, NDCG, see https://scikit-learn.org/stable/modules/model_evaluation.html#label-ranking-average-precision
 
 # rouge score for evaluating the ability of text summarization
+
+# Database Integration: For large datasets, integrate with a database system optimized for text search. This way, the heavy lifting can be done by the database engine, which is optimized for such operations.
 
 """
 Methods to improve the representation (dimension instantiation) of text data for similarity or search applications, as well as methods to improve the way we measure the similarity between these representations.
