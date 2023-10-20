@@ -14,6 +14,11 @@ from transformers import (
     set_seed,
 )
 
+# from dotenv import load_dotenv
+# load_dotenv()
+
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 # Set seed for reproducibility
 set_seed(42)
 
@@ -68,12 +73,13 @@ def load_models(model_list):
     loaded_models = {}
     loaded_tokenizers = {}
     for model_name in model_list:
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=os.getenv("HUGGINGFACE_API_TOKEN"),)
         model = AutoModelForCausalLM.from_pretrained(
-            model_name, 
+            model_name,
+            use_auth_token=os.getenv("HUGGINGFACE_API_TOKEN"),
             offload_folder="offload", 
             offload_state_dict=True, 
-            quantization_config=bnb_config
+            quantization_config=bnb_config,
         )
         loaded_models[model_name] = model
         loaded_tokenizers[model_name] = tokenizer
