@@ -62,6 +62,7 @@ group all agents that are linked, if all human or all zombie -> move as a group,
 """
 Performance of aggressive and defensive agents in the same scenario
 Resources system
+indirect communication between agents to collaborate
 """
 
 """
