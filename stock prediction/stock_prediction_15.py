@@ -1,248 +1,126 @@
-
-import numpy as np
-import pandas as pd
-
-
-def normalize(data):
-    return (data - np.min(data)) / (np.max(data) - np.min(data))
-
-def denormalize(data, reference):
-    return data * (np.max(reference) - np.min(reference)) + np.min(reference)
-
-def grey_relational_coefficient(reference, comparison):
-    abs_diff = np.abs(reference - comparison)
-    max_diff = np.max(abs_diff)
-    min_diff = np.min(abs_diff)
-    return (min_diff + 0.5 * max_diff) / (abs_diff + 0.5 * max_diff + 1e-10)
-
-def grey_relational_analysis(reference_sequence, comparison_sequences):
-    normalized_reference = normalize(reference_sequence)
-    normalized_comparisons = np.array([normalize(sequence) for sequence in comparison_sequences])
-
-    coefficients = np.array([grey_relational_coefficient(normalized_reference, sequence) for sequence in normalized_comparisons])
-
-    weights = coefficients.sum(axis=0) / coefficients.sum()
-
-    aggregated_sequence = np.average(normalized_comparisons, axis=1, weights=weights)
-    
-    denormalized_aggregated_sequence = denormalize(aggregated_sequence, reference_sequence)
-
-    print("Weights:", weights)
-    print("Coefficients:", coefficients)
-    print("Aggregated sequence:", aggregated_sequence)
-
-    return denormalized_aggregated_sequence
-
-
-# Load data from CSV file
-data = pd.read_csv('apple_stock_data.csv')
-
-# Extract the 'Close' column as the reference sequence
-reference_sequence = data['Close'].values
-
-# Extract other columns or time periods as comparison sequences
-comparison_sequences = [
-    data['Close'].shift(1, fill_value=np.mean(reference_sequence)).dropna().values,  # Previous day's closing price
-    data['Close'].rolling(window=5, min_periods=1).mean().dropna().values,  # 5-day moving average
-]
-
-# Perform grey relational analysis
-prediction = grey_relational_analysis(reference_sequence, comparison_sequences)
-
-print("Predicted sequence:", prediction)
-
-
-
-
-"""
-import numpy as np
-import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-
-# Load dataset
-df = pd.read_csv('apple_stock_data.csv', index_col='Date', parse_dates=True)
-
-
-# Normalize the data
-scaler = MinMaxScaler(feature_range=(0, 1))
-df_scaled = scaler.fit_transform(df['Close'].values.reshape(-1,1))
-
-
-def grey_relational_grading(x0, xi, rho=0.5):
-    # Absolute difference sequence
-    abs_diff_sequence = np.abs(x0 - xi)
-
-    # Maximum and minimum
-    max_val = np.max(abs_diff_sequence)
-    min_val = np.min(abs_diff_sequence)
-
-    # Grey Relational Coefficient
-    grey_relational_coefficient = (min_val + (rho * max_val)) / (abs_diff_sequence + (rho * max_val))
-
-    # Grey Relational Grade
-    grey_relational_grade = np.mean(grey_relational_coefficient)
-
-    return grey_relational_grade
-
-# The first row of df_scaled is used as x0
-x0 = df_scaled[0]
-
-# Initialize a list to hold the grey relational grades
-grey_relational_grades = []
-
-# Calculate the grey relational grade for each sequence
-for i in range(1, len(df_scaled)):
-    xi = df_scaled[i]
-    grey_relational_grades.append(grey_relational_grading(x0, xi))
-
-from sklearn.linear_model import LinearRegression
-
-# Create a linear regression model
-model = LinearRegression()
-
-# Reshape the grey relational grades to a 2D array
-X = np.array(grey_relational_grades[:-1]).reshape(-1,1)
-
-# The target variable is the next day's grey relational grade
-y = grey_relational_grades[1:]
-
-# Fit the model
-model.fit(X, y)
-
-# Use the model to predict the grey relational grade for the next day
-next_day_grey_relational_grade = model.predict(X[-1].reshape(-1,1))
-
-# Denormalize the prediction to get the actual stock price
-predicted_price = scaler.inverse_transform(next_day_grey_relational_grade.reshape(-1,1))
-
-print('Predicted price: %.2f' % predicted_price)
-
-# Calculate the error
-error = np.abs(df['Close'][-1] - predicted_price)
-print('Error: %.2f' % error)
-"""
-
-"""
-import numpy as np
-import pandas as pd
-from cv2 import norm
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-
-# Load dataset
-df = pd.read_csv('apple_stock_data.csv', index_col='Date', parse_dates=True)
-
-# Normalize the data
-def normalization(data):
-    # Normalize data to (0,1)
-    min_data = np.min(data)
-    max_data = np.max(data)
-    normalized_data = (data - min_data) / (max_data - min_data)
-    return normalized_data, min_data, max_data
-
-df_scaled, min_data, max_data = normalization(df['Close'].values.reshape(-1,1))
-
-def greyRelationalAnalysis(data, primary_data):
-    max_val = np.max(data)
-    min_val = np.min(data)
-    primary_data = np.array(primary_data)
-    data = np.array(data)
-    grey_relational_coefficient = (min_val + 0.5 * max_val) / (data + 0.5 * max_val)
-    grey_relational_coefficient = np.min(grey_relational_coefficient) / grey_relational_coefficient
-    return grey_relational_coefficient
-
-# The first row of df_scaled is used as primary_data
-primary_data = df_scaled[0]
-
-# Calculate grey relational coefficients
-gra_coefficients = greyRelationalAnalysis(df_scaled, primary_data)
-
-# Split the data into training and testing sets
-train_size = int(len(gra_coefficients) * 0.7)
-train, test = gra_coefficients[0:train_size], gra_coefficients[train_size:len(gra_coefficients)]
-
-# Reshape the data to fit the model
-train = train.reshape(-1,1)
-test = test.reshape(-1,1)
-
-# Create a linear regression model
-model = LinearRegression()
-
-# Fit the model
-model.fit(train[:-1], train[1:])
-
-# Make predictions
-predictions = model.predict(test[:-1])
-
-# Calculate the error
-error = mean_squared_error(test[1:], predictions)
-print('Test MSE: %.3f' % error)
-
-# Print the actual prices and predictions
-print('Last actual coefficient: ', test[-1])
-print('Last predicted coefficient: ', predictions[-1])
-
-# Inverse normalization
-predicted_price = (predictions[-1] * (max_data - min_data)) + min_data
-
-# Print the actual prices and predictions
-print('Last actual price: ', df['Close'][-1])
-print('Predicted price: %.2f' % predicted_price)
-"""
-
-"""
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
+import tensorflow as tf
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
 
+# Load and preprocess data
+data = pd.read_csv('apple_stock_data.csv')
 
-def normalization(data):
-    # Normalize data to (0,1)
-    min_data = np.min(data)
-    max_data = np.max(data)
-    return (data - min_data) / (max_data - min_data)
+# Feature engineering 
+data['MA_5'] = data['Close'].rolling(window=5).mean()
+data['MA_20'] = data['Close'].rolling(window=20).mean()
+data['Volatility'] = data['Close'].rolling(window=5).std()
+data['High_Low_Spread'] = data['High'] - data['Low']
+data['Daily_Return'] = data['Close'].pct_change()
+data = data.dropna()
 
-def grey_relational_coefficient(data, primary_data, rho=0.5):
-    # Calculate grey relational coefficient
-    data = np.abs(data - primary_data)
-    max_data = np.max(data)
-    min_data = np.min(data)
-    return (min_data + rho * max_data) / (data + rho * max_data)
+# Normalize data
+scaler = MinMaxScaler()
+data_normalized = scaler.fit_transform(data[['Close', 'MA_5', 'MA_20', 'Volatility', 'High_Low_Spread', 'Daily_Return']])
+scaler_close = MinMaxScaler()
+prices_normalized = scaler_close.fit_transform(data['Close'].values.reshape(-1, 1)).flatten()
 
-# Load the stock data
-df = pd.read_csv('apple_stock_data.csv')
+# Prepare data for LSTM
+def create_dataset(data, look_back=1):
+    X, Y = [], []
+    for i in range(len(data) - look_back - 1):
+        a = data[i:(i + look_back), :]
+        X.append(a)
+        Y.append(data[i + look_back, 0])
+    return np.array(X), np.array(Y)
 
-# Assume that we are using the previous day's open, high, low, and close prices
-# as influencing factors for the next day's close price
-df['PrevOpen'] = df['Open'].shift(1)
-df['PrevHigh'] = df['High'].shift(1)
-df['PrevLow'] = df['Low'].shift(1)
-df['PrevClose'] = df['Close'].shift(1)
+look_back = 5
+X, y = create_dataset(data_normalized, look_back)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Drop missing values
-df = df.dropna()
+# Build and train LSTM model
+model = tf.keras.models.Sequential([
+    tf.keras.layers.LSTM(50, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])),
+    tf.keras.layers.LSTM(50),
+    tf.keras.layers.Dense(1)
+])
 
-# Normalize the data
-for col in ['PrevOpen', 'PrevHigh', 'PrevLow', 'PrevClose']:
-    df[col] = normalization(df[col])
+model.compile(optimizer='adam', loss='mean_squared_error')
+history = model.fit(X_train, y_train, epochs=10, batch_size=32, validation_data=(X_test, y_test))
 
-# Calculate the grey relational coefficients
-for col in ['PrevOpen', 'PrevHigh', 'PrevLow', 'PrevClose']:
-    df[col + 'GreyRelationalCoefficient'] = grey_relational_coefficient(df[col], df['Close'])
+# Evaluating model performance
+train_loss = history.history['loss']
+val_loss = history.history['val_loss']
 
-# Determine the weights of the influencing factors
-weights = df[['PrevOpenGreyRelationalCoefficient', 'PrevHighGreyRelationalCoefficient', 'PrevLowGreyRelationalCoefficient', 'PrevCloseGreyRelationalCoefficient']].mean()
-
-# For simplicity, we'll predict the next day's close price as a weighted average of the previous day's open, high, low, and close prices
-df['PredictedClose'] = df['PrevOpen'] * weights[0] + df['PrevHigh'] * weights[1] + df['PrevLow'] * weights[2] + df['PrevClose'] * weights[3]
-
-# Denormalize the predicted close price
-df['PredictedClose'] = df['PredictedClose'] * (df['Close'].max() - df['Close'].min()) + df['Close'].min()
-
-# Plot actual vs predicted
-plt.figure(figsize=(10,5))
-plt.plot(df['Close'], label='Actual Close')
-plt.plot(df['PredictedClose'], label='Predicted Close')
+plt.plot(train_loss, label='Train Loss')
+plt.plot(val_loss, label='Validation Loss')
 plt.legend()
 plt.show()
-"""
+
+# Use LSTM to predict prices
+predicted_prices_normalized = model.predict(X.reshape(X.shape[0], X.shape[1], X.shape[2])).flatten()
+predicted_prices = scaler_close.inverse_transform(predicted_prices_normalized.reshape(-1, 1)).flatten()
+
+# Dynamic Programming for maximizing profit
+def maxProfit(k, prices):
+    if prices.size == 0: return 0, [], []
+
+    n = len(prices)
+    if k >= n // 2:
+        transactions = [(i, i+1) for i in range(n - 1) if prices[i + 1] > prices[i]]
+        return sum(max(prices[i + 1] - prices[i], 0) for i in range(n - 1)), transactions, []
+
+    profits = [[0] * n for _ in range(k + 1)]
+    transactions = [[[] for _ in range(n)] for _ in range(k + 1)]
+
+    for j in range(1, k + 1):
+        max_profit_so_far = -prices[0]
+        max_profit_so_far_index = 0
+        for i in range(1, n):
+            if prices[i] + max_profit_so_far > profits[j][i - 1]:
+                profits[j][i] = prices[i] + max_profit_so_far
+                transactions[j][i] = transactions[j - 1][i].copy()
+                transactions[j][i].append((max_profit_so_far_index, i))
+            else:
+                profits[j][i] = profits[j][i - 1]
+                transactions[j][i] = transactions[j][i - 1].copy()
+
+            if max_profit_so_far < profits[j - 1][i] - prices[i]:
+                max_profit_so_far = profits[j - 1][i] - prices[i]
+                max_profit_so_far_index = i
+
+    return profits[k][-1], transactions[k][-1], profits
+
+k = 2
+profit, transactions, profit_matrix = maxProfit(k, predicted_prices)
+print(f'Maximum profit with {k} transactions: {profit}')
+
+# Profit Breakdown
+for idx, (buy, sell) in enumerate(transactions):
+    transaction_profit = predicted_prices[sell] - predicted_prices[buy]
+    print(f'Transaction {idx + 1}: Buy on day {buy}, Sell on day {sell}, Profit: {transaction_profit}')
+
+# Visualization of Predicted Prices
+plt.figure(figsize=(15, 6))
+plt.plot(prices_normalized, label='Actual Prices', color='blue')
+plt.plot(np.arange(look_back, len(predicted_prices) + look_back), predicted_prices_normalized, label='Predicted Prices', color='red')
+plt.legend()
+plt.title('Actual vs Predicted Prices')
+plt.xlabel('Days')
+plt.ylabel('Normalized Prices')
+plt.show()
+
+# Visualize Intermediate Profit Matrix
+plt.figure(figsize=(15, 6))
+sns.heatmap(profit_matrix, annot=True, fmt=".1f")
+plt.title('Profit Matrix Heatmap')
+plt.show()
+
+# Visualize Profit over Time
+plt.figure(figsize=(15, 6))
+for j in range(1, k + 1):
+    plt.plot(profit_matrix[j], label=f'Transaction {j}')
+plt.legend()
+plt.xlabel('Day')
+plt.ylabel('Profit')
+plt.title('Profit over Time per Transaction')
+plt.show()
+

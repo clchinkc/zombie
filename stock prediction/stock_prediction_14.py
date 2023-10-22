@@ -6,8 +6,18 @@ from scipy.linalg import eig, svd
 
 def load_stock_data(filename):
     data = pd.read_csv(filename, index_col='Date', parse_dates=True)
-    prices = data['Close'].values
-    return prices
+    selected_features = ['Close', 'Open', 'High', 'Low', 'Volume']  # example features
+    feature_matrix = data[selected_features].values
+    return feature_matrix
+
+def construct_data_matrix(feature_matrix, k=2):
+    rows, cols = feature_matrix.shape
+    X = np.zeros(((k * cols), (rows - k + 1)))
+
+    for i in range(rows - k + 1):
+        X[:, i] = feature_matrix[i:i+k].flatten()
+
+    return X
 
 def compute_dmd_matrix(X):
     U, Sigma, Vh = svd(X, full_matrices=False)
@@ -21,7 +31,7 @@ def find_dominant_modes(eigenvalues, eigenvectors, num_modes):
     dominant_eigenvectors = eigenvectors[:, dominant_indices]
     return dominant_eigenvalues, dominant_eigenvectors
 
-def predict_future_prices(A_tilde, X, dominant_eigenvalues, dominant_eigenvectors, forecast_steps):
+def predict_future_prices(A_tilde, X, forecast_steps):
     n_steps = X.shape[1]
     state = X[:, -1]
 
@@ -31,9 +41,12 @@ def predict_future_prices(A_tilde, X, dominant_eigenvalues, dominant_eigenvector
         future_state = np.linalg.matrix_power(A_tilde, i + 1) @ state
         future_states[i] = future_state
 
-    future_prices = future_states[:, 1]
+    # Extract closing prices from future states
+    num_features = X.shape[0] // 2
+    future_prices = future_states[:, num_features]
 
     return future_prices
+
 
 def plot_results(prices, future_prices):
     n_steps = len(prices)
@@ -51,10 +64,12 @@ def plot_results(prices, future_prices):
 
 if __name__ == '__main__':
     # Load data
-    prices = load_stock_data('apple_stock_data.csv')
+    feature_matrix = load_stock_data('apple_stock_data.csv')
 
     # Create data matrix
-    X = np.vstack((prices[:-1], prices[1:]))
+    k = 7
+    # sliding window size
+    X = construct_data_matrix(feature_matrix, k)
 
     # Perform SVD
     A_tilde = compute_dmd_matrix(X)
@@ -68,7 +83,10 @@ if __name__ == '__main__':
 
     # Forecast future prices
     forecast_steps = 30
-    future_prices = predict_future_prices(A_tilde, X, dominant_eigenvalues, dominant_eigenvectors, forecast_steps)
+    future_prices = predict_future_prices(A_tilde, X, forecast_steps)
 
-    # Plot actual and predicted prices
-    plot_results(prices, future_prices)
+    # Print and plot results
+    actual_prices = feature_matrix[k-1:, 0]  # Close prices
+    # print(f'Predicted prices: {future_prices}')
+    plot_results(actual_prices, future_prices)
+
