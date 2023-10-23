@@ -1,33 +1,29 @@
+import datetime
+from re import L
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import Lasso, LinearRegression, Ridge
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
+from sklearn.linear_model import Lasso, LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 
 
-def load_and_preprocess_data(filename):
-    data = pd.read_csv(filename, parse_dates=['Date'], index_col='Date')
-    
-    # Generate additional features
+# 1. Data Loading and Preprocessing
+def load_data(filename):
+    return pd.read_csv(filename, parse_dates=['Date'], index_col='Date')
+
+def generate_features(data):
     data['PrevOpen'] = data['Open'].shift(1, fill_value=np.mean(data['Open']))
     data['PrevHigh'] = data['High'].shift(1, fill_value=np.mean(data['High']))
     data['PrevLow'] = data['Low'].shift(1, fill_value=np.mean(data['Low']))
     data['PrevClose'] = data['Close'].shift(1, fill_value=np.mean(data['Close']))
     data['MovingAverage'] = data['Close'].rolling(window=7, min_periods=1).mean()
-    
-    # Relative Strength Index
-    data['RSI'] = compute_rsi(data, 14) # not used
-    
-    # Moving Average Convergence Divergence
-    data['MACD'], data['Signal_Line'], data['MACD_Histogram'] = compute_macd(data) # not used
-    
-    # Bollinger Bands
-    data['Upper_Bollinger_Band'], data['Lower_Bollinger_Band'] = compute_bollinger_bands(data) # not used
-    
-    processed_data = data.dropna()
-    return processed_data
+    data['RSI'] = compute_rsi(data, 14)
+    data['MACD'], data['Signal_Line'], data['MACD_Histogram'] = compute_macd(data)
+    data['Upper_Bollinger_Band'], data['Lower_Bollinger_Band'] = compute_bollinger_bands(data)
+    return data.dropna()
 
 def compute_rsi(data, window):
     delta = data['Close'].diff()
@@ -57,16 +53,15 @@ def compute_bollinger_bands(data):
     lower_band = sma - (rolling_std * 2)
     return upper_band, lower_band
 
-def split_and_normalize_data(data):
-    train_data, test_data = train_test_split(data, test_size=0.3, shuffle=False)
-    
-    min_vals = train_data.min()
-    max_vals = train_data.max()
-    
-    train_data = (train_data - min_vals) / (max_vals - min_vals)
-    test_data = (test_data - min_vals) / (max_vals - min_vals)
-    
-    return train_data, test_data, min_vals, max_vals
+# 3. Splitting and Normalization
+def split_data(data, test_size=0.3):
+    return train_test_split(data, test_size=test_size, shuffle=False)
+
+def normalize_data(data, min_vals=None, max_vals=None):
+    if min_vals is None or max_vals is None:
+        min_vals = data.min()
+        max_vals = data.max()
+    return (data - min_vals) / (max_vals - min_vals), min_vals, max_vals
 
 def perform_grey_relational_analysis(train_data, features):
     def grey_relational_coefficient(reference, comparison, rho=0.5):
@@ -82,52 +77,6 @@ def perform_grey_relational_analysis(train_data, features):
     aggregated_sequence = np.average(normalized_comparisons, axis=0, weights=weights)
     return aggregated_sequence
 
-def create_windowed_data(data, window_size=5):
-    X = []
-    for i in range(len(data) - window_size + 1):
-        X.append(data[i:i+window_size])
-    return np.array(X)
-
-def train_and_predict(train, test, window_size=5):
-    # Generate windowed training data
-    X_train = create_windowed_data(train['GRA'].values, window_size)
-    y_train = train['Close'].iloc[window_size-1:]
-    
-    model = LinearRegression()
-    model.fit(X_train, y_train)
-    
-    predictions = []
-
-    # Use last `window_size` values from train data as the initial window
-    window = list(train['GRA'].iloc[-window_size:].values)
-    
-    for i in range(len(test)):
-        # Use the window to predict the next value
-        prediction = model.predict([window])
-        predictions.append(prediction[0])
-        
-        # Move the window: drop the oldest value and append the prediction
-        window.pop(0)
-        window.append(prediction[0])
-
-    return predictions
-
-def evaluate_predictions(y_true, y_pred):
-    return mean_squared_error(y_true, y_pred)
-
-def visualize_results(train, test, predictions):
-    plt.figure(figsize=(12,6))
-    plt.plot(train.index, train['Close'], label='Training Close Prices', color='blue')
-    plt.plot(test.index, test['Close'], label='Actual Test Close Prices', color='green')
-    plt.plot(test.index, predictions, label='Predicted Test Close Prices', linestyle='--', color='red')
-    plt.fill_between(test.index, test['Close'], predictions, color='grey', alpha=0.5)
-    plt.title('Stock Price Prediction')
-    plt.xlabel('Date')
-    plt.ylabel('Stock Price')
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
-
 def create_windowed_data_for_features(data, features, window_size=5):
     X = []
     y = []
@@ -141,74 +90,74 @@ def create_windowed_data_for_features(data, features, window_size=5):
 
     return np.array(X), np.array(y)
 
-def train_and_predict_using_features(train, test, features, regression_type='linear', window_size=5, alpha=1.0):
-    X_train, y_train = create_windowed_data_for_features(train, features, window_size)
-    
-    if regression_type == 'linear':
-        model = LinearRegression()
-    elif regression_type == 'lasso':
-        model = Lasso(alpha=alpha)
-    elif regression_type == 'forest':
-        model = RandomForestRegressor(n_estimators=100)
-    else:
-        raise ValueError(f"Unsupported regression type: {regression_type}")
-        
+def train_model(X_train, y_train, model):
     model.fit(X_train, y_train)
-    
-    feature_windows = {feature: list(train[feature].iloc[-window_size:].values) for feature in features}
+    return model
+
+def predict_using_model(model, test, features, window_size=5, num_future_predictions=10):
+    feature_windows = {feature: list(test[feature].iloc[-window_size:].values) for feature in features}
     predictions = []
-    for i in range(len(test)):
+
+    total_length = len(test) + num_future_predictions
+    for i in range(total_length):
         x_window = []
         for feature in features:
             x_window.extend(feature_windows[feature])
+        
         prediction = model.predict([x_window])
         predictions.append(prediction[0])
+
         for feature in features:
             feature_windows[feature].pop(0)
             feature_windows[feature].append(prediction[0])
+
     return predictions
 
+
 def denormalize(data, min_vals, max_vals):
-    return data * (max_vals - min_vals) + min_vals
+    data_np = np.array(data)
+    min_vals_np = np.array(min_vals)
+    max_vals_np = np.array(max_vals)
+    return data_np * (max_vals_np - min_vals_np) + min_vals_np
 
-data = load_and_preprocess_data('apple_stock_data.csv')
-train, test, min_vals, max_vals = split_and_normalize_data(data)
+def visualize_results(train, test, future_dates=[], **prediction_sets):
+    plt.figure(figsize=(12,6))
+    plt.plot(train.index, train['Close'], label='Training Close Prices', color='blue')
+    plt.plot(test.index, test['Close'], label='Actual Test Close Prices', color='green')
+    
+    for label, preds in prediction_sets.items():
+        plt.plot(test.index.tolist() + future_dates, preds, label=label)
+    
+    plt.title('Stock Price Prediction Comparison')
+    plt.xlabel('Date')
+    plt.ylabel('Stock Price')
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
-# Train and predict using GRA
+
+# Example usage:
+data = load_data('apple_stock_data.csv')
+data = generate_features(data)
+train, test = split_data(data)
+normalized_train, train_min, train_max = normalize_data(train)
+normalized_test, _, _ = normalize_data(test, train_min, train_max)
+
 features = ['PrevOpen', 'PrevHigh', 'PrevLow', 'PrevClose', 'MovingAverage']
-train['GRA'] = perform_grey_relational_analysis(train, features)
-predictions_GRA = train_and_predict(train, test, window_size=7)
-predictions_GRA = denormalize(np.array(predictions_GRA), min_vals['Close'], max_vals['Close'])
+X_train, y_train = create_windowed_data_for_features(normalized_train, features, window_size=7)
+X_test, y_test = create_windowed_data_for_features(normalized_test, features, window_size=7)
 
-# Train and predict using Lasso regression
-lasso_predictions = train_and_predict_using_features(train, test, features, regression_type='lasso', alpha=1.0, window_size=7)
-lasso_predictions = denormalize(np.array(lasso_predictions), min_vals['Close'], max_vals['Close'])
+# model = LinearRegression()
+# model = Lasso(alpha=0.1)
+# model = RandomForestRegressor(n_estimators=100)
+model = GradientBoostingRegressor(n_estimators=100)
 
-# Train and predict using Random Forest regression
-rf_predictions = train_and_predict_using_features(train, test, features, regression_type='forest', window_size=7)
-rf_predictions = denormalize(np.array(rf_predictions), min_vals['Close'], max_vals['Close'])
+model = train_model(X_train, y_train, model)
+predictions = predict_using_model(model, normalized_test, features, window_size=7, num_future_predictions=5)
+predictions = denormalize(predictions, train_min['Close'], train_max['Close'])
 
-denormalized_train = denormalize(train['Close'].values, min_vals['Close'], max_vals['Close'])
-denormalized_test = denormalize(test['Close'].values, min_vals['Close'], max_vals['Close'])
+# Generate future dates
+next_date = data.index[-1] + datetime.timedelta(days=1)
+future_dates = [next_date + datetime.timedelta(days=i) for i in range(5)]
 
-mse_GRA = evaluate_predictions(denormalized_test, predictions_GRA)
-lasso_mse = evaluate_predictions(denormalized_test, lasso_predictions)
-rf_mse = evaluate_predictions(denormalized_test, rf_predictions)
-
-print(f'GRA MSE: {mse_GRA:.2f}')
-print(f'Lasso MSE: {lasso_mse:.2f}')
-print(f'Random Forest MSE: {rf_mse:.2f}')
-
-# Visualize the results
-plt.figure(figsize=(12,6))
-plt.plot(train.index, denormalized_train, label='Training Close Prices', color='blue')
-plt.plot(test.index, denormalized_test, label='Actual Test Close Prices', color='green')
-plt.plot(test.index, predictions_GRA, label='GRA-Based Predictions', linestyle='--', color='red')
-plt.plot(test.index, lasso_predictions, label='Lasso Predictions', linestyle=':', color='orange')
-plt.plot(test.index, rf_predictions, label='Random Forest Predictions', linestyle='-.', color='purple')
-plt.title('Stock Price Prediction Comparison')
-plt.xlabel('Date')
-plt.ylabel('Stock Price')
-plt.legend()
-plt.tight_layout()
-plt.show()
+visualize_results(train, test, future_dates=future_dates, model=predictions)
