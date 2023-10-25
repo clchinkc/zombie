@@ -1,81 +1,100 @@
+import nltk
+import requests
+from bs4 import BeautifulSoup
+from nltk.corpus import stopwords
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
 
-import datetime
+# Initial setup for NLP tools
+nltk.download('punkt')
+nltk.download('wordnet')
+nltk.download('stopwords')
+nltk.download('vader_lexicon')
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
+stop_words = set(stopwords.words('english'))
+lemmatizer = WordNetLemmatizer()
+sia = SentimentIntensityAnalyzer()
 
 
-def normalize(data):
-    return (data - np.min(data)) / (np.max(data) - np.min(data))
 
-def denormalize(data, reference):
-    return data * (np.max(reference) - np.min(reference)) + np.min(reference)
+def scrape_news(ticker):
+    """Scrape Yahoo Finance news headlines for a given ticker."""
+    URL = f'https://finance.yahoo.com/quote/{ticker}/news?p={ticker}'
+    HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+    page = requests.get(URL, headers=HEADERS)
+    soup = BeautifulSoup(page.content, 'html.parser')
 
-def grey_relational_coefficient(reference, comparison, rho=0.5):
-    abs_diff = np.abs(reference - comparison)
-    max_diff = np.max(abs_diff)
-    min_diff = np.min(abs_diff)
-    return (min_diff + rho * max_diff) / (abs_diff + rho * max_diff + 1e-10)
-
-def grey_relational_analysis(reference_sequence, comparison_sequences):
-    normalized_reference = normalize(reference_sequence)
-    normalized_comparisons = np.array([normalize(sequence) for sequence in comparison_sequences])
-
-    coefficients = np.array([grey_relational_coefficient(normalized_reference, sequence) for sequence in normalized_comparisons])
-
-    weights = coefficients.sum(axis=0) / coefficients.sum()
-
-    aggregated_sequence = np.average(normalized_comparisons, axis=1, weights=weights)
+    headlines = []
+    for item in soup.find_all('h3', class_='Mb(5px)'):
+        a_tag = item.find('a')
+        if a_tag and a_tag.text:
+            headlines.append(a_tag.text)
     
-    denormalized_aggregated_sequence = denormalize(aggregated_sequence, reference_sequence)
+    return headlines
+
+
+def process_text(text):
+    """Process text for sentiment analysis."""
+    words = word_tokenize(text)
+    words = [word.lower() for word in words if word.isalnum()]
+    words = [word for word in words if word not in stop_words]
+    words = [lemmatizer.lemmatize(word) for word in words]
     
-    print("Weights:", weights)
-    print("Coefficients:", coefficients)
-    print("Denormalized aggregated sequence:", denormalized_aggregated_sequence)
+    return ' '.join(words)
 
-    return denormalized_aggregated_sequence
+def get_sentiment(text):
+    """Determine sentiment of processed text."""
+    sentiment = sia.polarity_scores(text)
+    return sentiment
 
-# Load data
-data = pd.read_csv('apple_stock_data.csv')
+if __name__ == "__main__":
+    FAAMG = ['FB', 'AAPL', 'AMZN', 'MSFT', 'GOOGL']
 
-# Create shifted columns and other sequences
-data['PrevOpen'] = data['Open'].shift(1, fill_value=np.mean(data['Open']))
-data['PrevHigh'] = data['High'].shift(1, fill_value=np.mean(data['High']))
-data['PrevLow'] = data['Low'].shift(1, fill_value=np.mean(data['Low']))
-data['PrevClose'] = data['Close'].shift(1, fill_value=np.mean(data['Close']))
-data['5DayMovingAverage'] = data['Close'].rolling(window=5, min_periods=1).mean()
+    for ticker in FAAMG:
+        print(f"--- {ticker} ---")
+        headlines = scrape_news(ticker)
 
-# Handle missing values
-data.dropna(inplace=True)
+        for headline in headlines:
+            processed_headline = process_text(headline)
+            sentiment = get_sentiment(processed_headline)
+            print(f"[{sentiment['compound']}] {headline}")
 
-# Extract the 'Close' column as the reference sequence
-reference_sequence = data['Close'].values
+"""
+Stock Market Analysis:
 
-# Extract other columns as comparison sequences
-comparison_sequences = [
-    data['PrevOpen'].values, 
-    data['PrevHigh'].values, 
-    data['PrevLow'].values,
-    data['PrevClose'].values,
-    data['5DayMovingAverage'].values
-]
+Compare the sentiment scores with stock price movements for each company. For instance, a high average positive sentiment score might correlate with an upward movement in stock price.
+Build a model using historical sentiment scores and stock prices to predict future stock prices.
+Alert System:
 
-# Perform grey relational analysis
-predicted_sequence = grey_relational_analysis(reference_sequence, comparison_sequences)
+Set a threshold for sentiment scores. Whenever the score goes beyond this threshold (either too positive or too negative), send an alert. This could be useful for traders to pay attention to certain news headlines.
+Visualizations:
 
-# Visualization
-next_date = datetime.datetime.strptime(data['Date'].values[-1], '%Y-%m-%d %H:%M:%S%z') + datetime.timedelta(days=1)
-next_date_str = next_date.strftime('%Y-%m-%d %H:%M:%S%z')
+Plot sentiment scores over time to visually understand the sentiment trend for each company.
+Create pie charts showing the percentage of positive, negative, and neutral headlines for each company over a given period.
+Expand Scope:
 
-plt.figure(figsize=(10,5))
-plt.plot(data['Date'].values, data['Close'].values, label='Actual Close')
-plt.plot(next_date_str, predicted_sequence[0], label='Predicted Close', linestyle='--')
-plt.legend()
-plt.tight_layout()
-plt.show()
+Extend the code to cover more companies, sectors, or news sources. This would provide a broader view of the market sentiment.
+Instead of just headlines, you can scrape the full articles and analyze their sentiment. This would provide a more in-depth sentiment analysis.
+Refined Text Analysis:
 
-print(data['Close'].values[-1])
-print(predicted_sequence[0])
+Apply topic modeling (e.g., using LDA) to understand the common topics in the news and then analyze sentiment on a topic basis.
+Consider named entity recognition (NER) to identify mentions of other companies, people, or products in the headlines, which could be crucial for sentiment interpretation.
+Integration with Portfolio Management:
 
+If you have a stock portfolio, integrate the sentiment scores to influence your buy/sell decisions. For instance, consistently negative news sentiment might be a sign to reconsider holding a particular stock.
+Historical Analysis:
 
+Store the scraped headlines and sentiment scores in a database. Over time, you can analyze historical sentiment trends and correlate them with historical stock price movements.
+Comparison with Other Sentiment Analysis Tools:
+
+There are many sentiment analysis tools and libraries available. By comparing the results from different tools, you can achieve a more robust understanding of the true sentiment.
+Automate & Schedule:
+
+Automate the script to run at specific intervals (e.g., daily or weekly) to keep track of sentiment over time.
+Feedback Loop:
+
+If you're using this for trading, keep track of decisions made based on the sentiment scores. Over time, refine your thresholds or models based on actual outcomes to improve prediction accuracy.
+"""

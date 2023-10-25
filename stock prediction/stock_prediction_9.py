@@ -1,130 +1,167 @@
-
-
-"""
-Chaos theory is a branch of mathematics that focuses on the behavior of complex, nonlinear dynamical systems. It deals with systems that appear to be random or unpredictable, even though their underlying rules are deterministic. The study of chaos theory has applications in various disciplines, including physics, meteorology, engineering, biology, and economics.
-
-In chaos theory, a small change in the initial conditions of a system can result in drastically different outcomes, a phenomenon known as sensitive dependence on initial conditions or the "butterfly effect." This sensitivity makes long-term predictions in chaotic systems difficult, as even the slightest variation in initial conditions can lead to vastly different outcomes.
-
-Key concepts in chaos theory include:
-
-Attractors: In a dynamical system, an attractor is a set of values towards which the system tends to evolve, regardless of the starting conditions. There are different types of attractors, such as fixed points, limit cycles, and strange attractors. Strange attractors are often associated with chaotic systems and have a fractal structure.
-
-Fractals: Fractals are geometric shapes that exhibit self-similarity, meaning they look similar at different scales. They can be found in many natural phenomena, like coastlines, clouds, and snowflakes. Fractals are often used to model chaotic systems, as they can represent the complex behavior of these systems more effectively than traditional geometric shapes.
-
-Bifurcation: Bifurcation is a term used in chaos theory to describe the process by which a small change in a system's parameters causes the system to undergo a qualitative or topological change in its behavior. Bifurcation diagrams are used to visualize the transitions between different types of behavior in a system, such as periodic, chaotic, or stable.
-
-Lyapunov exponent: The Lyapunov exponent is a measure of the rate of separation of initially close trajectories in a dynamical system. A positive Lyapunov exponent indicates that the system is chaotic, as nearby trajectories diverge exponentially over time.
-
-Applying chaos theory to stock prices can help in understanding the seemingly unpredictable and complex behavior of financial markets. While stock prices may appear random, chaos theory suggests that there could be underlying patterns or structures governing their movement. Here are some ways chaos theory can be applied to stock prices:
-
-Identifying patterns: By analyzing stock price data through the lens of chaos theory, researchers can identify patterns or structures that might otherwise be hidden in the noise. These patterns could reveal relationships between different stocks, sectors, or economic indicators and help inform investment strategies.
-
-Nonlinear dynamics: Financial markets are complex, nonlinear systems that can exhibit chaotic behavior. Using techniques from chaos theory, such as fractals and attractors, analysts can study the dynamics of stock prices and gain insights into their behavior. This can help investors identify periods of stability, volatility, or potential shifts in market trends.
-
-Forecasting: While chaos theory implies that long-term predictions in chaotic systems are inherently difficult, it can still provide insights for short-term forecasts. By understanding the underlying dynamics of stock prices and their sensitivity to initial conditions, investors can make more informed decisions about market entry and exit points, and risk management.
-
-Risk management: Chaos theory can help investors and portfolio managers assess the level of risk associated with their investments. By analyzing the behavior of stock prices in the context of chaos theory, they can better understand the potential for large, unpredictable fluctuations and make more informed decisions about diversification and risk management strategies.
-
-Trading algorithms: Some quantitative traders use chaos theory to develop trading algorithms that exploit the patterns and structures found in stock price data. These algorithms may be able to identify short-term trading opportunities based on the chaotic behavior of financial markets.
-
-It is important to note that while chaos theory can provide valuable insights into the behavior of stock prices, it does not guarantee success in predicting or profiting from market movements. Financial markets are influenced by various factors, such as economic conditions, investor sentiment, and global events, which can all contribute to the complexity and unpredictability of stock prices.
-"""
-
-"""
-import numpy as np
-import pandas as pd
-import yfinance as yf
-from hurst import compute_Hc
-
-
-def get_stock_data(ticker, start_date, end_date):
-    stock_data = yf.download(ticker, start=start_date, end=end_date)
-    return stock_data['Close']
-
-def analyze_hurst_exponent(stock_data):
-    H, c, data = compute_Hc(stock_data, kind='price', simplified=True)
-    return H
-
-if __name__ == "__main__":
-    # Example: Apple Inc. stock (AAPL) from 2020-01-01 to 2021-09-01
-    ticker = 'AAPL'
-    start_date = '2020-01-01'
-    end_date = '2021-09-01'
-    
-    stock_data = get_stock_data(ticker, start_date, end_date)
-    hurst_exponent = analyze_hurst_exponent(stock_data)
-
-    print(f"The Hurst exponent for {ticker} is {hurst_exponent}")
-
-    if hurst_exponent < 0.5:
-        print("The stock price exhibits anti-persistent behavior.")
-    elif hurst_exponent == 0.5:
-        print("The stock price exhibits a random walk.")
-    else:
-        print("The stock price exhibits persistent behavior.")
-
-# If H < 0.5, the stock price exhibits anti-persistent behavior, meaning it tends to revert to the mean.
-# If H = 0.5, the stock price exhibits a random walk, meaning it's difficult to predict future prices.
-# If H > 0.5, the stock price exhibits persistent behavior, meaning it tends to trend in the same direction.
-"""
-
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import yfinance as yf
+from hurst import compute_Hc
 from scipy.integrate import solve_ivp
 from scipy.optimize import curve_fit
+from sklearn.cluster import KMeans
+from sklearn.linear_model import LinearRegression
 
-# Fetch historical stock price data
-ticker = 'AAPL'
-start_date = '2021-01-01'
-end_date = '2021-12-31'
 
-data = yf.download(ticker, start=start_date, end=end_date)
-data['Normalized'] = data['Close'] / data['Close'].iloc[0]
+# Data Acquisition
+def fetch_data(ticker, start_date, end_date):
+    """ Fetch stock data using yfinance. """
+    try:
+        return yf.download(ticker, start=start_date, end=end_date)['Close']
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+        return pd.Series()
 
-print("Finished fetching data")
+# Preprocessing
+def detrend_normalize(series):
+    """ Detrend and normalize the data """
+    trend = series.rolling(window=5).mean()
+    detrended = series - trend
+    normalized = (detrended - detrended.min()) / (detrended.max() - detrended.min())
+    return normalized.dropna(), trend.dropna()
 
-# Define the Lorenz system
+
+def time_delay_embedding(series, dimension, delay):
+    """ Reconstruct the phase space using the time delay embedding method """
+    vectors = []
+    for i in range(len(series) - (dimension - 1) * delay):
+        vector = [series[i + j * delay] for j in range(dimension)]
+        vectors.append(vector)
+    return np.array(vectors)
+
+# Time-Series Analysis and Feature Engineering
+def calculate_rolling_hurst(stock_data, window_size=252):
+    """ Calculate the rolling Hurst exponent """
+    hurst_values = []
+    for i in range(len(stock_data) - window_size):
+        H = compute_Hc(stock_data[i:i+window_size], kind='price', simplified=True)[0]
+        hurst_values.append(H)
+    return hurst_values
+
 def lorenz_system(t, xyz, sigma, beta, rho):
+    """ Lorenz System dynamics """
     x, y, z = xyz
-    return [
-        sigma * (y - x),
-        x * (rho - z) - y,
-        x * y - beta * z
-    ]
+    return [sigma * (y - x), x * (rho - z) - y, x * y - beta * z]
 
-# Function to fit the data
-def fit_function(t, sigma, beta, rho, x0, y0, z0):
-    sol = solve_ivp(lorenz_system, (t[0], t[-1]), [x0, y0, z0], t_eval=t, args=(sigma, beta, rho))
+def get_initial_guess(phase_space):
+    """ Generate an initial guess for Lorenz parameters based on phase space data. """
+    means = np.mean(phase_space, axis=0)
+    return [means[0], means[1], means[2], phase_space[0][0], phase_space[0][1], phase_space[0][2]]
+
+def fit_to_lorenz(time, phase_space, p0):
+    """ Fit the phase space data to the Lorenz system """
+    def fit_function(t, sigma, beta, rho, x0, y0, z0):
+        sol = solve_ivp(lorenz_system, (t[0], t[-1]), [x0, y0, z0], t_eval=t, args=(sigma, beta, rho))
+        return sol.y[0]
+    popt, _ = curve_fit(fit_function, time, phase_space[:, 0], p0=p0, method='trf')
+    return popt
+
+def predict_using_lorenz(t_future, popt):
+    """ Predict future values using the Lorenz system """
+    sigma, beta, rho, x0, y0, z0 = popt
+    sol = solve_ivp(lorenz_system, (t_future[0], t_future[-1]), [x0, y0, z0], t_eval=t_future, args=(sigma, beta, rho))
     return sol.y[0]
 
-# Preprocess the data
-time = np.linspace(0, 1, len(data))
-normalized_prices = data['Normalized'].values
+def predict_using_clusters(series, clusters, next_n):
+    """ Predict future values using the clustered phase space """
+    dimension = 2
+    delay = 1
+    last_cluster = clusters[-1]
+    next_points = []
+    
+    for _ in range(next_n):
+        similar_clusters = np.where(clusters[:-1] == last_cluster)[0]
+        if len(similar_clusters) == 0:
+            break
+        next_cluster = clusters[similar_clusters + 1]
+        next_point = series[similar_clusters + (dimension - 1)].mean()
+        next_points.append(next_point)
+        last_cluster = np.random.choice(next_cluster)
+    
+    return next_points
 
-print("Finished preprocessing data")
+def extrapolate_trend(series, next_n):
+    """ Extrapolate the trend using linear regression for the next 'next_n' points. """
+    trend = series.rolling(window=5).mean().dropna()
+    x = np.arange(len(trend)).reshape(-1, 1)
+    y = trend.values
+    model = LinearRegression().fit(x, y)
+    future_x = np.arange(len(trend), len(trend) + next_n).reshape(-1, 1)
+    return model.predict(future_x)
 
-# Fit the data to the Lorenz system
-popt, _ = curve_fit(fit_function, time, normalized_prices, p0=(10, 8/3, 28, 1, 1, 1), method='trf')
+def restore_scale_trend(original_series, trend, normalized_series, predicted_points):
+    """ Restore the original scale and trend of the predicted values """
+    scale = (original_series.max() - original_series.min()) / (normalized_series.max() - normalized_series.min())
+    restored_points = [predicted_points[i] * scale + trend.values[i] for i in range(len(predicted_points))]
+    return restored_points
 
-print("Finished fitting data")
 
-# Predict future stock prices
-sigma, beta, rho, x0, y0, z0 = popt
-t_future = np.linspace(0, 1.2, int(len(data) * 1.2))
-predicted_prices = fit_function(t_future, sigma, beta, rho, x0, y0, z0)
+def consolidate_predictions(lorenz_pred, cluster_pred, hurst_value):
+    lorenz_weight = hurst_value
+    return lorenz_pred * lorenz_weight + cluster_pred * (1 - lorenz_weight)
 
-print("Finished predicting data")
+def visualize_combined_data(time, data, lorenz_predictions, cluster_predictions, combined_predictions, hurst_values, window_size):
+    """ Visualize actual, Lorenz-predicted, cluster-predicted, and combined stock prices """
+    fig, ax = plt.subplots(figsize=(14, 6))
+    ax.plot(time, data.values, label='Actual Data', color='blue')
+    ax.plot(time[-len(lorenz_predictions):], lorenz_predictions, label='Lorenz Predictions', linestyle='-.', color='orange')
+    ax.plot(time[-len(cluster_predictions):], cluster_predictions, label='Cluster Predictions', linestyle=':', color='purple')
+    ax.plot(time[-len(combined_predictions):], combined_predictions, label='Combined Predictions', linestyle='--', color='green')
+    
+    behavior_colors = ['blue', 'yellow', 'red']
+    for i, H in enumerate(hurst_values):
+        ax.axvspan(time[i], time[i+window_size], facecolor=behavior_colors[int(np.round(H))], alpha=0.1)
+    # behaviors = ["Trending", "Random Walk", "Mean Reverting"]
+    # ax.text(0.02, 0.85, f"Behavior Regions:\n{behaviors[0]}: H > 0.5\n{behaviors[1]}: H = 0.5\n{behaviors[2]}: H < 0.5", transform=ax.transAxes)
+    
+    ax.legend(loc="upper left")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Stock Price")
+    plt.title(f"Stock Price & Predictions with Behavior Regions")
+    plt.show()
 
-# Plot the results
-plt.plot(time, normalized_prices, label='Historical Data')
-plt.plot(t_future, predicted_prices, label='Predicted Data', linestyle='--')
-plt.xlabel("Time")
-plt.ylabel("Normalized Stock Price")
-plt.legend()
-plt.show()
+if __name__ == "__main__":
+    ticker = 'AAPL'
+    start_date = '2020-01-01'
+    end_date = '2021-12-31'
+    window_size = 252
 
-print("Finished plotting data")
+    # Data Acquisition
+    data = fetch_data(ticker, start_date, end_date)
+
+    # Preprocessing
+    normalized_data, trend_data = detrend_normalize(data)
+    phase_space = time_delay_embedding(normalized_data, dimension=3, delay=1)
+    
+    # Time-Series Analysis
+    hurst_values = calculate_rolling_hurst(data, window_size=window_size)
+
+    # Lorenz System Prediction
+    initial_guess = get_initial_guess(phase_space)
+    popt = fit_to_lorenz(np.arange(len(phase_space)), phase_space, p0=initial_guess)
+    lorenz_predictions = predict_using_lorenz(np.arange(len(data), len(data) + window_size), popt)
+    
+    # Clustering-based Prediction
+    clustering_model = KMeans(n_clusters=5, n_init="auto")
+    clusters = clustering_model.fit_predict(phase_space)
+    cluster_predictions = predict_using_clusters(normalized_data, clusters, window_size)
+
+    # Combining Predictions
+    combined_predictions = []
+    for lorenz_value, cluster_value, hurst_value in zip(lorenz_predictions, cluster_predictions, hurst_values):
+        combined_predictions.append(consolidate_predictions(lorenz_value, cluster_value, hurst_value))
+    
+    # Restore Scale and Trend
+    restored_lorenz_predictions = restore_scale_trend(data, trend_data, normalized_data, lorenz_predictions)
+    restored_cluster_predictions = restore_scale_trend(data, trend_data, normalized_data, cluster_predictions)
+    restored_combined_predictions = restore_scale_trend(data, trend_data, normalized_data, combined_predictions)
+
+    # Visualization
+    visualize_combined_data(data.index, data, restored_lorenz_predictions, restored_cluster_predictions, restored_combined_predictions, hurst_values, window_size)
 

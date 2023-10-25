@@ -2,6 +2,9 @@
 # Stock Prediction
 # https://neptune.ai/blog/predicting-stock-prices-using-machine-learning
 # https://www.youtube.com/watch?v=WcfKaZL4vpA
+# https://medium.com/swlh/stock-market-screening-and-analysis-using-web-scraping-neural-networks-and-regression-analysis-f40742dd86e0
+# https://ieeexplore.ieee.org/document/8995080
+# https://github.com/alisonmitchell/Stock-Prediction
 # stock prediction google search
 
 """

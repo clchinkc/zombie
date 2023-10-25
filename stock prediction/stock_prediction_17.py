@@ -1,7 +1,10 @@
+import datetime
+from re import L
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import Lasso, LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
@@ -87,34 +90,29 @@ def create_windowed_data_for_features(data, features, window_size=5):
 
     return np.array(X), np.array(y)
 
-def train_model(X_train, y_train, regression_type='linear', alpha=1.0):
-    if regression_type == 'linear':
-        model = LinearRegression()
-    elif regression_type == 'lasso':
-        model = Lasso(alpha=alpha)
-    elif regression_type == 'forest':
-        model = RandomForestRegressor(n_estimators=100)
-    else:
-        raise ValueError(f"Unsupported regression type: {regression_type}")
-    
+def train_model(X_train, y_train, model):
     model.fit(X_train, y_train)
     return model
 
-def predict_using_model(model, test, features, window_size=5):
+def predict_using_model(model, test, features, window_size=5, num_future_predictions=10):
     feature_windows = {feature: list(test[feature].iloc[-window_size:].values) for feature in features}
     predictions = []
 
-    for i in range(len(test)):
+    total_length = len(test) + num_future_predictions
+    for i in range(total_length):
         x_window = []
         for feature in features:
             x_window.extend(feature_windows[feature])
+        
         prediction = model.predict([x_window])
         predictions.append(prediction[0])
+
         for feature in features:
             feature_windows[feature].pop(0)
             feature_windows[feature].append(prediction[0])
 
     return predictions
+
 
 def denormalize(data, min_vals, max_vals):
     data_np = np.array(data)
@@ -122,13 +120,22 @@ def denormalize(data, min_vals, max_vals):
     max_vals_np = np.array(max_vals)
     return data_np * (max_vals_np - min_vals_np) + min_vals_np
 
-def visualize_results(train, test, **prediction_sets):
+def visualize_results(train, test, future_dates=[], **prediction_sets):
     plt.figure(figsize=(12,6))
     plt.plot(train.index, train['Close'], label='Training Close Prices', color='blue')
     plt.plot(test.index, test['Close'], label='Actual Test Close Prices', color='green')
     
     for label, preds in prediction_sets.items():
-        plt.plot(test.index, preds, label=label)
+        # Split the predictions into test and future predictions based on lengths
+        test_preds = preds[:len(test)]
+        future_preds = preds[len(test):]
+
+        # Plot test predictions
+        plt.plot(test.index, test_preds, label=f'{label} Test Predictions', color='orange')
+
+        # If there are future predictions, plot them with a distinct color
+        if future_dates:
+            plt.plot(future_dates, future_preds, label=f'{label} Future Predictions', linestyle='--', color='red')
     
     plt.title('Stock Price Prediction Comparison')
     plt.xlabel('Date')
@@ -136,6 +143,8 @@ def visualize_results(train, test, **prediction_sets):
     plt.legend()
     plt.tight_layout()
     plt.show()
+
+
 
 # Example usage:
 data = load_data('apple_stock_data.csv')
@@ -148,8 +157,18 @@ features = ['PrevOpen', 'PrevHigh', 'PrevLow', 'PrevClose', 'MovingAverage']
 X_train, y_train = create_windowed_data_for_features(normalized_train, features, window_size=7)
 X_test, y_test = create_windowed_data_for_features(normalized_test, features, window_size=7)
 
-model = train_model(X_train, y_train, regression_type='linear')
-predictions = predict_using_model(model, normalized_test, features, window_size=7)
+# model = LinearRegression()
+# model = Lasso(alpha=0.1)
+# model = RandomForestRegressor(n_estimators=100)
+model = GradientBoostingRegressor(n_estimators=100)
+
+model = train_model(X_train, y_train, model)
+predictions = predict_using_model(model, normalized_test, features, window_size=7, num_future_predictions=5)
 predictions = denormalize(predictions, train_min['Close'], train_max['Close'])
 
-visualize_results(train, test, LinearRegression=predictions)
+# Generate future dates
+num_dates = 7
+next_date = data.index[-1] + datetime.timedelta(days=1)
+future_dates = [next_date + datetime.timedelta(days=i) for i in range(num_dates)]
+
+visualize_results(train, test, future_dates=future_dates, model=predictions)

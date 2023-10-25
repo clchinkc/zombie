@@ -1,163 +1,174 @@
-import datetime
-from re import L
-
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.linear_model import Lasso, LinearRegression
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
-
+import yfinance as yf
+from hurst import compute_Hc
+from scipy.integrate import solve_ivp
+from scipy.optimize import least_squares
+from sklearn.cluster import KMeans
+from sklearn.kernel_approximation import svd
 
 # 1. Data Loading and Preprocessing
-def load_data(filename):
-    return pd.read_csv(filename, parse_dates=['Date'], index_col='Date')
 
-def generate_features(data):
-    data['PrevOpen'] = data['Open'].shift(1, fill_value=np.mean(data['Open']))
-    data['PrevHigh'] = data['High'].shift(1, fill_value=np.mean(data['High']))
-    data['PrevLow'] = data['Low'].shift(1, fill_value=np.mean(data['Low']))
-    data['PrevClose'] = data['Close'].shift(1, fill_value=np.mean(data['Close']))
-    data['MovingAverage'] = data['Close'].rolling(window=7, min_periods=1).mean()
-    data['RSI'] = compute_rsi(data, 14)
-    data['MACD'], data['Signal_Line'], data['MACD_Histogram'] = compute_macd(data)
-    data['Upper_Bollinger_Band'], data['Lower_Bollinger_Band'] = compute_bollinger_bands(data)
-    return data.dropna()
+def fetch_data(ticker, start_date, end_date):
+    data = yf.download(ticker, start=start_date, end=end_date)
+    return data['Close'].values
 
-def compute_rsi(data, window):
-    delta = data['Close'].diff()
-    gain = (delta.where(delta > 0, 0)).fillna(0)
-    loss = (-delta.where(delta < 0, 0)).fillna(0)
+def detrend_normalize(data):
+    trend = np.polyfit(np.arange(len(data)), data, 1)[0] * np.arange(len(data))
+    detrended = data - trend
+    normalized = detrended / np.linalg.norm(detrended)
+    return normalized, trend
 
-    avg_gain = gain.rolling(window=window).mean()
-    avg_loss = loss.rolling(window=window).mean()
+def time_delay_embedding(data, delay, dimension):
+    N = len(data)
+    X = np.zeros((dimension, N - (dimension-1)*delay))
+    for i in range(dimension):
+        X[i] = data[i*delay : i*delay + X.shape[1]]
+    return X
+
+# 2. Dynamic Mode Decomposition (DMD) Analysis
+
+def construct_data_matrix(feature_matrix, k=2):
+    rows, cols = feature_matrix.shape
+    X = np.zeros(((k * cols), (rows - k + 1)))
+    for i in range(rows - k + 1):
+        X[:, i] = feature_matrix[i:i+k].flatten()
+    return X
+
+def compute_dmd_matrix(X):
+    U, Sigma, Vh = svd(X, full_matrices=False)
+    S_inv = np.diag(1 / Sigma)
+    A_tilde = U.T @ X @ Vh.T @ S_inv
+    return A_tilde
+
+def find_dominant_modes(eigenvalues, eigenvectors, num_modes):
+    dominant_indices = np.argsort(np.abs(eigenvalues))[-num_modes:]
+    dominant_eigenvalues = eigenvalues[dominant_indices]
+    dominant_eigenvectors = eigenvectors[:, dominant_indices]
+    return dominant_eigenvalues, dominant_eigenvectors
+
+def predict_future_prices(A_tilde, X, forecast_steps=50):
+    state = X[:, -1].reshape(-1, 1)  # Ensure state is a column vector
     
-    rs = avg_gain / avg_loss
-    rsi = 100 - (100 / (1 + rs))
+    # Initialize the future_prices list with the last known price
+    future_prices = [state[0][0]]
+
+    for _ in range(forecast_steps - 1):  # -1 since we already have the last known price
+        state = A_tilde @ state
+        future_prices.append(state[0][0])  # Extracting the future price from the state
+
+    return np.array(future_prices)
+
+
+# 3. Advanced Time-Series Analysis
+
+def calculate_rolling_hurst(stock_data, window_size=252):
+    """ Calculate the rolling Hurst exponent """
+    hurst_values = []
+    for i in range(len(stock_data) - window_size):
+        H = compute_Hc(stock_data[i:i+window_size], kind='price', simplified=True)[0]
+        hurst_values.append(H)
+    return hurst_values
+
+def lorenz_system(t, xyz, sigma, beta, rho):
+    """ Lorenz System dynamics """
+    x, y, z = xyz
+    return [sigma * (y - x), x * (rho - z) - y, x * y - beta * z]
+
+def fit_to_lorenz(embedded_data, forecast_steps):
+    data_len = embedded_data.shape[1]
+    initial_condition = embedded_data[:, -1]  # Use the last known point as the initial condition
+
+    def cost_function(params):
+        sol = solve_ivp(lorenz_system, [0, data_len + forecast_steps], initial_condition, args=params, t_eval=np.arange(data_len + forecast_steps))
+        return (sol.y[:, -forecast_steps:] - embedded_data[:, -forecast_steps:]).flatten()
+
+    res = least_squares(cost_function, x0=[10, 28, 8/3])
+
+    # Once we have the best fit parameters, we'll forecast the next values
+    sol = solve_ivp(lorenz_system, [0, forecast_steps], initial_condition, args=res.x, t_eval=np.arange(forecast_steps))
+    return sol.y[0]  # Return x-values from Lorenz system
+
+
+def predict_using_clusters(embedded_data, forecast_steps):
+    kmeans = KMeans(n_clusters=3, n_init="auto").fit(embedded_data.T)
+    cluster_centers = kmeans.cluster_centers_
     
-    return rsi
+    predictions = [embedded_data[:, -1]]
+    for _ in range(forecast_steps - 1):  
+        distances = np.linalg.norm(cluster_centers - predictions[-1].reshape(-1, 1), axis=1)
+        predictions.append(cluster_centers[np.argmin(distances)])
+    return np.array(predictions).T[0]  # Return the x-values from the cluster centers
 
-def compute_macd(data):
-    short_ema = data['Close'].ewm(span=12, adjust=False).mean()
-    long_ema = data['Close'].ewm(span=26, adjust=False).mean()
-    macd = short_ema - long_ema
-    signal = macd.ewm(span=9, adjust=False).mean()
-    histogram = macd - signal
-    return macd, signal, histogram
 
-def compute_bollinger_bands(data):
-    sma = data['Close'].rolling(window=20).mean()
-    rolling_std = data['Close'].rolling(window=20).std()
-    upper_band = sma + (rolling_std * 2)
-    lower_band = sma - (rolling_std * 2)
-    return upper_band, lower_band
+def reverse_preprocess(data_normalized_detrended, min_val, max_val, trend):
+    data_detrended = data_normalized_detrended * (max_val - min_val) + min_val
+    original_data = data_detrended + trend
+    return original_data
 
-# 3. Splitting and Normalization
-def split_data(data, test_size=0.3):
-    return train_test_split(data, test_size=test_size, shuffle=False)
+def consolidate_predictions(lorenz_pred, cluster_pred, hurst_value):
+    lorenz_weight = hurst_value
+    return lorenz_pred * lorenz_weight + cluster_pred * (1 - lorenz_weight)
 
-def normalize_data(data, min_vals=None, max_vals=None):
-    if min_vals is None or max_vals is None:
-        min_vals = data.min()
-        max_vals = data.max()
-    return (data - min_vals) / (max_vals - min_vals), min_vals, max_vals
+# 4. Visualization
 
-def perform_grey_relational_analysis(train_data, features):
-    def grey_relational_coefficient(reference, comparison, rho=0.5):
-        abs_diff = np.abs(reference - comparison)
-        max_diff = np.max(abs_diff)
-        min_diff = np.min(abs_diff)
-        return (min_diff + rho * max_diff) / (abs_diff + rho * max_diff + 1e-10)
-
-    normalized_reference = train_data['Close']
-    normalized_comparisons = [train_data[feature] for feature in features]
-    coefficients = [grey_relational_coefficient(normalized_reference, seq) for seq in normalized_comparisons]
-    weights = np.mean(coefficients, axis=1)
-    aggregated_sequence = np.average(normalized_comparisons, axis=0, weights=weights)
-    return aggregated_sequence
-
-def create_windowed_data_for_features(data, features, window_size=5):
-    X = []
-    y = []
+def visualize_combined_data(data, dmd_predictions, lorenz_predictions, cluster_predictions, combined_predictions, trend, hurst_values, window_size):
+    fig, ax = plt.subplots(figsize=(14, 8))
     
-    for i in range(len(data) - window_size + 1):
-        x_window = []
-        for feature in features:
-            x_window.extend(data[feature].iloc[i:i+window_size].values)
-        X.append(x_window)
-        y.append(data['Close'].iloc[i + window_size - 1])
-
-    return np.array(X), np.array(y)
-
-def train_model(X_train, y_train, model):
-    model.fit(X_train, y_train)
-    return model
-
-def predict_using_model(model, test, features, window_size=5, num_future_predictions=10):
-    feature_windows = {feature: list(test[feature].iloc[-window_size:].values) for feature in features}
-    predictions = []
-
-    total_length = len(test) + num_future_predictions
-    for i in range(total_length):
-        x_window = []
-        for feature in features:
-            x_window.extend(feature_windows[feature])
-        
-        prediction = model.predict([x_window])
-        predictions.append(prediction[0])
-
-        for feature in features:
-            feature_windows[feature].pop(0)
-            feature_windows[feature].append(prediction[0])
-
-    return predictions
-
-
-def denormalize(data, min_vals, max_vals):
-    data_np = np.array(data)
-    min_vals_np = np.array(min_vals)
-    max_vals_np = np.array(max_vals)
-    return data_np * (max_vals_np - min_vals_np) + min_vals_np
-
-def visualize_results(train, test, future_dates=[], **prediction_sets):
-    plt.figure(figsize=(12,6))
-    plt.plot(train.index, train['Close'], label='Training Close Prices', color='blue')
-    plt.plot(test.index, test['Close'], label='Actual Test Close Prices', color='green')
+    time = np.arange(len(data) - len(hurst_values))
     
-    for label, preds in prediction_sets.items():
-        plt.plot(test.index.tolist() + future_dates, preds, label=label)
+    # Assuming Hurst values can range between 0 and 1
+    for i, H in enumerate(hurst_values):
+        if i + window_size < len(data):
+            color = plt.cm.RdYlGn(H)  # Get color based on Hurst value
+            ax.axvspan(i, i + window_size, facecolor=color, alpha=0.1)
     
-    plt.title('Stock Price Prediction Comparison')
-    plt.xlabel('Date')
-    plt.ylabel('Stock Price')
-    plt.legend()
-    plt.tight_layout()
+    ax.plot(data, label='Actual Stock Prices', color='black')
+    ax.plot(np.arange(len(data), len(data) + len(dmd_predictions)), dmd_predictions, label='DMD Predictions', color='red')
+    ax.plot(np.arange(len(data), len(data) + len(lorenz_predictions)), lorenz_predictions, label='Lorenz Predictions', color='blue')
+    ax.plot(np.arange(len(data), len(data) + len(cluster_predictions)), cluster_predictions, label='Cluster Predictions', color='green')
+    ax.plot(np.arange(len(data), len(data) + len(combined_predictions)), combined_predictions, label='Combined Predictions', color='purple')
+    
+    ax.set_xlabel('Time')
+    ax.set_ylabel('Stock Price')
+    ax.set_title('Stock Price Predictions using DMD, Lorenz System, and Clustering')
+    ax.legend(loc='upper left')
+    ax.grid(True)
     plt.show()
 
 
-# Example usage:
-data = load_data('apple_stock_data.csv')
-data = generate_features(data)
-train, test = split_data(data)
-normalized_train, train_min, train_max = normalize_data(train)
-normalized_test, _, _ = normalize_data(test, train_min, train_max)
+if __name__ == "__main__":
+    # Data acquisition and preprocessing
+    stock_data = fetch_data('AAPL', '2020-01-01', '2022-12-31')
+    min_val = np.min(stock_data)
+    max_val = np.max(stock_data)
+    normalized_data, trend = detrend_normalize(stock_data)
+    embedded_data = time_delay_embedding(normalized_data, 1, 3)
+    data_matrix = construct_data_matrix(embedded_data.T, k=2)
+    
+    window_size = 252
+    forecast_steps = 30
 
-features = ['PrevOpen', 'PrevHigh', 'PrevLow', 'PrevClose', 'MovingAverage']
-X_train, y_train = create_windowed_data_for_features(normalized_train, features, window_size=7)
-X_test, y_test = create_windowed_data_for_features(normalized_test, features, window_size=7)
+    # Advanced Time-Series Analysis
+    hurst_values = calculate_rolling_hurst(stock_data, window_size=window_size)
 
-# model = LinearRegression()
-# model = Lasso(alpha=0.1)
-# model = RandomForestRegressor(n_estimators=100)
-model = GradientBoostingRegressor(n_estimators=100)
+    # DMD Analysis
+    A_tilde = compute_dmd_matrix(data_matrix)
+    dmd_predictions = predict_future_prices(A_tilde, data_matrix, forecast_steps)
+    dmd_predictions = reverse_preprocess(dmd_predictions, min_val, max_val, trend[-forecast_steps:])
+    
+    # Lorenz System Prediction
+    lorenz_predictions = fit_to_lorenz(embedded_data, forecast_steps)
+    lorenz_predictions = reverse_preprocess(lorenz_predictions, min_val, max_val, trend[-forecast_steps:])
 
-model = train_model(X_train, y_train, model)
-predictions = predict_using_model(model, normalized_test, features, window_size=7, num_future_predictions=5)
-predictions = denormalize(predictions, train_min['Close'], train_max['Close'])
+    # Clustering-based Prediction
+    cluster_predictions = predict_using_clusters(embedded_data, forecast_steps)
+    cluster_predictions = reverse_preprocess(cluster_predictions, min_val, max_val, trend[-forecast_steps:])
 
-# Generate future dates
-next_date = data.index[-1] + datetime.timedelta(days=1)
-future_dates = [next_date + datetime.timedelta(days=i) for i in range(5)]
+    # Consolidate Predictions
+    combined_predictions = consolidate_predictions(lorenz_predictions, cluster_predictions, hurst_values[-1])
 
-visualize_results(train, test, future_dates=future_dates, model=predictions)
+    # Visualization
+    visualize_combined_data(stock_data, dmd_predictions, lorenz_predictions, cluster_predictions, combined_predictions, trend, hurst_values, window_size)
+
+
