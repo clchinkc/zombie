@@ -54,9 +54,9 @@ def metropolis_hastings(likelihood_func, proposal_sampler, last_price, num_itera
 
 # Define the likelihood function for the MCMC simulation
 
-# geometric Brownian motion model modelled with a Wiener process
+# Black Scholes model modelled with geometric Brownian motion
 # def likelihood(final_price, previous_price, mu, sigma, theta):
-#     # Calculate the parameters of the geometric Brownian motion model
+#     # Calculate the parameters of the geometric Brownian motion
 #     alpha = theta / sigma
 #     beta = mu - 0.5 * sigma ** 2 / theta
 #     # Calculate the expected log price and log volatility at the final time point
@@ -224,7 +224,8 @@ plt.xlabel("Days")
 plt.ylabel("Price")
 plt.show()
 
-
+# stochastic volatility (like the Heston model)
+# solve SDE or Hamilton-Jacobi-Bellman (HJB) equations, derive optimal trading strategies
 
 """
 Use adaptive MCMC methods, which update the proposal distribution based on the information gathered from previous iterations. Some popular adaptive MCMC methods include the Adaptive Metropolis (AM) algorithm, the Covariance Matrix Adaptation Evolution Strategy (CMA-ES), and the Dual Averaging Stochastic Gradient Hamiltonian Monte Carlo (DA-SG-HMC) algorithm. These methods can adjust the proposal distribution to better explore the target distribution, resulting in faster convergence and improved sampling efficiency.

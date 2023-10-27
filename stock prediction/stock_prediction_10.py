@@ -7,63 +7,99 @@ One way to use stochastic control theory in stock price prediction is to model t
 This code is using dynamic programming and Bellman's equation to solve a continuous-time stochastic control problem known as the Merton problem. The model assumes that the stock price follows a geometric Brownian motion (GBM) and uses Monte Carlo simulation to estimate the transition probabilities and rewards for the discretized state and action spaces. The optimal policy is obtained by iteratively solving the Bellman's equation until convergence.
 """
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 # Parameters
-S0 = 100              # initial stock price
-mu = 0.05             # expected return of the stock
-sigma = 0.2           # standard deviation of the stock returns
-dt = 1                # length of time steps (in years)
-T = 1                 # length of investment horizon (in years)
-r = 0.03              # risk-free interest rate
-n_wealth_states = 101 # number of possible wealth levels
-wealth_min = 0        # minimum possible wealth level
-wealth_max = 200      # maximum possible wealth level
-n_simulation = 10000  # number of simulations for Monte Carlo simulation
+initial_stock_price = 100
+expected_return = 0.05
+stock_volatility = 0.2
+time_step = 1
+investment_horizon = 1
+risk_free_rate = 0.03
+n_stock_price_states = 101
+stock_price_min = 50  # Minimum stock price in the discretized space
+stock_price_max = 150  # Maximum stock price in the discretized space
+n_simulation = 10000
+n_actions = 101
 
-# Discretize wealth and action spaces
-wealth_space = np.linspace(wealth_min, wealth_max, n_wealth_states)  # possible wealth levels
-action_space = [0, 1]  # 0: keep everything in cash, 1: invest everything in stock
+# Discretize stock price and action spaces
+stock_price_space = np.linspace(stock_price_min, stock_price_max, n_stock_price_states)
+action_space = np.linspace(0, 1, n_actions)  # Fractions representing percentage invested in stocks
 
-# Transition probabilities and rewards
-P = np.zeros((n_wealth_states, len(action_space), n_wealth_states))  # transition probabilities
-R = np.zeros((n_wealth_states, len(action_space)))  # immediate rewards
+# Initialize transition probabilities and rewards
+transition_probs = np.zeros((n_stock_price_states, len(action_space), n_stock_price_states))
+rewards = np.zeros((n_stock_price_states, len(action_space)))
 
-for i, x in enumerate(wealth_space):
-    for a in action_space:
-        if a == 0:
-            R[i, a] = r * x * dt
-            next_wealth = x + R[i, a]
-            j = np.argmin(np.abs(wealth_space - next_wealth))
-            P[i, a, j] = 1
-        else:
-            sim_returns = np.random.normal(mu * dt, sigma * np.sqrt(dt), n_simulation)
-            next_wealth = x * (1 + sim_returns)
-            for next_x in next_wealth:
-                j = np.argmin(np.abs(wealth_space - next_x))
-                P[i, a, j] += 1 / n_simulation
-                R[i, a] += (1 / n_simulation) * (next_x - x)
+np.random.seed(42)
+
+# Calculate returns based on a stochastic process
+simulated_returns = np.random.normal(expected_return * time_step, stock_volatility * np.sqrt(time_step), n_simulation)
+
+for current_price_idx, current_stock_price in enumerate(stock_price_space):
+    for action_idx, fraction_invested in enumerate(action_space):
+        combined_rewards = []
+        
+        for simulated_return in simulated_returns:
+            next_stock_price = current_stock_price * (1 + simulated_return)
+            idx_closest_price = np.argmin(np.abs(stock_price_space - next_stock_price))
+            transition_probs[current_price_idx, action_idx, idx_closest_price] += 1 / n_simulation
 
 # Value iteration
-V = np.zeros(n_wealth_states)  # value function
-n_iterations = 1000  # maximum number of iterations for value iteration
-tolerance = 1e-6  # convergence tolerance for value iteration
-gamma = 1  # discount factor (set to 1 for undiscounted problem)
+value_function = np.zeros(n_stock_price_states)
+max_iterations = 1000
+convergence_tolerance = 1e-6
+discount_factor = 1
 
-for _ in range(n_iterations):
-    V_next = np.zeros(n_wealth_states)
-    for i in range(n_wealth_states):
-        V_next[i] = np.max(R[i] + gamma * P[i].dot(V))
-    if np.max(np.abs(V - V_next)) < tolerance:
+for _ in range(max_iterations):
+    new_value_function = np.zeros(n_stock_price_states)
+    for i in range(n_stock_price_states):
+        new_value_function[i] = np.max(rewards[i] + discount_factor * np.dot(transition_probs[i], value_function))
+    if np.max(np.abs(value_function - new_value_function)) < convergence_tolerance:
         break
-    V = V_next
+    value_function = new_value_function
 
 # Extract optimal policy
-policy = np.zeros(n_wealth_states)
-for i in range(n_wealth_states):
-    policy[i] = np.argmax(R[i] + gamma * P[i].dot(V))
+optimal_policy = np.zeros(n_stock_price_states, dtype=float)
+for i in range(n_stock_price_states):
+    optimal_policy[i] = action_space[np.argmax(rewards[i] + discount_factor * np.dot(transition_probs[i], value_function))]
 
-print("Optimal policy:", policy)
+# Simulate stock price path
+T = 100
+stock_price_path = [initial_stock_price]
+optimal_fraction_path = []
+
+# Determine the optimal action for each stock price
+for idx, stock_price in enumerate(stock_price_path[:-1]):
+    idx_closest_price = np.argmin(np.abs(stock_price_space - stock_price))
+    optimal_fraction = optimal_policy[idx_closest_price]
+    optimal_fraction_path.append(optimal_fraction)
+
+    # Simulate next stock price based on the optimal action
+    dt_return = np.random.normal(expected_return * time_step, stock_volatility * np.sqrt(time_step))
+    next_stock_price = stock_price * (1 + dt_return)
+    stock_price_path.append(next_stock_price)
+
+# Plotting
+fig, ax1 = plt.subplots(figsize=(10, 6))
+
+color = 'tab:red'
+ax1.set_xlabel('Time')
+ax1.set_ylabel('Stock Price', color=color)
+ax1.plot(stock_price_path, color=color)
+ax1.tick_params(axis='y', labelcolor=color)
+
+ax2 = ax1.twinx()
+color = 'tab:blue'
+ax2.set_ylabel('Fraction Invested in Stock', color=color)
+ax2.plot(optimal_fraction_path, color=color)
+ax2.tick_params(axis='y', labelcolor=color)
+
+plt.title('Stock Price and Optimal Fraction Invested in Stock Over Time')
+plt.show()
+
+
+
 
 """
 A more appropriate approach to this problem would be to use more sophisticated models and techniques like continuous-time portfolio optimization, which involves solving a Hamilton-Jacobi-Bellman (HJB) partial differential equation.
