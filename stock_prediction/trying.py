@@ -18,11 +18,42 @@ def utility(wealth, rho=risk_aversion):
     else:
         return wealth**(1-rho) / (1-rho)
 
-def simulate_stock_price(T):
-    prices = [initial_stock_price]
-    dt_returns = np.random.normal(expected_return * time_step, stock_volatility * np.sqrt(time_step), T)
-    prices = initial_stock_price * np.cumprod(1 + dt_returns)
-    return np.insert(prices, 0, initial_stock_price)
+def kalman_predict(state_estimates, covariances, A, Q):
+    next_state_estimates = A @ state_estimates
+    next_covariances = A @ covariances @ A.T + Q
+    return next_state_estimates, next_covariances
+
+def kalman_update(state_estimates, covariances, observations, C, R):
+    observations = np.atleast_2d(observations).T  # Ensure observations is a 2D column vector
+
+    # Compute Kalman Gain
+    C_covariance_product = C @ covariances
+    kalman_gains = covariances @ C.T @ np.linalg.inv(C_covariance_product @ C.T + R)
+
+    # Update State Estimate and Covariance
+    updated_state_estimates = state_estimates + kalman_gains @ (observations - C @ state_estimates)
+    updated_covariances = covariances - kalman_gains @ C @ covariances
+
+    return updated_state_estimates, updated_covariances
+
+def simulate_stock_price(T, initial_state, initial_covariance, A, C, Q, R, expected_return, stock_volatility, time_step):
+    state_estimates = np.full((1, T), initial_state)
+    covariances = np.full((1, 1, T), initial_covariance)
+    true_prices = np.full(T, initial_stock_price)
+    observations = np.full(T, initial_stock_price)
+    
+    for t in range(1, T):
+        true_price = true_prices[t-1] * np.exp(np.random.normal(expected_return * time_step, stock_volatility * np.sqrt(time_step)))
+        observation = true_price + np.random.normal(0, stock_volatility * np.sqrt(time_step))
+        state_estimates[:, t:t+1], covariances[:, :, t:t+1] = kalman_predict(state_estimates[:, t-1:t], covariances[:, :, t-1:t], A, Q)
+        state_estimates[:, t:t+1], covariances[:, :, t:t+1] = kalman_update(state_estimates[:, t:t+1], covariances[:, :, t:t+1], np.log(observation), C, R)
+
+        true_prices[t] = true_price
+        observations[t] = observation
+
+    estimates = np.exp(state_estimates.flatten())
+
+    return true_prices, observations, estimates
 
 def get_stock_price_space(prices, buffer_percent=0.05):
     min_price_with_buffer = min(prices) * (1 - buffer_percent)
@@ -51,13 +82,13 @@ def compute_utilities_and_transitions(stock_price_space, n_simulation, action_sp
 
     for current_price_idx, current_price in enumerate(stock_price_space):
         for action_idx, fraction_invested in enumerate(action_space):
-            # Vectorized computation of final_wealth for all simulated returns
+            # Compute final_wealth for all simulated returns
             final_wealths = compute_final_wealth(current_price, fraction_invested, simulated_returns, risk_free_rate, time_step)
             
-            # Vectorized computation of utility values for all simulated returns
+            # Compute utility values for all simulated returns
             utility_values = current_price * (final_wealths - current_price) + utility(final_wealths)
             
-            # Vectorized mean calculation
+            # Compute mean of utility values
             utilities[current_price_idx, action_idx] = np.mean(utility_values)
 
             # Update transition probabilities
@@ -130,12 +161,20 @@ def plot_results(stock_price_path, optimal_fraction_path):
     plt.show()
     
 if __name__ == "__main__":
+    # Parameters for Kalman Filter
+    A = np.array([[1]])  # Identity for random walk
+    C = np.array([[1]])  # Observation matrix
+    Q = stock_volatility**2 * time_step  # Process noise
+    R = stock_volatility**2 * time_step  # Observation noise
+    initial_state = np.array([np.log(initial_stock_price)])
+    initial_covariance = np.array([[stock_volatility**2 * time_step]])
+
     # Simulate stock price path
     T = 252
-    stock_price_path = simulate_stock_price(T)
+    true_stock_prices, observations, kalman_estimates = simulate_stock_price(T, initial_state, initial_covariance, A, C, Q, R, expected_return, stock_volatility, time_step)
 
     # Get stock price space
-    stock_price_space = get_stock_price_space(stock_price_path)
+    stock_price_space = get_stock_price_space(true_stock_prices)
 
     # Get action space
     action_space = np.linspace(0, 1, n_actions)
@@ -147,7 +186,7 @@ if __name__ == "__main__":
     value_function = value_iteration(utilities, transition_probs, discount_factor, stock_price_space)
 
     # Simulate stock price path and find the optimal investment fraction for each stock price
-    stock_price_path, optimal_fraction_path = simulate_optimal_fraction_path(T, initial_stock_price, stock_price_space, action_space, utilities, transition_probs, value_function, expected_return, stock_volatility, time_step, discount_factor)
+    _, optimal_fraction_path = simulate_optimal_fraction_path(T, initial_stock_price, stock_price_space, action_space, utilities, transition_probs, value_function, expected_return, stock_volatility, time_step, discount_factor)
 
     # Plotting
-    plot_results(stock_price_path, optimal_fraction_path)
+    plot_results(kalman_estimates, optimal_fraction_path)
