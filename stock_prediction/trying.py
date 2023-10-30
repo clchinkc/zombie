@@ -12,11 +12,15 @@ n_actions = 101
 risk_aversion = 0.01  # risk aversion parameter
 discount_factor = np.exp(-risk_free_rate * time_step)
 
-def utility(wealth, rho=risk_aversion):
+def compute_VaR(returns, confidence_level):
+    return -np.percentile(returns, 100 - confidence_level)
+
+def risk_adjusted_utility(wealth, VaR, alpha=0.05, rho=risk_aversion):
+    risk_penalty = alpha * VaR
     if rho == 1:
-        return np.log(wealth)
+        return np.log(wealth) - risk_penalty
     else:
-        return wealth**(1-rho) / (1-rho)
+        return wealth**(1-rho) / (1-rho) - risk_penalty
 
 def kalman_predict(state_estimates, covariances, A, Q):
     next_state_estimates = A @ state_estimates
@@ -24,13 +28,11 @@ def kalman_predict(state_estimates, covariances, A, Q):
     return next_state_estimates, next_covariances
 
 def kalman_update(state_estimates, covariances, observations, C, R):
-    observations = np.atleast_2d(observations).T  # Ensure observations is a 2D column vector
+    observations = np.atleast_2d(observations).T
 
-    # Compute Kalman Gain
     C_covariance_product = C @ covariances
     kalman_gains = covariances @ C.T @ np.linalg.inv(C_covariance_product @ C.T + R)
 
-    # Update State Estimate and Covariance
     updated_state_estimates = state_estimates + kalman_gains @ (observations - C @ state_estimates)
     updated_covariances = covariances - kalman_gains @ C @ covariances
 
@@ -86,7 +88,8 @@ def compute_utilities_and_transitions(stock_price_space, n_simulation, action_sp
             final_wealths = compute_final_wealth(current_price, fraction_invested, simulated_returns, risk_free_rate, time_step)
             
             # Compute utility values for all simulated returns
-            utility_values = current_price * (final_wealths - current_price) + utility(final_wealths)
+            VaR = compute_VaR(simulated_returns, confidence_level=95)
+            utility_values = compute_action_utility(current_price, fraction_invested, simulated_returns, risk_free_rate, time_step, lambda x: utility(x, VaR))
             
             # Compute mean of utility values
             utilities[current_price_idx, action_idx] = np.mean(utility_values)
@@ -180,7 +183,7 @@ if __name__ == "__main__":
     action_space = np.linspace(0, 1, n_actions)
 
     # Compute utilities and transition probabilities
-    utilities, transition_probs = compute_utilities_and_transitions(stock_price_space, n_simulation, action_space, expected_return, stock_volatility, risk_free_rate, time_step, utility)
+    utilities, transition_probs = compute_utilities_and_transitions(stock_price_space, n_simulation, action_space, expected_return, stock_volatility, risk_free_rate, time_step, risk_adjusted_utility)
 
     # Value iteration
     value_function = value_iteration(utilities, transition_probs, discount_factor, stock_price_space)
