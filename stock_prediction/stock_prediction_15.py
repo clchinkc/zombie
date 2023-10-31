@@ -6,10 +6,8 @@ from hurst import compute_Hc
 from scipy.integrate import solve_ivp
 from scipy.optimize import least_squares
 from sklearn.cluster import KMeans
-from sklearn.kernel_approximation import svd
 from sklearn.linear_model import LinearRegression
 
-# 1. Data Loading and Preprocessing
 
 def fetch_data(ticker, start_date, end_date):
     data = yf.download(ticker, start=start_date, end=end_date)
@@ -37,7 +35,15 @@ def time_delay_embedding(data, dimension, delay):
         X[i] = data[i*delay : i*delay + X.shape[1]]
     return X
 
-# 2. Dynamic Mode Decomposition (DMD) Analysis
+
+def calculate_rolling_hurst(stock_data, window_size=252):
+    """ Calculate the rolling Hurst exponent """
+    hurst_values = []
+    for i in range(len(stock_data) - window_size):
+        H = compute_Hc(stock_data[i:i+window_size], kind='price', simplified=True)[0]
+        hurst_values.append(H)
+    return hurst_values
+
 
 def construct_data_matrices(feature_matrix):
     """Construct the data matrices X and X_prime for DMD."""
@@ -73,7 +79,6 @@ def compute_dmd_modes_and_freqs(X, A_tilde):
     
     return DMD_modes, DMD_freqs
 
-
 def predict_using_dmd_modes(X, DMD_modes, DMD_freqs, forecast_steps=50):
     """Predict future states using DMD modes and frequencies."""
     b = np.linalg.lstsq(DMD_modes, X[:, 0], rcond=None)[0]
@@ -84,16 +89,6 @@ def predict_using_dmd_modes(X, DMD_modes, DMD_freqs, forecast_steps=50):
     
     return np.abs(DMD_modes @ time_dynamics)[-1]
 
-
-# 3. Advanced Time-Series Analysis
-
-def calculate_rolling_hurst(stock_data, window_size=252):
-    """ Calculate the rolling Hurst exponent """
-    hurst_values = []
-    for i in range(len(stock_data) - window_size):
-        H = compute_Hc(stock_data[i:i+window_size], kind='price', simplified=True)[0]
-        hurst_values.append(H)
-    return hurst_values
 
 def lorenz_system(t, xyz, sigma, beta, rho):
     """ Lorenz System dynamics """
@@ -135,7 +130,6 @@ def consolidate_predictions(lorenz_pred, cluster_pred, hurst_value):
     lorenz_weight = hurst_value
     return lorenz_pred * lorenz_weight + cluster_pred * (1 - lorenz_weight)
 
-# 4. Visualization
 
 def visualize_combined_data(data, dmd_predictions, lorenz_predictions, cluster_predictions, combined_predictions, trend, hurst_values, window_size):
     fig, ax = plt.subplots(figsize=(14, 8))

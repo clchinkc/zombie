@@ -193,3 +193,24 @@ if __name__ == "__main__":
 
     # Plotting
     plot_results(kalman_estimates, optimal_fraction_path)
+    
+"""
+### Reinforcement Learning and Advanced Stochastic Control Techniques:
+
+1. **Incorporating Reinforcement Learning (RL):** Implement RL methods, inspired by stochastic control, for optimizing trading strategies. Utilize deep learning frameworks for handling complex, high-dimensional spaces. RL can dynamically adjust strategies based on market feedback, learning optimal actions over time.
+
+2. **Deep Stochastic Control Models:** Explore deep learning models integrated with stochastic control principles. These models are particularly adept at managing intricate patterns and large-scale data, providing a more nuanced understanding of market dynamics.
+
+### Implementing Rolling Horizon Optimization:
+
+1. **Rolling Horizon Strategy:** Adapt the code to apply a rolling horizon approach. This technique involves recalculating trading strategies at each time step, incorporating the most recent stock price and forecasts. Modify the optimization loop to account for a predetermined horizon, ensuring decisions are based on updated and relevant information.
+
+2. **Dynamic Optimization Recalculation:** Implement a mechanism where, at every time step, the optimization process is rerun for a specific future horizon. This ensures that decisions are always based on the latest data and projections, enhancing the adaptability of the strategy.
+
+### Introducing a Feedback Mechanism:
+
+1. **Feedback-Driven Model Updates:** Introduce a mechanism where past investment decisions and market observations (like actual stock price movements) are used to refine the model. This can be achieved by adjusting key parameters such as expected return and volatility based on historical performance and market trends.
+
+2. **Adaptive Parameter Adjustment:** Implement a system that modifies model parameters at each time step, based on accumulated historical data. This approach allows the model to evolve and adapt, potentially improving decision-making by learning from past outcomes.
+
+"""
