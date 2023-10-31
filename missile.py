@@ -100,6 +100,9 @@ class Missile:
         self.x += self.velocity_x * dt
         self.y -= self.velocity_y * dt  # Negative because Pygame's Y-axis is inverted
 
+        # Update angle based on velocity
+        self.angle = math.degrees(math.atan2(self.velocity_y, self.velocity_x))
+
         # Reset accelerations for the next frame
         self.acceleration_x = 0
         self.acceleration_y = 0
