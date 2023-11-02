@@ -159,18 +159,14 @@ if __name__ == "__main__":
     main()
 
 """
-Trajectory Visualization: Draw the trajectory of the missile.
 Enhancements: Refine the simulation by adding more features or improving the visuals.
 Optimization: Calculate the cost of the missile based on the acceleration, weight, and distance.
 
-        # Print statements for debugging
-        print(f"Position: ({self.x}, {self.y})")
-        print(f"Velocity: ({self.velocity_x}, {self.velocity_y})")
-        print(f"Acceleration: ({self.acceleration_x}, {self.acceleration_y})")
+# Print statements for debugging
+print(f"Position: ({self.x}, {self.y})")
+print(f"Velocity: ({self.velocity_x}, {self.velocity_y})")
+print(f"Acceleration: ({self.acceleration_x}, {self.acceleration_y})")
 
-Please keep using the calculate_initial_conditions method to calculate only the launch angle based on my calculation of gravity, air resistance, and propulsion, without modifying the initial velocity. The initial velocity should be zero and it will be updated in the update method through acceleration, which will be influenced by forces.
-
-Please ensure the initial conditions are calculated based on both the propulsion force and the weight of the missile. Please estimate the effect of propulsion on horizontal velocity and estimate the effect of propulsion on vertical velocity in the calculate_initial_conditions function. Given the simulation's simplicity, we can assume that the propulsion gives an equal boost in both the x and y directions. This is a simplification, but it helps us get started without knowing the launch angle.
 
 Set a fuel object and engine object for the missile. The engine should use the fuel at launch for a set rate to increase the acceleration until the set amount of fuel is used up.
 
