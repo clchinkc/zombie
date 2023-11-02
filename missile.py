@@ -11,6 +11,7 @@ WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 FPS = 60
+TIME_PER_FRAME = 1.0 / FPS  # Time per frame in seconds
 GRAVITY = 9.8  # Gravity constant
 AIR_RESISTANCE_COEFF = 0.01  # Air resistance coefficient for linear drag
 
@@ -79,7 +80,7 @@ class Missile:
         self.acceleration_y -= air_resist_accel_y
 
     def apply_propulsion(self):
-        if self.has_fuel and self.x < self.target_distance:
+        if self.has_fuel:
             acceleration_due_to_propulsion = self.propulsion_force / self.weight
             self.acceleration_x += acceleration_due_to_propulsion * math.cos(math.radians(self.angle))
             self.acceleration_y += acceleration_due_to_propulsion * math.sin(math.radians(self.angle))
@@ -93,12 +94,12 @@ class Missile:
         self.apply_propulsion()
 
         # Update the velocity based on acceleration
-        self.velocity_x += self.acceleration_x * dt
-        self.velocity_y += self.acceleration_y * dt
+        self.velocity_x += self.acceleration_x * TIME_PER_FRAME
+        self.velocity_y += self.acceleration_y * TIME_PER_FRAME
 
         # Update the position based on velocity
-        self.x += self.velocity_x * dt
-        self.y -= self.velocity_y * dt  # Negative because Pygame's Y-axis is inverted
+        self.x += self.velocity_x * TIME_PER_FRAME
+        self.y -= self.velocity_y * TIME_PER_FRAME  # Negative because Pygame's Y-axis is inverted
 
         # Update angle based on velocity
         self.angle = math.degrees(math.atan2(self.velocity_y, self.velocity_x))
@@ -127,12 +128,11 @@ def check_collision(missile, target):
 def main():
     run = True
     clock = pygame.time.Clock()
-    missile = Missile(propulsion_force=100, weight=10, target_distance=300)
-    target = Target(x=300, y=HEIGHT)  # Place target at the missile's target distance
+    missile = Missile(propulsion_force=100, weight=10, target_distance=100)
+    target = Target(x=100, y=HEIGHT)  # Place target at the missile's target distance
 
     while run:
-        global dt
-        dt = clock.tick(FPS) / 1000.0  # Delta time in seconds
+        clock.tick(FPS)
 
         WIN.fill(WHITE)
 
@@ -157,3 +157,43 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+"""
+Trajectory Visualization: Draw the trajectory of the missile.
+Enhancements: Refine the simulation by adding more features or improving the visuals.
+Optimization: Calculate the cost of the missile based on the acceleration, weight, and distance.
+
+        # Print statements for debugging
+        print(f"Position: ({self.x}, {self.y})")
+        print(f"Velocity: ({self.velocity_x}, {self.velocity_y})")
+        print(f"Acceleration: ({self.acceleration_x}, {self.acceleration_y})")
+
+Please keep using the calculate_initial_conditions method to calculate only the launch angle based on my calculation of gravity, air resistance, and propulsion, without modifying the initial velocity. The initial velocity should be zero and it will be updated in the update method through acceleration, which will be influenced by forces.
+
+Please ensure the initial conditions are calculated based on both the propulsion force and the weight of the missile. Please estimate the effect of propulsion on horizontal velocity and estimate the effect of propulsion on vertical velocity in the calculate_initial_conditions function. Given the simulation's simplicity, we can assume that the propulsion gives an equal boost in both the x and y directions. This is a simplification, but it helps us get started without knowing the launch angle.
+
+Set a fuel object and engine object for the missile. The engine should use the fuel at launch for a set rate to increase the acceleration until the set amount of fuel is used up.
+
+Variable Thrust: The acceleration of a real missile changes over time due to the consumption of fuel and the resulting reduction in mass.
+Variable Thrust with Fuel Consumption: The thrust now decreases as the fuel mass decreases, making it more realistic. As fuel burns, the missile becomes lighter, and the thrust decreases accordingly.
+
+Air Resistance Model: The model used for air resistance is quite simplistic. It assumes linear drag, which might not be very accurate for high-speed projectiles like missiles. A quadratic drag model might be more appropriate.
+Drag Coefficient and Air Density: It incorporates drag into the simulation using the drag equation. This is a significant improvement as it takes into account the missile's shape and air density at sea level.
+Improved Air Resistance: Consider using a quadratic drag formula (drag = 0.5 * air_density * velocity^2 * drag_coefficient * reference_area) for more realistic air resistance at higher velocities.
+
+Assumptions about Trajectory: The code seems to assume that the missile will follow a parabolic trajectory. This might not hold true in all cases, especially if the missile is self-propelled and can adjust its trajectory mid-flight.
+Propulsion Force: If the missile is self-propelled, add a force that continuously accelerates the missile until the fuel is depleted or until a certain point in its trajectory.
+
+Use of Weight: Utilize the missile’s weight to calculate the gravitational force (force = mass * gravity) and possibly its effect on air resistance.
+
+Realistic Initial Conditions: Revise the calculation of initial velocity and angle. Often, these are determined through optimization techniques considering the desired range, maximum height, and other trajectory characteristics.
+Configurability: Allow the user to adjust parameters like missile weight, propulsion force, drag coefficient, etc., to see how they affect the trajectory.
+
+Please solve differential equations to get the time of flight.
+# Simplified formula to estimate launch angle (ignores air resistance)
+angle = math.degrees(math.atan((v**2 - math.sqrt(v**4 - g * (g * d**2 + 2 * HEIGHT * v**2))) / (g * d)))
+
+Control when to use the fuel and in what direction
+Max acceleration and max velocity
+Anti-ballistic missile
+"""
