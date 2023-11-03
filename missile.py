@@ -170,17 +170,10 @@ print(f"Acceleration: ({self.acceleration_x}, {self.acceleration_y})")
 
 Set a fuel object and engine object for the missile. The engine should use the fuel at launch for a set rate to increase the acceleration until the set amount of fuel is used up.
 
-Variable Thrust: The acceleration of a real missile changes over time due to the consumption of fuel and the resulting reduction in mass.
-Variable Thrust with Fuel Consumption: The thrust now decreases as the fuel mass decreases, making it more realistic. As fuel burns, the missile becomes lighter, and the thrust decreases accordingly.
-
-Air Resistance Model: The model used for air resistance is quite simplistic. It assumes linear drag, which might not be very accurate for high-speed projectiles like missiles. A quadratic drag model might be more appropriate.
-Drag Coefficient and Air Density: It incorporates drag into the simulation using the drag equation. This is a significant improvement as it takes into account the missile's shape and air density at sea level.
-Improved Air Resistance: Consider using a quadratic drag formula (drag = 0.5 * air_density * velocity^2 * drag_coefficient * reference_area) for more realistic air resistance at higher velocities.
 
 Assumptions about Trajectory: The code seems to assume that the missile will follow a parabolic trajectory. This might not hold true in all cases, especially if the missile is self-propelled and can adjust its trajectory mid-flight.
 Propulsion Force: If the missile is self-propelled, add a force that continuously accelerates the missile until the fuel is depleted or until a certain point in its trajectory.
 
-Use of Weight: Utilize the missile’s weight to calculate the gravitational force (force = mass * gravity) and possibly its effect on air resistance.
 
 Realistic Initial Conditions: Revise the calculation of initial velocity and angle. Often, these are determined through optimization techniques considering the desired range, maximum height, and other trajectory characteristics.
 Configurability: Allow the user to adjust parameters like missile weight, propulsion force, drag coefficient, etc., to see how they affect the trajectory.
