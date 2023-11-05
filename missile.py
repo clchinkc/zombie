@@ -170,10 +170,19 @@ print(f"Acceleration: ({self.acceleration_x}, {self.acceleration_y})")
 
 Set a fuel object and engine object for the missile. The engine should use the fuel at launch for a set rate to increase the acceleration until the set amount of fuel is used up.
 
+ballistic missile vs cruise missile
 
 Assumptions about Trajectory: The code seems to assume that the missile will follow a parabolic trajectory. This might not hold true in all cases, especially if the missile is self-propelled and can adjust its trajectory mid-flight.
 Propulsion Force: If the missile is self-propelled, add a force that continuously accelerates the missile until the fuel is depleted or until a certain point in its trajectory.
 
+aerodynamic lift
+inertia
+rotation
+dynamics of flight control systems
+orientation and using control surfaces to steer
+thrust vectoring
+control surfaces
+interactions with the weather and environment
 
 Realistic Initial Conditions: Revise the calculation of initial velocity and angle. Often, these are determined through optimization techniques considering the desired range, maximum height, and other trajectory characteristics.
 Configurability: Allow the user to adjust parameters like missile weight, propulsion force, drag coefficient, etc., to see how they affect the trajectory.

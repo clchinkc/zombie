@@ -5,6 +5,7 @@
 # https://medium.com/swlh/stock-market-screening-and-analysis-using-web-scraping-neural-networks-and-regression-analysis-f40742dd86e0
 # https://ieeexplore.ieee.org/document/8995080
 # https://github.com/alisonmitchell/Stock-Prediction
+# https://github.com/CSchoel/nolds
 # stock prediction google search
 
 """

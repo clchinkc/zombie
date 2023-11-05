@@ -196,3 +196,20 @@ if __name__ == "__main__":
     visualize_combined_data(stock_data, dmd_predictions, lorenz_predictions, cluster_predictions, combined_predictions, trend, hurst_values, window_size)
 
 
+"""
+Takens' Theorem, introduced by Floris Takens in 1981, is a fundamental result in the theory of dynamical systems which provides a foundation for reconstructing a dynamical system from a series of observations. The theorem is especially significant in the analysis of time series data and is a cornerstone for the method of time-delay embeddings.
+
+In essence, Takens' Theorem states that under certain conditions, the dynamics of a system can be fully reconstructed from a single scalar observation function. That is, if you have a sequence of observations taken at successive times, you can recreate a space that is topologically equivalent to the original phase space of the dynamical system. This is known as a reconstructed phase space.
+
+Here's a simplified explanation of how it works:
+
+1. **Observation Function**: You start with a function that records observations from the system over time. For instance, this could be a single variable from a system that evolves over time, such as a stock price.
+
+2. **Time-Delay Embedding**: You construct vectors where each vector component is an observation separated by a fixed time delay. For example, if your observations are \( x(t) \), then a reconstructed state might look like \( (x(t), x(t + \tau), x(t + 2\tau), ..., x(t + (m-1)\tau)) \), where \( \tau \) is the time delay and \( m \) is the embedding dimension.
+
+3. **Embedding Dimension**: Takens' Theorem tells us that as long as the embedding dimension \( m \) is large enough (more precisely, at least twice the dimension of the original attractor of the dynamical system), the reconstructed dynamics will be equivalent to the true underlying dynamics of the system, up to a diffeomorphism (a kind of smooth, invertible map).
+
+This embedding technique allows for the examination of the dynamical properties of the system, such as cycles, periodicity, attractors, and chaotic behavior, using a time series of scalar measurements. The theorem is especially useful when the system in question has many unobservable or unmeasured variables.
+
+In practical applications, such as in analyzing financial time series data, Takens' theorem suggests that it may be possible to capture the essential dynamics of the stock market using just the historical price data, even though the market is influenced by a large number of unobserved factors. However, identifying the correct time delay \( \tau \) and embedding dimension \( m \) is non-trivial and typically requires careful analysis and sometimes trial and error.
+"""
