@@ -194,4 +194,32 @@ angle = math.degrees(math.atan((v**2 - math.sqrt(v**4 - g * (g * d**2 + 2 * HEIG
 Control when to use the fuel and in what direction
 Max acceleration and max velocity
 Anti-ballistic missile
+
+https://www.mwrf.com/markets/defense/article/21848658/the-3-major-phases-of-effective-missile-defense-systems
+
+https://zh.wikipedia.org/zh-tw/%E6%98%9F%E7%90%83%E5%A4%A7%E6%88%98%E8%AE%A1%E5%88%92
+
+https://zh.wikipedia.org/zh-tw/%E6%B4%B2%E9%9A%9B%E5%BD%88%E9%81%93%E9%A3%9B%E5%BD%88
+
+https://en.wikipedia.org/wiki/Ballistic_missile_flight_phases
+
+https://www.atlantis-press.com/article/25868869.pdf
+"""
+
+"""
+Proportional navigation is a guidance law used in missile technology to ensure that a missile intercepts a moving target. It's a concept widely used in both surface-to-air and air-to-air missiles, among other types. The underlying principle of proportional navigation (PN) is not to steer the missile directly at the target, but rather to maneuver it based on the target's motion to maintain a collision course.
+
+Here's how it works in simplified terms:
+
+1. **Line of Sight (LOS) Rate**: Proportional navigation focuses on the Line of Sight (LOS) angle between the missile and the target. The LOS is the straight line that connects the missile and the target. The guidance system continually measures the rate at which this angle is changing.
+
+2. **Proportional Response**: The missile is commanded to turn at a rate that is proportional to the LOS rate of change. The constant of proportionality is called the Navigation Constant or Navigation Ratio (usually denoted by "N"). A common value for N is 3, which means the missile will turn at a rate three times that of the LOS rate of change. This factor ensures that the missile leads the target, anticipating where it will be in the future rather than where it is currently.
+
+3. **Collision Course**: The result of this type of guidance law is that the missile will fly a path that brings it to an intersection with the target's path, ideally at the same time the target arrives at that point. This is because the guidance logic mathematically drives the missile's velocity vector to align with the LOS to the target as they converge.
+
+4. **Advantages**: Proportional navigation is robust and simple to implement. It does not require the missile to know the target's velocity or predict its future position, only the change in the LOS angle. PN is also less sensitive to measurement errors and uncertainties about the target's motion compared to other guidance methods.
+
+5. **Energy Management**: While PN is about the direction of flight, a missile also has to manage its energy (speed and altitude) to ensure it has enough kinetic energy to reach the target. This aspect is handled by other systems on the missile, which work in conjunction with the PN guidance.
+
+In essence, proportional navigation is an elegant solution to the interception problem because it automatically compensates for changes in the target's movement without requiring complex predictive calculations. It leverages the geometry of the situation to guide the missile to the right interception point, making it a very effective and widely used missile guidance method.
 """

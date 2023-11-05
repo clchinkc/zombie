@@ -92,15 +92,29 @@ class BallisticMissile(Missile):
             # Store the position where propulsion ends
             self.propulsion_end_position = self.position.copy()
 
+    def objective(self, target):
+        # Run the simulation until the missile stops moving upwards and starts moving downwards
+        # and its vertical position is below the target's vertical position.
+        while self.velocity[1] >= 0 or self.position[1] > target.position[1]:
+            self.update_state()
+            if target.is_hit_by(self):
+                return 0  # Target hit
+        # If the missile has passed the target's altitude or fallen to the ground, compute the miss distance
+        distance_to_target = np.linalg.norm(self.position - target.position)
+        return distance_to_target
 
-class CruiseMissile(Missile):
-    def __init__(self, mass, cross_section_area, drag_coefficient):
-        super().__init__(mass, cross_section_area, drag_coefficient)
-        # Additional attributes specific to cruise missile can be added here
+    @classmethod
+    def find_optimal_conditions(cls, target, initial_guess, bounds):
+        def _objective(params):
+            launch_angle, thrust, burn_time = params
+            # Instantiate the missile with given parameters
+            missile = cls(mass=1000, fuel_mass=300, cross_section_area=0.3, drag_coefficient=0.5, 
+                          launch_angle=launch_angle, max_thrust=thrust, burn_time=burn_time, 
+                          fuel_consumption_rate=5)
+            return missile.objective(target)
 
-    def update_state(self):
-        # Implementation specific to cruise missile goes here
-        pass  # Placeholder for now
+        result = minimize(_objective, initial_guess, bounds=bounds)
+        return result.x
 
 class Target:
     def __init__(self, position):
@@ -114,42 +128,28 @@ class Target:
         plt.scatter(self.position[0], self.position[1], c='red', marker='X', s=100, label='Target')
         plt.legend()
 
-def objective(params, target):
-    launch_angle, thrust, burn_time = params
-    # Add a reasonable assumption for the initial fuel mass and consumption rate
-    fuel_mass = 300  # Initial fuel mass in kg
-    fuel_consumption_rate = 5  # Fuel consumption rate in kg/s
-    
-    # Instantiate the missile with additional parameters
-    missile = BallisticMissile(mass=1000, fuel_mass=fuel_mass, cross_section_area=0.3, drag_coefficient=0.5, 
-                               launch_angle=launch_angle, max_thrust=thrust, burn_time=burn_time, 
-                               fuel_consumption_rate=fuel_consumption_rate)
-    
-    while missile.position[1] >= 0:
-        missile.update_state()
-        if target.is_hit_by(missile):
-            return 0  # Target hit
-
-    distance_to_target = np.linalg.norm(missile.position - target.position)
-    return distance_to_target
-
-def find_optimal_conditions(target):
-    result = minimize(objective, [45, 200000, 10], args=(target), bounds=[(0, 90), (0, 500000), (0, 60)])
-    return result.x
-
 def main():
-    target_position = [10000, 0]
+    target_position = [10000, 1000]
     target = Target(target_position)
 
-    optimal_launch_angle, optimal_thrust, optimal_burn_time = find_optimal_conditions(target)
+    initial_guess = [45, 200000, 10]  # Initial guess for the optimization
+    bounds = [(0, 90), (0, 500000), (0, 60)]  # Bounds for launch_angle, thrust, and burn_time
+
+    optimal_launch_angle, optimal_thrust, optimal_burn_time = BallisticMissile.find_optimal_conditions(
+        target, initial_guess, bounds
+    )
     print(f"Optimal Launch Angle: {optimal_launch_angle:.2f} degrees")
     print(f"Optimal Thrust: {optimal_thrust:.2f} N")
     print(f"Optimal Burn Time: {optimal_burn_time:.2f} s")
 
-    missile = BallisticMissile(mass=1000, fuel_mass=300, cross_section_area=0.3, drag_coefficient=0.5, 
-                               launch_angle=optimal_launch_angle, max_thrust=optimal_thrust, burn_time=optimal_burn_time, 
-                               fuel_consumption_rate=5)
-    while missile.position[1] >= 0:
+    # Create a missile instance with the optimal conditions found
+    missile = BallisticMissile(
+        mass=1000, fuel_mass=300, cross_section_area=0.3, drag_coefficient=0.5,
+        launch_angle=optimal_launch_angle, max_thrust=optimal_thrust, burn_time=optimal_burn_time,
+        fuel_consumption_rate=5
+    )
+    
+    while (missile.position[0] < target.position[0] or missile.position[1] >= 0 or missile.position[1] < target.position[1] or missile.position[0] >= target.position[0]) and not target.is_hit_by(missile):
         missile.update_state()
 
     missile.plot_trajectory(target)
