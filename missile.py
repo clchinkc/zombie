@@ -191,6 +191,8 @@ Please solve differential equations to get the time of flight.
 # Simplified formula to estimate launch angle (ignores air resistance)
 angle = math.degrees(math.atan((v**2 - math.sqrt(v**4 - g * (g * d**2 + 2 * HEIGHT * v**2))) / (g * d)))
 
+A GuidanceSystem class with methods for updating missile heading and position. This modularity allows for different guidance strategies to be implemented and tested with the CruiseMissile class.
+
 Control when to use the fuel and in what direction
 Max acceleration and max velocity
 Anti-ballistic missile
@@ -222,4 +224,50 @@ Here's how it works in simplified terms:
 5. **Energy Management**: While PN is about the direction of flight, a missile also has to manage its energy (speed and altitude) to ensure it has enough kinetic energy to reach the target. This aspect is handled by other systems on the missile, which work in conjunction with the PN guidance.
 
 In essence, proportional navigation is an elegant solution to the interception problem because it automatically compensates for changes in the target's movement without requiring complex predictive calculations. It leverages the geometry of the situation to guide the missile to the right interception point, making it a very effective and widely used missile guidance method.
+"""
+
+"""
+Ballistic missiles and cruise missiles are two distinct types of weapons systems used for delivering payloads over long distances, but they have different flight profiles, propulsion methods, and guidance systems.
+
+**Ballistic Missile:**
+
+1. **Flight Trajectory:** A ballistic missile follows a ballistic trajectory to reach its target. This means that it is launched directly into the upper layers of the Earth's atmosphere or beyond (into space) and travels outside the atmosphere before re-entering and descending onto its target. Its path is largely determined by gravity and is therefore predictable once the missile is in flight.
+
+2. **Propulsion:** Ballistic missiles are powered by rocket engines and boosters that provide the necessary thrust to escape the Earth's gravity. They only burn their fuel for a short period during the launch phase; after that, they follow an unpowered trajectory.
+
+3. **Guidance:** The guidance system of a ballistic missile is mainly used during the initial powered phase of flight. Once it exits the atmosphere, it follows a predetermined path that cannot be altered significantly, making it less flexible in targeting after launch.
+
+**Cruise Missile:**
+
+1. **Flight Trajectory:** A cruise missile is designed to fly at a constant altitude, usually quite low to the ground, following the terrain to avoid detection. Its flight path can be programmed to be highly erratic to evade enemy defenses.
+
+2. **Propulsion:** Cruise missiles are powered throughout their flight by jet engines, much like an airplane. They can be launched from land, sea, or air platforms.
+
+3. **Guidance:** They have advanced guidance systems that can receive updates during flight. They often use a combination of GPS, inertial navigation, terrain contour matching (TERCOM), and sometimes image matching systems (DSMAC) to find their target.
+
+Ballistic Missile
+
+**Boost Phase:**
+The boost phase for a ballistic missile is the initial stage of its flight. It starts from the moment of launch and continues until the rocket engines stop firing and the missile ceases to gain altitude. During this phase, the missile is powered by its rocket boosters, which provide the necessary thrust to leave the Earth’s atmosphere. The missile's trajectory during the boost phase is somewhat adjustable, allowing for corrections and stabilization as it heads towards the edge of space. This is also the most vulnerable phase of the missile's flight, as it is relatively slow and can be tracked and potentially intercepted.
+
+**Midcourse Phase:**
+After the boost phase, the missile enters the midcourse phase, where it follows a ballistic trajectory—essentially coasting through space under the influence of gravity. This phase can last anywhere from a few minutes to over half an hour, depending on the missile's range. During this phase, the missile is outside of the Earth's atmosphere and it's in a free-flight trajectory. Some ballistic missiles may deploy decoys during the midcourse phase to confuse missile defense systems. The guidance system makes minor adjustments using small thrusters, if necessary, to correct the flight path for any initial launch errors or to adjust for conditions in space.
+
+**Terminal Phase:**
+The terminal phase begins once the missile re-enters the Earth's atmosphere and heads towards its target. It is characterized by re-entry at extremely high speeds, with the warhead (or multiple warheads in the case of MIRV—Multiple Independently targetable Reentry Vehicles) encountering atmospheric resistance and heating. This phase is relatively short, but it is also the most challenging for missile defenses to intercept the incoming warhead(s) due to the high velocity and sometimes the presence of countermeasures. The warheads are generally not powered during this phase and rely on their speed and ballistic trajectory to reach the target. The precision of the strike depends on the accuracy of the missile's guidance system during the launch and any terminal guidance that might be employed, such as maneuverable reentry vehicles (MaRVs).
+
+In contrast to a cruise missile, a ballistic missile's trajectory is much less flexible once it's in its midcourse phase, making its path predictable if not altered by countermeasures or sophisticated guidance systems like MaRVs. Ballistic missiles are also typically much faster in their terminal phase compared to cruise missiles, which makes them more challenging to defend against.
+
+Cruise missile
+
+Continuous propulsion, lower altitude flight path, and advanced guidance systems.
+
+Launch Phase:
+Think of the launch phase as the missile's kickoff moment. If it's a ground or sea-launched missile, it typically ignites a solid rocket booster that propels it to the required altitude and velocity. This phase is all about getting the missile up to speed and at the right height to start its main journey.
+
+Cruise Phase:
+During the cruise phase, the missile settles into its main travel mode. The missile follows pre-set navigational waypoints. It maintains a low altitude, often employing terrain-hugging techniques to to avoid detection. The missile's sophisticated guidance systems, which can include inertial navigation coupled with terrain contour matching (TERCOM), satellite guidance (like GPS) and other sensors, constantly monitor and correct its flight path, ensuring it stays on course.
+
+Terminal Phase:
+In the terminal phase of a cruise missile's flight, the focus is on pinpoint accuracy and evasion. The missile may engage additional guidance systems, like radar or infrared homing, to precisely target its destination. It maneuvers to avoid defenses, possibly using decoys and electronic warfare to outwit enemy systems. Some missiles perform a "pop-up" maneuver to evade defenses before making a steep dive towards the target. This phase culminates with the missile making fine adjustments to ensure it hits the target precisely, coordinating all systems for a successful strike.
 """
