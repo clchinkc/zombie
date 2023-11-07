@@ -176,6 +176,7 @@ Assumptions about Trajectory: The code seems to assume that the missile will fol
 Propulsion Force: If the missile is self-propelled, add a force that continuously accelerates the missile until the fuel is depleted or until a certain point in its trajectory.
 
 aerodynamic lift
+angular velocity
 inertia
 rotation
 dynamics of flight control systems

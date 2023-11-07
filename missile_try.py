@@ -4,9 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import minimize
 
-G = 9.81  # Gravitational acceleration (m/s^2)
-RHO = 1.225  # Air density at sea level (kg/m^3)
-DT = 0.01  # Time step (s)
+GRAVITY = 9.81  # Gravitational acceleration (m/s^2)
+AIR_DENSITY = 1.225  # Air density at sea level (kg/m^3)
+TIME_STEP = 0.01  # Time step (s)
+HIT_RADIUS = 10  # Radius within which the target is considered hit (m)
 
 class Missile:
     def __init__(self, mass, cross_section_area, drag_coefficient):
@@ -21,33 +22,33 @@ class Missile:
 
     def apply_gravity(self):
         # Gravity applies to all missiles, but can be zero in some cases.
-        return np.array([0., -self.mass * G])
+        return np.array([0., -self.mass * GRAVITY])
 
     def apply_air_resistance(self):
         # Air resistance applies to all missiles, can be overridden if the calculation differs.
         velocity_magnitude = np.linalg.norm(self.velocity)
         drag_direction = self.velocity / velocity_magnitude if velocity_magnitude > 0 else np.array([0., 0.])
-        return -0.5 * RHO * velocity_magnitude ** 2 * self.Cd * self.A * drag_direction
+        return -0.5 * AIR_DENSITY * velocity_magnitude ** 2 * self.Cd * self.A * drag_direction
 
-    def apply_propulsion(self):
+    def apply_thrust(self):
         # This method will be specific to the subclass implementation.
-        raise NotImplementedError("The apply_propulsion method should be implemented by subclasses")
+        raise NotImplementedError("The apply_thrust method should be implemented by subclasses")
 
     def update_forces(self):
         # Update forces. This will call the relevant methods that can be overridden by subclasses.
         forces = np.array([0., 0.])
         forces += self.apply_gravity()
         forces += self.apply_air_resistance()
-        forces += self.apply_propulsion()
+        forces += self.apply_thrust()
         return forces
 
-    def update_state(self):
+    def update_motion(self):
         total_force = self.update_forces()
         acceleration = total_force / self.mass
-        self.velocity += acceleration * DT
-        self.position += self.velocity * DT
+        self.velocity += acceleration * TIME_STEP
+        self.position += self.velocity * TIME_STEP
         self.trajectory.append(self.position.copy())
-        self.time_elapsed += DT
+        self.time_elapsed += TIME_STEP
 
     def plot_trajectory(self, target):
         trajectory = np.array(self.trajectory)
@@ -72,12 +73,12 @@ class BallisticMissile(Missile):
         self.fuel_mass = fuel_mass  # The initial fuel mass
         self.fuel_consumption_rate = fuel_consumption_rate  # Rate at which fuel is consumed (kg/s)
 
-    def apply_propulsion(self):
+    def apply_thrust(self):
         angle_rad = np.radians(self.launch_angle)
         if self.time_elapsed <= self.burn_time and self.fuel_mass > 0:
             current_thrust = self.max_thrust * (self.fuel_mass / (self.mass - self.fuel_mass))
             # Decrease fuel mass
-            self.fuel_mass -= self.fuel_consumption_rate * DT
+            self.fuel_mass -= self.fuel_consumption_rate * TIME_STEP
             # Ensure fuel mass doesn't become negative
             self.fuel_mass = max(self.fuel_mass, 0)
             # Calculate the propulsion force
@@ -85,15 +86,15 @@ class BallisticMissile(Missile):
         else:
             return np.array([0., 0.])
 
-    def update_state(self):
-        self.mass -= self.fuel_consumption_rate * DT
+    def update_motion(self):
+        self.mass -= self.fuel_consumption_rate * TIME_STEP
         self.mass = max(self.mass, 0)
-        super().update_state()
+        super().update_motion()
 
     def objective(self, target, fuel_efficiency_weight=1.0, time_penalty_weight=1.0):
         initial_fuel_mass = self.fuel_mass
         while self.velocity[1] >= 0 or self.position[1] > target.position[1]:
-            self.update_state()
+            self.update_motion()
             if target.is_hit_by(self):
                 return 0  # Target hit
         # If the missile has passed the target's altitude or fallen to the ground, compute the miss distance
@@ -135,19 +136,24 @@ class CruiseMissile(Missile):
         self.boost_time = 10  # Boost phase duration in seconds
         self.terminal_phase_start = 1000  # Distance in meters from target to start terminal phase
         self.cruising_altitude = 500  # Cruising altitude in meters
+        self.launch_angle = 45  # Launch angle in degrees
         self.guidance_system = 'launch'  # Start with launch phase guidance
 
-    def apply_propulsion(self):
+    def apply_thrust(self):
         if self.guidance_system == 'launch':
             if self.time_elapsed <= self.boost_time:
-                climb_angle_rad = np.radians(45)  # Climb angle set to 45 degrees
+                # Calculate the required climb angle to reach cruising altitude at the end of the boost phase
+                # Assume that the initial horizontal velocity is the same as the initial vertical velocity
+                avg_vertical_velocity = self.cruising_altitude / self.boost_time
+                self.launch_angle = np.degrees(np.arctan(avg_vertical_velocity / avg_vertical_velocity))
+                
+                climb_angle_rad = np.radians(self.launch_angle)
                 vertical_thrust_component = self.engine_thrust * np.sin(climb_angle_rad)
                 horizontal_thrust_component = self.engine_thrust * np.cos(climb_angle_rad)
 
-                # Apply vertical thrust component to counter gravity and the rest to climb at a 45-degree angle
                 return np.array([
-                    horizontal_thrust_component,
-                    vertical_thrust_component + self.mass * G  # Subtract gravity's force component
+                    horizontal_thrust_component + self.apply_air_resistance()[0],
+                    vertical_thrust_component + self.mass * GRAVITY + self.apply_air_resistance()[1]
                 ])
             else:
                 # Transition to cruise phase after boost
@@ -167,7 +173,7 @@ class CruiseMissile(Missile):
             # Gravity is countered by lift in cruise and terminal phases
             return np.array([0., 0.])
 
-    def update_guidance(self, target):
+    def update_guidance_and_navigation(self, target):
         distance_to_target = np.linalg.norm(target.position - self.position)
 
         # Switch to terminal phase based on distance to target
@@ -204,9 +210,9 @@ class CruiseMissile(Missile):
             self.velocity[0] = np.cos(descent_angle_rad) * np.linalg.norm(self.velocity)
             self.velocity[1] = -np.sin(descent_angle_rad) * np.linalg.norm(self.velocity)
 
-    def update_state(self, target):
-        self.update_guidance(target)
-        super().update_state()
+    def update_motion(self, target):
+        self.update_guidance_and_navigation(target)
+        super().update_motion()
 
 
 class Target:
@@ -215,7 +221,7 @@ class Target:
 
     def is_hit_by(self, missile):
         distance_to_missile = np.linalg.norm(missile.position - self.position)
-        return distance_to_missile < 10
+        return distance_to_missile < HIT_RADIUS
 
     def plot(self):
         plt.scatter(self.position[0], self.position[1], c='red', marker='X', s=100, label='Target')
@@ -237,7 +243,7 @@ def main():
     )
     
     while (missile.position[0] < target.position[0] or missile.position[1] >= 0 or missile.position[1] < target.position[1] or missile.position[0] >= target.position[0]) and not target.is_hit_by(missile):
-        missile.update_state()
+        missile.update_motion()
 
     missile.plot_trajectory(target)
     
@@ -249,7 +255,7 @@ def main():
     
     # Update and plot the cruise missile's trajectory
     while cruise_missile.time_elapsed < cruise_missile.max_flight_time:
-        cruise_missile.update_state(target)
+        cruise_missile.update_motion(target)
         if target.is_hit_by(cruise_missile):
             break
 
@@ -259,3 +265,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+"""
+Please modify the method so that the cruise missile climbs to cruise altitude exactly at the end of the boost phase instead of climbing 45 degrees in the boost phase and raising vertically to the cruise altitude in the cruise phase.
+Introduce constants at the class level to replace magic numbers.
+"""
