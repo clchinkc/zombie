@@ -192,7 +192,8 @@ Please solve differential equations to get the time of flight.
 # Simplified formula to estimate launch angle (ignores air resistance)
 angle = math.degrees(math.atan((v**2 - math.sqrt(v**4 - g * (g * d**2 + 2 * HEIGHT * v**2))) / (g * d)))
 
-A GuidanceSystem class with methods for updating missile heading and position. This modularity allows for different guidance strategies to be implemented and tested with the CruiseMissile class.
+Fluid mechanics
+Aerodynamics
 
 Control when to use the fuel and in what direction
 Max acceleration and max velocity
