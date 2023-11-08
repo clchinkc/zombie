@@ -466,6 +466,8 @@ def search_and_rank(keyword, text=sample_text, preprocess=True, weights={'exact'
 
 
 
+
+
 default_weights = {
     'exact': 0.9,          # Full weight for precise matches.
     'regex': 0.7,          # Flexible search with moderate precision.
@@ -478,11 +480,14 @@ default_weights = {
 }
 
 
+# Run the search and rank function with your desired parameters
 results = search_and_rank("搜尋 for", sample_text, preprocess=True, weights=default_weights)
 
+# Print the results
 print("Results:")
 for line, score in results:
     print(f"Line: {line:<{max(len(line) for line, _ in results)}} | Score: {score:>7.3f}")
+
 
 
 

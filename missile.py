@@ -273,3 +273,25 @@ During the cruise phase, the missile settles into its main travel mode. The miss
 Terminal Phase:
 In the terminal phase of a cruise missile's flight, the focus is on pinpoint accuracy and evasion. The missile may engage additional guidance systems, like radar or infrared homing, to precisely target its destination. It maneuvers to avoid defenses, possibly using decoys and electronic warfare to outwit enemy systems. Some missiles perform a "pop-up" maneuver to evade defenses before making a steep dive towards the target. This phase culminates with the missile making fine adjustments to ensure it hits the target precisely, coordinating all systems for a successful strike.
 """
+
+"""
+Why it is hard to detect the Hypersonic Weapons?
+
+Flight Altitude
+Nations that do not possess (or have access to) space-based sensor systems to detect ballistic missile launches and that rely on ground-based sensors, such as radars, to detect incoming mid- to long-range ballistic missiles, could experience a further compression of their decision/ response timelines. The reasoning is that typical ballistic missiles tend to fly at higher altitudes than hypersonic missiles and should therefore be detectable earlier.
+
+Due to the Earth’s curvature and the HGVs’ low-gliding altitude as compared with that of a similar range ballistic missile, radar or other line-of-site sensors will likely not detect an HGV as early as they would a ballistic missile. For example, a radar operating from the surface of a smooth Earth would detect a 3,000-km-range RV about 12 minutes before impact, but would not detect an HGV until about six minutes before impact.
+
+Compounding the defensive challenges even further, even HCMs would fly at altitudes higher than most current surface-to-air missile systems are capable of reaching.
+Plasma Stealth
+Plasma stealth is a proposed process to use ionized gas (plasma) to reduce the radar cross-section (RCS) of an aircraft. Interactions between electromagnetic radiation and ionized gas have been extensively studied for many purposes, including concealing aircraft from radar as stealth technology. Various methods might plausibly be able to form a layer or cloud of plasma around a vehicle to deflect or absorb radar, from simpler electrostatic or radio frequency discharges to more complex laser discharges. It is theoretically possible to reduce RCS in this way, but it may be very difficult to do so in practice. Some Russian systems e.g. the 3M22 Zircon (SS-N-33) missile have been reported to make use of plasma stealth.
+Invisibility
+U.S. defense officials have stated that both terrestrial- and current space-based sensor architectures are insufficient to detect and track hypersonic weapons. Hypersonic targets are 10 to 20 times dimmer than what the U.S. normally tracks by satellites in geostationary orbit.
+
+Current Radar Algorithms
+Most of the current radars are optimized for conventional threats, such as fighters, subsonic/supersonic missiles. These radars evaluate the radar plots and determine if these plots are meet the target criteria. With its high speed and flight pattern the hypersonic missiles probably will not meet the track initiation criteria current radars.
+Data Links and Command Control Architecture
+Some analysts have argued that the current command and control architecture of the countries would be incapable of “processing data quickly enough to respond an incoming hypersonic threat.
+
+https://www.cbo.gov/publication/58924
+"""
