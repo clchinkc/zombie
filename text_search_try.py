@@ -365,6 +365,44 @@ def translate_multilanguage(sentence: str):
 
 
 
+def retrieve_matches(preprocessed_keywords, preprocessed_lines, search_methods):
+    """
+    Retrieves matches for each keyword using the specified search methods.
+    """
+    retrieved_matches = {lang: [] for lang in preprocessed_keywords}
+    
+    for lang, kw in preprocessed_keywords.items():
+        for method, search_function in search_methods.items():
+            if search_function:
+                matches = search_function(kw, "\n".join(preprocessed_lines))
+                # Add method information to the match if it's not already included
+                matches_with_method = [(matched_text, score, method) for matched_text, score in matches]
+                retrieved_matches[lang].extend(matches_with_method)
+    
+    return retrieved_matches
+
+
+def rank_matches(retrieved_matches, cleaned_to_original_mapping, weights):
+    """
+    Ranks the retrieved matches by applying the weights and accumulating the scores.
+    """
+    scores = {}
+
+    for lang, matches in retrieved_matches.items():
+        for match in matches:
+            matched_text, score, method = match  # Assuming this is the structure of the matches
+            if method not in weights:
+                raise ValueError(f"Method {method} not found in weights dictionary.")
+            original_text = cleaned_to_original_mapping.get(matched_text, matched_text)
+            weighted_score = score * weights[method]
+            scores[original_text] = scores.get(original_text, 0) + weighted_score
+
+    # Sort results by the accumulated scores
+    ranked_results = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+    return ranked_results
+
+
+
 def search_and_rank(keyword, text=sample_text, preprocess=True, weights={'exact': 0.9, 'ngram': 0.6, 'regex': 0.7, 'fuzzy': 0.8, 'tfidf': 0.7, 'bm25': 0.7, 'word_embedding': 0.8, 'semantic': 1.0}):
 
     # Split the text once
@@ -417,26 +455,13 @@ def search_and_rank(keyword, text=sample_text, preprocess=True, weights={'exact'
             'semantic': semantic_search if 'semantic' in weights else None,
         }
 
-        for method, search_function in search_methods.items():
-            if not search_function:
-                continue
-            
-            matches = search_function(kw, "\n".join(preprocessed_lines))
-            
-            if not matches:
-                continue
-
-            for matched_text, score in matches:
-                # Map the matched text back to the original text
-                matching_line_original = cleaned_to_original_mapping.get(matched_text, matched_text)
-
-                weighted_score = score * weights[method]
-                scores[matching_line_original] = scores.get(matching_line_original, 0) + weighted_score
-
-    # Sort results by the accumulated scores
-    ranked_results = sorted(scores, key=lambda x: scores[x], reverse=True)
-
-    return list(zip(ranked_results, [scores[x] for x in ranked_results]))
+    # Retrieve matches
+    retrieved_matches = retrieve_matches(preprocessed_keywords, preprocessed_lines, search_methods)
+    
+    # Rank the matches
+    ranked_results = rank_matches(retrieved_matches, cleaned_to_original_mapping, weights)
+    
+    return ranked_results
 
 
 
@@ -460,10 +485,6 @@ for line, score in results:
     print(f"Line: {line:<{max(len(line) for line, _ in results)}} | Score: {score:>7.3f}")
 
 
-# mixed language in keyword or line
-# eg Cleaned Traditional keyword: 搜尋   for
-# added space after cleaning
-
 
 # Save computation if some method only execute if same language
 # The adaptive search will be based on score improvement. If the score improvement of a search method compared to previous ones is not significant, we can skip the subsequent, more computationally intensive methods.
@@ -477,10 +498,11 @@ for line, score in results:
 # Parallel Processing: For tasks that can be parallelized, using multithreading or multiprocessing can significantly speed up the process.
 
 
-# https://www.sbert.net/docs/pretrained_models.html
+# https://www.sbert.net/docs/pretrained_models.html 
 
 # https://www.sbert.net/examples/applications/cross-encoder/README.html
 # https://www.sbert.net/docs/pretrained_cross-encoders.html
+# https://www.sbert.net/examples/applications/retrieve_rerank/README.html
 
 # https://www.sbert.net/docs/usage/semantic_textual_similarity.html
 # https://www.sbert.net/examples/applications/retrieve_rerank/README.html
@@ -580,7 +602,7 @@ Methods to improve the representation (dimension instantiation) of text data for
 ### Improved Instantiation of Dimension:
 2. *Stop Word Removal*: Common words such as "and", "the", "is", etc., that don't provide significant meaning in many contexts are removed to reduce noise and dimensionality.
 4. **Latent Semantic Indexing (LSI)**: A technique that identifies patterns in relationships between terms and concepts in unstructured text. It's often used to uncover the latent structure (topics or themes) in a large collection of text.
-
+5. **Latent Dirichlet Allocation (LDA)**: A generative statistical model that allows sets of observations to be explained by unobserved groups that explain why some parts of the data are similar. It's often used to discover topics within a large corpus.
 ### Improved Instantiation of Similarity Function:
 1. *Cosine of Angle Between Two Vectors*: Cosine similarity measures the cosine of the angle between two non-zero vectors. It determines how similar two documents are irrespective of their size.
 3. *Dot Product*: This measures the sum of the product of corresponding entries of the two sequences of numbers. When appropriately normalized, the dot product can be very effective, especially when combined with term weighting (like TF-IDF weights).
