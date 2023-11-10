@@ -1,4 +1,9 @@
 
+"""
+Transformer model or probabilistic forecasting methods
+ARIMA (AutoRegressive Integrated Moving Average), GARCH (generalized autoregressive conditional heteroskedasticity), LSTM (Long Short Term Memory), Prophet
+econometric models
+"""
 
 """
 Project description to do web scraping and text classification using scrapy and transformer library to identify the sentiment of a specific stock.
