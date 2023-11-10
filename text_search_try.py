@@ -365,27 +365,45 @@ def translate_multilanguage(sentence: str):
 
 
 
-def retrieve_matches(preprocessed_keywords, preprocessed_lines, search_methods):
+def retrieve_matches(preprocessed_keywords, preprocessed_lines, search_methods, threshold=0.5, required_matches=3):
     """
     Retrieves matches for each keyword using the specified search methods.
+    Only returns matches with a score above the given threshold.
+    Stops retrieving more matches once required_matches above the threshold have been found.
     """
     retrieved_matches = {lang: [] for lang in preprocessed_keywords}
     
     for lang, kw in preprocessed_keywords.items():
+        total_matches = 0  # Keep track of the number of matches above the threshold
+        
         for method, search_function in search_methods.items():
-            if search_function:
+            if search_function and total_matches < required_matches:
                 matches = search_function(kw, "\n".join(preprocessed_lines))
-                # Add method information to the match if it's not already included
-                matches_with_method = [(matched_text, score, method) for matched_text, score in matches]
-                retrieved_matches[lang].extend(matches_with_method)
+                # Filter matches by score threshold
+                filtered_matches = [(matched_text, score) for matched_text, score in matches if score >= threshold]
+                
+                # Print how many matches were found with the current method
+                print(f"Found {len(filtered_matches)} matches for {lang.capitalize()} keyword using {method} search.")
+                
+                # Count how many matches are above the threshold and add them to the result
+                for match in filtered_matches:
+                    if total_matches < required_matches:
+                        # Add method information to the match if it's not already included
+                        match_with_method = (match[0], match[1], method)
+                        retrieved_matches[lang].append(match_with_method)
+                        total_matches += 1
+                    else:
+                        # We have enough matches, can stop adding more
+                        break
+                
+                # If we have enough matches, we can break out of the loop for this language
+                if total_matches >= required_matches:
+                    break
     
     return retrieved_matches
 
 
 def rank_matches(retrieved_matches, cleaned_to_original_mapping, weights):
-    """
-    Ranks the retrieved matches by applying the weights and accumulating the scores.
-    """
     scores = {}
 
     for lang, matches in retrieved_matches.items():
@@ -403,7 +421,7 @@ def rank_matches(retrieved_matches, cleaned_to_original_mapping, weights):
 
 
 
-def search_and_rank(keyword, text=sample_text, preprocess=True, weights={'exact': 0.9, 'ngram': 0.6, 'regex': 0.7, 'fuzzy': 0.8, 'tfidf': 0.7, 'bm25': 0.7, 'word_embedding': 0.8, 'semantic': 1.0}):
+def search_and_rank(keyword, text=sample_text, preprocess=True, weights={'exact': 0.9, 'ngram': 0.6, 'regex': 0.7, 'fuzzy': 0.8, 'tfidf': 0.7, 'bm25': 0.7, 'word_embedding': 0.8, 'semantic': 1.0}, threshold=0.5, required_matches=3):
 
     # Split the text once
     lines = [line for line in text.split("\n") if line.strip()]
@@ -456,15 +474,12 @@ def search_and_rank(keyword, text=sample_text, preprocess=True, weights={'exact'
         }
 
     # Retrieve matches
-    retrieved_matches = retrieve_matches(preprocessed_keywords, preprocessed_lines, search_methods)
+    retrieved_matches = retrieve_matches(preprocessed_keywords, preprocessed_lines, search_methods, threshold=threshold, required_matches=required_matches)
     
     # Rank the matches
     ranked_results = rank_matches(retrieved_matches, cleaned_to_original_mapping, weights)
     
     return ranked_results
-
-
-
 
 
 
@@ -481,7 +496,7 @@ default_weights = {
 
 
 # Run the search and rank function with your desired parameters
-results = search_and_rank("搜尋 for", sample_text, preprocess=True, weights=default_weights)
+results = search_and_rank("搜尋 for", sample_text, preprocess=True, weights=default_weights, threshold=0.5, required_matches=3)
 
 # Print the results
 print("Results:")
@@ -491,16 +506,15 @@ for line, score in results:
 
 
 
+
 # Save computation if some method only execute if same language
-# The adaptive search will be based on score improvement. If the score improvement of a search method compared to previous ones is not significant, we can skip the subsequent, more computationally intensive methods.
+
 # Parallel Processing: Since many of the search methods are independent of each other, run them in parallel to speed up the search process.
-# store two version of corpus, original and processed corpus, but return original one only
-# divide the process back to retrieval and rank two part (retrieval can be done in parallel)
-# change back to return score over threshold when in production
 # Batch Processing: Instead of processing one line at a time, consider vectorized operations or batch processing, especially for methods like word_embedding or semantic, which can handle batches of data and benefit from parallelization.
-# Handling of translations: We're currently translating the same text segment for every language. This can be inefficient. Instead, we can cache the translations or use batch translation.
-# Memory Management: Storing and manipulating multiple versions of the text can be memory-intensive. Using efficient data structures and clearing unused variables can be considered.
 # Parallel Processing: For tasks that can be parallelized, using multithreading or multiprocessing can significantly speed up the process.
+
+# store two version of corpus, original and processed corpus, but return original one only
+# Memory Management: Storing and manipulating multiple versions of the text can be memory-intensive. Using efficient data structures and clearing unused variables can be considered.
 
 
 # https://www.sbert.net/docs/pretrained_models.html 
@@ -604,13 +618,28 @@ for line, score in results:
 """
 Methods to improve the representation (dimension instantiation) of text data for similarity or search applications, as well as methods to improve the way we measure the similarity between these representations.
 
-### Improved Instantiation of Dimension:
-2. *Stop Word Removal*: Common words such as "and", "the", "is", etc., that don't provide significant meaning in many contexts are removed to reduce noise and dimensionality.
-4. **Latent Semantic Indexing (LSI)**: A technique that identifies patterns in relationships between terms and concepts in unstructured text. It's often used to uncover the latent structure (topics or themes) in a large collection of text.
-5. **Latent Dirichlet Allocation (LDA)**: A generative statistical model that allows sets of observations to be explained by unobserved groups that explain why some parts of the data are similar. It's often used to discover topics within a large corpus.
-### Improved Instantiation of Similarity Function:
-1. *Cosine of Angle Between Two Vectors*: Cosine similarity measures the cosine of the angle between two non-zero vectors. It determines how similar two documents are irrespective of their size.
-3. *Dot Product*: This measures the sum of the product of corresponding entries of the two sequences of numbers. When appropriately normalized, the dot product can be very effective, especially when combined with term weighting (like TF-IDF weights).
+### Instantiation of Dimension:
+
+1. **Latent Semantic Indexing (LSI)**: 
+   - This approach processes text by creating a term-document matrix, where each entry represents the frequency of a term in a document.
+   - Singular Value Decomposition (SVD) is then applied to reduce the number of rows while preserving the similarity structure among columns. This reduces dimensionality and captures the underlying meaning of words by grouping together terms that occur in similar contexts.
+   - LSI can handle synonyms effectively and is robust against noise in the data.
+
+2. **Latent Dirichlet Allocation (LDA)**: 
+   - LDA models each document as a mixture of various topics, and each topic as a mixture of words.
+   - The model assumes that documents are produced by picking a distribution over topics and then picking a distribution over words for each topic.
+   - It's particularly useful for finding topics that describe a collection of documents.
+
+### Similarity Measurement:
+
+1. **Cosine Similarity**: Measures the cosine of the angle between two vectors in the vector space, which is widely used for text similarity because it is effective and efficient.
+   - **Improvement Tips**:
+     - Normalize the vectors before applying cosine similarity to prevent the dominance of longer documents.
+     - Consider the context of words (n-grams or skip-grams) to better capture the meaning in comparison.
+
+2. **Jaccard Similarity**: Used for comparing the similarity and diversity of sample sets, assessing the size of the intersection divided by the size of the union of the sample sets.
+
+3. **Word Movers Distance (WMD)**: Utilizes word embeddings (e.g., Word2Vec, GloVe) and measures the minimum amount of distance that the embedded words of one document need to "travel" to reach the embedded words of another document.
 """
 
 """
@@ -680,42 +709,7 @@ Certainly! Here's a comparison of the four methods: Reciprocal Rank Fusion, Cond
 In summary, the choice of method depends on the specific application and the desired outcome. Each method has its strengths and is best suited for particular scenarios.
 """
 
-"""
-Trie (or Prefix Tree):
 
-Definition: A trie is a tree-like data structure that is used to store a dynamic set of strings, where the keys are usually strings.
-Nodes: Each node of a trie typically represents a character of a string, and paths from the root to a node represent a prefix of strings.
-Use cases: They are especially useful for:
-Autocomplete features (like Google's search suggestions).
-Implementing dictionaries with efficient insert, search, and delete operations.
-IP routing (Longest prefix matching).
-Advantages:
-Lookup time for a string is O(m), where m is the length of the word.
-Efficient in terms of memory when dealing with a large number of strings with shared prefixes.
-Drawbacks:
-Can still be space-consuming if there aren't many shared prefixes.
-More complex than basic data structures like hash tables.
-Inverted Index:
-
-Definition: An inverted index is a data structure used to store a mapping from words or terms to their locations in a set of documents.
-Structure: Usually consists of:
-A list of all unique words from a set of documents.
-For each word, a list of document IDs (or references) where that word appears.
-Use cases:
-The backbone of many search engines. When you type a query, the search engine uses an inverted index to find the documents where the terms appear.
-Text analysis and natural language processing tasks.
-Advantages:
-Enables fast full-text searches.
-More space efficient than forward indexes (that map from documents to the words they contain).
-Drawbacks:
-Can take time and space to build, especially for large datasets.
-Maintenance and updates can be challenging in dynamic datasets.
-Which to use? The choice between a trie and an inverted index depends on the problem you're trying to solve:
-
-If you're trying to build a feature where you need to suggest completions for a prefix (like search suggestions), a trie might be more appropriate.
-If you're indexing a set of documents to quickly retrieve all documents containing a particular word or set of words, then an inverted index is more suitable.
-In some complex systems, such as search engines, a combination of multiple data structures, including tries and inverted indexes, might be used to achieve desired performance characteristics.
-"""
 
 """
 **TextRank** and **RAKE** are methodologies used in natural language processing (NLP) to extract keywords or key phrases from documents:
@@ -789,6 +783,22 @@ In essence, while TextRank and RAKE are primarily designed for keyword extractio
 """
 
 """
+Handling mixed language content in a text search program can be challenging but rewarding, as it can provide a richer user experience. Here's how you can approach this:
+
+1. **Indexing**:
+   - Build separate indexes for different languages if feasible. This way, when a search is conducted in a particular language, the corresponding index can be queried for faster results.
+   - Use a standard inverted index with an additional layer that includes language metadata.
+
+2. **Query Expansion**:
+   - Use query expansion techniques to include synonyms, translations, or related terms in multiple languages.
+   - This can be especially useful for niche terms or phrases that might not have direct translations.
+
+3. **Feedback and User Preferences**:
+   - Allow users to filter results by language or to specify their preferred languages.
+   - Collect feedback on search results to continuously improve accuracy.
+"""
+
+"""
 If you're using a transformer model like BERT in the Sentence Transformers library (or similar libraries), you may encounter a limitation where the model can only handle a specific maximum number of tokens (e.g., 128, 512, etc.). When performing semantic search or other applications, longer sentences or paragraphs might get truncated, leading to potential loss of context and accuracy.
 
 Here are a few strategies to overcome this limitation:
@@ -831,52 +841,7 @@ Here are a few strategies to overcome this limitation:
 When you use these techniques, always ensure to validate and test the effectiveness of your approach using relevant benchmarks or evaluation datasets to ensure the quality of your semantic search system.
 """
 
-"""
-Handling mixed language content in a text search program can be challenging but rewarding, as it can provide a richer user experience. Here's how you can approach this:
 
-1. **Language Detection**:
-   - Use libraries like `langdetect` or `langid.py` to identify the language of each word or phrase.
-   - For larger corpora, you can segment the text into paragraphs or sentences and then detect the language for each segment.
-   - Keep in mind that language detection on very short texts (like single words or short phrases) can be inaccurate.
-
-2. **Tokenization**:
-   - Tokenization splits a text into words, phrases, symbols, or other meaningful elements (tokens). Since different languages have different tokenization rules, use a tokenizer that can handle multiple languages. Libraries like `spaCy` or the `Natural Language Toolkit (NLTK)` offer multi-language tokenization.
-
-3. **Indexing**:
-   - Build separate indexes for different languages if feasible. This way, when a search is conducted in a particular language, the corresponding index can be queried for faster results.
-   - Use a standard inverted index with an additional layer that includes language metadata.
-
-4. **Stemming and Lemmatization**:
-   - Different languages have different morphology. Use stemming and lemmatization tools tailored for each language to reduce words to their base or root form.
-   - Libraries like `spaCy` and `NLTK` provide stemming and lemmatization tools for various languages.
-
-5. **Handling Transliterations**:
-   - In mixed-language scenarios, especially with languages that use non-Latin scripts, content might be transliterated. Consider using tools or libraries that can detect and convert transliterations.
-
-6. **Cross-Language Search**:
-   - If you want users to search in one language and get results in another, consider implementing cross-language information retrieval (CLIR) techniques.
-   - One way is to translate the query into all supported languages, search, and then present the results. Tools like `Google Cloud Translation API` can be used for this.
-
-7. **Query Expansion**:
-   - Use query expansion techniques to include synonyms, translations, or related terms in multiple languages.
-   - This can be especially useful for niche terms or phrases that might not have direct translations.
-
-8. **Feedback and User Preferences**:
-   - Allow users to filter results by language or to specify their preferred languages.
-   - Collect feedback on search results to continuously improve accuracy.
-
-9. **Training Custom Models**:
-   - If you have sufficient labeled data, consider training custom models that understand the context and semantics of mixed-language content. 
-
-10. **Regularly Update Language Models**:
-   - Languages evolve, and new terms, slang, or phrases can emerge. Keep your language models and tools updated to ensure the search program remains relevant.
-
-11. **Testing**:
-   - Regularly test the search functionality with mixed language queries and content.
-   - Use A/B testing or other techniques to gauge user satisfaction and to identify areas of improvement.
-
-By ensuring your text search program is equipped to handle mixed language content, you can provide a more comprehensive and satisfying experience for users who navigate multilingual environments.
-"""
 
 """
 Query expansion is a technique used in information retrieval and database systems to improve search results. The primary aim is to include additional terms in the search to fetch more relevant results, especially when the initial query is too ambiguous or brief. This technique is beneficial because users often provide search terms that might not directly match the terms in the documents or databases.
