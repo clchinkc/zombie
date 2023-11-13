@@ -10,9 +10,9 @@ from sklearn.preprocessing import MinMaxScaler
 data = pd.read_csv('apple_stock_data.csv')
 
 # Feature engineering 
-data['MA_5'] = data['Close'].rolling(window=5).mean()
-data['MA_20'] = data['Close'].rolling(window=20).mean()
-data['Volatility'] = data['Close'].rolling(window=5).std()
+data['MA_5'] = data['Close'].rolling(window=5, min_periods=1).mean()
+data['MA_20'] = data['Close'].rolling(window=20, min_periods=1).mean()
+data['Volatility'] = data['Close'].rolling(window=5, min_periods=1).std()
 data['High_Low_Spread'] = data['High'] - data['Low']
 data['Daily_Return'] = data['Close'].pct_change()
 data = data.dropna()
@@ -32,19 +32,55 @@ def create_dataset(data, look_back=1):
         Y.append(data[i + look_back, 0])
     return np.array(X), np.array(Y)
 
-look_back = 5
-X, y = create_dataset(data_normalized, look_back)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Create datasets for two time scales
+look_back_short = 5  # Shorter time scale
+look_back_long = 20  # Longer time scale
+
+X_short, y_short = create_dataset(data_normalized, look_back_short)
+X_long, y_long = create_dataset(data_normalized, look_back_long)
+
+# Determine the minimum length between the two datasets
+min_length = min(len(X_short), len(X_long))
+
+# Trim the longer dataset
+X_short = X_short[:min_length]
+y_short = y_short[:min_length]
+X_long = X_long[:min_length]
+y_long = y_long[:min_length]
+
+# Now split data into training and testing sets for both time scales
+X_short_train, X_short_test, y_short_train, y_short_test = train_test_split(X_short, y_short, test_size=0.2, random_state=42)
+X_long_train, X_long_test, y_long_train, y_long_test = train_test_split(X_long, y_long, test_size=0.2, random_state=42)
 
 # Build and train LSTM model
-model = tf.keras.models.Sequential([
-    tf.keras.layers.LSTM(50, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])),
-    tf.keras.layers.LSTM(50),
-    tf.keras.layers.Dense(1)
-])
+from tensorflow.keras.layers import LSTM, Concatenate, Dense, Input
+from tensorflow.keras.models import Model
 
+# Define LSTM layers for both time scales
+input_short = Input(shape=(look_back_short, data_normalized.shape[1]))
+input_long = Input(shape=(look_back_long, data_normalized.shape[1]))
+
+lstm_short = LSTM(50, return_sequences=True)(input_short)
+lstm_short = LSTM(50)(lstm_short)
+
+lstm_long = LSTM(50, return_sequences=True)(input_long)
+lstm_long = LSTM(50)(lstm_long)
+
+# Concatenate the outputs from both LSTMs
+concat = Concatenate()([lstm_short, lstm_long])
+
+# Dense layers following the concatenated outputs
+output = Dense(25, activation='relu')(concat)
+output = Dense(1)(output)
+
+# Define the model
+model = Model(inputs=[input_short, input_long], outputs=output)
 model.compile(optimizer='adam', loss='mean_squared_error')
-history = model.fit(X_train, y_train, epochs=10, batch_size=32, validation_data=(X_test, y_test))
+
+# Train the model on data from both time scales
+history = model.fit([X_short_train, X_long_train], y_short_train, 
+                    epochs=10, batch_size=32, 
+                    validation_data=([X_short_test, X_long_test], y_short_test))
 
 # Evaluating model performance
 train_loss = history.history['loss']
@@ -55,9 +91,15 @@ plt.plot(val_loss, label='Validation Loss')
 plt.legend()
 plt.show()
 
-# Use LSTM to predict prices
-predicted_prices_normalized = model.predict(X.reshape(X.shape[0], X.shape[1], X.shape[2])).flatten()
-predicted_prices = scaler_close.inverse_transform(predicted_prices_normalized.reshape(-1, 1)).flatten()
+print(f'Train Loss: {train_loss[-1]}')
+print(f'Validation Loss: {val_loss[-1]}')
+
+# Use the Time Fusion LSTM model to predict prices
+predicted_prices_normalized_short = model.predict([X_short, X_long]).flatten()
+predicted_prices_short = scaler_close.inverse_transform(predicted_prices_normalized_short.reshape(-1, 1)).flatten()
+
+# We use the short time scale predictions for the dynamic programming algorithm
+predicted_prices = predicted_prices_short
 
 # Dynamic Programming for maximizing profit
 def maxProfit(k, prices):
@@ -101,7 +143,7 @@ for idx, (buy, sell) in enumerate(transactions):
 # Visualization of Predicted Prices
 plt.figure(figsize=(15, 6))
 plt.plot(prices_normalized, label='Actual Prices', color='blue')
-plt.plot(np.arange(look_back, len(predicted_prices) + look_back), predicted_prices_normalized, label='Predicted Prices', color='red')
+plt.plot(np.arange(look_back_short, len(predicted_prices) + look_back_short), predicted_prices_normalized_short, label='Predicted Prices', color='red')
 plt.legend()
 plt.title('Actual vs Predicted Prices')
 plt.xlabel('Days')
