@@ -882,6 +882,7 @@ DStarLite average time: 15.427422 seconds
 # https://gamedev.stackexchange.com/questions/141688/how-to-optimize-pathfinding-on-a-very-large-dynamic-2d-grid
 # https://grail.cs.washington.edu/projects/crowd-flows/78-treuille.pdf
 # PSO also draw all particles
+# memorization to avoid recalculation
 
 """
 Multi-agent pathfinding

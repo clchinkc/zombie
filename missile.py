@@ -294,4 +294,7 @@ Data Links and Command Control Architecture
 Some analysts have argued that the current command and control architecture of the countries would be incapable of “processing data quickly enough to respond an incoming hypersonic threat.
 
 https://www.cbo.gov/publication/58924
+https://journals.sagepub.com/doi/10.1177/0954410016656874?icid=int.sj-full-text.similar-articles.8
+https://www.semanticscholar.org/paper/Rapid-generation-of-boost-trajectory-for-missile-Zhang-He/760ba82bfd818eb861d0b19990e01cdf5b996ae6
+https://www.semanticscholar.org/paper/Study-of-on-board-trajectory-generation-of-powered-Huang-Guan/c0596d88d4524fffb336e0fd7f9ea47c496688e7
 """
