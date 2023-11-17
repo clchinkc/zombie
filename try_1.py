@@ -12,46 +12,57 @@ def nearest_node(node_list, random_point):
     random_node = TreeNode(Point(random_point))
     return min(node_list, key=lambda node: node.distance(random_node))
 
-def steer(from_node, to_point, step_size, goal, obstacles):
+def find_nearby_nodes(tree, new_node, radius):
+    return [node for node in tree if node.distance(new_node) <= radius]
+
+def steer(from_node, to_point, step_size, obstacles):
     direction = np.array(to_point) - np.array((from_node.point.x, from_node.point.y))
     length = np.linalg.norm(direction)
     direction = direction / length if length != 0 else direction
 
     step = step_size
     new_point = np.array((from_node.point.x, from_node.point.y)) + step * direction
-    return new_point if not is_collision(from_node.point, Point(new_point), obstacles) else None
+    if not is_collision(from_node.point, Point(new_point), obstacles):
+        return new_point
+    else:
+        return None
 
 
 def dynamic_step_size(from_node, to_point, step_size, goal, obstacles):
-    from_coords = (from_node.point.x, from_node.point.y)  # Extract coordinates from the TreeNode
-
     goal_distance = np.linalg.norm(np.array(to_point) - np.array(goal))
     step = min(step_size, goal_distance)
 
-    obstacle_distances = [obstacle.distance(Point(from_coords)) for obstacle in obstacles]
+    obstacle_distances = [obstacle.distance(Point(from_node.point)) for obstacle in obstacles]
     if obstacle_distances:
         min_obstacle_distance = min(obstacle_distances)
-        step = min(step, min_obstacle_distance / 2)  # Adjust as needed
+        # If close to an obstacle, reduce step size
+        if min_obstacle_distance < step_size:
+            step = max(step, min_obstacle_distance / 2)  # Ensure a minimum step
     return step
 
 
-def random_sampling(space_size):
-    return np.random.uniform(0, space_size[0]), np.random.uniform(0, space_size[1])
+def random_sampling(space_size, obstacles):
+    while True:
+        x = np.random.uniform(0, space_size[0])
+        y = np.random.uniform(0, space_size[1])
+        point = Point(x, y)
+        if not any(obstacle.contains(Point(point)) for obstacle in obstacles):
+            return x, y
 
-def gaussian_sampling(space_size, goal, alpha=0.5):
+def gaussian_sampling(space_size, goal, obstacles, alpha=0.5):
     if np.random.rand() > alpha:
-        return random_sampling(space_size)
+        return random_sampling(space_size, obstacles)
     else:
         std_dev = min(space_size) / 6
         # Sample a point from a 2D Gaussian distribution
         while True:
             point = np.random.normal(goal, std_dev)
-            if 0 <= point[0] <= space_size[0] and 0 <= point[1] <= space_size[1]:
+            if 0 <= point[0] <= space_size[0] and 0 <= point[1] <= space_size[1] and not any(obstacle.contains(Point(point)) for obstacle in obstacles):
                 return point
 
 def bridge_sampling(space_size, obstacles, bridge_length=5):
     while True:
-        midpoint = random_sampling(space_size)
+        midpoint = random_sampling(space_size, obstacles)
         direction = np.random.uniform(-1, 1, size=2)
         direction /= np.linalg.norm(direction)
         point_a = midpoint + bridge_length * direction / 2
@@ -61,7 +72,7 @@ def bridge_sampling(space_size, obstacles, bridge_length=5):
 
 def obstacle_sampling(space_size, obstacles, buffer=20.0, min_distance=1.0, alpha=0.5):
     if np.random.rand() > alpha:
-        return random_sampling(space_size)
+        return random_sampling(space_size, obstacles)
     else:
         while True:
             # Randomly select an obstacle
@@ -78,36 +89,8 @@ def obstacle_sampling(space_size, obstacles, buffer=20.0, min_distance=1.0, alph
             point = Point(x, y)
 
             # Check if the point is valid (within space bounds and not inside the obstacle)
-            if 0 <= point.x <= space_size[0] and 0 <= point.y <= space_size[1] and not obstacle.contains(point):
+            if 0 <= point.x <= space_size[0] and 0 <= point.y <= space_size[1] and not any(obstacle.contains(Point(point)) for obstacle in obstacles):
                 return x, y
-
-def informed_sampling(c_best, start, goal, space_size):
-    if c_best == float('inf'):
-        return random_sampling(space_size)
-    
-    center = np.array(start) + (np.array(goal) - np.array(start)) / 2
-    a = c_best / 2  # Semi-major axis
-    b = np.sqrt(a**2 - np.linalg.norm(np.array(goal) - np.array(start))**2 / 4)  # Semi-minor axis
-    
-    theta = np.arctan2((goal[1] - start[1]), (goal[0] - start[0]))  # Angle to rotate the axes
-    
-    while True:
-        # Sample a random point in a unit circle then stretch it to the ellipse size
-        angle = np.random.uniform(0, 2 * np.pi)
-        r = np.sqrt(np.random.uniform(0, 1))  # To ensure uniform distribution
-        p = np.array([a * r * np.cos(angle), b * r * np.sin(angle)])
-        
-        # Rotate the point by theta and translate it to the center
-        cos_theta, sin_theta = np.cos(theta), np.sin(theta)
-        rotated_p = np.array([
-            cos_theta * p[0] - sin_theta * p[1],
-            sin_theta * p[0] + cos_theta * p[1]
-        ]) + center
-        
-        # Check if the point is within the space bounds
-        if 0 <= rotated_p[0] <= space_size[0] and 0 <= rotated_p[1] <= space_size[1]:
-            return rotated_p
-
 
 
 class TreeNode:
@@ -134,32 +117,45 @@ def rrt(start, goal, obstacles, num_iterations, step_size, sampling_method):
     tree = [start_node]
     c_best = float('inf')
 
-    for _ in range(num_iterations):
+    for i in range(num_iterations):
         # Goal biasing: occasionally sample the goal
         if np.random.rand() < 0.1:  # 10% chance to sample the goal
             random_point = goal
         else:
             # Choose sampling method based on user input
-            if sampling_method == 'informed':
-                random_point = informed_sampling(c_best, start, goal, space_size)
-            elif sampling_method == 'gaussian':
-                random_point = gaussian_sampling(space_size, goal)
+            if sampling_method == 'gaussian':
+                random_point = gaussian_sampling(space_size, goal, obstacles)
             elif sampling_method == 'bridge':
                 random_point = bridge_sampling(space_size, obstacles)
             elif sampling_method == 'obstacle':
                 random_point = obstacle_sampling(space_size, obstacles)
             else:
-                random_point = random_sampling(space_size)
+                random_point = random_sampling(space_size, obstacles)
 
         nearest = nearest_node(tree, random_point)
         dynamic_size = dynamic_step_size(nearest, random_point, step_size, goal, obstacles)
-        new_point_coords = steer(nearest, random_point, dynamic_size, goal, obstacles)
+        new_point_coords = steer(nearest, random_point, dynamic_size, obstacles)
         if new_point_coords is not None:
             new_node = TreeNode(Point(new_point_coords), nearest)
             tree.append(new_node)
+            
+            # RRT* Rewiring Logic
+            gamma = 2 * (space_size[0] * space_size[1]) / np.pi  # Constant
+            search_radius = min(30.0, (gamma * (np.log(len(tree)) / len(tree)) ** 0.5))
+            nearby_nodes = find_nearby_nodes(tree, new_node, search_radius)
+            for node in nearby_nodes:
+                if node == nearest or node == new_node.parent:
+                    continue
+                if tree_distance(tree, new_node, start_node) + new_node.distance(node) < tree_distance(tree, node, start_node):
+                    if not is_collision(new_node.point, node.point, obstacles):
+                        node.parent = new_node
+                        # Update c_best if a new node is added to the tree
+                        if tree_distance(tree, node, start_node) < c_best:
+                            c_best = tree_distance(tree, node, start_node)
+            
             if Point(new_point_coords).distance(Point(goal)) <= dynamic_size:
                 goal_reached = True
-                print("Reached the goal!")
+                print("Reached the goal at iteration", i)
                 return tree, goal_reached  # Return the tree immediately after reaching the goal
     print("Failed to reach the goal.")
     goal_reached = False
@@ -193,11 +189,11 @@ goal = (90, 90)
 obstacles = [Polygon([(20, 20), (30, 20), (30, 30), (20, 30)]),
             Polygon([(50, 50), (60, 50), (60, 60), (50, 60)]),
             Polygon([(70, 70), (80, 70), (80, 80), (70, 80)])]
-num_iterations = 1500
-step_size = 1.
+num_iterations = 1000
+step_size = 5.
 
-# Choose the sampling method: 'random', 'gaussian', 'bridge', 'obstacle', or 'informed'
-sampling_method = 'gaussian'
+# Choose the sampling method: 'random', 'gaussian', 'bridge', or 'obstacle'
+sampling_method = 'obstacle'
 
 path, goal_reached = rrt(start, goal, obstacles, num_iterations, step_size, sampling_method)
 
