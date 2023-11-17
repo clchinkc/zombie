@@ -233,5 +233,35 @@ for i in range(len(smoothed_path)-1):
     plt.plot([smoothed_path[i].x, smoothed_path[i+1].x], [smoothed_path[i].y, smoothed_path[i+1].y], 'g-', linewidth=3)
 # Show the plot
 plt.legend(loc='upper left')
-plt.title('RRT Path Planning (Correct Path in Magenta)')
+plt.title('RRT Path Planning')
 plt.show()
+
+"""
+Define the Path Problem:
+
+Clearly define the initial and target points of your path.
+Establish any constraints (e.g., obstacles, boundaries) and criteria for optimization (shortest distance, minimal turns, etc.).
+Initial Path Generation:
+
+Create an initial path. This can be a straight line between the start and end points or a more complex path based on available data.
+Iterative Optimization:
+
+Path Refinement: Adjust the path by moving intermediate points, ensuring it adheres to constraints and improves based on your criteria.
+Cost Function: Implement a cost function to evaluate the efficiency of the path. This function should consider factors like distance, smoothness, and adherence to constraints.
+Iterative Improvements: Use iterative methods to make incremental improvements to the path. This might involve moving path points slightly and checking if the cost function value improves.
+Backtracking for Optimization:
+
+Identify Problematic Sections: Use the cost function to identify parts of the path that are less optimal.
+Backtrack and Re-route: For these sections, backtrack to a previous decision point and try alternative routes or adjustments.
+Evaluate Alternatives: Use the cost function to evaluate these new alternatives. Keep the changes if they result in an improved path.
+Smoothing the Path:
+
+Curve Fitting: Apply curve fitting techniques (like Bezier curves or splines) to smooth out sharp turns or angles in the path.
+Balance Between Smoothness and Accuracy: Ensure that while smoothing the path, you don’t deviate significantly from the optimal path.
+Final Evaluation:
+
+Once a satisfactory path is generated, perform a final evaluation using your cost function and ensure it meets all criteria and constraints.
+Iterative Refinement (Optional):
+
+If necessary, iterate over the entire process to further refine the path, especially if new data or constraints emerge.
+"""

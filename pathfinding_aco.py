@@ -53,8 +53,6 @@ class AntColony:
 
         for _ in range(self.n_iterations):
             paths = self.generate_paths(start, goal)
-
-            # Update pheromones based on all paths (mainly for evaporation)
             self.update_pheromones(paths)
 
             for path, length in paths:
@@ -77,10 +75,7 @@ class AntColony:
         while current != goal:
             next_node = self.select_next_node(current, goal)
             path.append(next_node)
-
-            # Dynamic pheromone update as the ant moves
-            self.graph.add_pheromone(current, next_node, self.local_evaporation * self.graph.pheromone_level(current, next_node))
-
+            self.graph.add_pheromone(current, next_node, -self.local_evaporation * self.graph.pheromone_level(current, next_node))
             current = next_node
 
         length = self.path_length(path) + self.obstacle_proximity_penalty(path)
@@ -150,12 +145,12 @@ def visualize_path(grid_size, obstacles, path):
     plt.show()
 
 # Example Usage
-grid_size = (20, 20)
-obstacles = [(x, y) for x in range(8, 15) for y in range(8, 15)]  # Example obstacle
+grid_size = (30, 30)
+obstacles = [(x, y) for x in range(10, 20) for y in range(10, 20)]  # Example obstacle
 graph = Graph(grid_size, obstacles)
 ant_colony = AntColony(graph, n_ants=10, n_iterations=100, decay=0.1, local_evaporation=0.01, alpha=1, beta=1)
 
 start = (0, 0)
-goal = (18, 18)
+goal = (25, 25)
 path, length = ant_colony.run(start, goal)
 visualize_path(grid_size, obstacles, path)
