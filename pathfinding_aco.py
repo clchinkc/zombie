@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import animation
 from matplotlib import pyplot as plt
 
 
@@ -11,24 +12,17 @@ class Graph:
     def get_neighbors(self, node):
         x, y = node
         neighbors = []
-        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (-1, 1), (1, -1), (1, 1)]:  # Including diagonals
+        for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:  # Adjacent neighbors
             nx, ny = x + dx, y + dy
             if 0 <= nx < self.grid_size[0] and 0 <= ny < self.grid_size[1] and (nx, ny) not in self.obstacles:
-                safe = True
-                # Check for proximity to obstacles
-                for ox, oy in [(0, 1), (1, 0), (-1, 0), (0, -1)]:
-                    if (nx + ox, ny + oy) in self.obstacles:
-                        safe = False
-                        break
-                if safe:
-                    neighbors.append((nx, ny))
+                neighbors.append((nx, ny))
         return neighbors
 
     def pheromone_level(self, node1, node2):
-        return self.pheromones.get((node1, node2), 1.0)  # Default pheromone level
+        return self.pheromones.get((node1, node2), 0.1)  # Default pheromone level
 
-    def add_pheromone(self, node1, node2, amount, local_evaporation_rate=0):
-        self.pheromones[(node1, node2)] = (self.pheromones.get((node1, node2), 1.0) + amount) * (1 - local_evaporation_rate)
+    def add_pheromone(self, node1, node2, amount):
+        self.pheromones[(node1, node2)] = self.pheromones.get((node1, node2), 0.1) + amount
 
     def evaporate_pheromones(self, decay_rate):
         for edge in self.pheromones:
@@ -50,25 +44,25 @@ class AntColony:
         self.local_evaporation = local_evaporation
         self.alpha = alpha
         self.beta = beta
-        self.previous_success_rates = []
         self.previous_avg_path_lengths = []
+        self.avg_pheromone_levels = []
 
-    def run(self, start, goal):
+    def run(self, start, goal, visualizer):
         shortest_path = None
         shortest_path_length = float('inf')
 
         for iteration in range(self.n_iterations):
             paths = self.generate_paths(start, goal)
-            self.update_pheromones(paths)
             
-            current_success_rate = self.calculate_success_rate(paths)
-            self.previous_success_rates.append(current_success_rate)
+            # Update visualizer
+            visualizer.update(iteration, paths, self.graph.pheromones, shortest_path)
+            
             current_avg_path_length = self.calculate_average_path_length(paths)
             self.previous_avg_path_lengths.append(current_avg_path_length)
+            current_pheromone_level = self.calculate_average_pheromone_level()
+            self.avg_pheromone_levels.append(current_pheromone_level)
 
-            # Adaptive Parameter Tuning
-            if iteration > 0:
-                self.adapt_parameters(iteration, current_success_rate, current_avg_path_length)
+            self.adapt_parameters(iteration, current_avg_path_length, current_pheromone_level)
 
             for path, length in paths:
                 if length < shortest_path_length:
@@ -77,66 +71,51 @@ class AntColony:
 
         return shortest_path, shortest_path_length
 
-    def calculate_success_rate(self, paths):
-        success_count = 0
-        for path, length in paths:
-            if length < float('inf'):
-                success_count += 1
-        return success_count / len(paths)
-
     def calculate_average_path_length(self, paths):
         total_length = sum(length for _, length in paths)
         return total_length / len(paths)
 
-    def calculate_diversity_factor(self):
-        # Implement the logic to calculate the diversity of paths
-        # Calculate the standard deviation of path lengths as an example
-        path_length_std = np.std(self.previous_avg_path_lengths)
-        # Normalize and invert the standard deviation to get the diversity factor
-        # A higher std indicates lower diversity (need for more exploitation), and vice versa
-        diversity_factor = 1 / (1 + path_length_std)
+    def calculate_average_pheromone_level(self):
+        total_pheromone_level = sum(level for level in self.graph.pheromones.values())
+        return total_pheromone_level / len(self.graph.pheromones)
 
-        return max(0.8, min(diversity_factor, 1.2))
-
-    def adapt_parameters(self, iteration, current_success_rate, current_avg_path_length, momentum_window=5):
-        if iteration < momentum_window:
+    def adapt_parameters(self, iteration, current_avg_path_length, current_pheromone_level, momentum_window=5):
+        if iteration <= momentum_window:
             return  # Ensure enough data points for momentum calculation
 
-        # Calculate diversity factor for current iteration
-        diversity_factor = self.calculate_diversity_factor()
-
         # Calculate average changes over the momentum window
-        avg_success_rate_change = np.mean([current_success_rate - rate for rate in self.previous_success_rates[-momentum_window:]])
         avg_path_length_change = np.mean([current_avg_path_length - length for length in self.previous_avg_path_lengths[-momentum_window:]])
 
         # Non-linear transformation (e.g., hyperbolic tangent)
-        transformed_success_rate_change = np.tanh(avg_success_rate_change)
         transformed_path_length_change = np.tanh(avg_path_length_change)
 
-        # Adjust alpha (Pheromone Importance) with non-linear scaling and diversity factor
-        self.alpha *= (1.05 + (0.05 * transformed_success_rate_change)) * diversity_factor
+        # Adjust alpha (Pheromone Importance) with non-linear scaling
+        self.alpha *= (1.05 + (0.05 * transformed_path_length_change))
 
-        # Adjust beta (Heuristic Importance) with non-linear scaling and inverse diversity factor
-        self.beta *= (1.05 + (0.05 * transformed_path_length_change)) / diversity_factor
-
-        # Adjust decay rate with normalization, asymptotic adjustment, and diversity factor
-        decay_adjustment = np.tanh(current_avg_path_length - (self.previous_avg_path_lengths[-1] if self.previous_avg_path_lengths else current_avg_path_length))
-        self.decay *= (1 + decay_adjustment) * diversity_factor
-        self.decay = min(0.5, max(0.01, self.decay))
+        # Adjust beta (Heuristic Importance) with non-linear scaling
+        self.beta *= (1.05 + (0.05 * transformed_path_length_change))
 
         # Ensure alpha and beta are within reasonable bounds
         self.alpha = max(0.1, min(self.alpha, 5))
         self.beta = max(0.1, min(self.beta, 5))
+        
+        # Calculate the average pheromone level change over the last momentum window
+        avg_pheromone_level_change = np.mean([current_pheromone_level - level for level in self.avg_pheromone_levels[-momentum_window:]])
+        
+        # Adjust the pheromone decay rate based on the average pheromone level
+        # self.decay = max(0.00000001, min(0.000001, avg_pheromone_level_change / 1000000))
+        # self.local_evaporation = max(0.00000000001, min(0.000000001, avg_pheromone_level_change / 1000000000))
 
         # Update previous values for next iteration
-        self.previous_success_rates.append(current_success_rate)
         self.previous_avg_path_lengths.append(current_avg_path_length)
-        if len(self.previous_success_rates) > momentum_window:
-            self.previous_success_rates.pop(0)
+        self.avg_pheromone_levels.append(current_pheromone_level)
+        if len(self.previous_avg_path_lengths) > momentum_window:
             self.previous_avg_path_lengths.pop(0)
+            self.avg_pheromone_levels.pop(0)
 
         # Logging for monitoring
-        print(f"Iteration: {iteration}, Alpha: {self.alpha:.4f}, Beta: {self.beta:.4f}, Decay: {self.decay:.4f}, Diversity: {diversity_factor:.4f}")
+        print(f"Pheromone Level: {current_pheromone_level:.4f}, Avg Pheromone Level Change: {avg_pheromone_level_change:.4f}")
+        print(f"Iteration: {iteration}, Alpha: {self.alpha:.4f}, Beta: {self.beta:.4f}, Decay: {self.decay:.10f}, Local Evaporation: {self.local_evaporation:.10f}, Avg Path Length: {current_avg_path_length:.4f}")
 
     def generate_paths(self, start, goal):
         paths = []
@@ -152,15 +131,25 @@ class AntColony:
             next_node = self.select_next_node(current, goal)
             path.append(next_node)
 
-            # Dynamic local pheromone update as the ant moves
-            self.graph.add_pheromone(current, next_node, self.local_evaporation, self.local_evaporation)
+            # Local pheromone update using the distance between the nodes
+            distance_to_goal = self.graph.distance(next_node, goal)
+            distance_travelled = len(path) - 1
+            self.graph.add_pheromone(current, next_node, 1 / (distance_to_goal + distance_travelled))
+            
+            # Local pheromone evaporation
+            self.graph.evaporate_edge_pheromone(current, next_node, self.local_evaporation)
 
-            # Dynamic global evaporation
-            self.graph.evaporate_edge_pheromone(current, next_node, self.decay)
-
+            # Proceed to the next node
             current = next_node
 
+            # Break if path becomes excessively long (to avoid infinite loops)
+            if len(path) > self.graph.grid_size[0] * self.graph.grid_size[1]:
+                break
+
+        # Pheromone evaporation and length calculation after path completion
+        self.graph.evaporate_pheromones(self.decay)
         length = self.path_length(path) + self.obstacle_proximity_penalty(path)
+
         return path, length
 
     def obstacle_proximity_penalty(self, path):
@@ -186,12 +175,6 @@ class AntColony:
 
         return neighbors[np.random.choice(len(neighbors), p=probabilities)]
 
-    def update_pheromones(self, paths):
-        for path, length in paths:
-            for i in range(len(path) - 1):
-                self.graph.add_pheromone(path[i], path[i + 1], 1.0 / length)
-        self.graph.evaporate_pheromones(self.decay)
-
     def path_length(self, path):
         length = 0
         for i in range(len(path) - 1):
@@ -199,39 +182,92 @@ class AntColony:
         return length
 
 
-def visualize_path(grid_size, obstacles, path):
-    # Create a grid representation
-    grid = np.zeros(grid_size)
-    for obstacle in obstacles:
-        grid[obstacle] = -1  # Mark obstacles
+class AntColonyVisualizer:
+    def __init__(self, grid_size, obstacles):
+        self.grid_size = grid_size
+        self.obstacles = obstacles
+        self.iteration_paths = []
+        self.pheromone_levels = []
+        self.shortest_paths = []
 
-    # Mark the path
-    for node in path:
-        grid[node] = 1
+    def update(self, iteration, paths, pheromone_map, shortest_path):
+        self.iteration_paths.append((iteration, paths))
+        self.pheromone_levels.append(pheromone_map.copy())
+        self.shortest_paths.append(shortest_path)
 
-    # Mark the start and goal
-    start, goal = path[0], path[-1]
-    grid[start] = 2
-    grid[goal] = 3
+    def normalize_pheromone_grid(self, pheromone_map):
+        pheromone_grid = np.zeros(self.grid_size)
+        for (node1, node2), intensity in pheromone_map.items():
+            x, y = (np.array(node1) + np.array(node2)) / 2
+            pheromone_grid[int(x), int(y)] = intensity
+        
+        # Normalize the pheromone grid
+        max_intensity = pheromone_grid.max()
+        if max_intensity > 0:
+            pheromone_grid /= max_intensity
+        
+        return pheromone_grid
 
-    # Plotting
-    plt.figure(figsize=(10, 10))
-    plt.imshow(grid.T, cmap='viridis', origin='lower')
-    plt.colorbar(label='Status', ticks=[-1, 0, 1, 2, 3])
-    plt.clim(-1.5, 3.5)
-    plt.title('Ant Colony Path Visualization')
-    plt.xlabel('X Coordinate')
-    plt.ylabel('Y Coordinate')
-    plt.grid(False)
-    plt.show()
+    def visualize_pheromone_evolution(self):
+        # Animated visualization of pheromone intensity over iterations
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.set_xlim(0, self.grid_size[0])
+        ax.set_ylim(0, self.grid_size[1])
+
+        # Initial setup for the heatmap
+        pheromone_grid = self.normalize_pheromone_grid(self.pheromone_levels[0])
+        heatmap = ax.imshow(pheromone_grid.T, cmap='hot', origin='lower')
+        colorbar = fig.colorbar(heatmap, ax=ax, orientation='vertical')
+
+        def animate(i):
+            # Clear previous state
+            ax.clear()
+
+            # Update the pheromone grid for the current iteration and normalize
+            pheromone_grid = self.normalize_pheromone_grid(self.pheromone_levels[i])
+
+            # Update the heatmap data and redraw
+            heatmap.set_data(pheromone_grid.T)
+            ax.imshow(pheromone_grid.T, cmap='hot', origin='lower')
+            ax.set_title(f"Iteration: {i}")
+
+        ani = animation.FuncAnimation(fig, animate, frames=len(self.iteration_paths), interval=1000)
+        plt.show()
+
+
+    def visualize_path_evolution(self):
+        # Animated visualization of path evolution over iterations, highlighting the shortest path
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.set_xlim(0, self.grid_size[0])
+        ax.set_ylim(0, self.grid_size[1])
+
+        def animate(i):
+            ax.clear()
+            iteration, paths = self.iteration_paths[i]
+            shortest_path = self.shortest_paths[i]
+            # Plot all paths
+            for path, _ in paths:
+                ax.plot(*zip(*path), marker='o', color='gray', alpha=0.5)
+            # Highlight the shortest path
+            if shortest_path:
+                ax.plot(*zip(*shortest_path), marker='o', color='red', linewidth=2)
+            ax.set_title(f"Iteration: {iteration}")
+
+        ani = animation.FuncAnimation(fig, animate, frames=len(self.iteration_paths), interval=1000)
+        plt.show()
 
 # Example Usage
-grid_size = (20, 20)
-obstacles = [(x, y) for x in range(8, 15) for y in range(8, 15)]  # Example obstacle
+grid_size = (10, 10)
+obstacles = [(x, y) for x in range(3, 7) for y in range(4, 7)]
 graph = Graph(grid_size, obstacles)
-ant_colony = AntColony(graph, n_ants=10, n_iterations=20, decay=0.1, local_evaporation=0.01, alpha=1, beta=1)
+ant_colony = AntColony(graph, n_ants=5, n_iterations=10, decay=0.001, local_evaporation=0.00001, alpha=1, beta=1)
+
+visualizer = AntColonyVisualizer(grid_size, obstacles)
 
 start = (0, 0)
-goal = (18, 18)
-path, length = ant_colony.run(start, goal)
-visualize_path(grid_size, obstacles, path)
+goal = (9, 9)
+path, length = ant_colony.run(start, goal, visualizer)
+
+# Visualization
+visualizer.visualize_pheromone_evolution()
+visualizer.visualize_path_evolution()
