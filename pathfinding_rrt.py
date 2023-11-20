@@ -20,8 +20,7 @@ def steer(from_node, to_point, step_size, obstacles):
     length = np.linalg.norm(direction)
     direction = direction / length if length != 0 else direction
 
-    step = step_size
-    new_point = np.array((from_node.point.x, from_node.point.y)) + step * direction
+    new_point = np.array((from_node.point.x, from_node.point.y)) + step_size * direction
     if not is_collision(from_node.point, Point(new_point), obstacles):
         return new_point
     else:
@@ -146,7 +145,7 @@ class TreeNode:
     def __repr__(self):
         return f"TreeNode({self.point.x}, {self.point.y})"
 
-def tree_distance(tree, node, start_node):
+def tree_distance(node, start_node):
     distance = 0
     current_node = node
     while current_node != start_node:
@@ -192,12 +191,12 @@ def rrt(start, goal, obstacles, num_iterations, step_size, sampling_method):
             for node in nearby_nodes:
                 if node == nearest or node == new_node.parent:
                     continue
-                if tree_distance(tree, new_node, start_node) + new_node.distance(node) < tree_distance(tree, node, start_node):
+                if tree_distance(new_node, start_node) + new_node.distance(node) < tree_distance(node, start_node):
                     if not is_collision(new_node.point, node.point, obstacles):
                         node.parent = new_node
                         # Update c_best if a new node is added to the tree
-                        if tree_distance(tree, node, start_node) < c_best:
-                            c_best = tree_distance(tree, node, start_node)
+                        if tree_distance(node, start_node) < c_best:
+                            c_best = tree_distance(node, start_node)
             
             if Point(new_point_coords).distance(Point(goal)) <= dynamic_size:
                 goal_reached = True
@@ -220,24 +219,40 @@ def find_path(tree, goal_reached):
 
     return path[::-1]  # Return reversed path starting from the beginning
 
-def smooth_path(path, obstacles, max_iterations=50, tolerance=0.01):
+def smooth_path(path, obstacles, max_iterations=50):
+    if len(path) < 3:  # No smoothing needed for paths with less than 3 points
+        return path
+
     smooth_path = path.copy()
     iteration = 0
+
     while iteration < max_iterations:
         changed = False
-        for i in range(len(smooth_path) - 2):
-            for j in range(len(smooth_path) - 1, i+1, -1):
+
+        i = 0
+        while i < len(smooth_path) - 2:
+            max_j = i + 1  # Initialize max_j as the next immediate point
+
+            for j in range(i + 2, len(smooth_path)):
                 if not is_collision(smooth_path[i], smooth_path[j], obstacles):
-                    # Update the path by removing intermediate points
-                    smooth_path = smooth_path[:i+1] + smooth_path[j:]
-                    changed = True
-                    break
-            if changed:
-                break
+                    max_j = j  # Find the furthest point that can be directly reached without collision
+
+            if max_j != i + 1:
+                # Remove intermediate points between i and max_j
+                smooth_path[i + 1:max_j] = [smooth_path[max_j]]
+                changed = True
+
+            i = max_j  # Move to the next point that needs checking
+
         iteration += 1
+
         if not changed:
-            break
+            break  # Exit early if no changes are made in the iteration
+
     return smooth_path
+
+
+
 
 def plot_obstacles(obstacles, ax):
     for obstacle in obstacles:
