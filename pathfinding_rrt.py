@@ -29,7 +29,7 @@ def steer(from_node, to_point, step_size, obstacles):
 
 
 def dynamic_step_size(from_node, to_point, step_size, goal, obstacles):
-    goal_distance = np.linalg.norm(np.array(to_point) - np.array(goal))
+    goal_distance = float(np.linalg.norm(np.array(to_point) - np.array(goal)))
     step = min(step_size, goal_distance)
 
     obstacle_distances = [obstacle.distance(Point(from_node.point)) for obstacle in obstacles]
@@ -49,12 +49,12 @@ def random_sampling(space_size, obstacles):
         if not any(obstacle.contains(Point(point)) for obstacle in obstacles):
             return x, y
 
-def gaussian_sampling(space_size, goal, obstacles, alpha=0.5):
+def goal_biased_sampling(space_size, goal, obstacles, alpha=0.5):
     if np.random.rand() > alpha:
         return random_sampling(space_size, obstacles)
     else:
         std_dev = min(space_size) / 6
-        # Sample a point from a 2D Gaussian distribution
+        # Sample a point from a gaussian distribution centered at the goal
         while True:
             point = np.random.normal(goal, std_dev)
             if 0 <= point[0] <= space_size[0] and 0 <= point[1] <= space_size[1] and not any(obstacle.contains(Point(point)) for obstacle in obstacles):
@@ -69,6 +69,27 @@ def bridge_sampling(space_size, obstacles, bridge_length=5):
         point_b = midpoint - bridge_length * direction / 2
         if not is_collision(Point(point_a), Point(point_b), obstacles) and 0 <= point_a[0] <= space_size[0] and 0 <= point_a[1] <= space_size[1] and 0 <= point_b[0] <= space_size[0] and 0 <= point_b[1] <= space_size[1]:
             return midpoint
+
+def gaussian_sampling(tree, start, goal, space_size, obstacles, alpha=0.5, std_dev=None):
+    if std_dev is None:
+        std_dev = min(space_size) / 8  # Standard deviation can be adjusted
+
+    while True:
+        # Choose a center point from the current node
+        if np.random.rand() > alpha:
+            center = np.array((tree[-1].point.x, tree[-1].point.y))
+        else:
+            # Choose a center point from a random node
+            node = np.random.choice(tree)
+            center = np.array((node.point.x, node.point.y))
+
+        # Sample from Gaussian distribution centered around the chosen point
+        x, y = np.random.normal(center, std_dev, size=2)
+        point = Point(x, y)
+
+        # Check if the sampled point is valid
+        if 0 <= x <= space_size[0] and 0 <= y <= space_size[1] and not any(obstacle.contains(point) for obstacle in obstacles):
+            return (x, y)
 
 def obstacle_sampling(space_size, obstacles, buffer=20.0, min_distance=1.0, alpha=0.5):
     if np.random.rand() > alpha:
@@ -91,6 +112,27 @@ def obstacle_sampling(space_size, obstacles, buffer=20.0, min_distance=1.0, alph
             # Check if the point is valid (within space bounds and not inside the obstacle)
             if 0 <= point.x <= space_size[0] and 0 <= point.y <= space_size[1] and not any(obstacle.contains(Point(point)) for obstacle in obstacles):
                 return x, y
+
+def dynamic_domain_sampling(tree, space_size, obstacles, expand_radius=10.0):
+    # Focus on leaf nodes
+    leaf_nodes = [node for node in tree if node.parent is not None and node not in tree[:-1]]
+
+    if not leaf_nodes:
+        # Fallback to the entire tree if no leaf nodes are found
+        leaf_nodes = tree
+
+    # Choose a random leaf node
+    random_node = np.random.choice(leaf_nodes)
+
+    while True:
+        angle = np.random.uniform(0, 2 * np.pi)
+        distance = np.random.uniform(0, expand_radius)
+        x = random_node.point.x + distance * np.cos(angle)
+        y = random_node.point.y + distance * np.sin(angle)
+
+        point = Point(x, y)
+        if 0 <= x <= space_size[0] and 0 <= y <= space_size[1] and not any(obstacle.contains(point) for obstacle in obstacles):
+            return (x, y)
 
 
 class TreeNode:
@@ -123,12 +165,16 @@ def rrt(start, goal, obstacles, num_iterations, step_size, sampling_method):
             random_point = goal
         else:
             # Choose sampling method based on user input
-            if sampling_method == 'gaussian':
-                random_point = gaussian_sampling(space_size, goal, obstacles)
+            if sampling_method == 'goal':
+                random_point = goal_biased_sampling(space_size, goal, obstacles)
             elif sampling_method == 'bridge':
                 random_point = bridge_sampling(space_size, obstacles)
+            elif sampling_method == 'gaussian':
+                random_point = gaussian_sampling(tree, start, goal, space_size, obstacles)
             elif sampling_method == 'obstacle':
                 random_point = obstacle_sampling(space_size, obstacles)
+            elif sampling_method == 'dynamic_domain':
+                random_point = dynamic_domain_sampling(tree, space_size, obstacles)
             else:
                 random_point = random_sampling(space_size, obstacles)
 
@@ -192,8 +238,8 @@ obstacles = [Polygon([(20, 20), (30, 20), (30, 30), (20, 30)]),
 num_iterations = 1000
 step_size = 5.
 
-# Choose the sampling method: 'random', 'gaussian', 'bridge', or 'obstacle'
-sampling_method = 'obstacle'
+# Choose the sampling method: 'random', 'goal', 'bridge', 'gaussian', 'obstacle', or 'dynamic_domain'
+sampling_method = 'dynamic_domain'
 
 path, goal_reached = rrt(start, goal, obstacles, num_iterations, step_size, sampling_method)
 
@@ -235,6 +281,12 @@ for i in range(len(smoothed_path)-1):
 plt.legend(loc='upper left')
 plt.title('RRT Path Planning')
 plt.show()
+
+"""
+Informed RRT Sampling*: In Informed RRT* (an extension of RRT), once a path is found, further samples are drawn from an ellipsoidal region that contains all possible shorter paths. This focuses the search on areas that are most likely to improve the current solution.
+
+Heuristic-Based Sampling: This approach uses heuristics or additional information about the environment (like gradients or potential fields) to guide the sampling process towards more promising areas.
+"""
 
 """
 Define the Path Problem:

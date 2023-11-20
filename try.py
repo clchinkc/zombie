@@ -1,128 +1,88 @@
+import matplotlib.pyplot as plt
 import numpy as np
+from scipy.fft import fft, fft2, fftshift
 
+# Simulation parameters
+grid_size = 50  # Size of the grid
+initial_infected = 5  # Initial number of infected cells
+infection_rate = 0.2  # Probability of infection spread to adjacent cells
+simulation_steps = 100  # Number of steps in the simulation
 
-class Graph:
-    def __init__(self, size, obstacles):
-        self.size = size
-        self.obstacles = obstacles
-        self.nodes = self.generate_nodes()
-        self.edges = self.generate_edges()
+# Initialize the grid (0: Susceptible, 1: Infected, 2: Removed)
+grid = np.zeros((grid_size, grid_size), dtype=int)
+infected_indices = np.random.choice(grid_size * grid_size, initial_infected, replace=False)
+grid[np.unravel_index(infected_indices, grid.shape)] = 1
 
-    def generate_nodes(self):
-        nodes = []
-        for i in range(self.size[0]):
-            for j in range(self.size[1]):
-                if (i, j) not in self.obstacles:
-                    nodes.append((i, j))
-        return nodes
+# Function to update the grid based on zombie spread dynamics
+def update_grid(grid):
+    new_grid = grid.copy()
+    for i in range(grid_size):
+        for j in range(grid_size):
+            if grid[i, j] == 1:  # Infected cell
+                # Check adjacent cells for infection spread
+                for di in [-1, 0, 1]:
+                    for dj in [-1, 0, 1]:
+                        if 0 <= i + di < grid_size and 0 <= j + dj < grid_size:
+                            if grid[i + di, j + dj] == 0:  # Susceptible cell
+                                if np.random.rand() < infection_rate:
+                                    new_grid[i + di, j + dj] = 1  # New infection
+    return new_grid
 
-    def generate_edges(self):
-        edges = {}
-        for node in self.nodes:
-            edges[node] = []
-            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-                neighbor = (node[0] + dx, node[1] + dy)
-                if neighbor in self.nodes:
-                    edges[node].append(neighbor)
-        return edges
+# Run the simulation
+time_series_data = []
+spatial_data = []
 
-    def node_to_index(self, node):
-        return node[0] * self.size[1] + node[1]
+for step in range(simulation_steps):
+    grid = update_grid(grid)
+    time_series_data.append(np.sum(grid == 1))  # Count infected cells
+    spatial_data.append(grid.copy())
 
-    def index_to_node(self, index):
-        return (index // self.size[1], index % self.size[1])
+# Convert spatial data to array for easier processing
+spatial_data = np.array(spatial_data)
 
-class Ant:
-    def __init__(self, start_node):
-        self.current_node = start_node
-        self.path = [start_node]
-        self.path_length = 0
+# FFT analysis on time-series data
+time_series_fft = fft(time_series_data)
+frequencies = np.fft.fftfreq(len(time_series_data), d=1)
 
-    def move_to_node(self, next_node):
-        self.path_length += np.linalg.norm(np.array(next_node) - np.array(self.current_node))
-        self.current_node = next_node
-        self.path.append(next_node)
+# Identify and highlight dominant frequencies
+dominant_freqs = frequencies[(np.abs(time_series_fft) > np.max(np.abs(time_series_fft)) * 0.1) & (frequencies > 0)]
+dominant_freq_indices = np.argsort(-np.abs(time_series_fft))[:len(dominant_freqs)]
 
-    def choose_next_node(self, graph, pheromone_map):
-        neighbors = graph.edges[self.current_node]
-        neighbor_indices = [graph.node_to_index(neighbor) for neighbor in neighbors]
-        pheromone_levels = np.array([pheromone_map[(self.current_node, neighbor)] for neighbor in neighbors])
-        
-        if pheromone_levels.sum() == 0:
-            probabilities = None  # Equal probability for all if no pheromones
-        else:
-            probabilities = pheromone_levels / pheromone_levels.sum()
+# Spatial analysis at different stages
+stages = [10, 40, 90]  # Early, middle, and late stages of the simulation
 
-        next_index = np.random.choice(neighbor_indices, p=probabilities)
-        next_node = graph.index_to_node(next_index)
-        return next_node
+# Visualization
+fig, axs = plt.subplots(len(stages) + 1, 2, figsize=(12, (len(stages) + 1) * 6))
 
-def initialize_pheromones(graph, initial_value):
-    pheromone_map = {}
-    for node in graph.nodes:
-        for neighbor in graph.edges[node]:
-            pheromone_map[(node, neighbor)] = initial_value
-    return pheromone_map
+# Plotting time-series data and its FFT
+axs[0, 0].plot(frequencies, np.abs(time_series_fft))
+axs[0, 0].scatter(frequencies[dominant_freq_indices], np.abs(time_series_fft)[dominant_freq_indices], color='red')
+axs[0, 0].set_title("FFT of Time-Series Data (Dominant Frequencies Highlighted)")
+axs[0, 0].set_xlabel("Frequency")
+axs[0, 0].set_ylabel("Amplitude")
 
-def update_pheromones(pheromone_map, ants, decay_rate, pheromone_deposit):
-    # Evaporate pheromones
-    for edge in pheromone_map:
-        pheromone_map[edge] *= (1 - decay_rate)
+axs[0, 1].plot(time_series_data)
+axs[0, 1].set_title("Time-Series Data")
+axs[0, 1].set_xlabel("Time Step")
+axs[0, 1].set_ylabel("Number of Infected Cells")
 
-    # Deposit new pheromones
-    for ant in ants:
-        for i in range(len(ant.path) - 1):
-            edge = (ant.path[i], ant.path[i + 1])
-            pheromone_map[edge] += pheromone_deposit / ant.path_length
+# Plotting spatial data and its FFT at different stages
+for i, stage in enumerate(stages):
+    # FFT of spatial data at the selected stage
+    spatial_fft = fft2(spatial_data[stage])
+    spatial_fft_shifted = fftshift(spatial_fft)
 
-def aco_algorithm(graph, start, goal, num_ants, num_iterations, decay_rate, pheromone_deposit):
-    pheromone_map = initialize_pheromones(graph, initial_value=1.0)
-    best_path = None
-    best_path_length = float('inf')
+    # Original spatial data
+    axs[i + 1, 0].imshow(spatial_data[stage], cmap='viridis')
+    axs[i + 1, 0].set_title(f"Spatial Data at Time Step {stage}")
+    axs[i + 1, 0].set_xlabel("X Coordinate")
+    axs[i + 1, 0].set_ylabel("Y Coordinate")
 
-    for _ in range(num_iterations):
-        ants = [Ant(start) for _ in range(num_ants)]
+    # FFT-transformed spatial data
+    axs[i + 1, 1].imshow(np.log(np.abs(spatial_fft_shifted)), cmap='hot')
+    axs[i + 1, 1].set_title(f"FFT of Spatial Data at Time Step {stage} (Log Scale)")
+    axs[i + 1, 1].set_xlabel("Frequency X")
+    axs[i + 1, 1].set_ylabel("Frequency Y")
 
-        for ant in ants:
-            while ant.current_node != goal:
-                next_node = ant.choose_next_node(graph, pheromone_map)
-                ant.move_to_node(next_node)
-
-            # Check if the ant's path is better
-            if ant.path_length < best_path_length:
-                best_path = ant.path
-                best_path_length = ant.path_length
-
-        update_pheromones(pheromone_map, ants, decay_rate, pheromone_deposit)
-
-    return best_path
-
-def visualize_path(graph, path):
-    import matplotlib.pyplot as plt
-    plt.figure(figsize=(10, 10))
-    plt.xlim(-1, graph.size[0])
-    plt.ylim(-1, graph.size[1])
-    plt.xticks(np.arange(-0.5, graph.size[0], 1))
-    plt.yticks(np.arange(-0.5, graph.size[1], 1))
-    plt.grid(True)
-    plt.plot([node[0] for node in path], [node[1] for node in path], color='red', linewidth=2)
-    plt.plot([node[0] for node in graph.obstacles], [node[1] for node in graph.obstacles], 'sk', markersize=10)
-    plt.show()
-
-# Define your space size and obstacles
-space_size = (20, 20)
-obstacles = [(5, 5), (5, 6), (5, 7), (5, 8), (5, 9)]
-
-# Create graph
-graph = Graph(space_size, obstacles)
-
-# Run ACO
-start_node = (0, 0)
-goal_node = (19, 19)
-num_ants = 10
-num_iterations = 10
-decay_rate = 0.1
-pheromone_deposit = 1.0
-
-best_path = aco_algorithm(graph, start_node, goal_node, num_ants, num_iterations, decay_rate, pheromone_deposit)
-visualize_path(graph, best_path)
+plt.tight_layout()
+plt.show()
