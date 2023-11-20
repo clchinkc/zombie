@@ -207,6 +207,19 @@ def rrt(start, goal, obstacles, num_iterations, step_size, sampling_method):
     goal_reached = False
     return tree, goal_reached
 
+def find_path(tree, goal_reached):
+    if goal_reached:
+        node = tree[-1]
+    else:
+        return None
+
+    path = []
+    while node is not None:
+        path.append(node.point)
+        node = node.parent
+
+    return path[::-1]  # Return reversed path starting from the beginning
+
 def smooth_path(path, obstacles, max_iterations=50, tolerance=0.01):
     smooth_path = path.copy()
     iteration = 0
@@ -226,6 +239,32 @@ def smooth_path(path, obstacles, max_iterations=50, tolerance=0.01):
             break
     return smooth_path
 
+def plot_obstacles(obstacles, ax):
+    for obstacle in obstacles:
+        x, y = obstacle.exterior.xy
+        ax.fill(x, y, alpha=0.5, fc='orange', ec='none')
+
+def plot_tree(tree, ax):
+    for point in tree:
+        if point.parent is not None:
+            ax.plot([point.point.x, point.parent.point.x], [point.point.y, point.parent.point.y], 'blue')
+
+def plot_points(tree, start, goal, ax):
+    for point in tree:
+        ax.plot(point.point.x, point.point.y, 'bo')
+    ax.plot(start[0], start[1], 'go', label='Start')
+    ax.plot(goal[0], goal[1], 'ro', label='Goal')
+
+def plot_path(path, color, line_style, label, linewidth, ax):
+    for i in range(len(path)-1):
+        if i == 0:
+            # Add label only for the first segment
+            ax.plot([path[i].x, path[i+1].x], [path[i].y, path[i+1].y], color=color, linestyle=line_style, linewidth=linewidth, label=label)
+        else:
+            # Plot without label for the rest of the segments
+            ax.plot([path[i].x, path[i+1].x], [path[i].y, path[i+1].y], color=color, linestyle=line_style, linewidth=linewidth)
+
+
 
 
 # Example usage:
@@ -244,12 +283,7 @@ sampling_method = 'dynamic_domain'
 path, goal_reached = rrt(start, goal, obstacles, num_iterations, step_size, sampling_method)
 
 # Find the correct path
-correct_path = []
-node = path[-1] if goal_reached else None
-while node is not None:
-    correct_path.append(node.point)
-    node = node.parent
-correct_path = correct_path[::-1]  # Reverse to start from the beginning
+correct_path = find_path(path, goal_reached)
 
 # Find the smooth path
 smoothed_path = smooth_path(correct_path, obstacles)
@@ -258,62 +292,16 @@ smoothed_path = smooth_path(correct_path, obstacles)
 fig, ax = plt.subplots()
 ax.set_xlim(0, space_size[0])
 ax.set_ylim(0, space_size[1])
-# Plot the obstacles
-for obstacle in obstacles:
-    x, y = obstacle.exterior.xy
-    ax.fill(x, y, alpha=0.5, fc='orange', ec='none')
-# Plot the tree
-for point in path:
-    if point.parent is not None:
-        plt.plot([point.point.x, point.parent.point.x], [point.point.y, point.parent.point.y], 'blue')
-# Plot the points
-for point in path:
-    ax.plot(point.point.x, point.point.y, 'bo')
-ax.plot(start[0], start[1], 'go', label='Start')
-ax.plot(goal[0], goal[1], 'ro', label='Goal')
-# Plot the correct path
-for i in range(len(correct_path)-1):
-    plt.plot([correct_path[i].x, correct_path[i+1].x], [correct_path[i].y, correct_path[i+1].y], 'm-', linewidth=3)
-# Plot the smooth path
-for i in range(len(smoothed_path)-1):
-    plt.plot([smoothed_path[i].x, smoothed_path[i+1].x], [smoothed_path[i].y, smoothed_path[i+1].y], 'g-', linewidth=3)
-# Show the plot
+
+# Plot elements
+plot_obstacles(obstacles, ax)
+plot_tree(path, ax)
+plot_points(path, start, goal, ax)
+if correct_path:
+    plot_path(correct_path, 'r', '-', 'Correct Path', 3, ax)
+if smoothed_path:
+    plot_path(smoothed_path, 'g', '-', 'Smooth Path', 3, ax)
+
 plt.legend(loc='upper left')
 plt.title('RRT Path Planning')
 plt.show()
-
-"""
-Informed RRT Sampling*: In Informed RRT* (an extension of RRT), once a path is found, further samples are drawn from an ellipsoidal region that contains all possible shorter paths. This focuses the search on areas that are most likely to improve the current solution.
-
-Heuristic-Based Sampling: This approach uses heuristics or additional information about the environment (like gradients or potential fields) to guide the sampling process towards more promising areas.
-"""
-
-"""
-Define the Path Problem:
-
-Clearly define the initial and target points of your path.
-Establish any constraints (e.g., obstacles, boundaries) and criteria for optimization (shortest distance, minimal turns, etc.).
-Initial Path Generation:
-
-Create an initial path. This can be a straight line between the start and end points or a more complex path based on available data.
-Iterative Optimization:
-
-Path Refinement: Adjust the path by moving intermediate points, ensuring it adheres to constraints and improves based on your criteria.
-Cost Function: Implement a cost function to evaluate the efficiency of the path. This function should consider factors like distance, smoothness, and adherence to constraints.
-Iterative Improvements: Use iterative methods to make incremental improvements to the path. This might involve moving path points slightly and checking if the cost function value improves.
-Backtracking for Optimization:
-
-Identify Problematic Sections: Use the cost function to identify parts of the path that are less optimal.
-Backtrack and Re-route: For these sections, backtrack to a previous decision point and try alternative routes or adjustments.
-Evaluate Alternatives: Use the cost function to evaluate these new alternatives. Keep the changes if they result in an improved path.
-Smoothing the Path:
-
-Curve Fitting: Apply curve fitting techniques (like Bezier curves or splines) to smooth out sharp turns or angles in the path.
-Balance Between Smoothness and Accuracy: Ensure that while smoothing the path, you don’t deviate significantly from the optimal path.
-Final Evaluation:
-
-Once a satisfactory path is generated, perform a final evaluation using your cost function and ensure it meets all criteria and constraints.
-Iterative Refinement (Optional):
-
-If necessary, iterate over the entire process to further refine the path, especially if new data or constraints emerge.
-"""

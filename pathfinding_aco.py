@@ -235,3 +235,21 @@ Pheromone Evaporation and Diffusion: Implement a more sophisticated pheromone ev
 Performance Metrics: Introduce more performance metrics such as the total number of steps taken by all ants, the number of iterations until the first optimal path is found, and the convergence rate.
 
 """
+
+"""
+Memory Mechanism
+Memory Storage: Each ant should have a memory to store a certain number of previously visited nodes. This storage could be a simple list or a more complex structure like a stack or queue, depending on how you want to utilize the memory.
+Memory Utilization:
+Avoiding Revisits: Ants should reference their memory to avoid revisiting recently visited nodes. This can prevent them from cycling or wandering in areas they have already explored.
+Backtracking: In situations where no viable forward path is available, ants could use their memory to backtrack to a previous position and explore alternate routes.
+Memory Size:
+The size of the memory (i.e., the number of nodes it can store) should be carefully chosen. Too little memory might not significantly impact the pathfinding, while too much could lead to inefficiency and increased computational load.
+Memory Update:
+The memory should be dynamically updated as ants move. This could involve adding new nodes to the memory and removing the oldest ones, ensuring that the memory reflects the most recent path history.
+Integration with Pheromone Mechanism:
+The memory mechanism should work in tandem with the pheromone trail. For instance, an ant might choose to follow a strong pheromone trail even if it leads to a node in its memory, under the assumption that this popular route is likely efficient.
+Path Smoothing:
+Once a path to the goal is found, ants can use their memory to refine or smooth their path by removing unnecessary loops or detours they remembered.
+Collective Memory:
+Optionally, ants can share parts of their memory with the colony. When an ant finds a particularly efficient path, it can share this information with other ants, influencing their decision-making.
+"""
