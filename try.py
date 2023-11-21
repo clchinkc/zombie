@@ -1,322 +1,232 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from shapely.geometry import LineString, Point, Polygon
+from matplotlib import animation
 
 
-def is_collision(p1, p2, obstacles, buffer=1.0):
-    line = LineString([p1, p2])
-    buffered_line = line.buffer(buffer)
-    return any(buffered_line.intersects(obstacle) for obstacle in obstacles)
-
-def nearest_node(node_list, random_point):
-    random_node = TreeNode(Point(random_point))
-    return min(node_list, key=lambda node: node.distance(random_node))
-
-def find_nearby_nodes(tree, new_node, radius):
-    return [node for node in tree if node.distance(new_node) <= radius]
-
-def steer(from_node, to_point, step_size, obstacles):
-    direction = np.array(to_point) - np.array((from_node.point.x, from_node.point.y))
-    length = np.linalg.norm(direction)
-    direction = direction / length if length != 0 else direction
-
-    new_point = np.array((from_node.point.x, from_node.point.y)) + step_size * direction
-    if not is_collision(from_node.point, Point(new_point), obstacles):
-        return new_point
-    else:
-        return None
+class Graph:
+    def __init__(self, grid_size, obstacles):
+        self.grid_size = grid_size
+        self.obstacles = set(obstacles)
+        self.nodes = self.generate_nodes()
+        self.edges = self.generate_edges()
 
 
-def dynamic_step_size(from_node, to_point, step_size, goal, obstacles):
-    goal_distance = float(np.linalg.norm(np.array(to_point) - np.array(goal)))
-    step = min(step_size, goal_distance)
+    def generate_nodes(self):
+        nodes = []
+        for i in range(self.grid_size[0]):
+            for j in range(self.grid_size[1]):
+                if (i, j) not in self.obstacles:
+                    nodes.append((i, j))
+        return nodes
 
-    obstacle_distances = [obstacle.distance(Point(from_node.point)) for obstacle in obstacles]
-    if obstacle_distances:
-        min_obstacle_distance = min(obstacle_distances)
-        # If close to an obstacle, reduce step size
-        if min_obstacle_distance < step_size:
-            step = max(step, min_obstacle_distance / 2)  # Ensure a minimum step
-    return step
+    def generate_edges(self):
+        edges = {}
+        for node in self.nodes:
+            edges[node] = []
+            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                neighbor = (node[0] + dx, node[1] + dy)
+                if neighbor in self.nodes:
+                    edges[node].append(neighbor)
+        return edges
 
 
-def random_sampling(space_size, obstacles):
-    while True:
-        x = np.random.uniform(0, space_size[0])
-        y = np.random.uniform(0, space_size[1])
-        point = Point(x, y)
-        if not any(obstacle.contains(Point(point)) for obstacle in obstacles):
-            return x, y
+class Ant:
+    def __init__(self, start_node):
+        self.current_node = start_node
+        self.path = [start_node]
+        self.path_length = 0
 
-def goal_biased_sampling(space_size, goal, obstacles, alpha=0.5):
-    if np.random.rand() > alpha:
-        return random_sampling(space_size, obstacles)
-    else:
-        std_dev = min(space_size) / 6
-        # Sample a point from a gaussian distribution centered at the goal
-        while True:
-            point = np.random.normal(goal, std_dev)
-            if 0 <= point[0] <= space_size[0] and 0 <= point[1] <= space_size[1] and not any(obstacle.contains(Point(point)) for obstacle in obstacles):
-                return point
+    def move_to_node(self, graph, next_node, colony, amount, local_evaporation, goal):
+        self.path_length += np.linalg.norm(np.array(next_node) - np.array(self.current_node))
+        self.current_node = next_node
+        self.path.append(next_node)
 
-def bridge_sampling(space_size, obstacles, bridge_length=5):
-    while True:
-        midpoint = random_sampling(space_size, obstacles)
-        direction = np.random.uniform(-1, 1, size=2)
-        direction /= np.linalg.norm(direction)
-        point_a = midpoint + bridge_length * direction / 2
-        point_b = midpoint - bridge_length * direction / 2
-        if not is_collision(Point(point_a), Point(point_b), obstacles) and 0 <= point_a[0] <= space_size[0] and 0 <= point_a[1] <= space_size[1] and 0 <= point_b[0] <= space_size[0] and 0 <= point_b[1] <= space_size[1]:
-            return midpoint
+        # Dynamic pheromone update
+        distance_to_goal = np.linalg.norm(np.array(goal) - np.array(next_node))
+        distance_to_obstacle = min([float(np.linalg.norm(np.array(next_node) - np.array(obstacle))) for obstacle in graph.obstacles])
+        distance_threshold = 1
+        adjusted_distance_to_obstacle = max(0, distance_threshold - distance_to_obstacle)
+        
+        pheromone_amount = amount / np.sqrt(self.path_length**2 + distance_to_goal**2 + adjusted_distance_to_obstacle**2)
+        edge = (self.path[-2], self.path[-1])
+        colony.set_pheromone(edge, colony.get_pheromone(edge) + pheromone_amount)
 
-def gaussian_sampling(tree, start, goal, space_size, obstacles, alpha=0.5, std_dev=None):
-    if std_dev is None:
-        std_dev = min(space_size) / 8  # Standard deviation can be adjusted
+        # Local pheromone evaporation
+        colony.set_pheromone(edge, colony.get_pheromone(edge) * (1 - local_evaporation))
 
-    while True:
-        # Choose a center point from the current node
-        if np.random.rand() > alpha:
-            center = np.array((tree[-1].point.x, tree[-1].point.y))
-        else:
-            # Choose a center point from a random node
-            node = np.random.choice(tree)
-            center = np.array((node.point.x, node.point.y))
+    def choose_next_node(self, graph, colony, alpha, beta, goal):
+        # Enhanced heuristic: distance to goal combined with obstacle avoidance
+        neighbors = graph.edges[self.current_node]
+        heuristic = np.array([1.0 / (np.linalg.norm(np.array(neighbor) - np.array(goal)) + 1) for neighbor in neighbors])
+        pheromones = np.array([colony.get_pheromone((self.current_node, neighbor)) for neighbor in neighbors])
 
-        # Sample from Gaussian distribution centered around the chosen point
-        x, y = np.random.normal(center, std_dev, size=2)
-        point = Point(x, y)
+        probabilities = pheromones ** alpha * heuristic ** beta
+        probabilities /= probabilities.sum()
 
-        # Check if the sampled point is valid
-        if 0 <= x <= space_size[0] and 0 <= y <= space_size[1] and not any(obstacle.contains(point) for obstacle in obstacles):
-            return (x, y)
+        next_index = np.random.choice(len(neighbors), p=probabilities)
+        return neighbors[next_index]
 
-def obstacle_sampling(space_size, obstacles, buffer=20.0, min_distance=1.0, alpha=0.5):
-    if np.random.rand() > alpha:
-        return random_sampling(space_size, obstacles)
-    else:
-        while True:
-            # Randomly select an obstacle
-            obstacle = np.random.choice(obstacles)
-            obstacle_center = obstacle.centroid.coords[0]
 
-            # Sample a random angle and distance
-            angle = np.random.uniform(0, 2 * np.pi)
-            distance = np.random.uniform(min_distance, buffer)
+class AntColony:
+    def __init__(self, graph, n_ants, n_iterations, alpha=1., beta=1., amount=1., decay=0.1, local_evaporation=0.05):
+        self.graph = graph
+        self.n_ants = n_ants
+        self.n_iterations = n_iterations
+        self.alpha = alpha
+        self.beta = beta
+        self.amount = amount
+        self.decay = decay
+        self.local_evaporation = local_evaporation
+        self.pheromone_map = {}
+
+    def get_pheromone(self, edge):
+        if edge not in self.pheromone_map:
+            self.pheromone_map[edge] = 0.1
+        return self.pheromone_map[edge]
+
+    def set_pheromone(self, edge, value):
+        self.pheromone_map[edge] = value
+
+    def run(self, start, goal):
+        best_path = list()
+        best_path_length = float('inf')
+        iteration_data = []
+
+        for i in range(self.n_iterations):
+            ants = [Ant(start) for _ in range(self.n_ants)]
+            total_path_length = 0
+            for ant in ants:
+                while ant.current_node != goal:
+                    next_node = ant.choose_next_node(self.graph, self, self.alpha, self.beta, goal)
+                    ant.move_to_node(self.graph, next_node, self, self.amount, self.local_evaporation, goal)
+                total_path_length += ant.path_length
+                
+                if ant.path_length < best_path_length:
+                    best_path = ant.path
+                    best_path_length = ant.path_length
             
-            # Calculate x and y coordinates
-            x = obstacle_center[0] + distance * np.cos(angle)
-            y = obstacle_center[1] + distance * np.sin(angle)
-            point = Point(x, y)
-
-            # Check if the point is valid (within space bounds and not inside the obstacle)
-            if 0 <= point.x <= space_size[0] and 0 <= point.y <= space_size[1] and not any(obstacle.contains(Point(point)) for obstacle in obstacles):
-                return x, y
-
-def dynamic_domain_sampling(tree, space_size, obstacles, expand_radius=10.0):
-    # Focus on leaf nodes
-    leaf_nodes = [node for node in tree if node.parent is not None and node not in tree[:-1]]
-
-    if not leaf_nodes:
-        # Fallback to the entire tree if no leaf nodes are found
-        leaf_nodes = tree
-
-    # Choose a random leaf node
-    random_node = np.random.choice(leaf_nodes)
-
-    while True:
-        angle = np.random.uniform(0, 2 * np.pi)
-        distance = np.random.uniform(0, expand_radius)
-        x = random_node.point.x + distance * np.cos(angle)
-        y = random_node.point.y + distance * np.sin(angle)
-
-        point = Point(x, y)
-        if 0 <= x <= space_size[0] and 0 <= y <= space_size[1] and not any(obstacle.contains(point) for obstacle in obstacles):
-            return (x, y)
-
-
-class TreeNode:
-    def __init__(self, point, parent=None):
-        self.point = point
-        self.parent = parent
-
-    def distance(self, other):
-        return self.point.distance(other.point)
-
-    def __repr__(self):
-        return f"TreeNode({self.point.x}, {self.point.y})"
-
-def tree_distance(node, start_node):
-    distance = 0
-    current_node = node
-    while current_node != start_node:
-        distance += current_node.distance(current_node.parent)
-        current_node = current_node.parent
-    return distance
-
-def rrt(start, goal, obstacles, num_iterations, step_size, sampling_method):
-    start_node = TreeNode(Point(start))
-    tree = [start_node]
-    c_best = float('inf')
-
-    for i in range(num_iterations):
-        # Goal biasing: occasionally sample the goal
-        if np.random.rand() < 0.1:  # 10% chance to sample the goal
-            random_point = goal
-        else:
-            # Choose sampling method based on user input
-            if sampling_method == 'goal':
-                random_point = goal_biased_sampling(space_size, goal, obstacles)
-            elif sampling_method == 'bridge':
-                random_point = bridge_sampling(space_size, obstacles)
-            elif sampling_method == 'gaussian':
-                random_point = gaussian_sampling(tree, start, goal, space_size, obstacles)
-            elif sampling_method == 'obstacle':
-                random_point = obstacle_sampling(space_size, obstacles)
-            elif sampling_method == 'dynamic_domain':
-                random_point = dynamic_domain_sampling(tree, space_size, obstacles)
-            else:
-                random_point = random_sampling(space_size, obstacles)
-
-        nearest = nearest_node(tree, random_point)
-        dynamic_size = dynamic_step_size(nearest, random_point, step_size, goal, obstacles)
-        new_point_coords = steer(nearest, random_point, dynamic_size, obstacles)
-        if new_point_coords is not None:
-            new_node = TreeNode(Point(new_point_coords), nearest)
-            tree.append(new_node)
+            # Global pheromone evaporation
+            self.update_pheromones(self.pheromone_map, self.decay)
             
-            # RRT* Rewiring Logic
-            gamma = 2 * (space_size[0] * space_size[1]) / np.pi  # Constant
-            search_radius = min(30.0, (gamma * (np.log(len(tree)) / len(tree)) ** 0.5))
-            nearby_nodes = find_nearby_nodes(tree, new_node, search_radius)
-            for node in nearby_nodes:
-                if node == nearest or node == new_node.parent:
-                    continue
-                if tree_distance(new_node, start_node) + new_node.distance(node) < tree_distance(node, start_node):
-                    if not is_collision(new_node.point, node.point, obstacles):
-                        node.parent = new_node
-                        # Update c_best if a new node is added to the tree
-                        if tree_distance(node, start_node) < c_best:
-                            c_best = tree_distance(node, start_node)
+            # Normalize pheromone levels
+            self.normalize_pheromones(self.pheromone_map)
+
+            visualizer.update(i, [ant.path for ant in ants], self.pheromone_map, best_path)
+
+            # Record the average path length and pheromone level for this iteration
+            avg_path_length = total_path_length / len(ants)
+            pheromone_level = sum(self.pheromone_map.values()) / len(self.pheromone_map)
+            iteration_data.append((i, avg_path_length, pheromone_level))
+
+        return best_path, iteration_data
+
+    def update_pheromones(self, pheromone_map, decay_rate):
+        for edge in pheromone_map:
+            pheromone_map[edge] *= (1 - decay_rate)
+
+    def normalize_pheromones(self, pheromone_map):
+        # Normalize pheromone levels so that the highest level is 1
+        max_pheromone = max(pheromone_map.values())
+        for edge in pheromone_map:
+            pheromone_map[edge] /= max_pheromone
+
+class AntColonyVisualizer:
+    def __init__(self, graph, grid_size, obstacles):
+        self.graph = graph
+        self.grid_size = grid_size
+        self.obstacles = obstacles
+        self.iteration_paths = []
+        self.pheromone_levels = []
+        self.shortest_paths = []
+
+    def update(self, iteration, paths, pheromone_map, shortest_path):
+        self.iteration_paths.append((iteration, paths))
+        self.pheromone_levels.append(pheromone_map.copy())
+        self.shortest_paths.append(shortest_path)
+
+    def get_pheromone_grid(self, pheromone_map):
+        pheromone_grid = np.zeros(self.grid_size)
+        for node in self.graph.nodes:
+            for neighbor in self.graph.edges[node]:
+                edge = (node, neighbor)
+                # Ensure the edge is in the pheromone map
+                if edge in pheromone_map:
+                    pheromone_level = pheromone_map[edge]
+                    pheromone_grid[node[0], node[1]] = pheromone_level
+                    
+        for obstacle in self.obstacles:
+            pheromone_grid[obstacle[0], obstacle[1]] = 0
             
-            if Point(new_point_coords).distance(Point(goal)) <= dynamic_size:
-                goal_reached = True
-                print("Reached the goal at iteration", i)
-                return tree, goal_reached  # Return the tree immediately after reaching the goal
-    print("Failed to reach the goal.")
-    goal_reached = False
-    return tree, goal_reached
+        return pheromone_grid
 
-def find_path(tree, goal_reached):
-    if goal_reached:
-        node = tree[-1]
-    else:
-        return None
+    def visualize_pheromone_evolution(self):
+        # Modified visualization for pheromone intensity over iterations with colorbar
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.set_xlim(-1, self.grid_size[0])
+        ax.set_ylim(-1, self.grid_size[1])
+        plt.xticks(np.arange(-0.5, self.grid_size[0], 1))
+        plt.yticks(np.arange(-0.5, self.grid_size[1], 1))
 
-    path = []
-    while node is not None:
-        path.append(node.point)
-        node = node.parent
+        # Initial setup for the heatmap
+        pheromone_grid = self.get_pheromone_grid(self.pheromone_levels[0])
+        heatmap = ax.imshow(pheromone_grid.T, cmap='hot', origin='lower')
+        colorbar = fig.colorbar(heatmap, ax=ax, orientation='vertical')
 
-    return path[::-1]  # Return reversed path starting from the beginning
+        def animate(i):
+            # Update the pheromone grid for the current iteration
+            pheromone_grid = self.get_pheromone_grid(self.pheromone_levels[i])
 
-def smooth_path(path, obstacles, max_iterations=50):
-    if len(path) < 3:  # No smoothing needed for paths with less than 3 points
-        return path
+            # Update the heatmap data
+            heatmap.set_data(pheromone_grid.T)
+            ax.set_title(f"Iteration: {i}")
 
-    smooth_path = path.copy()
-    iteration = 0
+        ani = animation.FuncAnimation(fig, animate, frames=len(self.pheromone_levels), interval=1000)
+        plt.show()
 
-    while iteration < max_iterations:
-        changed = False
+    def visualize_path_evolution(self):
+        # Modified visualization for path evolution over iterations
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.set_xlim(-1, self.grid_size[0])
+        ax.set_ylim(-1, self.grid_size[1])
+        plt.xticks(np.arange(-0.5, self.grid_size[0], 1))
+        plt.yticks(np.arange(-0.5, self.grid_size[1], 1))
+        ax.grid(True)
 
-        i = 0
-        while i < len(smooth_path) - 2:
-            max_j = i + 1  # Initialize max_j as the next immediate point
+        def animate(i):
+            ax.clear()
+            iteration, paths = self.iteration_paths[i]
+            shortest_path = self.shortest_paths[i]
 
-            for j in range(i + 2, len(smooth_path)):
-                if not is_collision(smooth_path[i], smooth_path[j], obstacles):
-                    max_j = j  # Find the furthest point that can be directly reached without collision
+            for path in paths:
+                ax.plot([node[0] for node in path], [node[1] for node in path], color='gray', alpha=0.5, linewidth=2)
 
-            if max_j != i + 1:
-                # Remove intermediate points between i and max_j
-                smooth_path[i + 1:max_j] = [smooth_path[max_j]]
-                changed = True
+            if shortest_path:
+                ax.plot([node[0] for node in shortest_path], [node[1] for node in shortest_path], color='red', linewidth=3)
 
-            i = max_j  # Move to the next point that needs checking
+            ax.set_title(f"Iteration: {iteration}")
 
-        iteration += 1
+        ani = animation.FuncAnimation(fig, animate, frames=len(self.iteration_paths), interval=1000)
+        plt.show()
+        
 
-        if not changed:
-            break  # Exit early if no changes are made in the iteration
+# Example usage
+grid_size = (20, 20)
+obstacles = [(5, 5), (5, 6), (5, 7), (5, 8), (5, 9)]
 
-    return smooth_path
+graph = Graph(grid_size, obstacles)
+ant_colony = AntColony(graph, n_ants=100, n_iterations=100, alpha=1., beta=1., amount=0.1, decay=0.001, local_evaporation=0.00001)
 
+visualizer = AntColonyVisualizer(graph, grid_size, obstacles)
 
-
-
-def plot_obstacles(obstacles, ax):
-    for obstacle in obstacles:
-        x, y = obstacle.exterior.xy
-        ax.fill(x, y, alpha=0.5, fc='orange', ec='none')
-
-def plot_tree(tree, ax):
-    for point in tree:
-        if point.parent is not None:
-            ax.plot([point.point.x, point.parent.point.x], [point.point.y, point.parent.point.y], 'blue')
-
-def plot_points(tree, start, goal, ax):
-    for point in tree:
-        ax.plot(point.point.x, point.point.y, 'bo')
-    ax.plot(start[0], start[1], 'go', label='Start')
-    ax.plot(goal[0], goal[1], 'ro', label='Goal')
-
-def plot_path(path, color, line_style, label, linewidth, ax):
-    for i in range(len(path)-1):
-        if i == 0:
-            # Add label only for the first segment
-            ax.plot([path[i].x, path[i+1].x], [path[i].y, path[i+1].y], color=color, linestyle=line_style, linewidth=linewidth, label=label)
-        else:
-            # Plot without label for the rest of the segments
-            ax.plot([path[i].x, path[i+1].x], [path[i].y, path[i+1].y], color=color, linestyle=line_style, linewidth=linewidth)
-
-
-
-
-# Example usage:
-space_size = (100, 100)
 start = (0, 0)
-goal = (90, 90)
-obstacles = [Polygon([(20, 20), (30, 20), (30, 30), (20, 30)]),
-            Polygon([(50, 50), (60, 50), (60, 60), (50, 60)]),
-            Polygon([(70, 70), (80, 70), (80, 80), (70, 80)])]
-num_iterations = 1000
-step_size = 5.
+goal = (19, 19)
+best_path, iteration_data = ant_colony.run(start, goal)
 
-# Choose the sampling method: 'random', 'goal', 'bridge', 'gaussian', 'obstacle', or 'dynamic_domain'
-sampling_method = 'dynamic_domain'
+visualizer.visualize_pheromone_evolution()
+visualizer.visualize_path_evolution()
 
-path, goal_reached = rrt(start, goal, obstacles, num_iterations, step_size, sampling_method)
-
-# Find the correct path
-correct_path = find_path(path, goal_reached)
-
-# Find the smooth path
-smoothed_path = smooth_path(correct_path, obstacles)
-
-# Plotting the result
-fig, ax = plt.subplots()
-ax.set_xlim(0, space_size[0])
-ax.set_ylim(0, space_size[1])
-
-# Plot elements
-plot_obstacles(obstacles, ax)
-plot_tree(path, ax)
-plot_points(path, start, goal, ax)
-if correct_path:
-    plot_path(correct_path, 'r', '-', 'Correct Path', 3, ax)
-if smoothed_path:
-    plot_path(smoothed_path, 'g', '-', 'Smooth Path', 3, ax)
-
-plt.legend(loc='upper left')
-plt.title('RRT Path Planning')
-plt.show()
+print(f"Shortest path: {best_path}")
+print(f"Path length: {len(best_path)}")
+print(f"Iteration data:")
+for iteration, avg_path_length, pheromone_level in iteration_data:
+    print(f"Iteration: {iteration}, Avg. path length: {avg_path_length}, Pheromone level: {pheromone_level}")
