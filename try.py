@@ -122,7 +122,7 @@ class AntColony:
 
     def update_pheromones(self, pheromone_map, decay_rate):
         for edge in pheromone_map:
-            pheromone_map[edge] *= (1 - decay_rate)
+            self.set_pheromone(edge, self.get_pheromone(edge) * (1 - decay_rate))
 
     def normalize_pheromones(self, pheromone_map):
         # Normalize pheromone levels so that the highest level is 1
