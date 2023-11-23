@@ -153,14 +153,30 @@ def tree_distance(node, start_node):
         current_node = current_node.parent
     return distance
 
-def rrt(start, goal, obstacles, num_iterations, step_size, sampling_method):
+
+def ellipse_sampling(space_size, start, goal, c_best, obstacles):
+    center = (np.array(start) + np.array(goal)) / 2
+    axis_length = c_best / 2
+    while True:
+        angle = np.random.uniform(0, 2 * np.pi)
+        r = np.random.uniform(0, axis_length)
+        x = center[0] + r * np.cos(angle)
+        y = center[1] + r * np.sin(angle)
+        if 0 <= x <= space_size[0] and 0 <= y <= space_size[1] and not any(obstacle.contains(Point(x, y)) for obstacle in obstacles):
+            return x, y
+
+
+def rrt(start, goal, obstacles, num_iterations, step_size, space_size):
     start_node = TreeNode(Point(start))
     tree = [start_node]
     c_best = float('inf')
+    goal_reached = False
+    goal_node = None
 
     for i in range(num_iterations):
-        # Goal biasing: occasionally sample the goal
-        if np.random.rand() < 0.1:  # 10% chance to sample the goal
+        if goal_reached:
+            random_point = ellipse_sampling(space_size, start, goal, c_best, obstacles)
+        elif np.random.rand() < 0.1:  # 10% chance to sample the goal
             random_point = goal
         else:
             # Choose sampling method based on user input
@@ -197,27 +213,33 @@ def rrt(start, goal, obstacles, num_iterations, step_size, sampling_method):
                         # Update c_best if a new node is added to the tree
                         if tree_distance(node, start_node) < c_best:
                             c_best = tree_distance(node, start_node)
-            
-            if Point(new_point_coords).distance(Point(goal)) <= dynamic_size:
-                goal_reached = True
-                print("Reached the goal at iteration", i)
-                return tree, goal_reached  # Return the tree immediately after reaching the goal
-    print("Failed to reach the goal.")
-    goal_reached = False
-    return tree, goal_reached
 
-def find_path(tree, goal_reached):
-    if goal_reached:
-        node = tree[-1]
-    else:
+            # Check if the goal is reached and update c_best
+            if Point(new_point_coords).distance(Point(goal)) <= dynamic_size:
+                
+                if not goal_reached:
+                    print("Reached the goal at iteration", i)
+                
+                goal_reached = True
+                goal_node = new_node
+                c_best = tree_distance(goal_node, start_node)
+                
+
+    return tree, goal_reached, goal_node
+
+def find_path_to_goal(goal_node, start_node):
+    if goal_node is None:
         return None
 
     path = []
-    while node is not None:
-        path.append(node.point)
-        node = node.parent
+    current_node = goal_node
+    while current_node != start_node:
+        path.append(current_node.point)
+        current_node = current_node.parent
+    path.append(start_node.point)  # Include the start node
 
     return path[::-1]  # Return reversed path starting from the beginning
+
 
 def smooth_path(path, obstacles, max_iterations=50):
     if len(path) < 3:  # No smoothing needed for paths with less than 3 points
@@ -289,16 +311,17 @@ goal = (90, 90)
 obstacles = [Polygon([(20, 20), (30, 20), (30, 30), (20, 30)]),
             Polygon([(50, 50), (60, 50), (60, 60), (50, 60)]),
             Polygon([(70, 70), (80, 70), (80, 80), (70, 80)])]
-num_iterations = 1000
+num_iterations = 500
 step_size = 5.
 
 # Choose the sampling method: 'random', 'goal', 'bridge', 'gaussian', 'obstacle', or 'dynamic_domain'
-sampling_method = 'dynamic_domain'
+sampling_method = 'obstacle'
 
-path, goal_reached = rrt(start, goal, obstacles, num_iterations, step_size, sampling_method)
+# Run RRT
+path, goal_reached, goal_node = rrt(start, goal, obstacles, num_iterations, step_size, space_size)
 
 # Find the correct path
-correct_path = find_path(path, goal_reached)
+correct_path = find_path_to_goal(goal_node, path[0]) if goal_reached else None
 
 # Find the smooth path
 smoothed_path = smooth_path(correct_path, obstacles)
