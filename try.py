@@ -244,7 +244,7 @@ def find_path_to_goal(goal_node, start_node):
 
 
 def smooth_path(path, obstacles, max_iterations=50):
-    if len(path) < 3:  # No smoothing needed for paths with less than 3 points
+    if path is None or len(path) < 3:
         return path
 
     smooth_path = path.copy()
@@ -313,7 +313,7 @@ goal = (90, 90)
 obstacles = [Polygon([(20, 20), (30, 20), (30, 30), (20, 30)]),
             Polygon([(50, 50), (60, 50), (60, 60), (50, 60)]),
             Polygon([(70, 70), (80, 70), (80, 80), (70, 80)])]
-num_iterations = 500
+num_iterations = 1000
 step_size = 5.
 
 # Choose the sampling method: 'random', 'goal', 'bridge', 'gaussian', 'obstacle', or 'dynamic_domain'
