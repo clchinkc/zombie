@@ -38,6 +38,7 @@ https://realpython.com/inner-functions-what-are-they-good-for/
 functional programming 教學
 https://medium.com/onedegree-tech-blog/%E7%82%BA%E4%BB%80%E9%BA%BC%E6%88%91%E8%A6%81%E5%AD%B8-functional-programming-%E5%8F%AF%E8%AE%80-%E5%8F%AF%E9%9D%A0-%E6%9C%89%E4%BF%A1%E5%BF%83-160e39f1632b
 https://www.youtube.com/watch?v=ZtInesLXD-Y
+use np.unravel_index to turn 1d index to 2d index
 """
 
 import random

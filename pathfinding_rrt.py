@@ -223,7 +223,9 @@ def rrt(start, goal, obstacles, num_iterations, step_size, space_size):
                 goal_reached = True
                 goal_node = new_node
                 c_best = tree_distance(goal_node, start_node)
-                
+
+    if not goal_reached:
+        print("Goal not reached!")
 
     return tree, goal_reached, goal_node
 
@@ -242,7 +244,7 @@ def find_path_to_goal(goal_node, start_node):
 
 
 def smooth_path(path, obstacles, max_iterations=50):
-    if len(path) < 3:  # No smoothing needed for paths with less than 3 points
+    if path is None or len(path) < 3:
         return path
 
     smooth_path = path.copy()
@@ -311,17 +313,17 @@ goal = (90, 90)
 obstacles = [Polygon([(20, 20), (30, 20), (30, 30), (20, 30)]),
             Polygon([(50, 50), (60, 50), (60, 60), (50, 60)]),
             Polygon([(70, 70), (80, 70), (80, 80), (70, 80)])]
-num_iterations = 500
+num_iterations = 1000
 step_size = 5.
 
 # Choose the sampling method: 'random', 'goal', 'bridge', 'gaussian', 'obstacle', or 'dynamic_domain'
-sampling_method = 'obstacle'
+sampling_method = 'gaussian'
 
 # Run RRT
 path, goal_reached, goal_node = rrt(start, goal, obstacles, num_iterations, step_size, space_size)
 
 # Find the correct path
-correct_path = find_path_to_goal(goal_node, path[0]) if goal_reached else None
+correct_path = find_path_to_goal(goal_node, path[0])
 
 # Find the smooth path
 smoothed_path = smooth_path(correct_path, obstacles)

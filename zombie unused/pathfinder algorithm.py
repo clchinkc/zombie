@@ -14,6 +14,7 @@ Machine learning algorithms: You could use machine learning techniques such as r
 import heapq
 import math
 import random
+from collections import defaultdict
 from enum import Enum
 from queue import PriorityQueue
 
@@ -356,6 +357,66 @@ class ThetaStar:
             next_step = path[1]
             return next_step
         return x, y
+
+
+class MemoryEfficientAStar:
+    def __init__(self, goal_x, goal_y, prune_threshold=1.5):
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+        self.heuristic_cache = {}
+        self.prune_threshold = prune_threshold
+
+    def heuristic(self, x, y):
+        # Euclidean distance as heuristic
+        return ((x - self.goal_x) ** 2 + (y - self.goal_y) ** 2) ** 0.5
+
+    def find_neighbors(self, grid, x, y):
+        neighbors = [(x + dx, y + dy) for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]]
+        return [(nx, ny) for nx, ny in neighbors if grid.is_valid_move(nx, ny)]
+
+    def move(self, x, y, grid):
+        path = self.find_path((x, y), grid)
+        return path[1] if len(path) > 1 else (x, y)
+
+    def find_path(self, start_pos, grid):
+        open_list = []
+        heapq.heappush(open_list, (0, start_pos))
+
+        came_from = {}
+        g_score = defaultdict(lambda: float('inf'))
+        g_score[start_pos] = 0
+
+        f_score = defaultdict(lambda: float('inf'))
+        f_score[start_pos] = self.heuristic(*start_pos)
+
+        while open_list:
+            current_f, current = heapq.heappop(open_list)
+
+            if current == (self.goal_x, self.goal_y):
+                return self.reconstruct_path(came_from, current)
+
+            for neighbor in self.find_neighbors(grid, *current):
+                tentative_g_score = g_score[current] + 1  # assuming cost of 1 for each move
+                if tentative_g_score < g_score[neighbor]:
+                    came_from[neighbor] = current
+                    g_score[neighbor] = tentative_g_score
+                    f_score[neighbor] = tentative_g_score + self.heuristic(*neighbor)
+                    if neighbor not in [n for f, n in open_list]:
+                        heapq.heappush(open_list, (f_score[neighbor], neighbor))
+
+            # Prune nodes from open list based on f-score threshold
+            avg_f_score = sum(f for f, _ in open_list) / len(open_list)
+            open_list = [node for node in open_list if node[0] <= avg_f_score * self.prune_threshold]
+
+        return []
+
+    def reconstruct_path(self, came_from, current):
+        path = []
+        while current in came_from:
+            path.append(current)
+            current = came_from[current]
+        path.append(current)
+        return path[::-1]
 
 
 class JPS:
@@ -760,20 +821,21 @@ class Simulation:
 
 
 # Create and populate the grid environment
-width, height = 9, 9
+width, height = 10, 10
 grid = Grid(width, height)
 start_x, start_y = 0, 0
-goal_x, goal_y = 8, 8
+goal_x, goal_y = 9, 9
 grid.generate_maze(start_x, start_y, goal_x, goal_y)
 
 # Create agents
 agents = [
-    #Agent(0, 0, AStar(goal_x, goal_y)),
-    #Agent(0, 0, ThetaStar(goal_x, goal_y)),
-    #Agent(0, 0, JPS(goal_x, goal_y)),
-    #Agent(0, 0, DFS(goal_x, goal_y)),
-    #Agent(0, 0, DStarLite(goal_x, goal_y)),
-    Agent(0, 0, PSO(goal_x, goal_y)),
+    #Agent(start_x, start_y, AStar(goal_x, goal_y)),
+    #Agent(start_x, start_y, ThetaStar(goal_x, goal_y)),
+    #Agent(start_x, start_y, MemoryEfficientAStar(goal_x, goal_y)),
+    #Agent(start_x, start_y, JPS(goal_x, goal_y)),
+    #Agent(start_x, start_y, DFS(goal_x, goal_y)),
+    #Agent(start_x, start_y, DStarLite(goal_x, goal_y)),
+    #Agent(start_x, start_y, PSO(goal_x, goal_y)),
 ]
 
 # Run the simulation
@@ -781,99 +843,61 @@ simulation = Simulation(grid, agents, goal_x, goal_y)
 simulation.run()
 
 
-# import random
-# import time
 
-# # create 10 random grids of different sizes
-# grids = []
-# for i in range(1):
-#     size = random.randint(900, 1000)
-#     grids.append(Grid(size, size))
+import random
+import time
 
-# # create the AStar, ThetaStar and JPS algorithms
-# astar = AStar(goal_x, goal_y)
-# thetastar = ThetaStar(goal_x, goal_y)
-# jps = JPS(goal_x, goal_y)
-# dfs = DFS(goal_x, goal_y)
-# dstarlite = DStarLite(goal_x, goal_y)
 
-# # measure the time it takes for each algorithm to find a path on each grid
-# astar_times = []
-# thetastar_times = []
-# jps_times = []
-# dfs_times = []
-# dstarlite_times = []
-# for grid in grids:
-#     # set the starting position and goal position for each grid
-#     start_x, start_y = random.randint(0, grid.width - 1), random.randint(0, grid.height - 1)
-#     goal_x, goal_y = random.randint(0, grid.width - 1), random.randint(0, grid.height - 1)
-#     grid.generate_maze(start_x, start_y, goal_x, goal_y)
+def run_pathfinding_comparison(grid_size, algorithms, num_runs):
+    # Dictionary to store cumulative times for each algorithm
+    cumulative_times = {algo.__name__: 0. for algo in algorithms}
 
-#     # update AStar and ThetaStar goal positions
-#     astar.goal_x, astar.goal_y = goal_x, goal_y
-#     thetastar.goal_x, thetastar.goal_y = goal_x, goal_y
-#     jps.goal_x, jps.goal_y = goal_x, goal_y
-#     dfs.goal_x, dfs.goal_y = goal_x, goal_y
-#     dstarlite.goal_x, dstarlite.goal_y = goal_x, goal_y
+    for _ in range(num_runs):
+        # Start and goal positions relative to the grid size
+        start_x, start_y = 0, 0
+        goal_x, goal_y = grid_size - 1, grid_size - 1
 
-#     # measure AStar time
-#     start_time = time.time()
-#     path = astar.find_path((start_x, start_y), grid)
-#     end_time = time.time()
-#     astar_time = end_time - start_time
-#     astar_times.append(astar_time)
+        # Create and populate the grid environment for each run
+        grid = Grid(grid_size, grid_size)
+        grid.generate_maze(start_x, start_y, goal_x, goal_y)
 
-#     # measure ThetaStar time
-#     start_time = time.time()
-#     path = thetastar.find_path((start_x, start_y), grid)
-#     end_time = time.time()
-#     thetastar_time = end_time - start_time
-#     thetastar_times.append(thetastar_time)
+        for algo in algorithms:
+            # Create an agent with the specified algorithm
+            agent = Agent(start_x, start_y, algo(goal_x, goal_y))
+
+            # Start the timer when the agent starts moving
+            start_time = time.time()
+
+            # Simulate the agent until it reaches the goal
+            while (agent.x, agent.y) != (goal_x, goal_y):
+                agent.move(grid)
+
+            # Stop the timer when the agent reaches the goal
+            end_time = time.time()
+
+            # Accumulate the time taken
+            cumulative_times[algo.__name__] += end_time - start_time
+
+    # Average the times over all runs
+    average_times = {algo: total_time / num_runs for algo, total_time in cumulative_times.items()}
     
-#     # measure JPS time
-#     start_time = time.time()
-#     path = jps.find_path((start_x, start_y), grid)
-#     end_time = time.time()
-#     jps_time = end_time - start_time
-#     jps_times.append(jps_time)
-    
-#     # measure DFS time
-#     start_time = time.time()
-#     path = dfs.find_path((start_x, start_y), grid)
-#     end_time = time.time()
-#     dfs_time = end_time - start_time
-#     dfs_times.append(dfs_time)
-    
-#     # measure DStarLite time
-#     start_time = time.time()
-#     path = dstarlite.find_path((start_x, start_y), grid)
-#     end_time = time.time()
-#     dstarlite_time = end_time - start_time
-#     dstarlite_times.append(dstarlite_time)
+    return average_times
 
-# # print the average time for each algorithm
-# print(f"AStar average time: {sum(astar_times)/len(astar_times):.6f} seconds")
-# print(f"ThetaStar average time: {sum(thetastar_times)/len(thetastar_times):.6f} seconds")
-# print(f"JPS average time: {sum(jps_times)/len(jps_times):.6f} seconds")
-# print(f"DFS average time: {sum(dfs_times)/len(dfs_times):.6f} seconds")
-# print(f"DStarLite average time: {sum(dstarlite_times)/len(dstarlite_times):.6f} seconds")
+# Example usage
+algorithms = [AStar, ThetaStar, MemoryEfficientAStar, JPS, DFS, DStarLite]
+grid_size = 9  # Size of the grid
+num_runs = 100  # Number of runs for each algorithm
 
+average_times = run_pathfinding_comparison(grid_size, algorithms, num_runs)
+print(average_times)
 
 """
-100 random grids of different sizes from 50x50 to 100x100
-AStar average time: 0.017849 seconds
-ThetaStar average time: 0.029060 seconds
-JPS average time: 0.012722 seconds
-DFS average time: 0.011744 seconds
-DStarLite average time: 0.050464 seconds
+1 random grids of size 99
+{'AStar': 166.23853468894958, 'ThetaStar': 99.12606048583984, 'MemoryEfficientAStar': 64.19273805618286, 'JPS': 176.79540944099426, 'DFS': 77.81984758377075, 'DStarLite': 12.325010061264038}
 """
 """
-1 random grids of different sizes from 900x900 to 1000x1000
-AStar average time: 26.007051 seconds
-ThetaStar average time: 28.495731 seconds
-JPS average time: 2.713599 seconds
-DFS average time: 224.046146 seconds
-DStarLite average time: 15.427422 seconds
+100 random grids of size 9
+{'AStar': 0.013023581504821777, 'ThetaStar': 0.016449856758117675, 'MemoryEfficientAStar': 0.009579455852508545, 'JPS': 0.026429591178894044, 'DFS': 0.008093197345733643, 'DStarLite': 0.005863986015319824}
 """
 
 # http://www.codenamepandey.com/movementalgo
