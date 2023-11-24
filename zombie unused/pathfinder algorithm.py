@@ -82,10 +82,16 @@ class Grid:
             else:
                 stack.pop()
 
-        for y in range(self.height):
-            for x in range(self.width):
-                if (self.height % 2 == 0 and y == self.height - 1) or (self.width % 2 == 0 and x == self.width - 1):
-                    self.grid[y][x] = CellType.EMPTY
+        # Adjusting the handling of even dimensions
+        # Ensuring the last row/column are not left entirely empty
+        if self.width % 2 == 0:
+            for y in range(0, self.height, 2):
+                if self.grid[y][self.width - 2] == CellType.EMPTY:
+                    self.grid[y][self.width - 1] = CellType.EMPTY
+        if self.height % 2 == 0:
+            for x in range(0, self.width, 2):
+                if self.grid[self.height - 2][x] == CellType.EMPTY:
+                    self.grid[self.height - 1][x] = CellType.EMPTY
 
         self.set_goal(end_x, end_y)
 
@@ -107,42 +113,206 @@ class Grid:
             self.grid[y2][x2] = CellType.EMPTY
             self.grid[(y1 + y2) // 2][(x1 + x2) // 2] = CellType.EMPTY
 
-        for y in range(self.height):
-            for x in range(self.width):
-                if x % 2 == 0 or y % 2 == 0:
-                    self.grid[y][x] = CellType.OBSTACLE
+        # Initialize all cells as walls
+        self.grid.fill(CellType.OBSTACLE)
 
-        start_cell = (start_x, start_y)
-        visited = {start_cell}
-        frontier = get_neighbors(start_x, start_y)
+        # Start from a random point and make it empty
+        self.grid[start_y][start_x] = CellType.EMPTY
+
+        # Add the neighbors of the start cell to the frontier
+        frontier = [(start_x, start_y)]
 
         while frontier:
-            current_cell = frontier.pop(np.random.randint(len(frontier)))
-            x, y = current_cell
-            connecting_neighbors = [
-                (nx, ny) for nx, ny in get_neighbors(x, y) if (nx, ny) in visited
-            ]
-            if connecting_neighbors:
-                cx, cy = connecting_neighbors[np.random.randint(len(connecting_neighbors))]
-                remove_wall(x, y, cx, cy)
-                visited.add(current_cell)
-                frontier.extend([n for n in get_neighbors(x, y) if n not in visited and n not in frontier])
+            current = random.choice(frontier)
+            frontier.remove(current)
+            x, y = current
 
-        for y in range(self.height):
-            for x in range(self.width):
-                if (self.height % 2 == 0 and y == self.height - 1 and end_y == self.height - 1) or (
-                        self.width % 2 == 0 and x == self.width - 1 and end_x == self.width - 1):
-                    self.grid[y][x] = CellType.EMPTY
+            neighbors = [n for n in get_neighbors(x, y) if self.grid[n[1]][n[0]] == CellType.EMPTY]
+            if neighbors:
+                nx, ny = random.choice(neighbors)
+                remove_wall(x, y, nx, ny)
+
+            frontier.extend([n for n in get_neighbors(x, y) if self.grid[n[1]][n[0]] == CellType.OBSTACLE and n not in frontier])
+
+        # Ensure the last row and column are integrated into the maze
+        if self.width % 2 == 0:
+            for y in range(0, self.height, 2):
+                if is_valid_cell(self.width - 3, y):
+                    remove_wall(self.width - 3, y, self.width - 2, y)
+                    self.grid[y][self.width - 1] = CellType.EMPTY
+
+        if self.height % 2 == 0:
+            for x in range(0, self.width, 2):
+                if is_valid_cell(x, self.height - 3):
+                    remove_wall(x, self.height - 3, x, self.height - 2)
+                    self.grid[self.height - 1][x] = CellType.EMPTY
 
         self.set_goal(end_x, end_y)
+        
+    # Kruskal's Algorithm
+    def generate_maze_2(self, start_x, start_y, end_x, end_y):
+        def is_valid_cell(x, y):
+            return 0 <= x < self.width and 0 <= y < self.height
+
+        def get_neighbors(x, y):
+            neighbors = []
+            for dx, dy in [(-2, 0), (2, 0), (0, -2), (0, 2)]:
+                nx, ny = x + dx, y + dy
+                if is_valid_cell(nx, ny):
+                    neighbors.append((nx, ny))
+            return neighbors
+
+        def remove_wall(x1, y1, x2, y2):
+            self.grid[y1][x1] = CellType.EMPTY
+            self.grid[y2][x2] = CellType.EMPTY
+            self.grid[(y1 + y2) // 2][(x1 + x2) // 2] = CellType.EMPTY
+
+        # Initialize all cells as walls
+        self.grid.fill(CellType.OBSTACLE)
+
+        # Create initial sets for each cell and list of walls
+        sets = {}
+        walls = []
+
+        # Open each cell and gather walls
+        for y in range(0, self.height, 2):
+            for x in range(0, self.width, 2):
+                self.grid[y][x] = CellType.EMPTY
+                sets[(x, y)] = {(x, y)}
+                for nx, ny in get_neighbors(x, y):
+                    if is_valid_cell(nx, ny) and (nx, ny) not in sets:
+                        walls.append(((x, y), (nx, ny)))
+
+        # Shuffle the walls to randomize the process
+        random.shuffle(walls)
+
+        # Merge sets and remove walls
+        for cell1, cell2 in walls:
+            set1 = sets[cell1]
+            set2 = sets[cell2]
+            if set1 != set2:
+                remove_wall(*cell1, *cell2)
+                union_set = set1.union(set2)
+                for cell in union_set:
+                    sets[cell] = union_set
+
+        # Ensure the last row and column are integrated into the maze
+        if self.width % 2 == 0:
+            for y in range(0, self.height, 2):
+                if is_valid_cell(self.width - 3, y):
+                    remove_wall(self.width - 3, y, self.width - 2, y)
+                    self.grid[y][self.width - 1] = CellType.EMPTY
+
+        if self.height % 2 == 0:
+            for x in range(0, self.width, 2):
+                if is_valid_cell(x, self.height - 3):
+                    remove_wall(x, self.height - 3, x, self.height - 2)
+                    self.grid[self.height - 1][x] = CellType.EMPTY
+
+        self.set_goal(end_x, end_y)
+
+    # Eller's Algorithm
+    def generate_maze_3(self, start_x, start_y, end_x, end_y):
+        def join_sets(sets, x1, y, x2):
+            set1 = sets[x1, y]
+            set2 = sets[x2, y]
+            if set1 != set2:
+                for k in sets.keys():
+                    if sets[k] == set2:
+                        sets[k] = set1
+                remove_wall(x1, y, x2, y)
+
+        def remove_wall(x1, y1, x2, y2):
+            self.grid[y1][x1] = CellType.EMPTY
+            self.grid[y2][x2] = CellType.EMPTY
+            self.grid[(y1 + y2) // 2][(x1 + x2) // 2] = CellType.EMPTY
+
+        # Initialize all cells as walls
+        self.grid.fill(CellType.OBSTACLE)
+
+        # Initial setup for sets
+        sets = {}
+        set_counter = 1
+
+        for y in range(0, self.height, 2):
+            # Assign sets to each cell in the row
+            for x in range(0, self.width, 2):
+                self.grid[y][x] = CellType.EMPTY
+                if (x, y) not in sets:
+                    sets[(x, y)] = set_counter
+                    set_counter += 1
+
+            # Randomly join adjacent sets in the same row
+            for x in range(0, self.width - 2, 2):
+                if random.choice([True, False]):
+                    join_sets(sets, x, y, x + 2)
+
+            # Create vertical connections
+            if y < self.height - 2:
+                next_row_sets = set(sets[x, y] for x in range(0, self.width, 2))
+                for set_id in next_row_sets:
+                    cells_in_set = [x for x in range(0, self.width, 2) if sets[x, y] == set_id]
+                    # Ensure at least one cell in the set connects downward
+                    x = random.choice(cells_in_set)
+                    sets[(x, y + 2)] = sets[(x, y)]
+                    remove_wall(x, y, x, y + 2)
+                    cells_in_set.remove(x)
+                    # Optionally connect other cells in the set downward
+                    for x in cells_in_set:
+                        if random.choice([True, False]):
+                            sets[(x, y + 2)] = sets[(x, y)]
+                            remove_wall(x, y, x, y + 2)
+
+            # Additional handling for the last row
+            if y == self.height - 2 or y == self.height - 1:
+                # Join all adjacent sets in the last row
+                for x in range(0, self.width - 2, 2):
+                    if sets[(x, y)] != sets[(x + 2, y)]:
+                        join_sets(sets, x, y, x + 2)
+
+        # Additional handling for the last column
+        if self.width % 2 == 0:
+            last_col = self.width - 1
+            for y in range(0, self.height, 2):
+                if self.grid[y][last_col - 1] == CellType.EMPTY:
+                    self.grid[y][last_col] = CellType.EMPTY
+                    if y > 0 and self.grid[y - 1][last_col - 1] == CellType.EMPTY:
+                        self.grid[y - 1][last_col] = CellType.EMPTY
+
+        # Merge any separate sets in the last row
+        for x in range(0, self.width - 2, 2):
+            if sets[(x, self.height - 2)] != sets[(x + 2, self.height - 2)]:
+                join_sets(sets, x, self.height - 2, x + 2)
+
+        self.set_goal(end_x, end_y)
+
+
+# text based visualization
+def print_grid(grid):
+    for y in range(grid.height):
+        for x in range(grid.width):
+            if grid.grid[y][x] == CellType.OBSTACLE:
+                print('#', end='')
+            elif grid.grid[y][x] == CellType.EMPTY:
+                print('.', end='')
+            elif grid.grid[y][x] == CellType.GOAL:
+                print('G', end='')
+            else:
+                print(' ', end='')
+        print()
+
+# Usage example
+# grid = Grid(10, 10)
+# grid.generate_maze_3(0, 0, 9, 9)
+# print_grid(grid)
+
+
 
 # or wave function collapse
 # Greedy Best-First Search
 # Bidirectional Search
 # Recursive Division
-# Eller's Algorithm
-# Kruskal's Algorithm
-# Prim's Algorithm
+# Growing Tree Algorithm
 # https://github.com/avihuxp/WaveFunctionCollapse
 # https://www.youtube.com/watch?v=2SuvO4Gi7uY
 # https://en.wikipedia.org/wiki/Maze_generation_algorithm
@@ -151,6 +321,9 @@ class Grid:
 # https://youtu.be/20KHNA9jTsE
 # https://youtu.be/TO0Tx3w5abQ
 # https://realpython.com/python-maze-solver/
+
+
+
 
 # Create agent classes
 class Agent:
@@ -1038,4 +1211,165 @@ Quadtree operations can also be used to solve other problems, such as quickly de
 
 """
 https://zhuanlan.zhihu.com/p/349074802
+"""
+
+"""
+### Hierarchical A* (HPA*)
+
+HPA* is an adaptation of A* that uses a hierarchy of abstraction levels to simplify pathfinding. To implement HPA*:
+
+1. **Map Abstraction**: Divide the map into several hierarchical levels. At each level, the map is more abstracted, meaning it has fewer and larger nodes.
+
+2. **Inter-Level Pathfinding**: Implement pathfinding at each level of the hierarchy. At higher levels, pathfinding covers larger distances with less detail. At lower levels, pathfinding is more detailed but covers shorter distances.
+
+3. **Path Refinement**: Once a path is found at a higher abstraction level, refine it at the lower levels to get a detailed and accurate path.
+
+4. **Dynamic Updates**: For environments that change, you will need to update the hierarchical representation dynamically, which could involve recalculating the abstraction at various levels.
+
+
+Implementing Hierarchical Pathfinding A* (HPA*) in your existing simulation requires significant modifications and additions. I'll provide an extended code snippet that includes the necessary classes and modifications to integrate HPA* into your simulation. This will involve creating abstract nodes and edges, pathfinding at multiple levels of abstraction, and refining paths to work with your grid.
+
+### Step 1: Abstraction Layer and Graph
+
+These classes create an abstract representation of the grid, dividing it into clusters and creating nodes and edges between them.
+
+```python
+class AbstractNode:
+    def __init__(self, id, center):
+        self.id = id
+        self.center = center
+
+class AbstractEdge:
+    def __init__(self, node1, node2):
+        self.node1 = node1
+        self.node2 = node2
+
+class AbstractGraph:
+    def __init__(self):
+        self.nodes = {}
+        self.edges = defaultdict(list)
+
+    def add_node(self, node):
+        self.nodes[node.id] = node
+
+    def add_edge(self, node1, node2):
+        edge = AbstractEdge(node1, node2)
+        self.edges[node1.id].append(edge)
+        self.edges[node2.id].append(edge)
+
+class AbstractionLayer:
+    def __init__(self, grid, cluster_size):
+        self.grid = grid
+        self.cluster_size = cluster_size
+        self.abstract_graph = AbstractGraph()
+
+    def generate_abstraction(self):
+        # Implement logic to generate nodes and edges
+        pass
+```
+
+### Step 2: Hierarchical A* Pathfinding
+
+This class uses the abstract graphs to find paths at different abstraction levels.
+
+```python
+class HPAStar:
+    def __init__(self, abstraction_layer):
+        self.abstraction_layer = abstraction_layer
+
+    def find_path(self, start, goal):
+        # Implement HPA* algorithm here
+        pass
+
+    def refine_path(self, high_level_path):
+        # Refine the high-level path
+        pass
+```
+
+### Step 3: Integration into the Agent
+
+Modify the `Agent` class to use HPA* for pathfinding.
+
+```python
+class Agent:
+    def __init__(self, x, y, pathfinding_algorithm):
+        self.x = x
+        self.y = y
+        self.pathfinding_algorithm = pathfinding_algorithm
+
+    def move(self, grid):
+        # Adjust the move function to use HPA* for pathfinding
+        pass
+```
+
+### Step 4: Setting up the Simulation
+
+Create abstraction layers and initialize HPA* for your agents.
+
+```python
+# Create abstraction layers
+abstraction_layer = AbstractionLayer(grid, cluster_size=5)
+abstraction_layer.generate_abstraction()
+
+# Initialize HPA* with the abstraction layers
+hpa_star = HPAStar(abstraction_layer)
+
+# Create agents with HPA*
+agents = [Agent(0, 0, hpa_star)]
+
+# Rest of the simulation setup...
+```
+
+### Additional Considerations
+
+1. **Abstraction Generation**: Implement the `generate_abstraction` method in `AbstractionLayer` to create nodes and edges based on your grid. This could involve dividing the grid into clusters and connecting adjacent clusters.
+
+2. **Pathfinding in HPAStar**: The `find_path` method in `HPAStar` should find paths using the abstract graphs and then refine them for the actual grid.
+
+3. **Path Refinement**: The `refine_path` method should convert the abstract path into a detailed path that can be followed in the grid.
+
+4. **Dynamic Environment Handling**: If your environment changes, update the abstraction layers accordingly.
+
+This implementation provides a framework for HPA* in your simulation. The detailed implementation of methods like `generate_abstraction`, `find_path`, and `refine_path` will depend on the specifics of your grid and the abstraction strategy you choose.
+"""
+
+"""
+### Field D*
+
+Field D* is an advanced pathfinding algorithm that is an extension of the D* algorithm, optimized for continuous domains and often used in robotics. To implement Field D*:
+
+1. **Continuous Space Representation**: Unlike traditional grid-based maps, Field D* works in a continuous space. You would need to represent the environment as a continuous field, possibly using a graph structure where nodes represent locations in the space and edges represent navigable paths.
+
+2. **Dynamic Environment Handling**: Field D* is designed to handle dynamic changes in the environment. This requires updating the path as new information becomes available, re-planning from the current location to the goal.
+
+3. **Path Smoothing**: Since Field D* does not constrain paths to grid edges, it can result in paths with unnecessary turns. Implement a path smoothing algorithm to create more natural and efficient paths.
+"""
+
+"""
+This excerpt appears to be from a scholarly paper discussing advancements in heuristic planners, specifically focusing on various algorithms used for pathfinding and motion planning in robotics and other computational fields. The algorithms mentioned include:
+
+1. **A*** Variants:
+   - **Field D* (FD*)**: Like Theta*, it doesn't constrain paths to grid edges but may include unnecessary turns.
+   - **MEA* (Memory-Efficient A*)**: Incorporates a pruning process, offering better performance, lower memory use, and reduced computational time compared to A* and HPA*.
+   - **HPA* (Hierarchical A*)**: Another variant using a pruning process.
+
+2. **Sampling-Based Algorithms**:
+   - **RRT (Rapidly-Exploring Random Tree)**: Suitable for high-dimensional complex problems.
+   - **RRT***: Asymptotically optimal, discovering initial paths quickly and enhancing them in consecutive iterations. However, it has a slower convergence rate than basic RRT.
+   - **RRT*-Smart**: An improvement on RRT*, achieving near-optimal paths more quickly.
+   - **RRT*-AB (RRT*-Adjustable Bounds)**: A variation that converges rapidly to optimal or near-optimal paths compared to other RRT*-based approaches.
+
+The paper contrasts these algorithms, focusing on MEA* in comparison with prominent sampling-based and grid-based algorithms. MEA* is highlighted for its shorter path generation, improved execution time, and lower memory requirements, particularly effective for 2D, off-line applications with constrained resources. However, in high-dimensional problems, RRT*-AB is expected to outperform MEA* due to its suitability for complex environments. The paper also mentions future research directions, including motion planning with RRT*-AB in 3D space for 6 DOF robotic arms and the use of fuzzy logic-based navigation for cooperative mobile robots in 3D environments.
+"""
+
+"""
+Several planners have been used for mobile robots such as potential field, visibility graph, evolutionary meta-heuristic methods, sampling-based methods, and grid-based methods [3]. Each of them has their own advantages and disadvantages. Classic methods such as potential field and visibility graphs are complex, and computationally expensive to deal with real-time applications and high-dimensional problems. Nature-inspired meta-heuristic approaches such as Genetic Algorithm (GA) [10], and Artificial Bee Colony (ABC) algorithm [11] are suitable for the optimization of multi-objective planning problems. A major drawback of these approaches is pre-mature convergence, trapping in a local optimum, high computational cost, and complex mapping of data [3,11,12,13]. Recently, reinforcement learning has also emerged, but it is more suitable for robots learning new skills than for path-planning applications [14,15]. Sampling-based Planning (SBP) approaches such as RRT* (Rapidly exploring Random Tree Star) [16] are successful for high-dimensional complex problems [3]. A major limitation of sampling-based algorithms is their slow convergence rate [3,13]. RRT*-AB [12] is a recent sampling-based planner which has resolved this issue and has improved convergence rate as compared to other SBP variants [12]. Grid-based methods are another class of planning technique applicable to low-dimensional space. A* [17] is a popular grid-based algorithm and is usually preferred to solve planning problems of mobile robots in low dimensions [1,4,18,19]. However, A* does not always find the shortest path because the path is constrained to grid edges. Its memory requirements also expand vigorously for complex problems [4,6]. Memory-Efficient A* (MEA*) [20] is a variant of A* which has addressed these limitations and its performance is also comparable to A* as compared to other variants [20]. However, there is always a trade-off between processing time and robustness.
+"""
+
+"""
+https://www.mdpi.com/2073-8994/11/7/945
+3.1. MEA* Algorithm
+3.2. RRT*-AB Algorithm
+
+https://journals.sagepub.com/doi/10.5772/56718
 """
