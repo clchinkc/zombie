@@ -1372,4 +1372,13 @@ https://www.mdpi.com/2073-8994/11/7/945
 3.2. RRT*-AB Algorithm
 
 https://journals.sagepub.com/doi/10.5772/56718
+
+EB-RRT* based Navigation Algorithm for UAV
+"""
+
+"""
+Hybrid A*
+CHOMP: Covariant Hamiltonian Optimization for Motion Planning
+TrajOpt: Motion Planning with Sequential ConvexOptimization and Convex Collision Checking
+Artificial Potential Field
 """
