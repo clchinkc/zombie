@@ -1,3 +1,4 @@
+import sys
 import tkinter as tk
 
 import matplotlib.pyplot as plt
@@ -62,8 +63,16 @@ def random_disturbance(strength=0.1):
     return np.random.normal(0, strength)
 
 # Simulation Function
+# Global variable to track if the window is open
+window_open = True
+
+def on_window_close():
+    global window_open
+    window_open = False
+    window.destroy()
+
 def run_simulation():
-    global running, current_x, current_y, current_altitude, setpoint_x, setpoint_y, setpoint_altitude
+    global running, current_x, current_y, current_altitude, setpoint_x, setpoint_y, setpoint_altitude, window_open
 
     if running:
         return  # Prevent multiple instances of the simulation
@@ -160,15 +169,19 @@ def run_simulation():
             'time': i * time_step
         }
 
-        # Update GUI
-        window.after(0, update_gui, data)
+        # Check if the window is still open before updating GUI
+        if not window_open:
+            break  # Break out of the loop if the window is closed
 
-        # Tkinter event processing
+        # Update GUI and Tkinter event processing
+        window.after(0, update_gui, data)
         window.update_idletasks()
         window.update()
-        
-        running = False
-        run_button.config(state=tk.NORMAL)  # Re-enable the run button
+
+    running = False
+    if window_open:
+        run_button.config(state=tk.NORMAL)  # Re-enable the run button only if the window still exists
+
 
 def update_gui(data):
     # Update labels with new data
@@ -208,6 +221,7 @@ def update_gui(data):
 # Tkinter setup
 window = tk.Tk()
 window.title('Missile Trajectory Simulation')
+window.protocol("WM_DELETE_WINDOW", on_window_close)
 
 # Labels for data display
 position_label = tk.Label(window, text="Position: ")
