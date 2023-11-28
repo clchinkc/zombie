@@ -5,7 +5,6 @@ from tkinter import ttk
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
 
 
 class Entity:
@@ -24,9 +23,12 @@ class Survivor(Entity):
     def __init__(self, position, boundary):
         super().__init__(position, boundary)
         self.health = 100
+        self.health_history = [self.health]
+        self.position_history = [position.copy()]  # Store position history
 
     def decrease_health(self, amount):
         self.health = max(self.health - amount, 0)
+        self.health_history.append(self.health)  # Update health history
 
     def evade_zombie(self, zombie, speed, dt):
         evasion_direction = normalize(self.position - zombie.position)
@@ -36,8 +38,9 @@ class Survivor(Entity):
         self.velocity = evasion_direction * speed
 
 class Zombie(Entity):
-    # For more sophisticated zombie behavior, methods can be added here
-    pass
+    def __init__(self, position, boundary):
+        super().__init__(position, boundary)
+        self.position_history = [position.copy()]  # Store position history
 
 class PIDController:
     def __init__(self, kp, ki, kd, control_limit=None):
@@ -89,54 +92,54 @@ class Simulation:
         self.zombie_speed = 0.5
         self.steps = 0  # Step counter
         self.paused = True
-
+        
+        self.survivors = []  # List to store multiple survivors
+        self.zombies = []    # List to store multiple zombies
         self.setup_entities()
         self.setup_pid_controller()
 
         # Data for plotting
-        self.survivor_positions = []
-        self.survivor_healths = []
-        self.zombie_positions = []
         self.health_drop_positions = []
 
+
     def setup_entities(self):
-        self.survivor = Survivor([0., 0.], self.boundary)
-        self.zombie = Zombie([10., 10.], self.boundary)
+        # Clear previous entities
+        self.survivors.clear()
+        self.zombies.clear()
+        # Create multiple survivors and zombies
+        num_survivors = 3
+        num_zombies = 2
+        self.survivors = [Survivor([random.uniform(0, self.boundary[0]), random.uniform(0, self.boundary[1])], self.boundary) for _ in range(num_survivors)]
+        self.zombies = [Zombie([random.uniform(0, self.boundary[0]), random.uniform(0, self.boundary[1])], self.boundary) for _ in range(num_zombies)]
 
     def setup_pid_controller(self):
         self.pid = PIDController(kp=1.0, ki=0.1, kd=0.05, control_limit=10)
 
     def update_simulation(self):
-        # Update positions and states of survivor and zombie
-        current_distance = distance(self.survivor, self.zombie)
-        pid_speed_adjustment = self.pid.update(self.desired_distance, current_distance, self.dt)
-        # Add random noise to the speed adjustment
-        pid_speed_adjustment += random.uniform(-0.1, 0.1)
+        # Update for multiple entities
+        for survivor in self.survivors:
+            closest_zombie = min(self.zombies, key=lambda z: distance(survivor, z))
+            survivor.evade_zombie(closest_zombie, self.survivor_speed, self.dt)
+            survivor.move(self.dt)
+            if distance(survivor, closest_zombie) < self.interaction_distance:
+                survivor.decrease_health(self.health_decrement)
+                self.health_drop_positions.append(survivor.position.copy())
+            survivor.health_history.append(survivor.health)  # Record health data
 
-        # Use the survivor_speed as a cap for the final speed
-        final_speed = np.clip(pid_speed_adjustment, -self.survivor_speed, self.survivor_speed)
-
-        # Use the final speed for evasion
-        self.survivor.evade_zombie(self.zombie, final_speed, self.dt)
-        move_towards(self.survivor, self.zombie, speed=self.zombie_speed)
-
-        self.survivor.move(self.dt)
-        self.zombie.move(self.dt)
-
-        # Check for interaction and decrease health if necessary
-        if current_distance < self.interaction_distance:
-            self.survivor.decrease_health(self.health_decrement)
+        for zombie in self.zombies:
+            closest_survivor = min(self.survivors, key=lambda s: distance(s, zombie))
+            move_towards(closest_survivor, zombie, self.zombie_speed)
+            zombie.move(self.dt)
 
         self.steps += 1  # Increment step counter
         self.update_plot_data()
 
     def update_plot_data(self):
-        self.survivor_positions.append(self.survivor.position.copy())
-        self.survivor_healths.append(self.survivor.health)
-        self.zombie_positions.append(self.zombie.position.copy())
-        # If health has dropped, record the position for later marking
-        if len(self.survivor_healths) > 1 and self.survivor_healths[-1] < self.survivor_healths[-2]:
-            self.health_drop_positions.append(self.survivor.position.copy())
+        # Update plot data for multiple entities
+        for survivor in self.survivors:
+            survivor.position_history.append(survivor.position.copy())
+        for zombie in self.zombies:
+            zombie.position_history.append(zombie.position.copy())
 
     def run(self):
         if not self.paused:
@@ -152,9 +155,6 @@ class Simulation:
     def reset(self):
         self.setup_entities()
         self.setup_pid_controller()
-        self.survivor_positions.clear()
-        self.survivor_healths.clear()
-        self.zombie_positions.clear()
         self.health_drop_positions.clear()
         self.steps = 0
 
@@ -278,11 +278,11 @@ class GUI:
         self.performance_frame.pack(side=tk.TOP, fill=tk.X)
 
     def update_canvas(self):
-        # Update the position of the survivor
-        self.update_entity_position(self.simulation.survivor, "green")
-
-        # Update the position of the zombie
-        self.update_entity_position(self.simulation.zombie, "red")
+        # Update for multiple survivors and zombies
+        for survivor in self.simulation.survivors:
+            self.update_entity_position(survivor, "green")
+        for zombie in self.simulation.zombies:
+            self.update_entity_position(zombie, "red")
 
     def update_entity_position(self, entity, color):
         if entity.canvas_object_id is None:
@@ -303,25 +303,34 @@ class GUI:
     def update_plot(self):
         self.ax1.clear()
         self.ax2.clear()
-        
-        survivor_positions = np.array(self.simulation.survivor_positions)
-        zombie_positions = np.array(self.simulation.zombie_positions)
-        health_drop_positions = np.array(self.simulation.health_drop_positions)
-        
+
         # Plot for the positions
-        if len(survivor_positions) > 0 and len(zombie_positions) > 0:
-            self.ax1.plot(survivor_positions[:, 0], survivor_positions[:, 1], label="Survivor Position", color='blue')
-            self.ax1.plot(zombie_positions[:, 0], zombie_positions[:, 1], label="Zombie Position", color='red')
-            if len(health_drop_positions) > 0:
-                self.ax1.scatter(health_drop_positions[:, 0], health_drop_positions[:, 1], color='purple', marker='x', label='Health Drop')
-            self.ax1.set_xlabel('X Position', fontsize=14)
-            self.ax1.set_ylabel('Y Position', fontsize=14)
-            self.ax1.set_title('Survivor vs Zombie Position', fontsize=16, fontweight='bold')
-            self.ax1.grid(True, which='both', linestyle='--', linewidth=0.5)
-            self.ax1.legend(loc='upper right')
-        
-        # Plot for the health
-        self.ax2.plot(self.simulation.survivor_healths, label="Survivor Health", color='green')
+        for i in range(len(self.simulation.survivors)):
+            # Plot the current position of each survivor
+            self.ax1.scatter(*self.simulation.survivors[i].position, label="Survivors", color="blue")
+            # Plot the movement history of each survivor
+            self.ax1.plot(*zip(*self.simulation.survivors[i].position_history), color="blue")
+
+        for i in range(len(self.simulation.zombies)):
+            # Plot the current position of each zombie
+            self.ax1.scatter(*self.simulation.zombies[i].position, label="Zombies", color="red")
+            # Plot the movement history of each zombie
+            self.ax1.plot(*zip(*self.simulation.zombies[i].position_history), color="red")
+            
+        if self.simulation.health_drop_positions:
+            self.ax1.scatter(*zip(*self.simulation.health_drop_positions), label="Health Drop", color="purple", marker='x')
+
+        self.ax1.set_xlabel('X Position', fontsize=14)
+        self.ax1.set_ylabel('Y Position', fontsize=14)
+        self.ax1.set_title('Survivor vs Zombie Position', fontsize=16, fontweight='bold')
+        self.ax1.grid(True, which='both', linestyle='--', linewidth=0.5)
+        self.ax1.legend(loc='upper right')
+
+        # Plot for the health of each survivor
+        for idx, survivor in enumerate(self.simulation.survivors):
+            if survivor.health_history:  # Check if health history data is available
+                self.ax2.plot(survivor.health_history, label=f"Survivor {idx+1}", linestyle='-', linewidth=2)
+
         self.ax2.set_xlabel('Step', fontsize=14)
         self.ax2.set_ylabel('Health', fontsize=14)
         self.ax2.set_title('Survivor Health Over Time', fontsize=16, fontweight='bold')
@@ -329,17 +338,21 @@ class GUI:
         self.ax2.legend(loc='upper right')
         
         plt.tight_layout()
-        
         self.fig.canvas.draw()
 
     def update_performance_metrics(self):
-        # Update performance metrics
         survival_time = self.simulation.steps * self.simulation.dt
-        distance_between = distance(self.simulation.survivor, self.simulation.zombie)
 
+        # Calculate the average distance between all pairs of survivors and zombies
+        total_distance = sum(distance(survivor, zombie) for survivor in self.simulation.survivors for zombie in self.simulation.zombies)
+        avg_distance = total_distance / (len(self.simulation.survivors) * len(self.simulation.zombies))
+
+        # Update labels
         self.survival_time_label.config(text=f"Survival Time: {survival_time:.2f}s")
-        self.distance_label.config(text=f"Distance Between: {distance_between:.2f}")
-        self.health_label.config(text=f"Survivor Health: {self.simulation.survivor.health}")
+        self.distance_label.config(text=f"Avg. Distance Between: {avg_distance:.2f}")
+
+        health_text = " | ".join(f"S{idx+1}: {survivor.health}" for idx, survivor in enumerate(self.simulation.survivors))
+        self.health_label.config(text=f"Survivor Health: {health_text}")
 
     def setup_refresh(self):
         self.root.after(100, self.refresh)
@@ -362,9 +375,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
 
 """
 Your Python code for a survivor vs. zombie simulation is well-designed, but there are several potential enhancements that could make it more dynamic and engaging. Here are some enhancement suggestions:
@@ -406,4 +416,10 @@ Your Python code for a survivor vs. zombie simulation is well-designed, but ther
    - **Realistic Physics**: Implement a basic physics engine for realistic collision and movement handling.
 
 By integrating these enhancements, your simulation can become more realistic, challenging, and engaging, offering a rich experience that combines strategic gameplay with dynamic interactions.
+"""
+
+"""
+Environment and Weather that affect the behavior and effectiveness of the survivor and zombie in the simulation.
+
+Resources and Population Control
 """

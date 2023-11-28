@@ -1374,6 +1374,14 @@ https://www.mdpi.com/2073-8994/11/7/945
 https://journals.sagepub.com/doi/10.5772/56718
 
 EB-RRT* based Navigation Algorithm for UAV
+
+https://www.semanticscholar.org/paper/RT-RRT*%3A-a-real-time-path-planning-algorithm-based-Naderi-Rajam%C3%A4ki/a28ff0c2890fb178991bedf4f7ea66537c47ff24
+
+https://www.mdpi.com/2076-3417/10/4/1381
+
+https://www.semanticscholar.org/paper/UAV-path-re-planning-based-on-improved-RRT-in-Meng-Qing/171bdecb09f27fb5716ef09523e9db72b2a6e071
+
+https://vhartmann.com/strrt/
 """
 
 """

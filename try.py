@@ -1,12 +1,46 @@
-import sys
+import random
 import tkinter as tk
+from tkinter import ttk
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-from mpl_toolkits.mplot3d import Axes3D
 
+
+class Entity:
+    def __init__(self, position, boundary):
+        self.position = np.array(position)
+        self.velocity = np.array([0., 0.])
+        self.boundary = np.array(boundary)
+        self.canvas_object_id = None
+
+    def move(self, dt):
+        new_position = self.position + self.velocity * dt
+        # Enforce boundary conditions
+        self.position = np.clip(new_position, [0, 0], self.boundary)
+
+class Survivor(Entity):
+    def __init__(self, position, boundary):
+        super().__init__(position, boundary)
+        self.health = 100
+        self.health_history = [self.health]
+        self.position_history = [position.copy()]  # Store position history
+
+    def decrease_health(self, amount):
+        self.health = max(self.health - amount, 0)
+        self.health_history.append(self.health)  # Update health history
+
+    def evade_zombie(self, zombie, speed, dt):
+        evasion_direction = normalize(self.position - zombie.position)
+        # Add random noise to the evasion direction
+        evasion_direction += np.random.normal(0, 0.1, 2)
+        evasion_direction = normalize(evasion_direction)
+        self.velocity = evasion_direction * speed
+
+class Zombie(Entity):
+    def __init__(self, position, boundary):
+        super().__init__(position, boundary)
+        self.position_history = [position.copy()]  # Store position history
 
 class PIDController:
     def __init__(self, kp, ki, kd, control_limit=None):
@@ -20,260 +54,325 @@ class PIDController:
     def update(self, setpoint, measured_value, dt):
         error = setpoint - measured_value
         self.integral += error * dt
+
         if self.prev_error is None:
-            derivative = 0
-        else:
-            derivative = (error - self.prev_error) / dt
-        self.prev_error = error
-        control_signal = self.kp * error + self.ki * self.integral + self.kd * derivative
-        if self.control_limit is not None:
-            control_signal = np.clip(control_signal, -self.control_limit, self.control_limit)
-        return control_signal
+            self.prev_error = error
 
-class AdaptivePIDController:
-    def __init__(self, kp, ki, kd, kp_adapt, ki_adapt, kd_adapt, control_limit=None):
-        self.base_kp, self.base_ki, self.base_kd = kp, ki, kd
-        self.kp_adapt, self.ki_adapt, self.kd_adapt = kp_adapt, ki_adapt, kd_adapt
-        self.control_limit = control_limit
-        self.integral = self.prev_error = 0
-
-    def update(self, setpoint, measured_value, dt):
-        error = setpoint - measured_value
-        self.integral += error * dt
         derivative = (error - self.prev_error) / dt
-
-        # Adaptive tuning of PID parameters based on error magnitude
-        kp = self.base_kp + self.kp_adapt * np.abs(error)
-        ki = self.base_ki + self.ki_adapt * np.abs(error)
-        kd = self.base_kd + self.kd_adapt * np.abs(error)
-
-        control_signal = kp * error + ki * self.integral + kd * derivative
         self.prev_error = error
+
+        control_signal = self.kp * error + self.ki * self.integral + self.kd * derivative
 
         if self.control_limit is not None:
             control_signal = np.clip(control_signal, -self.control_limit, self.control_limit)
+
         return control_signal
 
-def missile_model(x, y, altitude, control_signals, dt, disturbance):
-    # Incorporating robust control by handling disturbances
-    x += control_signals['x'] * dt + disturbance
-    y += control_signals['y'] * dt + disturbance
-    altitude += control_signals['z'] * dt - 9.81 * dt + disturbance
-    return x, y, altitude
+def distance(entity1, entity2):
+    return np.linalg.norm(entity1.position - entity2.position)
 
-def random_disturbance(strength=0.1):
-    return np.random.normal(0, strength)
+def normalize(vector):
+    norm = np.linalg.norm(vector)
+    if norm == 0:
+        return vector
+    return vector / norm
 
-# Simulation Function
-# Global variable to track if the window is open
-window_open = True
+def move_towards(target, mover, speed):
+    direction = normalize(target.position - mover.position)
+    mover.velocity = direction * speed
 
-def on_window_close():
-    global window_open
-    window_open = False
-    window.destroy()
+class Simulation:
+    def __init__(self):
+        self.boundary = [20, 20]
+        self.dt = 0.1
+        self.desired_distance = 5
+        self.interaction_distance = 1.0
+        self.health_decrement = 5
+        self.survivor_speed = 0
+        self.zombie_speed = 0.5
+        self.steps = 0  # Step counter
+        self.paused = True
+        
+        self.survivors = []  # List to store multiple survivors
+        self.zombies = []    # List to store multiple zombies
+        self.setup_entities()
+        self.setup_pid_controller()
 
-def run_simulation():
-    global running, current_x, current_y, current_z, setpoint_x, setpoint_y, setpoint_z, window_open, x_data, y_data, z_data, time_points, velocities_x, velocities_y, velocities_z, accelerations, control_inputs_x, control_inputs_y, control_inputs_z, environmental_conditions
-
-    if running:
-        return  # Prevent multiple instances of the simulation
-
-    running = True
-    run_button.config(state=tk.DISABLED)  # Disable the run button to prevent re-clicks
-
-    # Simulation parameters
-    setpoint_z = 1000  # Desired altitude (meters)
-    setpoint_x = 100  # Desired x position (meters)
-    setpoint_y = 100  # Desired y position (meters)
-
-    current_x, current_y, current_z = 0, 0, 500  # Initial positions
-    x_data.clear()
-    y_data.clear()
-    z_data.clear()
-
-    pid_x = PIDController(kp=0.2, ki=0.02, kd=0.05, control_limit=50)
-    pid_y = PIDController(kp=0.2, ki=0.02, kd=0.05, control_limit=50)
-    pid_z = PIDController(kp=0.6, ki=0.1, kd=0.2, control_limit=100)  # Altitude control
-    # pid_x = AdaptivePIDController(kp=0.2, ki=0.02, kd=0.05, kp_adapt=0.005, ki_adapt=0.001, kd_adapt=0.005, control_limit=50)
-    # pid_y = AdaptivePIDController(kp=0.2, ki=0.02, kd=0.05, kp_adapt=0.005, ki_adapt=0.001, kd_adapt=0.005, control_limit=50)
-    # pid_z = AdaptivePIDController(kp=0.6, ki=0.1, kd=0.2, kp_adapt=0.01, ki_adapt=0.002, kd_adapt=0.01, control_limit=100)  # Altitude control
-
-    time_step = 0.1
-    n_steps = 500
-
-    # Define additional data structures for logging
-    velocities_x, velocities_y, velocities_z = [], [], []
-    accelerations = []
-    control_inputs_x, control_inputs_y, control_inputs_z = [], [], []
-    environmental_conditions = []
-
-    # Data for plotting
-    time_points = np.linspace(0, n_steps * time_step, n_steps)
-    x_positions, y_positions, z_positions = [], [], []
-    x_errors, y_errors, z_errors = [], [], []
-
-    # Initial states for velocity calculation
-    prev_x, prev_y, prev_altitude = current_x, current_y, current_z
-
-    # Simulation loop
-    for i in time_points:
-        disturbance = random_disturbance()
-        environmental_conditions.append(disturbance)
-
-        control_signal_x = pid_x.update(setpoint_x, current_x, time_step)
-        control_signal_y = pid_y.update(setpoint_y, current_y, time_step)
-        control_signal_z = pid_z.update(setpoint_z, current_z, time_step)
-
-        control_inputs_x.append(control_signal_x)
-        control_inputs_y.append(control_signal_y)
-        control_inputs_z.append(control_signal_z)
-
-        new_x, new_y, new_altitude = missile_model(
-            current_x, current_y, current_z,
-            {'x': control_signal_x, 'y': control_signal_y, 'z': control_signal_z},
-            time_step, disturbance
-        )
-
-        # Calculate velocity and acceleration
-        velocity_x = (new_x - prev_x) / time_step
-        velocity_y = (new_y - prev_y) / time_step
-        velocity_z = (new_altitude - prev_altitude) / time_step
-
-        velocities_x.append(velocity_x)
-        velocities_y.append(velocity_y)
-        velocities_z.append(velocity_z)
-
-        acceleration = (velocity_z - (prev_altitude - current_z) / time_step) / time_step
-        accelerations.append(acceleration)
-
-        # Update positions and errors
-        current_x, current_y, current_z = new_x, new_y, new_altitude
-        x_positions.append(current_x)
-        y_positions.append(current_y)
-        z_positions.append(current_z)
-
-        x_errors.append(setpoint_x - current_x)
-        y_errors.append(setpoint_y - current_y)
-        z_errors.append(setpoint_z - current_z)
-
-        # Prepare data for GUI update
-        data = {
-            'x_position': current_x,
-            'y_position': current_y,
-            'altitude': current_z,
-            'velocity_x': velocities_x[-1] if velocities_x else 0,
-            'velocity_y': velocities_y[-1] if velocities_y else 0,
-            'velocity_z': velocities_z[-1] if velocities_z else 0,
-            'control_x': control_inputs_x[-1] if control_inputs_x else 0,
-            'control_y': control_inputs_y[-1] if control_inputs_y else 0,
-            'control_z': control_inputs_z[-1] if control_inputs_z else 0,
-            'time': i * time_step
-        }
-
-        # Check if the window is still open before updating GUI
-        if not window_open:
-            break  # Break out of the loop if the window is closed
-
-        # Update GUI and Tkinter event processing
-        window.after(0, update_gui, data)
-        window.update_idletasks()
-        window.update()
-
-    running = False
-    if window_open:
-        run_button.config(state=tk.NORMAL)  # Re-enable the run button only if the window still exists
+        # Data for plotting
+        self.health_drop_positions = []
 
 
-def update_gui(data):
-    # Update labels with new data
-    position_label.config(text=f"Position: ({data['x_position']:.2f}, {data['y_position']:.2f}, {data['altitude']:.2f}) m")
-    velocity_label.config(text=f"Velocity: ({data['velocity_x']:.2f}, {data['velocity_y']:.2f}, {data['velocity_z']:.2f}) m/s")
-    control_label.config(text=f"Control Inputs: ({data['control_x']:.2f}, {data['control_y']:.2f}, {data['control_z']:.2f})")
-    time_label.config(text=f"Simulation Time: {data['time']:.2f} s")
+    def setup_entities(self):
+        # Clear previous entities
+        self.survivors.clear()
+        self.zombies.clear()
+        # Create multiple survivors and zombies
+        num_survivors = 3
+        num_zombies = 2
+        self.survivors = [Survivor([random.uniform(0, self.boundary[0]), random.uniform(0, self.boundary[1])], self.boundary) for _ in range(num_survivors)]
+        self.zombies = [Zombie([random.uniform(0, self.boundary[0]), random.uniform(0, self.boundary[1])], self.boundary) for _ in range(num_zombies)]
 
-    # Update the trajectory plot
-    x_data.append(data['x_position'])
-    y_data.append(data['y_position'])
-    z_data.append(data['altitude'])
-    ax_trajectory.clear()
-    ax_trajectory.plot(x_data, y_data, z_data, label='Missile Trajectory')
-    ax_trajectory.scatter(setpoint_x, setpoint_y, setpoint_z, color='r', marker='o', label='Target')
-    ax_trajectory.set_xlabel('X Position (m)')
-    ax_trajectory.set_ylabel('Y Position (m)')
-    ax_trajectory.set_zlabel('Altitude (m)')
-    ax_trajectory.set_title('Missile Trajectory')
-    ax_trajectory.legend()
+    def setup_pid_controller(self):
+        self.pid = PIDController(kp=1.0, ki=0.1, kd=0.05, control_limit=10)
 
-    # Update the position plot
-    ax_position.clear()
-    ax_position.plot(time_points[:len(x_data)], x_data, label='X Position')
-    ax_position.plot(time_points[:len(y_data)], y_data, label='Y Position')
-    ax_position.plot(time_points[:len(z_data)], z_data, label='Z Position')
-    ax_position.set_xlabel('Time (s)')
-    ax_position.set_ylabel('Position (m)')
-    ax_position.set_title('Position Over Time')
-    ax_position.legend()
+    def update_simulation(self):
+        # Update for multiple entities
+        for survivor in self.survivors:
+            closest_zombie = min(self.zombies, key=lambda z: distance(survivor, z))
+            survivor.evade_zombie(closest_zombie, self.survivor_speed, self.dt)
+            survivor.move(self.dt)
+            if distance(survivor, closest_zombie) < self.interaction_distance:
+                survivor.decrease_health(self.health_decrement)
+                self.health_drop_positions.append(survivor.position.copy())
+            survivor.health_history.append(survivor.health)  # Record health data
 
-    # Update the velocity plot
-    ax_velocity.clear()
-    ax_velocity.plot(time_points[:len(velocities_x)], velocities_x, label='X Velocity')
-    ax_velocity.plot(time_points[:len(velocities_y)], velocities_y, label='Y Velocity')
-    ax_velocity.plot(time_points[:len(velocities_z)], velocities_z, label='Z Velocity')
-    ax_velocity.set_xlabel('Time (s)')
-    ax_velocity.set_ylabel('Velocity (m/s)')
-    ax_velocity.set_title('Velocity Over Time')
-    ax_velocity.legend()
+        for zombie in self.zombies:
+            closest_survivor = min(self.survivors, key=lambda s: distance(s, zombie))
+            move_towards(closest_survivor, zombie, self.zombie_speed)
+            zombie.move(self.dt)
 
-    # Update the control signal plot
-    ax_control.clear()
-    ax_control.plot(time_points[:len(control_inputs_x)], control_inputs_x, label='X Control Signal')
-    ax_control.plot(time_points[:len(control_inputs_y)], control_inputs_y, label='Y Control Signal')
-    ax_control.plot(time_points[:len(control_inputs_z)], control_inputs_z, label='Z Control Signal')
-    ax_control.set_xlabel('Time (s)')
-    ax_control.set_ylabel('Control Signal')
-    ax_control.set_title('Control Signal Over Time')
-    ax_control.legend()
+        self.steps += 1  # Increment step counter
+        self.update_plot_data()
 
-    canvas.draw()
-    fig.tight_layout()
+    def update_plot_data(self):
+        # Update plot data for multiple entities
+        for survivor in self.survivors:
+            survivor.position_history.append(survivor.position.copy())
+        for zombie in self.zombies:
+            zombie.position_history.append(zombie.position.copy())
 
-# Tkinter setup
-window = tk.Tk()
-window.title('Missile Trajectory Simulation')
-window.protocol("WM_DELETE_WINDOW", on_window_close)
+    def run(self):
+        if not self.paused:
+            self.update_simulation()
 
-# Data for plotting
-x_data, y_data, z_data = [], [], []
+    def pause(self):
+        self.paused = True
 
-# Simulation running state
-running = False
+    def resume(self):
+        self.paused = False
+        self.run()
 
-# Start Simulation Button
-run_button = tk.Button(window, text="Start Simulation", command=run_simulation)
-run_button.pack()
+    def reset(self):
+        self.setup_entities()
+        self.setup_pid_controller()
+        self.health_drop_positions.clear()
+        self.steps = 0
 
-# Labels for data display
-position_label = tk.Label(window, text="Position: ")
-position_label.pack()
+    def step_forward(self):
+        if self.paused:
+            self.update_simulation()
 
-velocity_label = tk.Label(window, text="Velocity: ")
-velocity_label.pack()
+class GUI:
+    def __init__(self, simulation):
+        self.simulation = simulation
+        self.root = tk.Tk()
+        self.root.title("Survivor vs Zombie Simulation")
 
-control_label = tk.Label(window, text="Control Inputs: ")
-control_label.pack()
+        self.setup_control_panel()
+        self.setup_canvas()
+        self.setup_plot()
+        self.setup_performance_metrics()
+        self.setup_refresh()
+        
+        self.debounce_job = None
+        self.throttle_job = None
+        self.throttle_interval = 500
 
-time_label = tk.Label(window, text="Simulation Time: ")
-time_label.pack()
+    def setup_control_panel(self):
+        self.control_panel = tk.Frame(self.root)
+        self.control_panel.pack(side=tk.BOTTOM, fill=tk.X)
 
-# Matplotlib setup for plotting
-fig = Figure(figsize=(12, 8))
-ax_trajectory = fig.add_subplot(221, projection='3d')  # For 3D trajectory plot
-ax_position = fig.add_subplot(222)                    # For position plot
-ax_velocity = fig.add_subplot(223)                    # For velocity plot
-ax_control = fig.add_subplot(224)                     # For control signal plot
-canvas = FigureCanvasTkAgg(fig, master=window)
-widget = canvas.get_tk_widget()
-widget.pack()
+        self.start_button = tk.Button(self.control_panel, text="Start", command=self.start_simulation)
+        self.pause_button = tk.Button(self.control_panel, text="Pause", command=self.pause_simulation)
+        self.reset_button = tk.Button(self.control_panel, text="Reset", command=self.reset_simulation)
+        self.step_button = tk.Button(self.control_panel, text="Step", command=self.step_simulation)
 
-window.mainloop()
+        self.start_button.pack(side=tk.LEFT)
+        self.pause_button.pack(side=tk.LEFT)
+        self.reset_button.pack(side=tk.LEFT)
+        self.step_button.pack(side=tk.LEFT)
+
+        # Sliders for interactive controls
+        self.speed_slider = ttk.Scale(self.control_panel, from_=0, to=10, orient="horizontal", command=self.update_speed)
+        self.speed_slider.pack(side=tk.LEFT)
+        self.speed_label = tk.Label(self.control_panel, text="Speed: 0")
+        self.speed_label.pack(side=tk.LEFT)
+
+    def update_speed_debounced(self):
+        speed = self.speed_slider.get()
+        self.speed_label.config(text=f"Speed: {speed:.2f}")
+        self.simulation.survivor_speed = speed
+
+    def update_speed(self, event):
+        if self.debounce_job is not None:
+            self.root.after_cancel(self.debounce_job)
+        self.debounce_job = self.root.after(100, self.update_speed_debounced)
+
+    def reset_throttle(self):
+        self.throttle_job = None
+
+    def throttled_start_simulation(self):
+        if not self.throttle_job:
+            self.start_simulation()
+            self.throttle_job = self.root.after(self.throttle_interval, self.reset_throttle)
+
+    def start_simulation(self):
+        self.simulation.resume()
+        self.start_button.config(state='disabled')
+        self.pause_button.config(state='normal')
+
+    def throttled_pause_simulation(self):
+        if not self.throttle_job:
+            self.pause_simulation()
+            self.throttle_job = self.root.after(self.throttle_interval, self.reset_throttle)
+
+    def pause_simulation(self):
+        self.simulation.pause()
+        self.pause_button.config(state='disabled')
+        self.start_button.config(state='normal')
+
+    def throttled_reset_simulation(self):
+        if not self.throttle_job:
+            self.reset_simulation()
+            self.throttle_job = self.root.after(self.throttle_interval, self.reset_throttle)
+
+    def reset_simulation(self):
+        self.simulation.reset()
+        self.canvas.delete("all")
+        self.update_canvas()
+        self.update_plot()
+        self.update_performance_metrics()
+
+    def throttled_step_simulation(self):
+        if not self.throttle_job:
+            self.step_simulation()
+            self.throttle_job = self.root.after(self.throttle_interval, self.reset_throttle)
+
+    def step_simulation(self):
+        self.simulation.step_forward()
+        self.update_canvas()
+        self.update_plot()
+
+    def setup_canvas(self):
+        # Adjust canvas size and positioning to maximize space usage
+        self.canvas = tk.Canvas(self.root, width=self.simulation.boundary[0]*10, height=self.simulation.boundary[1]*10)
+        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+    def setup_plot(self):
+        # Adjust plot size and positioning
+        self.fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(5, 8), dpi=100)
+        self.canvas_fig = FigureCanvasTkAgg(self.fig, master=self.root)
+        self.canvas_fig_widget = self.canvas_fig.get_tk_widget()
+        self.canvas_fig_widget.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
+    def setup_performance_metrics(self):
+        # Create labels or text areas for performance metrics
+        self.performance_frame = tk.Frame(self.root)
+        self.survival_time_label = tk.Label(self.performance_frame, text="Survival Time: 0")
+        self.distance_label = tk.Label(self.performance_frame, text="Distance Between: 0")
+        self.health_label = tk.Label(self.performance_frame, text="Survivor Health: 100")
+        
+        self.survival_time_label.pack()
+        self.distance_label.pack()
+        self.health_label.pack()
+        self.performance_frame.pack(side=tk.TOP, fill=tk.X)
+
+    def update_canvas(self):
+        # Update for multiple survivors and zombies
+        for survivor in self.simulation.survivors:
+            self.update_entity_position(survivor, "green")
+        for zombie in self.simulation.zombies:
+            self.update_entity_position(zombie, "red")
+
+    def update_entity_position(self, entity, color):
+        if entity.canvas_object_id is None:
+            # If the entity doesn't have a canvas object yet, create one
+            entity.canvas_object_id = self.canvas.create_oval(
+                entity.position[0]*10 - 5, entity.position[1]*10 - 5,
+                entity.position[0]*10 + 5, entity.position[1]*10 + 5,
+                fill=color
+            )
+        else:
+            # If the entity already has a canvas object, just update its position
+            self.canvas.coords(
+                entity.canvas_object_id,
+                entity.position[0]*10 - 5, entity.position[1]*10 - 5,
+                entity.position[0]*10 + 5, entity.position[1]*10 + 5
+            )
+
+    def update_plot(self):
+        self.ax1.clear()
+        self.ax2.clear()
+
+        # Plot for the positions
+        for i in range(len(self.simulation.survivors)):
+            # Plot the current position of each survivor
+            self.ax1.scatter(*self.simulation.survivors[i].position, label="Survivors", color="blue")
+            # Plot the movement history of each survivor
+            self.ax1.plot(*zip(*self.simulation.survivors[i].position_history), color="blue")
+
+        for i in range(len(self.simulation.zombies)):
+            # Plot the current position of each zombie
+            self.ax1.scatter(*self.simulation.zombies[i].position, label="Zombies", color="red")
+            # Plot the movement history of each zombie
+            self.ax1.plot(*zip(*self.simulation.zombies[i].position_history), color="red")
+            
+        if self.simulation.health_drop_positions:
+            self.ax1.scatter(*zip(*self.simulation.health_drop_positions), label="Health Drop", color="purple", marker='x')
+
+        self.ax1.set_xlabel('X Position', fontsize=14)
+        self.ax1.set_ylabel('Y Position', fontsize=14)
+        self.ax1.set_title('Survivor vs Zombie Position', fontsize=16, fontweight='bold')
+        self.ax1.grid(True, which='both', linestyle='--', linewidth=0.5)
+        self.ax1.legend(loc='upper right')
+
+        # Plot for the health of each survivor
+        for idx, survivor in enumerate(self.simulation.survivors):
+            if survivor.health_history:  # Check if health history data is available
+                self.ax2.plot(survivor.health_history, label=f"Survivor {idx+1}", linestyle='-', linewidth=2)
+
+        self.ax2.set_xlabel('Step', fontsize=14)
+        self.ax2.set_ylabel('Health', fontsize=14)
+        self.ax2.set_title('Survivor Health Over Time', fontsize=16, fontweight='bold')
+        self.ax2.grid(True, which='both', linestyle='--', linewidth=0.5)
+        self.ax2.legend(loc='upper right')
+        
+        plt.tight_layout()
+        self.fig.canvas.draw()
+
+    def update_performance_metrics(self):
+        survival_time = self.simulation.steps * self.simulation.dt
+
+        # Calculate the average distance between all pairs of survivors and zombies
+        total_distance = sum(distance(survivor, zombie) for survivor in self.simulation.survivors for zombie in self.simulation.zombies)
+        avg_distance = total_distance / (len(self.simulation.survivors) * len(self.simulation.zombies))
+
+        # Update labels
+        self.survival_time_label.config(text=f"Survival Time: {survival_time:.2f}s")
+        self.distance_label.config(text=f"Avg. Distance Between: {avg_distance:.2f}")
+
+        health_text = " | ".join(f"S{idx+1}: {survivor.health}" for idx, survivor in enumerate(self.simulation.survivors))
+        self.health_label.config(text=f"Survivor Health: {health_text}")
+
+    def setup_refresh(self):
+        self.root.after(100, self.refresh)
+
+    def refresh(self):
+        self.simulation.run()
+        self.update_canvas()
+        self.update_plot()
+        self.update_performance_metrics()
+        self.root.after(100, self.refresh)
+
+    def start(self):
+        tk.mainloop()
+
+# Main Function
+def main():
+    simulation = Simulation()
+    gui = GUI(simulation)
+    gui.start()
+
+if __name__ == "__main__":
+    main()
+

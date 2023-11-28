@@ -263,3 +263,7 @@ Your suggestions for refining the implementation of a PID controller in a Python
 
 Implementing these modifications will make the PID controller a more integral and effective part of the simulation. The controller's responses will be more tailored to the specific needs of the simulation, providing a more realistic and dynamic experience. The addition of real-time visualization and analysis tools will also aid in understanding and fine-tuning the controller's impact.
 """
+
+"""
+please use dynamic programming to simulate the survivor action (like resource allocation and interval scheduling) in a zombie apocalypse simulation
+"""
