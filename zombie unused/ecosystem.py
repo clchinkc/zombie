@@ -117,15 +117,6 @@ plt.show()
 
 print("dt/dx**2 =", dt/dx**2) # dt/dx**2 means how many times the species will diffuse in one time step
 
-"""
-This code appears to be a simulation of two species competing for a limited resource in a one-dimensional environment. The code sets up arrays to store the population densities of two species (p1 and p2) over time (times) and across space (x). The initial conditions of the resource (r) and the two species (p1[0] and p2[0]) are defined using Gaussian functions.
-Next, the code sets some parameters that govern the simulation:
-d1 and d2: The diffusion rates of the two species. A higher diffusion rate means that the species will diffuse (spread out) faster, and a lower diffusion rate means that the species will diffuse slower.
-a and b: The competitiveness of the two species. A higher competitiveness means that the species will be better able to compete for resources, and a lower competitiveness means that the species will be worse at competing.
-The simulation is run for a specified time interval times using the finite difference method to update the populations of the two species and the resource over time based on the differential equations that describe the evolution of the system.
-Finally, the code plots the initial conditions of the resource and the two species using the matplotlib library.
-It's important to note that this code only sets up the simulation and defines the initial conditions, and the actual simulation would need to be run using additional code to see how the populations evolve over time.
-"""
 
 # solve the equation and get the solution
 
@@ -153,14 +144,6 @@ def solve_pop(p1, p2, r):
 
 p1, p2 = solve_pop(p1, p2, r)
 
-"""
-The code defines a function solve_pop that simulates the growth and competition of two populations, Species 1 and Species 2, for a given set of resources.
-The function uses finite differences to model the diffusion and growth of the populations over time.
-The populations compete for resources and their growth rates are determined by their competitiveness (parameters a and b) and their diffusion rates (parameters d1 and d2).
-The boundaries of the simulation are insulated, meaning that the populations at the edge of the simulation space cannot diffuse out of the space.
-The function returns the final populations after the simulation has run.
-The simulation is accelerated using the numba library.
-"""
 
 # plot the solution
 
@@ -176,105 +159,25 @@ plt.grid()
 plt.show()
 
 # animate the solution
+num_frames = 200
 
 def animate(i):
-    line1.set_data(x,p1[500*i])
-    line2.set_data(x,p2[500*i])
-    line3.set_data(x,r)
+    # Calculate the index for p1 and p2 arrays
+    index = int(i * len(times) / num_frames)
+    line1.set_data(x, p1[index])
+    line2.set_data(x, p2[index])
+    line3.set_data(x, r)
     
 # Equal aspect ratio Figure with black background and no axes.
-fig, ax = plt.subplots(1, 1, figsize=(14,8))
+fig, ax = plt.subplots(1, 1, figsize=(14, 8))
 ax.grid()
 line1, = ax.plot(x, p1[0], lw=3, label='Species 1, $d_1=${:.3f}'.format(d1))
 line2, = ax.plot(x, p2[0], lw=3, label='Species 2, $d_2=${:.3f}'.format(d2))
 line3, = ax.plot(x, r, ls='--', lw=3)
 ax.legend(fontsize=20)
 
-ani = animation.FuncAnimation(fig, animate, frames=400, interval=50)
-ani.save('species.gif',writer='pillow',fps=10)
-
-"""
-class SpatialSIZR:
-    def __init__(self, sigma, beta, rho, alpha, delta_S, delta_I, delta_Z, S0, I0, Z0, R0, dS, dI, dZ, aS, aI, r):
-        for name, argument in locals().items():
-            if name not in ('self', 'S0', 'I0', 'R0', 'Z0'):
-                if isinstance(argument, (float, int)):
-                    setattr(self, name, lambda self, value=argument: value)
-                elif callable(argument):
-                    setattr(self, name, argument)
-
-        self.initial_conditions = [S0, I0, Z0, R0]
-
-    def __call__(self, u, t, x):
-        # RHS of system of PDEs
-
-        S, I, Z, R = u
-
-        dSdt = self.sigma(t) - self.beta(t) * S * Z - self.delta_S(t) * S - self.alpha(t) * S ** 2 + self.dS(t) * (S[x-1] - 2 * S[x] + S[x+1]) + self.r(t) * S * (1 - self.aS(t) * Z)
-        dIdt = self.beta(t) * S * Z - self.rho(t) * I - self.delta_I(t) * I - self.alpha(t) * I ** 2 + self.dI(t) * (I[x-1] - 2 * I[x] + I[x+1]) + self.r(t) * I * (1 - self.aI(t) * Z)
-        dZdt = self.rho(t) * I - self.delta_Z(t) * S * Z - self.alpha(t) * Z ** 2 + self.dZ(t) * (Z[x-1] - 2 * Z[x] + Z[x+1])
-        dRdt = self.delta_S(t) * S + self.delta_I(t) * I + self.delta_Z(t) * S * Z + self.alpha(t) * (S ** 2 + I ** 2 + Z ** 2)
-
-        assert abs(dSdt + dIdt + dZdt + dRdt - self.sigma(t)) < 1e-10, "The sum of the derivatives is not zero"
-
-        return [dSdt, dIdt, dZdt, dRdt]
-
-
-def spatial_sizr_finite_difference(zombie_model, initial_conditions, time_steps, x_steps):
-    S0, I0, Z0, R0 = initial_conditions
-    dt = time_steps[1] - time_steps[0]
-    dx = x_steps[1] - x_steps[0]
-    S = np.zeros((len(time_steps), len(x_steps)))
-    I = np.zeros((len(time_steps), len(x_steps)))
-    Z = np.zeros((len(time_steps), len(x_steps)))
-    R = np.zeros((len(time_steps), len(x_steps)))
-
-    S[0, :] = S0
-    I[0, :] = I0
-    Z[0, :] = Z0
-    R[0, :] = R0
-
-    for t in range(1, len(time_steps)):
-        for x in range(1, len(x_steps) - 1):
-            dSdt, dIdt, dZdt, dRdt = zombie_model([S[t - 1, x], I[t - 1, x], Z[t - 1, x], R[t - 1, x]], time_steps[t], x)
-            S[t, x] = S[t - 1, x] + dt * dSdt
-            I[t, x] = I[t - 1, x] + dt * dIdt
-            Z[t, x] = Z[t - 1, x] + dt * dZdt
-            R[t, x] = R[t - 1, x] + dt * dRdt
-
-        # Apply zero-flux boundary conditions
-        S[t, 0], S[t, -1] = S[t, 1], S[t, -2]
-        I[t, 0], I[t, -1] = I[t, 1], I[t, -2]
-        Z[t, 0], Z[t, -1] = Z[t, 1], Z[t, -2]
-        R[t, 0], R[t, -1] = R[t, 1], R[t, -2]
-
-    return S, I, Z, R
-
-# Example usage
-time_steps = np.linspace(0, 10, 100)
-x_steps = np.linspace(0, 1, 100)
-S0 = np.ones(len(x_steps))
-I0 = np.zeros(len(x_steps))
-Z0 = np.zeros(len(x_steps))
-R0 = np.zeros(len(x_steps))
-
-# Instantiate the SpatialSIZR model with example parameters
-zombie_model = SpatialSIZR(sigma=0.1, beta=0.2, rho=0.1, alpha=0.1, delta_S=0.1, delta_I=0.1, delta_Z=0.1, S0=S0, I0=I0, Z0=Z0, R0=R0, dS=0.01, dI=0.01, dZ=0.01, aS=0.5, aI=0.5, r=1)
-
-# Run the simulation
-S, I, Z, R = spatial_sizr_finite_difference(zombie_model, [S0, I0, Z0, R0], time_steps, x_steps)
-
-# Plot the results
-import matplotlib.pyplot as plt
-
-plt.plot(x_steps, S[-1, :], label='S')
-plt.plot(x_steps, I[-1, :], label='I')
-plt.plot(x_steps, Z[-1, :], label='Z')
-plt.plot(x_steps, R[-1, :], label='R')
-plt.legend()
+ani = animation.FuncAnimation(fig, animate, frames=num_frames, interval=50)
 plt.show()
-"""
-
 
 
 

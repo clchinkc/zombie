@@ -177,6 +177,8 @@ https://github.com/toeverything/AFFiNE
 https://p101s2.github.io/
 Fastai
 https://github.com/Friedrich94326/AI_and_Data_Science/tree/Python/Python/Projects
+https://github.com/hkbus
+https://g0vhk-io.github.io/HKAddressParser/#/
 
 Must read books
 https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
@@ -313,6 +315,7 @@ TSMixer
 time series database
 InfluxDB 3.0
 https://thenewstack.io/predictive-analytics-using-a-time-series-database/
+https://iter01.com/559859.html
 
 financial analysis
 quantitative finance python
@@ -1314,6 +1317,10 @@ https://github.com/CStanKonrad/long_llama
 LLama 2 Long
 Mistral 7B
 Orca 2
+jina-embeddings-v2
+大規模文字嵌入基準排名
+SDXL Turbo
+
 
 bard api
 https://github.com/dsdanielpark/Bard-API
@@ -1363,6 +1370,14 @@ playwright-python
 https://ost.51cto.com/posts/2352
 selenium
 https://github.com/Friedrich94326/AI_and_Data_Science/blob/Python/Data%20Acquisition/Web%20Scraping%20with%20Beautiful%20Soup/web_scraping_script.py
+douban scraping random sleep ip pool dynamic agent
+https://github.com/chuanweihu/Douban-Scraping
+https://github.com/jctian96/douban-web-crawler
+https://cloud.tencent.com/developer/article/1745516
+https://largecats.github.io/blog/2019/06/18/scrape-movie-information/
+https://elasticsearch.cn/article/14863
+https://francis-press.com/papers/12298
+https://www.proquest.com/openview/76f584b3840e0bbfa0261544873e52e7/1?pq-origsite=gscholar&cbl=2046140
 
 search
 https://github.com/meilisearch/meilisearch
