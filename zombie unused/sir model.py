@@ -94,7 +94,7 @@ class SIZR:
         dZdt = self.rho(t)*I - self.delta_Z(t)*S*Z - self.alpha(t)*Z**2
         dRdt = self.delta_S(t)*S + self.delta_I(t)*I + self.delta_Z(t)*S*Z + self.alpha(t)*(S**2 + I**2 + Z**2)
         
-        assert abs(dSdt + dIdt + dZdt + dRdt - self.sigma(t)) < 1e-10, "The sum of the derivatives is not zero"
+        assert np.isclose(dSdt + dIdt + dZdt + dRdt, self.sigma(t)), "The sum of the derivatives is not zero"
         
         return [dSdt, dIdt, dZdt, dRdt]
 
@@ -152,3 +152,102 @@ if __name__ == "__main__":
     plt.show()
 
 
+"""
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.integrate import odeint
+
+
+class SIZR:
+    def __init__(self, S0, I0, Z0, R0, birth_rate_factor, transmission_rate_factor, recovery_rate_factor, zombie_death_base, zombie_death_scale, natural_death_s_base, natural_death_i_base, overpopulation_factor):
+        self.S0, self.I0, self.Z0, self.R0 = S0, I0, Z0, R0
+        self.birth_rate_factor = birth_rate_factor
+        self.transmission_rate_factor = transmission_rate_factor
+        self.recovery_rate_factor = recovery_rate_factor
+        self.zombie_death_base = zombie_death_base
+        self.zombie_death_scale = zombie_death_scale
+        self.natural_death_s_base = natural_death_s_base
+        self.natural_death_i_base = natural_death_i_base
+        self.overpopulation_factor = overpopulation_factor
+
+    # Continuous function for birth rate
+    def sigma(self, Z, total_population):
+        return self.birth_rate_factor * np.exp(-Z / (0.1 * total_population))
+
+    # Continuous function for transmission rate
+    def beta(self, S, Z, total_population):
+        return self.transmission_rate_factor * np.exp(-Z / (0.1 * total_population))
+
+    # Continuous function for recovery rate
+    def rho(self, I, total_population):
+        return self.recovery_rate_factor * np.exp(-I / (0.05 * total_population))
+
+    # Continuous function for zombie death rate
+    def delta_Z(self, S, total_population):
+        return self.zombie_death_base + self.zombie_death_scale * np.tanh((total_population - S) / (0.5 * total_population))
+
+    # Continuous function for natural death rate of susceptibles
+    def delta_S(self, Z, total_population):
+        return self.natural_death_s_base * np.exp(-Z / (0.2 * total_population))
+
+    # Continuous function for natural death rate of infected
+    def delta_I(self, Z, total_population):
+        return self.natural_death_i_base * np.exp(-Z / (0.2 * total_population))
+
+    # Continuous function for overpopulation factor
+    def alpha(self, total_population):
+        return self.overpopulation_factor * np.exp(total_population / 1000)
+
+    def __call__(self, u, t):
+        S, I, Z, R = u 
+        total_population = S + I + Z + R
+
+        # Calculate dynamic parameters
+        sigma = self.sigma(Z, total_population)
+        beta = self.beta(S, Z, total_population)
+        delta_S = self.delta_S(Z, total_population)
+        delta_I = self.delta_I(Z, total_population)
+        rho = self.rho(I, total_population)
+        delta_Z = self.delta_Z(S, total_population)
+        alpha = self.alpha(total_population)
+
+        # System of differential equations
+        dSdt = sigma - beta * S * Z - delta_S * S - alpha * S**2
+        dIdt = beta * S * Z - rho * I - delta_I * I - alpha * I**2
+        dZdt = rho * I - delta_Z * S * Z - alpha * Z**2
+        dRdt = delta_S * S + delta_I * I + delta_Z * S * Z + alpha * (S**2 + I**2 + Z**2)
+        
+        return [dSdt, dIdt, dZdt, dRdt]
+
+# Parameters
+birth_rate_factor = 2
+transmission_rate_factor = 0.03
+recovery_rate_factor = 1
+zombie_death_base = 0.0016
+zombie_death_scale = 0.0434
+natural_death_s_base = 0.007
+natural_death_i_base = 0.014
+overpopulation_factor = 0.0001
+
+# Initialize the model with parameters
+S0, I0, Z0, R0 = 100, 0, 10, 0
+zombie_model = SIZR(S0, I0, Z0, R0, birth_rate_factor, transmission_rate_factor, recovery_rate_factor, zombie_death_base, zombie_death_scale, natural_death_s_base, natural_death_i_base, overpopulation_factor)
+
+
+# Simulate over a period
+time_steps = np.linspace(0, 33, 10000)
+solution = odeint(zombie_model, [S0, I0, Z0, R0], time_steps)
+
+# Plotting
+H, I, Z, D = solution.T
+plt.plot(time_steps, H, label='Humans')
+plt.plot(time_steps, I, label='Infected')
+plt.plot(time_steps, Z, label='Zombies')
+plt.plot(time_steps, D, label='Dead')
+plt.xlabel('Time')
+plt.ylabel('Population')
+plt.title('Dynamic SIZR Model Simulation without Lambda Functions')
+plt.legend()
+plt.show()
+
+"""
