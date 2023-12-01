@@ -34,8 +34,11 @@ class NodeType(Enum):
 # --- AGENT BASE CLASS ---
 
 class Agent:
-    def __init__(self, name, health, attack_power):
-        self.name = name
+    id_counter = 0
+
+    def __init__(self, health, attack_power):
+        self.id = Agent.id_counter
+        Agent.id_counter += 1
         self.health = health
         self.attack_power = attack_power
         self.is_alive = True
@@ -57,8 +60,9 @@ class Agent:
 class Survivor(Agent):
     MAX_HEALTH = 100
 
-    def __init__(self, name, health, attack_power, morale):
-        super().__init__(name, health, attack_power)
+    def __init__(self, health, attack_power, morale):
+        super().__init__(health, attack_power)
+        self.name = f"Survivor{self.id}"
         self.morale = morale
 
     def heal(self, amount):
@@ -95,8 +99,8 @@ class Survivor(Agent):
         return f"{self.name} (Health: {round(self.health, 1)}, Morale: {round(self.morale, 1)})"
 
 class WarriorSurvivor(Survivor):
-    def __init__(self, name):
-        super().__init__(name, health=100, attack_power=10, morale=100)
+    def __init__(self):
+        super().__init__(health=100, attack_power=10, morale=100)
         self.combat_bonus = 2
 
     def attack(self):
@@ -104,8 +108,8 @@ class WarriorSurvivor(Survivor):
 
 
 class ScavengerSurvivor(Survivor):
-    def __init__(self, name):
-        super().__init__(name, health=100, attack_power=10, morale=100)
+    def __init__(self):
+        super().__init__(health=100, attack_power=10, morale=100)
         self.scavenging_bonus = 2
 
     def collect_resources(self, amount):
@@ -115,6 +119,10 @@ class ScavengerSurvivor(Survivor):
 # --- ZOMBIE CLASS ---
 
 class Zombie(Agent):
+
+    def __init__(self, health, attack_power):
+        super().__init__(health, attack_power)
+        self.name = f"Zombie{self.id}"
 
     def decide_movement(self, current_node):
         if not self.is_alive:
@@ -208,12 +216,12 @@ class Node:
         
         if self.building and self.building.building_type == 'zombie_nest':
             for _ in range(self.building.spawn_rate):
-                self.add_zombie(Zombie(f"Zombie{len(self.zombies) + 1}", 50, 8))
+                self.add_zombie(Zombie(50, 8))
 
         if self.resources and self.resources.quantity > 0:
             for survivor in self.survivors:
                 if self.resources.resource_type == 'medicine':
-                    survivor.heal(self.resources.use(5))
+                    survivor.heal(self.resources.use(10))
                 elif self.resources.resource_type == 'weapon':
                     survivor.attack_power = min(survivor.attack_power + self.resources.use(1), 20)
                 elif self.resources.resource_type == 'food':
@@ -248,7 +256,7 @@ class Node:
     def apply_specialization_effects(self):
         if self.node_type == NodeType.HOSPITAL:
             for survivor in self.survivors:
-                survivor.heal(5)
+                survivor.heal(10)
         elif self.node_type == NodeType.ARMORY:
             for survivor in self.survivors:
                 survivor.attack_power = min(survivor.attack_power + 5, 20)
@@ -307,9 +315,9 @@ class Simulation:
 
     def setup(self, num_survivors, num_zombies):
         for _ in range(num_survivors):
-            random.choice(self.nodes).add_survivor(Survivor(f"Survivor{_+1}", 100, 10, 100))
+            random.choice(self.nodes).add_survivor(Survivor(50, 8, 50))
         for _ in range(num_zombies):
-            random.choice(self.nodes).add_zombie(Zombie(f"Zombie{_+1}", 50, 8))
+            random.choice(self.nodes).add_zombie(Zombie(50, 8))
 
     def run(self, num_iterations):
         for _ in range(num_iterations):
@@ -320,9 +328,22 @@ class Simulation:
 
 
 # Drawing Functions
+def get_node_color(node):
+    # Update the colors based on the node type
+    if node.node_type == NodeType.HOSPITAL:
+        return (0, 255, 0)  # Green for hospital
+    elif node.node_type == NodeType.ARMORY:
+        return (0, 0, 255)  # Blue for armory
+    elif node.node_type == NodeType.RESOURCE:
+        return (255, 255, 0)  # Yellow for resource
+    elif node.node_type == NodeType.ZOMBIE_NEST:
+        return (255, 0, 0)  # Red for zombie nest
+    return (128, 128, 128)  # Default color
+
 def draw_node(node, x, y):
+    color = get_node_color(node)
     size = 20 + 2 * node.resources.quantity if node.resources else 20
-    pygame.draw.circle(win, BLUE, (x, y), size)
+    pygame.draw.circle(win, color, (x, y), size)
     text = FONT.render(node.name, True, WHITE)
     win.blit(text, (x - text.get_width()//2, y - text.get_height()//2))
 
@@ -340,6 +361,42 @@ def draw_metrics(num_survivors):
     text = FONT.render(f"Survivors: {num_survivors}", True, WHITE)
     win.blit(text, (10, 10))
 
+def handle_mouse_click(node_positions):
+    mouse_pos = pygame.mouse.get_pos()
+    for node, position in node_positions.items():
+        distance = math.hypot(mouse_pos[0] - position[0], mouse_pos[1] - position[1])
+        if distance < 20:  # Assuming the radius of a node circle is 20
+            current_selected_node = node
+            return current_selected_node
+    return None
+
+def display_node_info(node):
+    # Define padding and box dimensions
+    padding = 10
+    box_height = 30
+    box_width = WINDOW_WIDTH - 2 * padding
+
+    # Create a semi-transparent surface for the info box
+    info_surface = pygame.Surface((box_width, box_height))
+    info_surface.set_alpha(180)  # Alpha value for transparency (0-255)
+    info_surface.fill((0, 0, 0))  # Fill with black color
+
+    # Create text
+    info_text = FONT.render(f"{node.name}: Survivors - {len(node.survivors)}, Zombies - {len(node.zombies)}", True, WHITE)
+
+    # Positioning the text in the center of the info box
+    text_x = (box_width - info_text.get_width()) // 2
+    text_y = (box_height - info_text.get_height()) // 2
+
+    # Blit the text onto the info surface
+    info_surface.blit(info_text, (text_x, text_y))
+
+    # Blit the info surface onto the main window
+    win.blit(info_surface, (padding, WINDOW_HEIGHT - box_height - padding))
+    
+    # Print the info to the console
+    print(f"{node.name}: Survivors - {len(node.survivors)}, Zombies - {len(node.zombies)}")
+
 def print_state(nodes):
     print("="*60)
     for node in nodes:
@@ -351,12 +408,6 @@ def print_state(nodes):
 
 
 # --- PYGAME MAIN LOOP FUNCTIONS ---
-
-def handle_events():
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            return False
-    return True
 
 def clear_screen():
     win.fill((0, 0, 0))
@@ -419,30 +470,40 @@ if __name__ == "__main__":
         city_b: (300, 500),
         city_c: (500, 100)
     }
+    
+    current_selected_node = None
 
     running = True
     while running:
-        running = handle_events()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                current_selected_node = handle_mouse_click(node_positions)
 
         clear_screen()
-        
+
         draw_nodes_and_connections(node_positions)
         draw_agents(node_positions)
-        draw_simulation_metrics(sim)
         
-        pygame.display.update()
+        if current_selected_node:
+            display_node_info(current_selected_node)
+
+        draw_simulation_metrics(sim)
         
         print_state(cities)
 
+        pygame.display.update()
+
         sim.run(num_iterations=1)
-        
+
         if not any(len(city.survivors) for city in cities) or not any(len(city.zombies) for city in cities):
             running = False
-        
+
         pygame.time.delay(1000)
 
     pygame.quit()
-    
+        
     if any(len(city.survivors) for city in cities):
         print("Survivors win!")
     else:
@@ -482,21 +543,11 @@ if __name__ == "__main__":
 
 12. **Expansion Potential**: To augment the depth of the simulation, consider adding elements like technology progression, diplomacy avenues between human factions, hero units, and more.
 
----
-
-Please write the code referencing code 1 and code 2.
-
-Please refactor and rewrite the code to optimize the code readibility.
-
-Please provide high level suggestions for this zombie apocalypse simulation that combines agent-based approach and node approach.
 """
 
 
 """
 Your simulation combines both agent-based and node-based models, a great strategy for modeling dynamic interactions in different environments. Below are some high-level suggestions to improve and enhance the current design:
-
-1. **Enhance Modularity**:
-    - Separate different functionalities into distinct modules or files. For instance, agent-related classes (`Agent`, `Survivor`, `Zombie`) can be in one module, while the node and simulation classes can be in another.
 
 2. **Expand the Node System**:
     - Consider using a weighted graph system, so that moving from one node to another has a cost. This could affect decisions like whether to stay and fight or to move to another location.
@@ -526,23 +577,12 @@ Your simulation combines both agent-based and node-based models, a great strateg
       - Bandits raiding resources.
       - Helicopter rescues in a certain node.
 
-8. **Extend Combat Mechanics**:
-    - Implement a defense stat for survivors which can mitigate the damage from zombies.
-    - Have a range of attack powers rather than one fixed power to add unpredictability.
-
 9. **Add a GUI**:
     - Implementing a graphical user interface can provide a visual representation of nodes, their connections, agents, resources, and events. This can make the simulation more user-friendly and engaging.
-
-10. **Feedback and Learning**:
-    - Allow agents to learn from previous iterations, improving their decision-making over time using techniques like reinforcement learning.
-
-11. **Extend Setup**:
-    - Make the setup more dynamic. Instead of a fixed number of survivors and zombies, maybe have a range, or base it on the number of nodes. This way, as you expand the world, the setup can scale appropriately.
 
 12. **Configuration and Parameters**:
     - Consider externalizing configuration parameters (like the number of agents, nodes, iterations, etc.) so that they can be tweaked without modifying the code.
 
-Remember, the key is to iteratively build and test. Don't try to incorporate all suggestions at once, but rather prioritize based on your goals for the simulation.
 """
 
 
@@ -569,13 +609,7 @@ Here are a few enhancements and fixes we can apply:
 
 9. **Interactive Elements**: Allow the user to click on a node to see detailed statistics or even drop additional resources or "reinforcements" into a node.
 
-10. **Expand Random Events**: The function `random_events` exists but isn't implemented. Add events like "a horde of zombies appears" or "supply drop" that can change the course of the simulation.
-
-11. **Add Sound Effects**: Use pygame's mixer to add sounds, for instance, when zombies attack or when a node is under siege.
-
 After identifying the areas of enhancement, each can be approached step by step. Starting with pygame improvements could provide a better visualization tool, which then makes testing and tweaking the core logic easier.
-
-Would you like help with a specific section or enhancement?
 """
 
 
