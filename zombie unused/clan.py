@@ -1,78 +1,106 @@
+import math
+import random
 
-import numpy as np
 import pygame
 
-cities = [
-    {'name': 'City A', 'population': 1_000_000, 'location': (100, 100), 'color': (255, 0, 0)},
-    {'name': 'City B', 'population': 2_000_000, 'location': (400, 400), 'color': (0, 0, 255)},
-    {'name': 'City C', 'population': 1_500_000, 'location': (200, 600), 'color': (0, 255, 0)},
-    {'name': 'City D', 'population': 500_000, 'location': (700, 100), 'color': (255, 165, 0)},
-]
 
-def euclidean_distance(coord1, coord2):
-    return np.sqrt((coord1[0] - coord2[0])**2 + (coord1[1] - coord2[1])**2)
+class City:
+    def __init__(self, name, population, location, color):
+        self.name = name
+        self.population = population
+        self.location = location
+        self.color = color
 
-def gravity_model(Ci, Dj, Dij, alpha=-2): # alpha is the gravity model exponent
-    return Ci * Dj * (Dij ** alpha)
+    def draw(self, screen):
+        city_size = int(math.sqrt(self.population) / 100) if self.population > 0 else 0
+        pygame.draw.circle(screen, self.color, self.location, city_size)
 
-n_cities = len(cities)
-movements = np.zeros((n_cities, n_cities))
 
-for i in range(n_cities):
-    for j in range(n_cities):
-        if i == j:
-            movements[i, j] = 0
-        else:
-            Ci = cities[i]['population']
-            Dj = cities[j]['population']
-            Dij = euclidean_distance(cities[i]['location'], cities[j]['location'])
-            movements[i, j] = gravity_model(Ci, Dj, Dij)
+# Constants
+WIDTH, HEIGHT = 800, 600
+FPS = 10
+DOT_SPEED = 1.0 / 20
+MOVEMENT_SCALE_FACTOR = 10000
+RANDOM_RANGE = 10
+ALPHA = 3
 
-# Initialize pygame and create a window
-pygame.init()
-WIDTH, HEIGHT = 800, 800  # dimensions of the window
-win = pygame.display.set_mode((WIDTH, HEIGHT))
-clock = pygame.time.Clock()
-FPS = 10  # frames per second, higher values make the animation smoother
 
-# Game loop
-run = True
-while run:
-    clock.tick(FPS)
-    
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-            
-    # Clear the window
-    win.fill((0, 0, 0))  # Fills the window with black color
-    
-    # Draw cities
-    for city in cities:
-        pygame.draw.circle(win, city['color'], city['location'], city['population']//100000) # Change the division value to control the city size
+def initialize_cities():
+    return [
+        City("City A", 1000000., (100, 150), (255, 0, 0)),
+        City("City B", 1500000., (500, 150), (0, 255, 0)),
+        City("City C", 500000., (300, 400), (0, 0, 255)),
+        City("City D", 800000., (700, 300), (255, 255, 0))
+    ]
 
-    # Draw movements
-    for idx1 in range(n_cities):
-        for idx2 in range(n_cities):
-            if idx1 != idx2:
-                coord1 = np.array(cities[idx1]['location'])
-                coord2 = np.array(cities[idx2]['location'])
-                n_dots = int(movements[idx1, idx2] / 1000000)  # Change this value to control the number of dots
-                for dot in range(n_dots):
-                    fraction = (pygame.time.get_ticks() + dot * 100 / n_dots) % 100 / 100
-                    dot_position = coord1 + np.subtract(coord2, coord1) * fraction
-                    
-                    # Add noise to the dot_position
-                    noise = np.random.normal(scale=3, size=2)  # Change the scale value to control the noise magnitude
-                    dot_position += noise
-                    
-                    # Make sure dot_position is within the window
-                    dot_position = np.clip(dot_position, 0, np.array([WIDTH-1, HEIGHT-1]))
-                    
-                    pygame.draw.circle(win, cities[idx1]['color'], dot_position.astype(int), 3) # Change the circle radius to control the dot size
 
-    pygame.display.flip()  # Update the full display surface to the screen
+def euclidean_distance(point1, point2):
+    return math.sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
 
-pygame.quit()
 
-# city size varies as the population moves in and out of the city
+def gravity_model(pop1, pop2, distance, alpha=ALPHA):
+    try:
+        return (pop1 * pop2) / (distance ** alpha)
+    except ZeroDivisionError:
+        return 0
+
+
+def interpolate(start, end, factor):
+    return start[0] + factor * (end[0] - start[0]), start[1] + factor * (end[1] - start[1])
+
+
+def randomize_position(position, range=RANDOM_RANGE):
+    return position[0] + random.randint(-range, range), position[1] + random.randint(-range, range)
+
+
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption('City Movement Simulation')
+    clock = pygame.time.Clock()
+
+    cities = initialize_cities()
+    dots = []
+
+    running = True
+    while running:
+        screen.fill((255, 255, 255))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        for i, city_from in enumerate(cities):
+            for j, city_to in enumerate(cities):
+                if i != j:
+                    dist = euclidean_distance(city_from.location, city_to.location)
+                    move = gravity_model(city_from.population, city_to.population, dist)
+                    city_from.population = max(city_from.population - move, 0)
+                    city_to.population += move
+
+                    scaled_movement = int(move / MOVEMENT_SCALE_FACTOR)
+                    for _ in range(scaled_movement):
+                        random_start = randomize_position(city_from.location)
+                        random_end = randomize_position(city_to.location)
+                        dots.append({'from': random_start, 'to': random_end, 'progress': 0, 'color': city_from.color})
+
+        for city in cities:
+            city.draw(screen)
+
+        new_dots = []
+        for dot in dots:
+            dot['progress'] += DOT_SPEED
+            if dot['progress'] < 1.0:
+                new_dots.append(dot)
+                dot_position = interpolate(dot['from'], dot['to'], dot['progress'])
+                pygame.draw.circle(screen, dot['color'], (int(dot_position[0]), int(dot_position[1])), 2)
+
+        dots = new_dots
+        pygame.display.update()
+        clock.tick(FPS)
+
+    pygame.quit()
+
+
+if __name__ == "__main__":
+    main()

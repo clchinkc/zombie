@@ -251,3 +251,9 @@ plt.legend()
 plt.show()
 
 """
+
+"""
+Conditional Switching based on specific conditions or thresholds to represent discrete events or interventions.
+
+Incorporate stochastic element , adding a probabilistic aspect to the model. This can be particularly useful in capturing the unpredictable nature of a zombie outbreak.
+"""
