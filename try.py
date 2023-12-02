@@ -161,7 +161,7 @@ class Building:
     def __init__(self, building_type):
         self.building_type = building_type  # can be 'safe_house' or 'zombie_nest'
         if building_type == 'zombie_nest':
-            self.spawn_rate = 1  # Number of zombies spawned per iteration
+            self.spawn_rate = 0.5  # Number of zombies spawned per iteration
 
 # --- NODE CLASS ---
 
@@ -195,8 +195,8 @@ class Node:
         }
         return terrain_effects.get((self.terrain, type(agent)), 1)
 
-    def interact(self):
-        for survivor in self.survivors[:]:
+    def interact(self, x, y):
+        for survivor in self.survivors if self.survivors else []:
             move_to_node = survivor.decide_movement(self)
             if move_to_node:
                 self.transfer_survivor(survivor, move_to_node)
@@ -206,22 +206,32 @@ class Node:
                     survivor.collect_resources(resources_collected)
                     self.resources.quantity = max(0, self.resources.quantity - resources_collected)
                 self.resolve_combat(survivor)
+                
+            # Visualize healing for node type hospital
+            if self.node_type == NodeType.HOSPITAL:
+                survivor.heal(10)
+                floating_texts.append(FloatingText(f"+10 HP", (x, y - 50), GREEN, 2000))
 
-        for zombie in self.zombies[:]:
+        for zombie in self.zombies if self.zombies else []:
             move_to_node = zombie.decide_movement(self)
             if move_to_node:
                 self.transfer_zombie(zombie, move_to_node)
 
-        self.apply_specialization_effects()
-        
+        # Visualize zombie spawning
         if self.building and self.building.building_type == 'zombie_nest':
-            for _ in range(self.building.spawn_rate):
-                self.add_zombie(Zombie(50, 8))
+            if random.random() < self.building.spawn_rate:
+                new_zombie = Zombie(50, 8)
+                self.add_zombie(new_zombie)
+                floating_texts.append(FloatingText(f"Zombie Spawned", (x, y - 50), RED, 2000)) # Red for spawning
+
+        self.apply_specialization_effects()
 
         if self.resources and self.resources.quantity > 0:
             for survivor in self.survivors:
                 if self.resources.resource_type == 'medicine':
-                    survivor.heal(self.resources.use(10))
+                    healed_amount = self.resources.use(10)
+                    survivor.heal(healed_amount)
+                    floating_texts.append(FloatingText(f"+{healed_amount} HP", (x, y - 50), GREEN, 2000))  # Green for healing
                 elif self.resources.resource_type == 'weapon':
                     survivor.attack_power = min(survivor.attack_power + self.resources.use(1), 20)
                 elif self.resources.resource_type == 'food':
@@ -322,7 +332,7 @@ class Simulation:
     def run(self, num_iterations):
         for _ in range(num_iterations):
             for node in self.nodes:
-                node.interact()
+                node.interact(*node_positions[node])
             # Append to the list instead of assigning
             self.num_survivors_history.append(sum(len(node.survivors) for node in self.nodes))
 
@@ -407,6 +417,32 @@ def print_state(nodes):
         print('-'*50)
 
 
+# --- FLOATING TEXT CLASS ---
+
+class FloatingText:
+    def __init__(self, text, pos, color, duration=1000):
+        self.text = text
+        self.pos = list(pos)
+        self.color = color
+        self.start_time = pygame.time.get_ticks()
+        self.duration = duration
+
+    def draw(self, win):
+        # Calculate alpha based on time
+        current_time = pygame.time.get_ticks()
+        time_passed = current_time - self.start_time
+        if time_passed < self.duration:
+            alpha = max(255 - (255 * time_passed // self.duration), 0)
+            text_surface = FONT.render(self.text, True, self.color)
+            text_surface.set_alpha(alpha)
+            win.blit(text_surface, self.pos)
+            self.pos[1] -= 0.5  # Move text up
+
+    def is_expired(self):
+        return pygame.time.get_ticks() - self.start_time > self.duration
+
+
+
 # --- PYGAME MAIN LOOP FUNCTIONS ---
 
 def clear_screen():
@@ -475,6 +511,8 @@ if __name__ == "__main__":
 
     running = True
     while running:
+        floating_texts = []
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -485,15 +523,18 @@ if __name__ == "__main__":
 
         draw_nodes_and_connections(node_positions)
         draw_agents(node_positions)
-        
+
+        sim.run(num_iterations=1)
+
+        for text in floating_texts:
+            text.draw(win)
+
         if current_selected_node:
             display_node_info(current_selected_node)
 
         draw_simulation_metrics(sim)
-        
-        print_state(cities)
-
         pygame.display.update()
+        print_state(cities)
 
         sim.run(num_iterations=1)
 
