@@ -4,6 +4,7 @@ from collections import deque
 from enum import Enum
 
 import pygame
+from matplotlib import pyplot as plt
 
 # Initialize pygame
 pygame.init()
@@ -13,7 +14,7 @@ WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
 FONT = pygame.font.SysFont("Arial", 20)
 
 # Window settings
-win = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+win = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.DOUBLEBUF | pygame.HWSURFACE)
 pygame.display.set_caption("Zombie Apocalypse Simulation")
 
 # --- COLORS ---
@@ -40,11 +41,34 @@ class Agent:
     def __init__(self, health, attack_power):
         self.id = Agent.id_counter
         Agent.id_counter += 1
+        self.name = f"Agent{self.id}"
         self.health = health
         self.attack_power = attack_power
         self.is_alive = True
         self.floating_texts = []
         self.total_damage_received = 0
+        self.health_surface = FONT.render(str(self.health), True, WHITE)
+        self.health_bar_surface = pygame.Surface((40, 5))
+        self.health_bar_surface.fill(RED)  # Fill with red color
+        self.health_bar_rect = self.health_bar_surface.get_rect()
+        self.update_health_bar()
+
+    def update_health_surface(self):
+        self.health_surface = FONT.render(str(round(self.health)), True, WHITE)
+
+    def update_health_bar(self):
+        filled_width = int(self.health_bar_surface.get_width() * (self.health / self.MAX_HEALTH))
+        self.health_bar_surface.fill(RED)
+        self.health_bar_surface.fill(GREEN, (0, 0, filled_width, self.health_bar_surface.get_height()))
+
+    def draw(self, agent_color, x, y, offset=0, i=0, total=1):
+        angle = i * 2 * math.pi / total
+        distance = 50 + offset
+        dx = int(math.cos(angle) * distance)
+        dy = int(math.sin(angle) * distance)
+        pygame.draw.circle(win, agent_color, (x, y), 10)
+        win.blit(self.health_surface, (x - self.health_surface.get_width()//2, y - self.health_surface.get_height() - 15))
+        win.blit(self.health_bar_surface, (x - self.health_bar_rect.width//2, y - self.health_bar_rect.height - 10))
 
     def attack(self):
         return random.randint(1, self.attack_power)
@@ -59,6 +83,7 @@ class Agent:
             self.is_alive = False
             self.health = 0
         self.floating_texts.append(FloatingText(f"-{damage} HP", (x, y - 20), RED))
+        notification_manager.add_notification(f"{self.name} took {damage} damage at {x}, {y}")
 
     def accumulate_damage(self, damage):
         self.total_damage_received += damage
@@ -71,10 +96,17 @@ class Agent:
             # Apply damage or healing
             if net_effect > 0:
                 self.take_damage(net_effect, x, y)
+                self.update_health_surface()
+                self.update_health_bar()
                 self.floating_texts.append(FloatingText(f"-{net_effect} HP", (x, y - 20), RED))
+                notification_manager.add_notification(f"{self.name} took {net_effect} damage at {x}, {y}")
+                
             else:
                 self.heal(-net_effect, x, y)
+                self.update_health_surface()
+                self.update_health_bar()
                 self.floating_texts.append(FloatingText(f"+{-net_effect} HP", (x, y - 20), GREEN))
+                notification_manager.add_notification(f"{self.name} healed {-net_effect} HP at {x}, {y}")
 
             # Reset the accumulated damage
             self.total_damage_received = 0
@@ -93,6 +125,7 @@ class Survivor(Agent):
 
     def collect_resources(self, amount):
         self.morale += min(amount, 100 - self.morale)
+        notification_manager.add_notification(f"{self.name} collected {amount} resources")
 
     def display_resource_interaction(self, resource_type, amount, x, y):
         if amount > 0:
@@ -204,6 +237,13 @@ class Node:
         self.node_type = node_type
         self.resources = resources
         self.building = building
+        self.name_surface = FONT.render(self.name, True, WHITE)
+
+    def draw(self, x, y):
+        color = get_node_color(self)
+        size = 20 + 2 * self.resources.quantity if self.resources else 20
+        pygame.draw.circle(win, color, (x, y), size)
+        win.blit(self.name_surface, (x - self.name_surface.get_width()//2, y - self.name_surface.get_height()//2))
 
     def add_connection(self, node):
         if node not in self.connections:
@@ -256,8 +296,10 @@ class Node:
             survivor.accumulate_damage(-healed_amount)
         elif self.resources.resource_type == 'weapon':
             survivor.attack_power = min(survivor.attack_power + self.resources.use(1), 20)
+            notification_manager.add_notification(f"{survivor.name} increased attack power at {x}, {y}")
         elif self.resources.resource_type == 'food':
             survivor.morale = min(100, survivor.morale + self.resources.use(5))
+            notification_manager.add_notification(f"{survivor.name} increased morale at {x}, {y}")
 
         # Collecting resources
         if self.resources:
@@ -388,19 +430,9 @@ def get_node_color(node):
         return (255, 0, 0)  # Red for zombie nest
     return (128, 128, 128)  # Default color
 
-def draw_node(node, x, y):
-    color = get_node_color(node)
-    size = 20 + 2 * node.resources.quantity if node.resources else 20
-    pygame.draw.circle(win, color, (x, y), size)
-    text = FONT.render(node.name, True, WHITE)
-    win.blit(text, (x - text.get_width()//2, y - text.get_height()//2))
 
-def draw_agent(agent_color, x, y, offset=0, i=0, total=1):
-    angle = i * 2 * math.pi / total
-    distance = 50 + offset
-    dx = int(math.cos(angle) * distance)
-    dy = int(math.sin(angle) * distance)
-    pygame.draw.circle(win, agent_color, (x + dx, y + dy), 10)
+
+
 
 def draw_connection(pos1, pos2):
     pygame.draw.line(win, WHITE, pos1, pos2, 3)
@@ -440,9 +472,6 @@ def display_node_info(node):
 
     # Blit the info surface onto the main window
     win.blit(info_surface, (padding, WINDOW_HEIGHT - box_height - padding))
-    
-    # Print the info to the console
-    print(f"{node.name}: Survivors - {len(node.survivors)}, Zombies - {len(node.zombies)}")
 
 def print_state(nodes):
     print("="*60)
@@ -471,6 +500,31 @@ class FloatingText:
         self.pos[1] = new_y - 20
 
 
+# --- NOTIFICATION MANAGER CLASS ---
+
+class NotificationManager:
+    def __init__(self, start_x, start_y, width, height):
+        self.notifications = deque(maxlen=10)  # Adjust maxlen as needed
+        self.start_x = start_x
+        self.start_y = start_y
+        self.width = width
+        self.height = height
+        self.notification_index = 0
+
+    def add_notification(self, message):
+        indexed_message = f"{self.notification_index}: {message}"
+        self.notifications.appendleft(indexed_message)
+        self.notification_index += 1
+
+    def draw_notifications(self):
+        for i, message in enumerate(self.notifications):
+            text = FONT.render(message, True, WHITE)
+            # Inverted order: newer notifications are at the bottom
+            text_y = self.start_y - i * 20
+            if text_y > 20:  # Ensure it stays above the bottom edge
+                win.blit(text, (self.start_x, text_y))
+
+
 # --- PYGAME MAIN LOOP FUNCTIONS ---
 
 def clear_screen():
@@ -478,37 +532,13 @@ def clear_screen():
 
 def draw_nodes_and_connections(node_positions):
     for node, position in node_positions.items():
-        draw_node(node, *position)
+        node.draw(*position)
         for connection in node.connections:
             draw_connection(position, node_positions[connection])
 
-def draw_agent_health(agent, x, y, offset=0, i=0, total=1):
-    angle = i * 2 * math.pi / total
-    distance = 50 + offset
-    dx = int(math.cos(angle) * distance)
-    dy = int(math.sin(angle) * distance)
-    
-    health_text = FONT.render(str(round(agent.health)), True, WHITE)
-    win.blit(health_text, (x + dx - health_text.get_width()//2, y + dy - health_text.get_height() - 15))
 
-def draw_health_bar(agent, x, y, offset=0, i=0, total=1, bar_width=40, bar_height=5):
-    angle = i * 2 * math.pi / total
-    distance = 50 + offset
-    dx = int(math.cos(angle) * distance)
-    dy = int(math.sin(angle) * distance)
 
-    # Calculate the position for the health bar
-    health_bar_x = x + dx - bar_width // 2
-    health_bar_y = y + dy - bar_height - 20
 
-    # Draw the background of the health bar (red for depleted health)
-    pygame.draw.rect(win, RED, [health_bar_x, health_bar_y, bar_width, bar_height])
-
-    # Calculate the width of the filled part of the health bar (green for current health)
-    filled_width = int(bar_width * (agent.health / agent.MAX_HEALTH))
-
-    # Draw the filled part of the health bar
-    pygame.draw.rect(win, GREEN, [health_bar_x, health_bar_y, filled_width, bar_height])
 
 
 def process_floating_texts(agent, position):
@@ -525,22 +555,34 @@ def draw_agents(node_positions):
         zombie_positions = node.calculate_agent_positions(*position, num_agents, 40)
 
         for i, survivor in enumerate(node.survivors):
-            draw_agent(GREEN, *survivor_positions[i])
-            draw_agent_health(survivor, *survivor_positions[i])
-            draw_health_bar(survivor, *survivor_positions[i])
+            survivor.draw(GREEN, *survivor_positions[i])
             process_floating_texts(survivor, survivor_positions[i])
 
         for i, zombie in enumerate(node.zombies):
-            draw_agent(RED, *zombie_positions[i])
-            draw_agent_health(zombie, *zombie_positions[i])
-            draw_health_bar(zombie, *zombie_positions[i])
+            zombie.draw(RED, *zombie_positions[i])
             process_floating_texts(zombie, zombie_positions[i])
-
 
 def draw_simulation_metrics(sim):
     if sim.num_survivors_history:
         draw_metrics(sim.num_survivors_history[-1])
 
+
+def redraw_game_window():
+    # Clear screen at the start of each frame
+    clear_screen()
+
+    # Draw the nodes, connections, and agents
+    draw_nodes_and_connections(node_positions)
+    draw_agents(node_positions)
+
+    # Additional drawing functions like displaying node info or metrics
+    if current_selected_node:
+        display_node_info(current_selected_node)
+    draw_simulation_metrics(sim)
+    notification_manager.draw_notifications()
+
+    # Update the screen with what we've drawn
+    pygame.display.update()
 
 # --- MAIN LOOP ---
 
@@ -571,8 +613,10 @@ if __name__ == "__main__":
     }
     
     current_selected_node = None
+    notification_manager = NotificationManager(WINDOW_WIDTH - 200, WINDOW_HEIGHT - 20, 200, WINDOW_HEIGHT)
 
     running = True
+    clock = pygame.time.Clock()
     while running:
         # Handle events like quit or mouse click
         for event in pygame.event.get():
@@ -581,26 +625,16 @@ if __name__ == "__main__":
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 current_selected_node = handle_mouse_click(node_positions)
 
-        # Clear screen at the start of each frame
-        clear_screen()
-
         # Interact with nodes
         for node in sim.nodes:
             node.interact(*node_positions[node])
+            notification_manager.add_notification(f"{node.name} interaction processed")
+
         # Update simulation history
         sim.num_survivors_history.append(sum(len(node.survivors) for node in sim.nodes))
 
-        # Draw the nodes, connections, and agents
-        draw_nodes_and_connections(node_positions)
-        draw_agents(node_positions)
-
-        # Additional drawing functions like displaying node info or metrics
-        if current_selected_node:
-            display_node_info(current_selected_node)
-        draw_simulation_metrics(sim)
-
-        # Update the screen with what we've drawn
-        pygame.display.flip()
+        # Redraw the entire game window
+        redraw_game_window()
 
         # Print the current state to the console
         print_state(cities)
@@ -609,10 +643,17 @@ if __name__ == "__main__":
         if not any(len(city.survivors) for city in cities) or not any(len(city.zombies) for city in cities):
             running = False
 
-        # Delay to control frame rate
-        pygame.time.delay(1000)
+        # Tick the clock
+        clock.tick(1)
 
     pygame.quit()
+
+    # End of simulation summary
+    plt.plot(sim.num_survivors_history)
+    plt.title("Survivor Count Over Time")
+    plt.xlabel("Iterations")
+    plt.ylabel("Number of Survivors")
+    plt.show()
         
     if any(len(city.survivors) for city in cities):
         print("Survivors win!")
