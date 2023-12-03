@@ -94,6 +94,13 @@ class Survivor(Agent):
     def collect_resources(self, amount):
         self.morale += min(amount, 100 - self.morale)
 
+    def display_resource_interaction(self, resource_type, amount, x, y):
+        if amount > 0:
+            text = f"Collected {amount} {resource_type}"
+        else:
+            text = f"Used {-amount} {resource_type}"
+        self.floating_texts.append(FloatingText(text, (x, y - 40), BLUE))
+
     def decide_movement(self, current_node):
         if not self.is_alive:
             return None
@@ -253,9 +260,11 @@ class Node:
             survivor.morale = min(100, survivor.morale + self.resources.use(5))
 
         # Collecting resources
-        resources_collected = min(self.resources.quantity, 10)
-        survivor.collect_resources(resources_collected)
-        self.resources.quantity = max(0, self.resources.quantity - resources_collected)
+        if self.resources:
+            resources_collected = min(self.resources.quantity, 10)
+            survivor.collect_resources(resources_collected)
+            survivor.display_resource_interaction(self.resources.resource_type, resources_collected, x, y)
+            self.resources.quantity = max(0, self.resources.quantity - resources_collected)
 
     def resolve_combat(self, survivor_positions, zombie_positions):
         # First, calculate the total damage for each agent
@@ -405,8 +414,7 @@ def handle_mouse_click(node_positions):
     for node, position in node_positions.items():
         distance = math.hypot(mouse_pos[0] - position[0], mouse_pos[1] - position[1])
         if distance < 20:  # Assuming the radius of a node circle is 20
-            current_selected_node = node
-            return current_selected_node
+            return node
     return None
 
 def display_node_info(node):
@@ -483,6 +491,26 @@ def draw_agent_health(agent, x, y, offset=0, i=0, total=1):
     health_text = FONT.render(str(round(agent.health)), True, WHITE)
     win.blit(health_text, (x + dx - health_text.get_width()//2, y + dy - health_text.get_height() - 15))
 
+def draw_health_bar(agent, x, y, offset=0, i=0, total=1, bar_width=40, bar_height=5):
+    angle = i * 2 * math.pi / total
+    distance = 50 + offset
+    dx = int(math.cos(angle) * distance)
+    dy = int(math.sin(angle) * distance)
+
+    # Calculate the position for the health bar
+    health_bar_x = x + dx - bar_width // 2
+    health_bar_y = y + dy - bar_height - 20
+
+    # Draw the background of the health bar (red for depleted health)
+    pygame.draw.rect(win, RED, [health_bar_x, health_bar_y, bar_width, bar_height])
+
+    # Calculate the width of the filled part of the health bar (green for current health)
+    filled_width = int(bar_width * (agent.health / agent.MAX_HEALTH))
+
+    # Draw the filled part of the health bar
+    pygame.draw.rect(win, GREEN, [health_bar_x, health_bar_y, filled_width, bar_height])
+
+
 def process_floating_texts(agent, position):
     for text in agent.floating_texts:
         text.update(*position)
@@ -499,11 +527,13 @@ def draw_agents(node_positions):
         for i, survivor in enumerate(node.survivors):
             draw_agent(GREEN, *survivor_positions[i])
             draw_agent_health(survivor, *survivor_positions[i])
+            draw_health_bar(survivor, *survivor_positions[i])
             process_floating_texts(survivor, survivor_positions[i])
 
         for i, zombie in enumerate(node.zombies):
             draw_agent(RED, *zombie_positions[i])
             draw_agent_health(zombie, *zombie_positions[i])
+            draw_health_bar(zombie, *zombie_positions[i])
             process_floating_texts(zombie, zombie_positions[i])
 
 
