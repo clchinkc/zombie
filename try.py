@@ -35,6 +35,7 @@ class NodeType(Enum):
 
 class Agent:
     id_counter = 0
+    MAX_HEALTH = 100
 
     def __init__(self, health, attack_power):
         self.id = Agent.id_counter
@@ -42,15 +43,41 @@ class Agent:
         self.health = health
         self.attack_power = attack_power
         self.is_alive = True
+        self.floating_texts = []
+        self.total_damage_received = 0
 
     def attack(self):
         return random.randint(1, self.attack_power)
 
-    def take_damage(self, damage):
+    def heal(self, amount, x, y):
+        self.health += amount
+        self.health = min(self.health, self.MAX_HEALTH)
+
+    def take_damage(self, damage, x, y):
         self.health -= damage
         if self.health <= 0:
             self.is_alive = False
             self.health = 0
+        self.floating_texts.append(FloatingText(f"-{damage} HP", (x, y - 20), RED))
+
+    def accumulate_damage(self, damage):
+        self.total_damage_received += damage
+
+    def apply_accumulated_damage(self, x, y):
+        if self.total_damage_received != 0:
+            # Round to 1 decimal place
+            net_effect = round(self.total_damage_received, 1)
+
+            # Apply damage or healing
+            if net_effect > 0:
+                self.take_damage(net_effect, x, y)
+                self.floating_texts.append(FloatingText(f"-{net_effect} HP", (x, y - 20), RED))
+            else:
+                self.heal(-net_effect, x, y)
+                self.floating_texts.append(FloatingText(f"+{-net_effect} HP", (x, y - 20), GREEN))
+
+            # Reset the accumulated damage
+            self.total_damage_received = 0
 
     def decide_movement(self, current_node):
         return None
@@ -58,16 +85,11 @@ class Agent:
 # --- SURVIVOR CLASSES ---
 
 class Survivor(Agent):
-    MAX_HEALTH = 100
 
     def __init__(self, health, attack_power, morale):
         super().__init__(health, attack_power)
         self.name = f"Survivor{self.id}"
         self.morale = morale
-
-    def heal(self, amount):
-        self.health += amount
-        self.health = min(self.health, self.MAX_HEALTH)
 
     def collect_resources(self, amount):
         self.morale += min(amount, 100 - self.morale)
@@ -196,77 +218,91 @@ class Node:
         return terrain_effects.get((self.terrain, type(agent)), 1)
 
     def interact(self, x, y):
-        for survivor in self.survivors if self.survivors else []:
+        for survivor in self.survivors:
             move_to_node = survivor.decide_movement(self)
             if move_to_node:
                 self.transfer_survivor(survivor, move_to_node)
             else:
-                if self.resources and self.resources.quantity > 0:
-                    resources_collected = min(self.resources.quantity, 10)
-                    survivor.collect_resources(resources_collected)
-                    self.resources.quantity = max(0, self.resources.quantity - resources_collected)
-                self.resolve_combat(survivor)
-                
-            # Visualize healing for node type hospital
-            if self.node_type == NodeType.HOSPITAL:
-                survivor.heal(10)
-                floating_texts.append(FloatingText(f"+10 HP", (x, y - 50), GREEN, 2000))
+                self.handle_resources(survivor, x, y)
 
-        for zombie in self.zombies if self.zombies else []:
+        for zombie in self.zombies:
             move_to_node = zombie.decide_movement(self)
             if move_to_node:
                 self.transfer_zombie(zombie, move_to_node)
 
-        # Visualize zombie spawning
+        self.apply_specialization_effects(x, y)
+        self.resolve_combat(self.calculate_agent_positions(x, y, max(len(self.survivors), len(self.zombies)), offset=20),
+                            self.calculate_agent_positions(x, y, max(len(self.survivors), len(self.zombies)), offset=40))
+
         if self.building and self.building.building_type == 'zombie_nest':
             if random.random() < self.building.spawn_rate:
                 new_zombie = Zombie(50, 8)
                 self.add_zombie(new_zombie)
-                floating_texts.append(FloatingText(f"Zombie Spawned", (x, y - 50), RED, 2000)) # Red for spawning
+                new_zombie.floating_texts.append(FloatingText("Spawned", (x, y - 20), RED))
 
-        self.apply_specialization_effects()
+    def handle_resources(self, survivor, x, y):
+        if not self.resources or self.resources.quantity == 0:
+            return
 
-        if self.resources and self.resources.quantity > 0:
-            for survivor in self.survivors:
-                if self.resources.resource_type == 'medicine':
-                    healed_amount = self.resources.use(10)
-                    survivor.heal(healed_amount)
-                    floating_texts.append(FloatingText(f"+{healed_amount} HP", (x, y - 50), GREEN, 2000))  # Green for healing
-                elif self.resources.resource_type == 'weapon':
-                    survivor.attack_power = min(survivor.attack_power + self.resources.use(1), 20)
-                elif self.resources.resource_type == 'food':
-                    survivor.morale = min(100, survivor.morale + self.resources.use(5))
+        if self.resources.resource_type == 'medicine':
+            healed_amount = self.resources.use(10)
+            survivor.accumulate_damage(-healed_amount)
+        elif self.resources.resource_type == 'weapon':
+            survivor.attack_power = min(survivor.attack_power + self.resources.use(1), 20)
+        elif self.resources.resource_type == 'food':
+            survivor.morale = min(100, survivor.morale + self.resources.use(5))
 
-    def resolve_combat(self, survivor):
-        for zombie in self.zombies[:]:
+        # Collecting resources
+        resources_collected = min(self.resources.quantity, 10)
+        survivor.collect_resources(resources_collected)
+        self.resources.quantity = max(0, self.resources.quantity - resources_collected)
+
+    def resolve_combat(self, survivor_positions, zombie_positions):
+        # First, calculate the total damage for each agent
+        for i, survivor in enumerate(self.survivors):
+            for j, zombie in enumerate(self.zombies):
+                if not survivor.is_alive or not zombie.is_alive:
+                    continue
+
+                # Survivor attacks zombie
+                damage_to_zombie = survivor.attack() * self.terrain_impact(survivor)
+                zombie.accumulate_damage(damage_to_zombie)
+
+                # Zombie attacks survivor
+                damage_to_survivor = zombie.attack() * self.terrain_impact(zombie)
+                survivor.accumulate_damage(damage_to_survivor)
+
+        # Now, apply the accumulated damage and handle agent removal if needed
+        for i, survivor in enumerate(self.survivors):
+            survivor_x, survivor_y = survivor_positions[i]
+            survivor.apply_accumulated_damage(survivor_x, survivor_y)
             if not survivor.is_alive:
-                break
-
-            damage_to_zombie = survivor.attack() * self.terrain_impact(survivor)
-            print(f"Survivor {survivor.name} attacks Zombie {zombie.name} for {damage_to_zombie} damage.")  # Debug statement
-            zombie.take_damage(damage_to_zombie)
-
-            if not zombie.is_alive:
-                print(f"Zombie {zombie.name} is defeated!")  # Debug statement
-                self.zombies.remove(zombie)
-                survivor.morale = min(100, survivor.morale + 10)
-                continue
-
-            damage_to_survivor = zombie.attack() * self.terrain_impact(zombie)
-            print(f"Zombie {zombie.name} attacks Survivor {survivor.name} for {damage_to_survivor} damage.")  # Debug statement
-            survivor.take_damage(damage_to_survivor)
-
-            if not survivor.is_alive:
-                print(f"Survivor {survivor.name} is defeated!")  # Debug statement
                 self.survivors.remove(survivor)
                 for other_survivor in self.survivors:
                     other_survivor.morale = max(0, other_survivor.morale - 10)
 
+        for j, zombie in enumerate(self.zombies):
+            zombie_x, zombie_y = zombie_positions[j]
+            zombie.apply_accumulated_damage(zombie_x, zombie_y)
+            if not zombie.is_alive:
+                self.zombies.remove(zombie)
+                for survivor in self.survivors:
+                    survivor.morale = min(100, survivor.morale + 10)
 
-    def apply_specialization_effects(self):
+    def calculate_agent_positions(self, x, y, num_agents, offset=0):
+        positions = []
+        for i in range(num_agents):
+            angle = i * 2 * math.pi / num_agents
+            distance = 50 + offset
+            dx = int(math.cos(angle) * distance)
+            dy = int(math.sin(angle) * distance)
+            positions.append((x + dx, y + dy))
+        return positions
+
+    def apply_specialization_effects(self, x, y):
         if self.node_type == NodeType.HOSPITAL:
             for survivor in self.survivors:
-                survivor.heal(10)
+                survivor.accumulate_damage(-10)
         elif self.node_type == NodeType.ARMORY:
             for survivor in self.survivors:
                 survivor.attack_power = min(survivor.attack_power + 5, 20)
@@ -328,13 +364,6 @@ class Simulation:
             random.choice(self.nodes).add_survivor(Survivor(50, 8, 50))
         for _ in range(num_zombies):
             random.choice(self.nodes).add_zombie(Zombie(50, 8))
-
-    def run(self, num_iterations):
-        for _ in range(num_iterations):
-            for node in self.nodes:
-                node.interact(*node_positions[node])
-            # Append to the list instead of assigning
-            self.num_survivors_history.append(sum(len(node.survivors) for node in self.nodes))
 
 
 # Drawing Functions
@@ -420,27 +449,18 @@ def print_state(nodes):
 # --- FLOATING TEXT CLASS ---
 
 class FloatingText:
-    def __init__(self, text, pos, color, duration=1000):
+    def __init__(self, text, pos, color):
         self.text = text
         self.pos = list(pos)
         self.color = color
-        self.start_time = pygame.time.get_ticks()
-        self.duration = duration
 
     def draw(self, win):
-        # Calculate alpha based on time
-        current_time = pygame.time.get_ticks()
-        time_passed = current_time - self.start_time
-        if time_passed < self.duration:
-            alpha = max(255 - (255 * time_passed // self.duration), 0)
-            text_surface = FONT.render(self.text, True, self.color)
-            text_surface.set_alpha(alpha)
-            win.blit(text_surface, self.pos)
-            self.pos[1] -= 0.5  # Move text up
+        text_surface = FONT.render(self.text, True, self.color)
+        win.blit(text_surface, self.pos)
 
-    def is_expired(self):
-        return pygame.time.get_ticks() - self.start_time > self.duration
-
+    def update(self, new_x, new_y):
+        self.pos[0] = new_x
+        self.pos[1] = new_y - 20
 
 
 # --- PYGAME MAIN LOOP FUNCTIONS ---
@@ -463,15 +483,28 @@ def draw_agent_health(agent, x, y, offset=0, i=0, total=1):
     health_text = FONT.render(str(round(agent.health)), True, WHITE)
     win.blit(health_text, (x + dx - health_text.get_width()//2, y + dy - health_text.get_height() - 15))
 
+def process_floating_texts(agent, position):
+    for text in agent.floating_texts:
+        text.update(*position)
+        text.draw(win)
+    agent.floating_texts.clear()
+
 def draw_agents(node_positions):
     for node, position in node_positions.items():
-        num_agents = len(node.survivors) + len(node.zombies)
+        num_agents = max(len(node.survivors), len(node.zombies))
+
+        survivor_positions = node.calculate_agent_positions(*position, num_agents, 20)
+        zombie_positions = node.calculate_agent_positions(*position, num_agents, 40)
+
         for i, survivor in enumerate(node.survivors):
-            draw_agent(GREEN, *position, offset=20, i=i, total=num_agents)
-            draw_agent_health(survivor, *position, offset=20, i=i, total=num_agents)
+            draw_agent(GREEN, *survivor_positions[i])
+            draw_agent_health(survivor, *survivor_positions[i])
+            process_floating_texts(survivor, survivor_positions[i])
+
         for i, zombie in enumerate(node.zombies):
-            draw_agent(RED, *position, offset=40, i=i, total=num_agents)
-            draw_agent_health(zombie, *position, offset=40, i=i, total=num_agents)
+            draw_agent(RED, *zombie_positions[i])
+            draw_agent_health(zombie, *zombie_positions[i])
+            process_floating_texts(zombie, zombie_positions[i])
 
 
 def draw_simulation_metrics(sim):
@@ -511,36 +544,42 @@ if __name__ == "__main__":
 
     running = True
     while running:
-        floating_texts = []
-
+        # Handle events like quit or mouse click
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 current_selected_node = handle_mouse_click(node_positions)
 
+        # Clear screen at the start of each frame
         clear_screen()
 
+        # Interact with nodes
+        for node in sim.nodes:
+            node.interact(*node_positions[node])
+        # Update simulation history
+        sim.num_survivors_history.append(sum(len(node.survivors) for node in sim.nodes))
+
+        # Draw the nodes, connections, and agents
         draw_nodes_and_connections(node_positions)
         draw_agents(node_positions)
 
-        sim.run(num_iterations=1)
-
-        for text in floating_texts:
-            text.draw(win)
-
+        # Additional drawing functions like displaying node info or metrics
         if current_selected_node:
             display_node_info(current_selected_node)
-
         draw_simulation_metrics(sim)
-        pygame.display.update()
+
+        # Update the screen with what we've drawn
+        pygame.display.flip()
+
+        # Print the current state to the console
         print_state(cities)
 
-        sim.run(num_iterations=1)
-
+        # Check for end conditions
         if not any(len(city.survivors) for city in cities) or not any(len(city.zombies) for city in cities):
             running = False
 
+        # Delay to control frame rate
         pygame.time.delay(1000)
 
     pygame.quit()
@@ -617,9 +656,6 @@ Your simulation combines both agent-based and node-based models, a great strateg
       - Natural disasters.
       - Bandits raiding resources.
       - Helicopter rescues in a certain node.
-
-9. **Add a GUI**:
-    - Implementing a graphical user interface can provide a visual representation of nodes, their connections, agents, resources, and events. This can make the simulation more user-friendly and engaging.
 
 12. **Configuration and Parameters**:
     - Consider externalizing configuration parameters (like the number of agents, nodes, iterations, etc.) so that they can be tweaked without modifying the code.
