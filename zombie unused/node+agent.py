@@ -739,8 +739,6 @@ Your zombie apocalypse simulation combines the agent-based model (ABM) and node-
 
 Here are a few enhancements and fixes we can apply:
 
-1. **Make Simulation Turn-based**: The pygame loop runs continuously. To better see the simulation, it might be beneficial to make the simulation turn-based, where each turn proceeds either by a button press or a timer.
-
 2. **Enhance Zombie Movement**: Currently, if zombies don't find any survivors in their node, they just randomly move. A more strategic move would be for zombies to move closer to the largest group of survivors. 
 
 3. **Better Terrain Effects**: The `terrain_impact` is a great idea but needs to be expanded. For example, mountains might be difficult for both survivors and zombies, forests might provide cover for survivors, etc.
@@ -755,7 +753,7 @@ Here are a few enhancements and fixes we can apply:
 
 8. **Pygame Visual Enhancements**: Use images for zombies and survivors instead of circles. Additionally, provide UI elements to control the simulation (e.g., pause, speed up, restart).
 
-9. **Interactive Elements**: Allow the user to click on a node to see detailed statistics or even drop additional resources or "reinforcements" into a node.
+9. **Interactive Elements**: Allow the user to drop additional resources or "reinforcements" into a node.
 
 After identifying the areas of enhancement, each can be approached step by step. Starting with pygame improvements could provide a better visualization tool, which then makes testing and tweaking the core logic easier.
 """
@@ -763,6 +761,10 @@ After identifying the areas of enhancement, each can be approached step by step.
 
 """
 You can expand on this foundation by adding more features, mechanics, and elements, such as the ability for survivors to form groups, more complex terrains, the introduction of different types of zombies, building defenses, etc.
+
+Improving resource usage logic in the Node class for better game balance.
+
+Distinguish node type and building.
 """
 
 
