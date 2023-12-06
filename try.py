@@ -73,7 +73,7 @@ class GridEnvironment:
 
 
 # Temporal-Difference Learning (TD) - Q-Learning
-def q_learning(env, episodes, learning_rate, discount_factor, initial_epsilon, min_epsilon, epsilon_decay, policy_store_interval=10, simulation_interval=100):
+def q_learning(env, episodes, initial_learning_rate, min_learning_rate, learning_rate_decay, discount_factor, initial_epsilon, min_epsilon, epsilon_decay, policy_store_interval=10, simulation_interval=100):
     def state_action_hash(state, action):
         return (state.position, action.move)
 
@@ -114,6 +114,7 @@ def q_learning(env, episodes, learning_rate, discount_factor, initial_epsilon, m
         q_table[state_action_hash(env.safe_zone, a)] = env.safe_zone_reward
     
     epsilon = initial_epsilon
+    learning_rate = initial_learning_rate
     q_learning_snapshots = []
     simulation_rewards = []
 
@@ -137,7 +138,7 @@ def q_learning(env, episodes, learning_rate, discount_factor, initial_epsilon, m
         if episode % policy_store_interval == 0 or episode == episodes - 1:
             best_policy = convert_to_policy(q_table, env)
             q_learning_snapshots.append(best_policy)
-            logger.info(f'Episode {episode + 1}, Total Reward: {total_reward}, Steps: {steps}, Epsilon: {epsilon:.4f}')
+            logger.info(f'Episode {episode + 1}, Total Reward: {total_reward}, Steps: {steps}, Epsilon: {epsilon:.4f}, Learning Rate: {learning_rate:.4f}')
 
         if episode % simulation_interval == 0 or episode == episodes - 1:
             # Simulate episodes with the current policy
@@ -146,6 +147,7 @@ def q_learning(env, episodes, learning_rate, discount_factor, initial_epsilon, m
             simulation_rewards.append(rewards)
 
         epsilon = max(min_epsilon, epsilon * epsilon_decay)
+        learning_rate = max(min_learning_rate, learning_rate * learning_rate_decay)
     
     final_policy_q_learning = convert_to_policy(q_table, env)
     
@@ -347,7 +349,7 @@ def plot_value_function(env, V, title, ax=None):
     # Loop over data dimensions and create text annotations.
     for i in range(V.shape[0]):
         for j in range(V.shape[1]):
-            color = 'black'
+            color = 'black' if V[i, j] < V.max() / 2 else 'white'
             current_position = (i, j)
 
             if current_position in [z.position for z in env.zombie_positions]:
@@ -450,7 +452,7 @@ def plot_reward_curves(reward_curves, labels):
 env = GridEnvironment(grid_size=5, safe_zone=(0, 0), zombie_positions=[(2, 2), (1, 3)], start_position=(4, 4))
 
 # Q-Learning
-final_policy_q_learning, q_learning_snapshots, q_learning_sim_rewards = q_learning(env, episodes=1000, learning_rate=0.1, discount_factor=0.9, initial_epsilon=0.5, min_epsilon=0.01, epsilon_decay=0.99)
+final_policy_q_learning, q_learning_snapshots, q_learning_sim_rewards = q_learning(env, episodes=1000, initial_learning_rate=0.1, min_learning_rate=0.01, learning_rate_decay=0.99, discount_factor=0.9, initial_epsilon=0.5, min_epsilon=0.01, epsilon_decay=0.99)
 
 # Policy Iteration
 final_policy_dp, policy_snapshots, policy_iter_sim_rewards = policy_iteration(env, episodes=1000, gamma=0.9)
