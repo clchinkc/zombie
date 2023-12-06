@@ -74,44 +74,41 @@ class GridEnvironment:
 
 # Temporal-Difference Learning (TD) - Q-Learning
 def q_learning(env, episodes, initial_learning_rate, min_learning_rate, learning_rate_decay, discount_factor, initial_epsilon, min_epsilon, epsilon_decay, policy_store_interval=10, simulation_interval=100):
-    def state_action_hash(state, action):
-        return (state.position, action.move)
+    def state_action_index(state, action):
+        return state.position[0], state.position[1], env.actions.index(action)
 
     def choose_action(state, q_table, epsilon):
         if random.uniform(0, 1) < epsilon:
             return random.choice(env.actions)  # Explore
         else:
             # Exploit
-            return max(env.actions, key=lambda a: q_table[state_action_hash(state, a)])
+            state_index = state.position[0], state.position[1]
+            return env.actions[np.argmax(q_table[state_index])]
 
     def update_q_table(state, action, reward, next_state, q_table):
-        sa_hash = state_action_hash(state, action)
-        next_max = max(q_table[state_action_hash(next_state, a)] for a in env.actions)
-        q_table[sa_hash] = (1 - learning_rate) * q_table[sa_hash] + learning_rate * (reward + discount_factor * next_max)
-        # Set values for terminal states
-        if next_state in env.zombie_positions:
-            for a in env.actions:
-                q_table[state_action_hash(next_state, a)] = env.zombie_penalty
-        elif next_state == env.safe_zone:
-            for a in env.actions:
-                q_table[state_action_hash(next_state, a)] = env.safe_zone_reward
+        current_index = state_action_index(state, action)
+        next_state_index = next_state.position[0], next_state.position[1]
+        next_max = np.max(q_table[next_state_index])
+        q_table[current_index] = (1 - learning_rate) * q_table[current_index] + learning_rate * (reward + discount_factor * next_max)
 
     def convert_to_policy(q_table, env):
         policy_actions = np.empty((env.grid_size, env.grid_size), dtype=object)
         for i in range(env.grid_size):
             for j in range(env.grid_size):
-                state = State((i, j))
-                best_action = max(env.actions, key=lambda a: q_table[state_action_hash(state, a)])
-                policy_actions[i, j] = best_action.move
+                state_index = (i, j)
+                best_action_index = np.argmax(q_table[state_index])
+                policy_actions[i, j] = env.actions[best_action_index].move
         return policy_actions
 
-    q_table = {state_action_hash(State((i, j)), a): np.random.uniform(low=-0.1, high=0.1) for i in range(env.grid_size) for j in range(env.grid_size) for a in env.actions}
+    num_actions = len(env.actions)
+    q_table = np.random.uniform(low=-0.1, high=0.1, size=(env.grid_size, env.grid_size, num_actions))
+
     # Set values for terminal states
     for z in env.zombie_positions:
         for a in env.actions:
-            q_table[state_action_hash(z, a)] = env.zombie_penalty
+            q_table[state_action_index(z, a)] = env.zombie_penalty
     for a in env.actions:
-        q_table[state_action_hash(env.safe_zone, a)] = env.safe_zone_reward
+        q_table[state_action_index(env.safe_zone, a)] = env.safe_zone_reward
     
     epsilon = initial_epsilon
     learning_rate = initial_learning_rate
@@ -158,30 +155,58 @@ def q_learning(env, episodes, initial_learning_rate, min_learning_rate, learning
 def policy_iteration(env, episodes, gamma, theta=0.0001, policy_store_interval=1, simulation_interval=10):
     def calculate_state_value(policy, V):
         while True:
-            delta = 0
-            for i in range(env.grid_size):
-                for j in range(env.grid_size):
-                    state = State((i, j))
-                    action = env.actions[policy[i, j]]
-                    next_state = env.get_next_state(state, action)
-                    reward = env.calculate_reward(next_state)
-                    v = V[i, j]
-                    V[i, j] = reward + gamma * V[next_state.position[0], next_state.position[1]]
-                    delta = max(delta, abs(v - V[i, j]))
+            new_V = np.zeros_like(V)
+            for action_index, action in enumerate(env.actions):
+                # Calculate next states for each action
+                action_move = np.array(action.move)
+                next_positions = np.clip(np.dstack(np.indices(V.shape)) + action_move, 0, env.grid_size - 1)
+                next_states = next_positions.reshape(-1, 2)
+
+                # Vectorized check for valid and non-terminal states
+                valid_mask = np.all((next_states >= 0) & (next_states < env.grid_size), axis=1)
+                terminal_mask = np.array([env.is_terminal_state(State(tuple(pos))) for pos in next_states])
+                combined_mask = valid_mask & ~terminal_mask
+                combined_mask = combined_mask.reshape(V.shape)
+
+                # Apply policy and combined mask
+                policy_combined_mask = (policy == action_index) & combined_mask
+
+                # Vectorized calculation of rewards
+                rewards = np.array([env.calculate_reward(State(tuple(pos))) for pos in next_states])
+                rewards = rewards.reshape(V.shape)
+
+                # Update value function
+                next_values = V[next_positions[..., 0], next_positions[..., 1]]
+                new_V[policy_combined_mask] = rewards[policy_combined_mask] + gamma * next_values[policy_combined_mask]
+
+            delta = np.max(np.abs(new_V - V))
+            V[:] = new_V
+
             if delta < theta:
                 break
 
     def policy_improvement(V):
+        # Initialize new policy
         new_policy = np.zeros((env.grid_size, env.grid_size), dtype=int)
-        for i in range(env.grid_size):
-            for j in range(env.grid_size):
-                state = State((i, j))
-                action_values = []
-                for a in env.actions:
-                    next_state = env.get_next_state(state, a)
-                    reward = env.calculate_reward(next_state)
-                    action_values.append(reward + gamma * V[next_state.position[0], next_state.position[1]])
-                new_policy[i, j] = np.argmax(action_values)
+
+        # Calculate next states for each action
+        all_actions = np.array([a.move for a in env.actions])  # Shape: [num_actions, 2]
+        grid_indices = np.dstack(np.indices(V.shape))  # Shape: [grid_size, grid_size, 2]
+        next_states = grid_indices[:, :, None, :] + all_actions[None, None, :, :]  # Shape: [grid_size, grid_size, num_actions, 2]
+
+        # Clip next states to valid grid positions
+        valid_next_states = np.clip(next_states, 0, env.grid_size - 1)
+
+        # Calculate rewards and values for next states
+        next_state_rewards = np.array([[env.calculate_reward(State(tuple(pos))) for pos in valid_next_states[i, j]] for i in range(env.grid_size) for j in range(env.grid_size)]).reshape(env.grid_size, env.grid_size, len(env.actions))
+        next_state_values = V[valid_next_states[..., 0], valid_next_states[..., 1]]  # Shape: [grid_size, grid_size, num_actions]
+
+        # Compute action values
+        action_values = next_state_rewards + gamma * next_state_values  # Shape: [grid_size, grid_size, num_actions]
+
+        # Update policy
+        new_policy = np.argmax(action_values, axis=2)
+
         return new_policy
 
     def convert_to_policy(policy_matrix, env):
@@ -277,12 +302,15 @@ def monte_carlo(env, episodes, gamma, value_function_store_interval=10, simulati
             done = env.is_terminal_state(next_state)
             state = next_state
 
-        G = 0
-        for t in range(len(states) - 1, -1, -1):
-            G = gamma * G + rewards[t]
-            state = states[t]
-            if state not in states[:t] and state != env.safe_zone and state not in env.zombie_positions and state != env.start_position:
-                returns_sum[state.position] += G
+        unique_states = list(set(states))
+        G = np.zeros((env.grid_size, env.grid_size))
+        for state in unique_states:
+            first_occurrence_idx = next(i for i, x in enumerate(states) if x == state)
+            G[state.position] = sum([gamma ** i * r for i, r in enumerate(rewards[first_occurrence_idx:])])
+
+        for state in unique_states:
+            if state not in env.zombie_positions and state != env.safe_zone and state != env.start_position:
+                returns_sum[state.position] += G[state.position]
                 returns_count[state.position] += 1
                 V[state.position] = returns_sum[state.position] / returns_count[state.position]
 
@@ -475,3 +503,21 @@ plot_policy(env, final_policy_dp, "Final Policy Iteration Policy")
 plot_policy(env, final_policy_mc, "Final Monte Carlo Policy")
 plot_value_function(env, V_mc, "Final Monte Carlo Value Function")
 
+"""
+**Vectorization with NumPy**:
+    - You are currently using for-loops for operations on grid-like data structures. These can be optimized using NumPy's vectorized operations. For example, in functions like convert_to_policy used across different methods, you can use NumPy's array operations to directly map actions to their corresponding moves to simplify the code while optimize the performance.
+
+**Refactoring for Code Reuse**:
+    - There are some common functionalities across different methods (like `convert_to_policy`). You might want to refactor these into separate functions to avoid code duplication.
+
+State and Action Space Analysis: Add functions to analyze the state and action spaces, such as frequency of visiting each state and selecting each action. This could provide insight into the behavior of the agent and the effectiveness of the exploration strategy.
+
+Visualization Enhancements:
+Parameter Tuning Interface: Implement a user-friendly interface or a set of functions to easily modify and experiment with different hyperparameters like learning rate, discount factor, epsilon values, etc.
+Consider using interactive visualizations (like using matplotlib.widgets or a web-based solution) for a more dynamic and informative experience.
+Algorithm Comparisons: Develop a comparison framework to evaluate the performance of each algorithm under similar conditions. This could include metrics like convergence speed, final reward, or robustness to changes in the environment.
+
+Environment Complexity: Introduce more complex environments with dynamic obstacles or changing rewards to test the adaptability and robustness of the algorithms.
+
+Extend to Multi-Agent Scenarios: Expand the environment to support multiple agents, which could lead to more complex and interesting interactions and learning dynamics.
+"""
