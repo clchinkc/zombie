@@ -351,6 +351,16 @@ https://core.ac.uk/download/pdf/77231238.pdf
 
 https://www.researchgate.net/figure/Example-of-one-path-planned-with-the-ACO-RRT-algorithm-for-each-of-the-analyzed_fig6_309427799
 
+https://arxiv.org/abs/2102.04518
+
+https://scholar.google.com/citations?user=RLDbLcUAAAAJ&view_op=list_works&sortby=pubdate
+
+https://arxiv.org/abs/2206.01078
+
+https://arxiv.org/abs/2102.04518
+
+how can i incorporate idea of aco into rrt
+
 Combining Rapidly-exploring Random Trees (RRT) and Ant Colony Optimization (ACO) for pathfinding is an innovative approach that leverages the strengths of both algorithms. Here's a conceptual framework on how to integrate these two methods:
 
 1. **Initial Path Generation with RRT**:
