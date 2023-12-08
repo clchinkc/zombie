@@ -521,3 +521,13 @@ Environment Complexity: Introduce more complex environments with dynamic obstacl
 
 Extend to Multi-Agent Scenarios: Expand the environment to support multiple agents, which could lead to more complex and interesting interactions and learning dynamics.
 """
+# Monte Carlo Policy Gradient
+# actor critic
+# about monte carlo
+# https://blog.csdn.net/hiwallace/article/details/81284799
+# Sarsa、Qlearning；蒙特卡洛策略、时序差分等
+# https://cloud.tencent.com/developer/article/2338239?areaId=106001
+# gym environment+pytorch
+# https://zhiqingxiao.github.io/rl-book/en2023/code/CartPole-v0_VPG_torch.html
+# gym environment+tensorflow
+# https://zhiqingxiao.github.io/rl-book/en2023/code/CartPole-v0_VPG_tf.html
