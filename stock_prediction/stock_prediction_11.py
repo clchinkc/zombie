@@ -107,29 +107,25 @@ def maxProfit(k, prices):
 
     n = len(prices)
     if k >= n // 2:
-        transactions = [(i, i+1) for i in range(n - 1) if prices[i + 1] > prices[i]]
-        return sum(max(prices[i + 1] - prices[i], 0) for i in range(n - 1)), transactions, []
+        return sum(max(prices[i + 1] - prices[i], 0) for i in range(n - 1)), [(i, i + 1) for i in range(n - 1) if prices[i + 1] > prices[i]], []
 
     profits = [[0] * n for _ in range(k + 1)]
-    transactions = [[[] for _ in range(n)] for _ in range(k + 1)]
-
     for j in range(1, k + 1):
         max_profit_so_far = -prices[0]
-        max_profit_so_far_index = 0
         for i in range(1, n):
-            if prices[i] + max_profit_so_far > profits[j][i - 1]:
-                profits[j][i] = prices[i] + max_profit_so_far
-                transactions[j][i] = transactions[j - 1][i].copy()
-                transactions[j][i].append((max_profit_so_far_index, i))
-            else:
-                profits[j][i] = profits[j][i - 1]
-                transactions[j][i] = transactions[j][i - 1].copy()
+            profits[j][i] = max(profits[j][i - 1], prices[i] + max_profit_so_far)
+            max_profit_so_far = max(max_profit_so_far, profits[j - 1][i] - prices[i])
 
-            if max_profit_so_far < profits[j - 1][i] - prices[i]:
-                max_profit_so_far = profits[j - 1][i] - prices[i]
-                max_profit_so_far_index = i
+    # Reconstruct transactions (can be optimized based on specific needs)
+    transactions = []
+    for j in range(k, 0, -1):
+        for i in range(n - 1, 0, -1):
+            if profits[j][i] > profits[j][i - 1]:
+                transactions.append((i - 1, i))
+                break
 
-    return profits[k][-1], transactions[k][-1], profits
+    return profits[k][-1], transactions, profits
+
 
 k = 2
 profit, transactions, profit_matrix = maxProfit(k, predicted_prices)

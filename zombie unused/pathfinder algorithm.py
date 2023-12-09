@@ -423,6 +423,87 @@ class AStar:
             return next_step
         return x, y
 
+class BidirectionalAStar:
+    def __init__(self, goal_x, goal_y):
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+        self.heuristic_cache = {}
+
+    def heuristic(self, x, y):
+        # Euclidean distance as heuristic
+        return ((x - self.goal_x) ** 2 + (y - self.goal_y) ** 2) ** 0.5
+
+    def find_neighbors(self, grid, x, y):
+        neighbors = [(x + dx, y + dy) for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]]
+        return [(nx, ny) for nx, ny in neighbors if grid.is_valid_move(nx, ny)]
+
+    def move(self, x, y, grid):
+        path = self.find_path((x, y), (self.goal_x, self.goal_y), grid)
+        return path[1] if len(path) > 1 else (x, y)
+
+    def find_path(self, start_pos, goal_pos, grid):
+        start_open = []
+        heapq.heappush(start_open, (0, start_pos))
+
+        goal_open = []
+        heapq.heappush(goal_open, (0, goal_pos))
+
+        start_came_from = {start_pos: None}
+        goal_came_from = {goal_pos: None}
+
+        start_g_score = defaultdict(lambda: float('inf'))
+        start_g_score[start_pos] = 0
+
+        goal_g_score = defaultdict(lambda: float('inf'))
+        goal_g_score[goal_pos] = 0
+
+        while start_open and goal_open:
+            # Expand the node with the lowest f-score from the start open list
+            _, current_start = heapq.heappop(start_open)
+            # Expand the node with the lowest f-score from the goal open list
+            _, current_goal = heapq.heappop(goal_open)
+
+            if current_start in goal_came_from:
+                return self.reconstruct_path(start_came_from, goal_came_from, current_start)
+
+            if current_goal in start_came_from:
+                return self.reconstruct_path(start_came_from, goal_came_from, current_goal, reverse=True)
+
+            for neighbor in self.find_neighbors(grid, *current_start):
+                tentative_g_score = start_g_score[current_start] + 1
+                if tentative_g_score < start_g_score[neighbor]:
+                    start_came_from[neighbor] = current_start
+                    start_g_score[neighbor] = tentative_g_score
+                    heapq.heappush(start_open, (tentative_g_score + self.heuristic(*neighbor), neighbor))
+
+            for neighbor in self.find_neighbors(grid, *current_goal):
+                tentative_g_score = goal_g_score[current_goal] + 1
+                if tentative_g_score < goal_g_score[neighbor]:
+                    goal_came_from[neighbor] = current_goal
+                    goal_g_score[neighbor] = tentative_g_score
+                    heapq.heappush(goal_open, (tentative_g_score + self.heuristic(*neighbor), neighbor))
+
+        return []
+
+    def reconstruct_path(self, start_came_from, goal_came_from, meet_point, reverse=False):
+        path = []
+
+        # Reconstruct the path from the start to the meeting point
+        current = meet_point
+        while current:
+            path.append(current)
+            current = start_came_from[current]
+        path.reverse()
+
+        # Reconstruct the path from the goal to the meeting point
+        current = meet_point
+        if reverse:
+            current = goal_came_from[current]
+        while current:
+            path.append(current)
+            current = goal_came_from[current]
+
+        return path
 
 class ThetaStar:
     def __init__(self, goal_x, goal_y):
@@ -1003,6 +1084,7 @@ grid.generate_maze(start_x, start_y, goal_x, goal_y)
 # Create agents
 agents = [
     #Agent(start_x, start_y, AStar(goal_x, goal_y)),
+    #Agent(start_x, start_y, BidirectionalAStar(goal_x, goal_y)),
     #Agent(start_x, start_y, ThetaStar(goal_x, goal_y)),
     #Agent(start_x, start_y, MemoryEfficientAStar(goal_x, goal_y)),
     #Agent(start_x, start_y, JPS(goal_x, goal_y)),
@@ -1012,8 +1094,8 @@ agents = [
 ]
 
 # Run the simulation
-simulation = Simulation(grid, agents, goal_x, goal_y)
-simulation.run()
+#simulation = Simulation(grid, agents, goal_x, goal_y)
+#simulation.run()
 
 
 
@@ -1057,20 +1139,20 @@ def run_pathfinding_comparison(grid_size, algorithms, num_runs):
     return average_times
 
 # Example usage
-algorithms = [AStar, ThetaStar, MemoryEfficientAStar, JPS, DFS, DStarLite]
-grid_size = 9  # Size of the grid
-num_runs = 100  # Number of runs for each algorithm
+algorithms = [AStar, BidirectionalAStar, ThetaStar, MemoryEfficientAStar, JPS, DFS, DStarLite]
+grid_size = 99  # Size of the grid
+num_runs = 1  # Number of runs for each algorithm
 
 average_times = run_pathfinding_comparison(grid_size, algorithms, num_runs)
 print(average_times)
 
 """
 1 random grids of size 99
-{'AStar': 166.23853468894958, 'ThetaStar': 99.12606048583984, 'MemoryEfficientAStar': 64.19273805618286, 'JPS': 176.79540944099426, 'DFS': 77.81984758377075, 'DStarLite': 12.325010061264038}
+{'AStar': 26.696054935455322, 'BidirectionalAStar': 11.132912874221802, 'ThetaStar': 21.85900616645813, 'MemoryEfficientAStar': 13.792948484420776, 'JPS': 38.1959342956543, 'DFS': 41.405953884124756, 'DStarLite': 3.6806371212005615}
 """
 """
 100 random grids of size 9
-{'AStar': 0.013023581504821777, 'ThetaStar': 0.016449856758117675, 'MemoryEfficientAStar': 0.009579455852508545, 'JPS': 0.026429591178894044, 'DFS': 0.008093197345733643, 'DStarLite': 0.005863986015319824}
+{'AStar': 0.007079935073852539, 'BidirectionalAStar': 0.004592006206512451, 'ThetaStar': 0.009288866519927979, 'MemoryEfficientAStar': 0.005601677894592285, 'JPS': 0.014568932056427002, 'DFS': 0.005128917694091797, 'DStarLite': 0.0036286449432373045}
 """
 
 # http://www.codenamepandey.com/movementalgo
@@ -1164,21 +1246,10 @@ Gabow's 演算法的優點是能夠處理稀疏圖和密集圖，並且其時間
    優點：對於稀疏圖，比Floyd-Warshall算法更快；可以處理負權邊。
    缺點：需要先求解最短路徑的估計值，複雜度為O(EVlogV)，然後再進行Dijkstra算法，總的時間複雜度為O(EVlogV)。
     適用情況：邊權值可以為負的圖，或者是稀疏圖。
-
-6. 雙向搜索算法：
-   優點：可以減少搜索的節點數量，從而提高搜索速度。
-   缺點：需要知道起點和終點，不能用於單源最短路徑問題。
-    適用情況：需要求解特定兩點間的最短路徑問題。
 """
 
 """
-The DARPA Grand Challenge was a series of autonomous vehicle races organized by the Defense Advanced Research Projects Agency (DARPA) in the early 2000s. The goal of the Grand Challenge was to accelerate the development of autonomous vehicle technology for military use.
-
-The first DARPA Grand Challenge was held in 2004 and involved a 142-mile course through the Mojave Desert in California. The challenge was to build a fully autonomous vehicle that could navigate the course without any human intervention. None of the teams were able to complete the course, with the farthest any vehicle made it being 7.4 miles.
-
-The second DARPA Grand Challenge was held in 2005 and had a more difficult course that covered 132 miles through the desert. This time, five teams were able to complete the course, with the winner being "Stanley," a self-driving car developed by a team from Stanford University.
-
-The success of the DARPA Grand Challenge helped to kickstart the development of autonomous vehicle technology and led to further advancements in the field. Today, autonomous vehicles are becoming more common in both military and civilian applications, and the technology continues to evolve rapidly.
+https://en.wikipedia.org/wiki/DARPA_Grand_Challenge#Technology
 """
 
 """
@@ -1186,7 +1257,7 @@ Ma, H., & Koenig, S. (2016). Optimal target assignment and path finding for team
 """
 
 """
- Stern, R., Sturtevant, N., Felner, A., Koenig, S., Ma, H., Walker, T., ... & Boyarski, E. (2019). Multi-agent pathfinding: Definitions, variants, and benchmarks (PDF). arXiv preprint arXiv:1906.08291.
+Stern, R., Sturtevant, N., Felner, A., Koenig, S., Ma, H., Walker, T., ... & Boyarski, E. (2019). Multi-agent pathfinding: Definitions, variants, and benchmarks (PDF). arXiv preprint arXiv:1906.08291.
 """
 
 """
@@ -1209,9 +1280,7 @@ The hierarchical pathfinding algorithm can start by searching for a path between
 Quadtree operations can also be used to solve other problems, such as quickly determining the nearest neighbor of a point in a set of points or efficiently storing and querying spatial data. By using a quadtree for hierarchical pathfinding, the algorithm can efficiently search large areas of the map and avoid the need to perform detailed searches on areas of the map that are easy to traverse or do not contain obstacles, significantly reducing the computational cost of the pathfinding algorithm and improving its performance.
 """
 
-"""
-https://zhuanlan.zhihu.com/p/349074802
-"""
+
 
 """
 ### Hierarchical A* (HPA*)

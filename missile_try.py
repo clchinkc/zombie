@@ -18,7 +18,6 @@ class Missile:
         self.velocity = np.array([0., 0.])
         self.trajectory = [self.position.copy()]
         self.time_elapsed = 0.0
-        self.propulsion_end_position = None
 
     def apply_gravity(self):
         # Gravity applies to all missiles, but can be zero in some cases.
@@ -27,8 +26,10 @@ class Missile:
     def apply_air_resistance(self):
         # Air resistance applies to all missiles, can be overridden if the calculation differs.
         velocity_magnitude = np.linalg.norm(self.velocity)
+        # Calculate the drag coefficient based on the missile's current Mach number
+        dynamic_drag_coefficient = self.Cd / (1 + (self.Cd / (np.pi * self.A * self.mass)) * velocity_magnitude)
         drag_direction = self.velocity / velocity_magnitude if velocity_magnitude > 0 else np.array([0., 0.])
-        return -0.5 * AIR_DENSITY * velocity_magnitude ** 2 * self.Cd * self.A * drag_direction
+        return -0.5 * AIR_DENSITY * velocity_magnitude ** 2 * dynamic_drag_coefficient * self.A * drag_direction
 
     def apply_thrust(self):
         # This method will be specific to the subclass implementation.
@@ -58,37 +59,43 @@ class Missile:
         plt.title('Missile Trajectory')
         plt.grid(True)
 
-        if self.propulsion_end_position is not None:
-            plt.scatter(*self.propulsion_end_position, color='orange', s=50, label='Propulsion End', zorder=5)
-
         target.plot()
 
 
 class BallisticMissile(Missile):
-    def __init__(self, mass, fuel_mass, cross_section_area, drag_coefficient, launch_angle, max_thrust, burn_time, fuel_consumption_rate):
+    DEFAULT_MASS = 1000
+    DEFAULT_FUEL_MASS = 300
+    DEFAULT_CROSS_SECTION_AREA = 0.3
+    DEFAULT_DRAG_COEFFICIENT = 0.5
+    DEFAULT_FUEL_CONSUMPTION_RATE = 5
+
+    def __init__(self, launch_angle, max_thrust, burn_time, 
+                mass=DEFAULT_MASS, fuel_mass=DEFAULT_FUEL_MASS, cross_section_area=DEFAULT_CROSS_SECTION_AREA, 
+                drag_coefficient=DEFAULT_DRAG_COEFFICIENT, fuel_consumption_rate=DEFAULT_FUEL_CONSUMPTION_RATE,
+                ):
         super().__init__(mass, cross_section_area, drag_coefficient)
         self.launch_angle = launch_angle
         self.max_thrust = max_thrust  # The maximum thrust when the missile has full fuel
         self.burn_time = burn_time
         self.fuel_mass = fuel_mass  # The initial fuel mass
         self.fuel_consumption_rate = fuel_consumption_rate  # Rate at which fuel is consumed (kg/s)
+        self.propulsion_end_position = None
 
     def apply_thrust(self):
         angle_rad = np.radians(self.launch_angle)
+        fuel_consumed = self.fuel_consumption_rate * TIME_STEP
+        self.fuel_mass = max(self.fuel_mass - fuel_consumed, 0)
+        self.mass = max(self.mass - fuel_consumed, self.mass - self.DEFAULT_FUEL_MASS)
         if self.time_elapsed <= self.burn_time and self.fuel_mass > 0:
             current_thrust = self.max_thrust * (self.fuel_mass / (self.mass - self.fuel_mass))
-            # Decrease fuel mass
-            self.fuel_mass -= self.fuel_consumption_rate * TIME_STEP
-            # Ensure fuel mass doesn't become negative
-            self.fuel_mass = max(self.fuel_mass, 0)
             # Calculate the propulsion force
             return np.array([current_thrust * np.cos(angle_rad), current_thrust * np.sin(angle_rad)])
         else:
             return np.array([0., 0.])
 
     def update_motion(self):
-        self.mass -= self.fuel_consumption_rate * TIME_STEP
-        self.mass = max(self.mass, 0)
+        if self.time_elapsed <= self.burn_time and self.fuel_mass > 0:
+            self.propulsion_end_position = self.position.copy()
         super().update_motion()
 
     def objective(self, target, fuel_efficiency_weight=1.0, time_penalty_weight=1.0):
@@ -110,7 +117,6 @@ class BallisticMissile(Missile):
         # Combine the distance, fuel efficiency penalty, and time penalty into a single objective
         return distance_to_target + fuel_efficiency_penalty + time_penalty
 
-
     @classmethod
     def find_optimal_conditions(cls, target, initial_guess, bounds):
         def callback(xk):
@@ -120,99 +126,152 @@ class BallisticMissile(Missile):
             launch_angle, thrust, burn_time = params
             # Instantiate the missile with given parameters
             missile = cls(mass=1000, fuel_mass=300, cross_section_area=0.3, drag_coefficient=0.5, 
-                          launch_angle=launch_angle, max_thrust=thrust, burn_time=burn_time, 
-                          fuel_consumption_rate=5)
+                        launch_angle=launch_angle, max_thrust=thrust, burn_time=burn_time, 
+                        fuel_consumption_rate=5)
             return missile.objective(target)
 
         result = minimize(_objective, initial_guess, bounds=bounds, callback=callback)
         return result.x
 
+    def plot_trajectory(self, target):
+        super().plot_trajectory(target)
+        if self.propulsion_end_position is not None:
+            plt.scatter(*self.propulsion_end_position, color='orange', s=50, label='Propulsion End', zorder=5)
+
 
 class CruiseMissile(Missile):
-    def __init__(self, mass, cross_section_area, drag_coefficient, engine_thrust, max_flight_time):
+    DEFAULT_MASS = 1000
+    DEFAULT_FUEL_MASS = 300
+    DEFAULT_FUEL_CONSUMPTION_RATE = 5
+    DEFAULT_CROSS_SECTION_AREA = 0.3
+    DEFAULT_DRAG_COEFFICIENT = 0.5
+    DEFAULT_MAX_FLIGHT_TIME = 9600
+    TERMINAL_PHASE_START_DISTANCE = 400
+    CRUISING_ALTITUDE = 500
+
+    def __init__(self, launch_angle, engine_thrust, boost_time,
+                mass=DEFAULT_MASS, fuel_mass=DEFAULT_FUEL_MASS, fuel_consumption_rate=DEFAULT_FUEL_CONSUMPTION_RATE, cross_section_area=DEFAULT_CROSS_SECTION_AREA, drag_coefficient=DEFAULT_DRAG_COEFFICIENT, 
+                max_flight_time=DEFAULT_MAX_FLIGHT_TIME, terminal_phase_start=TERMINAL_PHASE_START_DISTANCE, cruising_altitude=CRUISING_ALTITUDE):
         super().__init__(mass, cross_section_area, drag_coefficient)
-        self.engine_thrust = engine_thrust
+        self.fuel_mass = fuel_mass
         self.max_flight_time = max_flight_time
-        self.boost_time = 10  # Boost phase duration in seconds
-        self.terminal_phase_start = 1000  # Distance in meters from target to start terminal phase
-        self.cruising_altitude = 500  # Cruising altitude in meters
-        self.launch_angle = 45  # Launch angle in degrees
-        self.guidance_system = 'launch'  # Start with launch phase guidance
+        self.launch_angle = launch_angle
+        self.engine_thrust = engine_thrust
+        self.boost_time = boost_time
+        self.fuel_consumption_rate = fuel_consumption_rate
+        self.terminal_phase_start = terminal_phase_start
+        self.cruising_altitude = cruising_altitude
+        self.guidance_system = 'launch'
+        self.phase_switch_positions = []
 
     def apply_thrust(self):
+        fuel_consumed = self.fuel_consumption_rate * TIME_STEP
+        self.fuel_mass = max(self.fuel_mass - fuel_consumed, 0)
+        self.mass = max(self.mass - fuel_consumed, self.mass - self.DEFAULT_FUEL_MASS)
+        
         if self.guidance_system == 'launch':
-            if self.time_elapsed <= self.boost_time:
-                # Calculate the required climb angle to reach cruising altitude at the end of the boost phase
-                # Assume that the initial horizontal velocity is the same as the initial vertical velocity
-                avg_vertical_velocity = self.cruising_altitude / self.boost_time
-                self.launch_angle = np.degrees(np.arctan(avg_vertical_velocity / avg_vertical_velocity))
-                
-                climb_angle_rad = np.radians(self.launch_angle)
-                vertical_thrust_component = self.engine_thrust * np.sin(climb_angle_rad)
-                horizontal_thrust_component = self.engine_thrust * np.cos(climb_angle_rad)
-
-                return np.array([
-                    horizontal_thrust_component + self.apply_air_resistance()[0],
-                    vertical_thrust_component + self.mass * GRAVITY + self.apply_air_resistance()[1]
-                ])
-            else:
-                # Transition to cruise phase after boost
-                self.guidance_system = 'cruise'
-                return np.array([self.engine_thrust, 0.])
+            return self.launch_phase_thrust()
         elif self.guidance_system == 'cruise':
-            # Maintain the propulsion in the horizontal direction
-            return np.array([self.engine_thrust, 0.])
+            return self.cruise_phase_thrust()
         elif self.guidance_system == 'terminal':
-            # No propulsion in terminal phase, missile is on final approach
-            return np.array([0., 0.])
+            return self.terminal_phase_thrust()
+        else:
+            raise ValueError("Invalid guidance system phase")
 
     def apply_gravity(self):
-        if self.guidance_system == 'launch' and self.position[1] < self.cruising_altitude:
+        if self.guidance_system in ['launch', 'terminal']:
             return super().apply_gravity()
         else:
-            # Gravity is countered by lift in cruise and terminal phases
+            # In cruise phase, gravity is countered by lift
             return np.array([0., 0.])
 
     def update_guidance_and_navigation(self, target):
-        distance_to_target = np.linalg.norm(target.position - self.position)
-
-        # Switch to terminal phase based on distance to target
-        if distance_to_target <= self.terminal_phase_start and self.guidance_system != 'terminal':
+        # Switch to the cruise phase when the missile has reached the cruising altitude
+        if self.position[1] >= self.cruising_altitude and self.guidance_system == 'launch':
+            self.guidance_system = 'cruise'
+            self.phase_switch_positions.append(self.position.copy())
+        # Switch to the terminal phase when the missile is within the horizontal distance to the target
+        horizontal_distance = target.position[0] - self.position[0]
+        if horizontal_distance <= self.terminal_phase_start and self.guidance_system == 'cruise':
             self.guidance_system = 'terminal'
-            self.terminal_phase_init_velocity = np.linalg.norm(self.velocity)  # Capture initial velocity for terminal phase
+            self.phase_switch_positions.append(self.position.copy())
 
         if self.guidance_system == 'launch':
-            # Launch phase guidance logic
-            if self.position[1] >= self.cruising_altitude:
-                self.guidance_system = 'cruise'
+            self.update_launch_phase()
         elif self.guidance_system == 'cruise':
-            # Cruise phase guidance logic
-            direction_to_target = (target.position - self.position) / distance_to_target
-            # Adjust only the horizontal velocity
-            self.velocity[0] = direction_to_target[0] * np.linalg.norm(self.velocity)
-            # Maintain low altitude flight
-            self.velocity[1] = 0
-            self.position[1] = self.cruising_altitude
+            self.update_cruise_phase(target)
         elif self.guidance_system == 'terminal':
-            # Calculate the horizontal and vertical distance to the target
-            horizontal_distance = target.position[0] - self.position[0]
-            vertical_distance = self.position[1] - target.position[1]
+            self.update_terminal_phase(target)
 
-            # Start with a gentle descent and increase the steepness as we get closer to the target
-            # We'll use a function of the horizontal distance to calculate a descent angle that
-            # gets steeper as the missile approaches the target.
-            # This factor will increase from 0 to 1 as the missile approaches the target
-            steepness_factor = np.clip(1 - horizontal_distance / self.terminal_phase_start, 0, 1)
-            # Use an arctangent function to get an angle that increases as we get closer
-            descent_angle_rad = np.arctan(steepness_factor * (vertical_distance / horizontal_distance))
+    def launch_phase_thrust(self):
+        if self.time_elapsed <= self.boost_time and self.fuel_mass > 0:
+            angle_rad = np.radians(self.launch_angle)
+            thrust = np.array([self.engine_thrust * np.cos(angle_rad), self.engine_thrust * np.sin(angle_rad)])
+        else:
+            thrust = np.array([0., 0.])
+        return thrust
 
-            # Adjust velocity towards the descent angle
-            self.velocity[0] = np.cos(descent_angle_rad) * np.linalg.norm(self.velocity)
-            self.velocity[1] = -np.sin(descent_angle_rad) * np.linalg.norm(self.velocity)
+    def cruise_phase_thrust(self):
+        # Maintain thrust only in the horizontal direction during the cruise phase
+        if self.fuel_mass > 0:
+            return np.array([self.engine_thrust, 0.])
+        else:
+            return np.array([0., 0.])
+
+    def terminal_phase_thrust(self):
+        # No thrust in the terminal phase
+        return np.array([0., 0.])
+
+    def update_launch_phase(self):
+        # Logic for the launch phase guidance
+        pass
+
+    def update_cruise_phase(self, target):
+        # Logic for the cruise phase guidance
+        direction_to_target = (target.position - self.position) / np.linalg.norm(target.position - self.position)
+        # Adjust velocity for horizontal flight
+        self.velocity[0] = direction_to_target[0] * np.linalg.norm(self.velocity)
+        # Maintain low altitude flight
+        self.position[1] = self.cruising_altitude
+
+    def update_terminal_phase(self, target):
+        # Logic for the terminal phase guidance
+        # Calculate the horizontal and vertical distance to the target
+        horizontal_distance = target.position[0] - self.position[0]
+        vertical_distance = self.position[1] - target.position[1]
+        # Start with a gentle descent angle and increase the steepness as we get closer to the target
+        steepness_factor = np.clip(1 - horizontal_distance / self.terminal_phase_start, 0, 1)
+        descent_angle_rad = np.arctan(steepness_factor * (vertical_distance / horizontal_distance))
+        # Adjust velocity for the descent angle
+        self.velocity[0] = np.cos(descent_angle_rad) * np.linalg.norm(self.velocity)
+        self.velocity[1] = -np.sin(descent_angle_rad) * np.linalg.norm(self.velocity)
 
     def update_motion(self, target):
         self.update_guidance_and_navigation(target)
         super().update_motion()
+
+    @classmethod
+    def optimize_launch_phase(cls, target, initial_guess, bounds):
+        def _callback(params):
+            print(f"Current iteration parameters: launch angle = {params[0]}, thrust = {params[1]}, boost time = {params[2]}")
+
+        def _objective(params):
+            launch_angle, engine_thrust, boost_time = params
+            missile = cls(mass=1000, cross_section_area=0.3, drag_coefficient=0.5, max_flight_time=9600, launch_angle=launch_angle, engine_thrust=engine_thrust, boost_time=boost_time)
+            # Simulate the launch phase
+            while missile.time_elapsed <= boost_time:
+                missile.update_motion(target)
+            # Evaluate the objective function: minimize the difference between current altitude and cruising altitude
+            altitude_difference = abs(missile.position[1] - missile.cruising_altitude)
+            return altitude_difference
+
+        result = minimize(_objective, initial_guess, bounds=bounds, callback=_callback)
+        return result.x
+
+    def plot_trajectory(self, target):
+        super().plot_trajectory(target)
+        for pos in self.phase_switch_positions:
+            plt.scatter(*pos, color='blue', s=50, zorder=5, label='Phase Switch')
 
 
 class Target:
@@ -225,68 +284,76 @@ class Target:
 
     def plot(self):
         plt.scatter(self.position[0], self.position[1], c='red', marker='X', s=100, label='Target')
-        plt.legend()
+
 
 def main():
-    target_position = [10000, 1000]
-    target = Target(target_position)
+    # Target positions
+    ballistic_target_position = [10000, 1000]  # Target for ballistic missile
+    cruise_target_position = [10000, 100]  # Target for cruise missile
 
+    # Ballistic Missile Optimization
+    ballistic_target = Target(ballistic_target_position)
     initial_guess = [45, 200000, 10]  # Initial guess for the optimization
     bounds = [(0, 90), (0, 500000), (0, 60)]  # Bounds for launch_angle, thrust, and burn_time
-    optimal_launch_angle, optimal_thrust, optimal_burn_time = BallisticMissile.find_optimal_conditions(target, initial_guess, bounds)
+    optimal_launch_angle, optimal_thrust, optimal_burn_time = BallisticMissile.find_optimal_conditions(ballistic_target, initial_guess, bounds)
 
-    # Create a missile instance with the optimal conditions found
-    missile = BallisticMissile(
-        mass=1000, fuel_mass=300, cross_section_area=0.3, drag_coefficient=0.5,
-        launch_angle=optimal_launch_angle, max_thrust=optimal_thrust, burn_time=optimal_burn_time,
-        fuel_consumption_rate=5
+    # Create a ballistic missile instance with the optimal conditions found
+    ballistic_missile = BallisticMissile(
+        launch_angle=optimal_launch_angle, max_thrust=optimal_thrust, burn_time=optimal_burn_time
     )
-    
-    while (missile.position[0] < target.position[0] or missile.position[1] >= 0 or missile.position[1] < target.position[1] or missile.position[0] >= target.position[0]) and not target.is_hit_by(missile):
-        missile.update_motion()
 
-    missile.plot_trajectory(target)
-    
-    target_position = [10000, 100]  # Assume a flat terrain and target at sea level
-    target = Target(target_position)
-
-    # Create the target and cruise missile
-    cruise_missile = CruiseMissile(mass=1000, cross_section_area=0.3, drag_coefficient=0.5, engine_thrust=5000, max_flight_time=9600)
-    
-    # Update and plot the cruise missile's trajectory
-    while cruise_missile.time_elapsed < cruise_missile.max_flight_time:
-        cruise_missile.update_motion(target)
-        if target.is_hit_by(cruise_missile):
+    # Update and plot the ballistic missile's trajectory
+    while not ballistic_target.is_hit_by(ballistic_missile):
+        ballistic_missile.update_motion()
+        if ballistic_missile.position[1] < 0 and ballistic_missile.velocity[1] < 0:
             break
 
-    cruise_missile.plot_trajectory(target)
+    ballistic_missile.plot_trajectory(ballistic_target)
+
+    # Cruise Missile Optimization
+    cruise_target = Target(cruise_target_position)
+    initial_guess = [45, 50000, 10]  # Initial guess: launch angle, engine thrust, boost time
+    bounds = [(0, 90), (10000, 100000), (5, 20)]  # Bounds for the parameters
+    optimal_launch_angle, optimal_engine_thrust, optimal_boost_time = CruiseMissile.optimize_launch_phase(cruise_target, initial_guess, bounds)
+
+    # Create the cruise missile
+    cruise_missile = CruiseMissile(
+        launch_angle=optimal_launch_angle, engine_thrust=optimal_engine_thrust, boost_time=optimal_boost_time
+    )
+
+    # Update and plot the cruise missile's trajectory
+    while not cruise_target.is_hit_by(cruise_missile):
+        cruise_missile.update_motion(cruise_target)
+        if cruise_missile.time_elapsed >= cruise_missile.max_flight_time:
+            break
+
+    cruise_missile.plot_trajectory(cruise_target)
+
     plt.legend()
     plt.show()
 
 if __name__ == "__main__":
     main()
 
-"""
-Please modify the method so that the cruise missile climbs to cruise altitude exactly at the end of the boost phase instead of climbing 45 degrees in the boost phase and raising vertically to the cruise altitude in the cruise phase.
-Introduce constants at the class level to replace magic numbers.
 
-Dynamic Time Step:
-A fixed time step (DT) works for simple simulations, but for a more accurate simulation, especially when the missile's speed changes drastically, an adaptive time-stepping method could be used.
+"""
+Ensure the velocity and position is not manipulated directly in the process. Only the acceleration should be used to update the velocity and position. The acceleration should be calculated based on the forces acting on the missile.
+
+Fuel Efficiency Objective: If you want to optimize fuel efficiency for the cruise missile as well, you might need to add a similar objective function as in the BallisticMissile for the optimization process.
+
+Please summarize all the forces act on the missile and improve the realism of the simulation.
+
+Dynamic Target:
+The target can be made to move, which can be more realistic.
 
 Logging and Verbosity:
 Add logging capabilities to help with debugging or understanding the missile's behavior over time.
 
 Physical Constraints:
-Ensure that physical constraints are applied, such as non-negative mass and preventing the fuel mass from increasing during flight.
-
-Error Handling:
-Add error handling to manage potential issues such as division by zero or optimization failures.
+Ensure that physical constraints are applied.
 
 Configuration via External Files:
 Allow for the missile and simulation parameters to be loaded from an external configuration file, making it easier to run different scenarios without changing the code.
-
-Modularize Code:
-Separate the classes and the main execution logic into different files/modules for better organization.
 
 Create a base Physics class that both missile types can inherit from. This class will handle the basic physics such as gravity, air resistance, and propulsion.
 
@@ -444,4 +511,20 @@ Here are some of the most common guidance methods used in missile systems:
    - Similar to inertial guidance, but includes celestial navigation as a reference to correct inertial drift, typically used in long-range intercontinental ballistic missiles (ICBMs).
 
 Each guidance method has its own advantages and disadvantages in terms of complexity, cost, susceptibility to countermeasures, and accuracy. Modern missiles often use a combination of these guidance methods to improve accuracy and resistance to jamming or other forms of interference. For example, a missile might use inertial guidance to get close to its target and then switch to active or semi-active homing for final approach and impact.
+"""
+
+"""
+https://github.com/rafal9820/9M723-Iskander-missile-trajectory
+
+https://github.com/topics/rocket-simulator
+
+https://github.com/topics/missile-defence-simulation
+
+https://github.com/topics/missile-simulation
+
+https://github.com/topics/missile
+
+https://github.com/ferencdv/missile_trajectory_simulator
+
+https://github.com/CoopLo/am_205_project
 """
