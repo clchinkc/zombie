@@ -10,7 +10,8 @@ TIME_STEP = 0.01  # Time step (s)
 HIT_RADIUS = 10  # Radius within which the target is considered hit (m)
 
 class Missile:
-    def __init__(self, mass, cross_section_area, drag_coefficient):
+    def __init__(self, target, mass, cross_section_area, drag_coefficient):
+        self.target = target
         self.mass = mass
         self.A = cross_section_area
         self.Cd = drag_coefficient
@@ -69,11 +70,11 @@ class BallisticMissile(Missile):
     DEFAULT_DRAG_COEFFICIENT = 0.5
     DEFAULT_FUEL_CONSUMPTION_RATE = 5
 
-    def __init__(self, launch_angle, max_thrust, burn_time, 
+    def __init__(self, target, launch_angle, max_thrust, burn_time, 
                 mass=DEFAULT_MASS, fuel_mass=DEFAULT_FUEL_MASS, cross_section_area=DEFAULT_CROSS_SECTION_AREA, 
                 drag_coefficient=DEFAULT_DRAG_COEFFICIENT, fuel_consumption_rate=DEFAULT_FUEL_CONSUMPTION_RATE,
                 ):
-        super().__init__(mass, cross_section_area, drag_coefficient)
+        super().__init__(target, mass, cross_section_area, drag_coefficient)
         self.launch_angle = launch_angle
         self.max_thrust = max_thrust  # The maximum thrust when the missile has full fuel
         self.burn_time = burn_time
@@ -125,7 +126,7 @@ class BallisticMissile(Missile):
         def _objective(params):
             launch_angle, thrust, burn_time = params
             # Instantiate the missile with given parameters
-            missile = cls(mass=1000, fuel_mass=300, cross_section_area=0.3, drag_coefficient=0.5, 
+            missile = cls(target, mass=1000, fuel_mass=300, cross_section_area=0.3, drag_coefficient=0.5, 
                         launch_angle=launch_angle, max_thrust=thrust, burn_time=burn_time, 
                         fuel_consumption_rate=5)
             return missile.objective(target)
@@ -145,15 +146,17 @@ class CruiseMissile(Missile):
     DEFAULT_FUEL_CONSUMPTION_RATE = 5
     DEFAULT_CROSS_SECTION_AREA = 0.3
     DEFAULT_DRAG_COEFFICIENT = 0.5
-    DEFAULT_MAX_FLIGHT_TIME = 9600
+    DEFAULT_LIFT_COEFFICIENT = 0.3
+    DEFAULT_MAX_FLIGHT_TIME = 3600
     TERMINAL_PHASE_START_DISTANCE = 400
-    CRUISING_ALTITUDE = 500
+    CRUISING_ALTITUDE = 1000
 
-    def __init__(self, launch_angle, engine_thrust, boost_time,
-                mass=DEFAULT_MASS, fuel_mass=DEFAULT_FUEL_MASS, fuel_consumption_rate=DEFAULT_FUEL_CONSUMPTION_RATE, cross_section_area=DEFAULT_CROSS_SECTION_AREA, drag_coefficient=DEFAULT_DRAG_COEFFICIENT, 
+    def __init__(self, target, launch_angle, engine_thrust, boost_time,
+                mass=DEFAULT_MASS, fuel_mass=DEFAULT_FUEL_MASS, fuel_consumption_rate=DEFAULT_FUEL_CONSUMPTION_RATE, cross_section_area=DEFAULT_CROSS_SECTION_AREA, drag_coefficient=DEFAULT_DRAG_COEFFICIENT, lift_coefficient=DEFAULT_LIFT_COEFFICIENT,
                 max_flight_time=DEFAULT_MAX_FLIGHT_TIME, terminal_phase_start=TERMINAL_PHASE_START_DISTANCE, cruising_altitude=CRUISING_ALTITUDE):
-        super().__init__(mass, cross_section_area, drag_coefficient)
+        super().__init__(target, mass, cross_section_area, drag_coefficient)
         self.fuel_mass = fuel_mass
+        self.lift_coefficient = lift_coefficient
         self.max_flight_time = max_flight_time
         self.launch_angle = launch_angle
         self.engine_thrust = engine_thrust
@@ -182,8 +185,21 @@ class CruiseMissile(Missile):
         if self.guidance_system in ['launch', 'terminal']:
             return super().apply_gravity()
         else:
-            # In cruise phase, gravity is countered by lift
-            return np.array([0., 0.])
+            # Calculate the lift force to counter gravity at cruising altitude
+            weight = self.mass * GRAVITY
+            velocity_magnitude = np.linalg.norm(self.velocity)
+            required_lift_coefficient = weight / (0.5 * AIR_DENSITY * velocity_magnitude ** 2 * self.A)
+            
+            # Adjust lift based on altitude error
+            # This is a simplification, in reality, the missile would need to adjust its angle of attack and thrust to adjust the lift force
+            # To make sure the vertical component of the velocity close to zero to maintain altitude
+            altitude_error = self.cruising_altitude - self.position[1]
+            lift_adjustment_factor = np.clip(altitude_error, -1, 1)  # More sensitive adjustment
+            effective_lift_coefficient = required_lift_coefficient + lift_adjustment_factor * self.lift_coefficient
+
+            # Calculate lift force
+            lift_force = 0.5 * AIR_DENSITY * velocity_magnitude ** 2 * effective_lift_coefficient * self.A
+            return super().apply_gravity() + np.array([0., lift_force])
 
     def update_guidance_and_navigation(self, target):
         # Switch to the cruise phase when the missile has reached the cruising altitude
@@ -195,13 +211,6 @@ class CruiseMissile(Missile):
         if horizontal_distance <= self.terminal_phase_start and self.guidance_system == 'cruise':
             self.guidance_system = 'terminal'
             self.phase_switch_positions.append(self.position.copy())
-
-        if self.guidance_system == 'launch':
-            self.update_launch_phase()
-        elif self.guidance_system == 'cruise':
-            self.update_cruise_phase(target)
-        elif self.guidance_system == 'terminal':
-            self.update_terminal_phase(target)
 
     def launch_phase_thrust(self):
         if self.time_elapsed <= self.boost_time and self.fuel_mass > 0:
@@ -219,32 +228,33 @@ class CruiseMissile(Missile):
             return np.array([0., 0.])
 
     def terminal_phase_thrust(self):
-        # No thrust in the terminal phase
-        return np.array([0., 0.])
-
-    def update_launch_phase(self):
-        # Logic for the launch phase guidance
-        pass
-
-    def update_cruise_phase(self, target):
-        # Logic for the cruise phase guidance
-        direction_to_target = (target.position - self.position) / np.linalg.norm(target.position - self.position)
-        # Adjust velocity for horizontal flight
-        self.velocity[0] = direction_to_target[0] * np.linalg.norm(self.velocity)
-        # Maintain low altitude flight
-        self.position[1] = self.cruising_altitude
-
-    def update_terminal_phase(self, target):
-        # Logic for the terminal phase guidance
         # Calculate the horizontal and vertical distance to the target
-        horizontal_distance = target.position[0] - self.position[0]
-        vertical_distance = self.position[1] - target.position[1]
-        # Start with a gentle descent angle and increase the steepness as we get closer to the target
+        horizontal_distance = self.target.position[0] - self.position[0]
+        vertical_distance = self.position[1] - self.target.position[1]
+
+        # Adjust descent angle based on proximity to the target
         steepness_factor = np.clip(1 - horizontal_distance / self.terminal_phase_start, 0, 1)
         descent_angle_rad = np.arctan(steepness_factor * (vertical_distance / horizontal_distance))
-        # Adjust velocity for the descent angle
-        self.velocity[0] = np.cos(descent_angle_rad) * np.linalg.norm(self.velocity)
-        self.velocity[1] = -np.sin(descent_angle_rad) * np.linalg.norm(self.velocity)
+
+        # Calculate desired velocity in the direction of the descent angle
+        desired_velocity = np.array([
+            np.cos(descent_angle_rad) * np.linalg.norm(self.velocity),
+            -np.sin(descent_angle_rad) * np.linalg.norm(self.velocity)
+        ])
+
+        # Calculate the difference between the desired and current velocity
+        velocity_difference = desired_velocity - self.velocity
+
+        # Calculate the acceleration needed to match the desired velocity
+        required_acceleration = velocity_difference / TIME_STEP
+
+        # Limit the acceleration
+        required_acceleration = np.clip(required_acceleration, -self.engine_thrust, self.engine_thrust)
+
+        # Calculate the thrust needed to achieve the required acceleration
+        thrust = required_acceleration * self.mass
+
+        return thrust
 
     def update_motion(self, target):
         self.update_guidance_and_navigation(target)
@@ -257,7 +267,7 @@ class CruiseMissile(Missile):
 
         def _objective(params):
             launch_angle, engine_thrust, boost_time = params
-            missile = cls(mass=1000, cross_section_area=0.3, drag_coefficient=0.5, max_flight_time=9600, launch_angle=launch_angle, engine_thrust=engine_thrust, boost_time=boost_time)
+            missile = cls(target, mass=1000, cross_section_area=0.3, drag_coefficient=0.5, max_flight_time=9600, launch_angle=launch_angle, engine_thrust=engine_thrust, boost_time=boost_time)
             # Simulate the launch phase
             while missile.time_elapsed <= boost_time:
                 missile.update_motion(target)
@@ -298,7 +308,7 @@ def main():
     optimal_launch_angle, optimal_thrust, optimal_burn_time = BallisticMissile.find_optimal_conditions(ballistic_target, initial_guess, bounds)
 
     # Create a ballistic missile instance with the optimal conditions found
-    ballistic_missile = BallisticMissile(
+    ballistic_missile = BallisticMissile(target=ballistic_target,
         launch_angle=optimal_launch_angle, max_thrust=optimal_thrust, burn_time=optimal_burn_time
     )
 
@@ -317,7 +327,7 @@ def main():
     optimal_launch_angle, optimal_engine_thrust, optimal_boost_time = CruiseMissile.optimize_launch_phase(cruise_target, initial_guess, bounds)
 
     # Create the cruise missile
-    cruise_missile = CruiseMissile(
+    cruise_missile = CruiseMissile(target=cruise_target,
         launch_angle=optimal_launch_angle, engine_thrust=optimal_engine_thrust, boost_time=optimal_boost_time
     )
 
@@ -339,6 +349,10 @@ if __name__ == "__main__":
 """
 Ensure the velocity and position is not manipulated directly in the process. Only the acceleration should be used to update the velocity and position. The acceleration should be calculated based on the forces acting on the missile.
 
+Apply proportional navigation guidance to adjust the missile's trajectory based on the rate of change of the line-of-sight angle to the target.
+
+Please adjust so that the lift force is applied on all phases of cruise missile, but adjusted according to angle of attack and other factors.
+
 Fuel Efficiency Objective: If you want to optimize fuel efficiency for the cruise missile as well, you might need to add a similar objective function as in the BallisticMissile for the optimization process.
 
 Please summarize all the forces act on the missile and improve the realism of the simulation.
@@ -350,7 +364,7 @@ Logging and Verbosity:
 Add logging capabilities to help with debugging or understanding the missile's behavior over time.
 
 Physical Constraints:
-Ensure that physical constraints are applied.
+Ensure that physical constraints are applied. For example, the missile should not be able to accelerate beyond the maximum thrust or decelerate beyond the maximum drag force. Also, the missile should not be able to turn faster than its maximum turn rate.
 
 Configuration via External Files:
 Allow for the missile and simulation parameters to be loaded from an external configuration file, making it easier to run different scenarios without changing the code.
