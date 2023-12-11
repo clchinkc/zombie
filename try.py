@@ -64,6 +64,31 @@ df['Symbol'] = symbol
 print(df)
 
 
+
+"""
+When scraping cryptocurrency data, beyond the basic information such as name, market cap, price, circulating supply, and symbol, there are several other types of information you might consider scraping, depending on your interests and the data available on the website. Here are some ideas:
+
+1. **Historical Data**: Historical price data, volume, and market cap, which can be useful for technical analysis, trend identification, and predictive modeling.
+
+5. **Social Media and News Sentiment**: Aggregating data from social media or news articles to gauge public sentiment or to track news that might affect the market.
+
+6. **Blockchain Data**: Information directly from the coin's blockchain, like transaction volumes, average transaction values, wallet addresses, and more, to understand network activity.
+
+7. **Tokenomics**: Data on the distribution and allocation of tokens, such as reserved tokens, tokens in circulation, and burn rates.
+
+9. **Regulatory News**: Tracking regulatory announcements or changes that might impact the cryptocurrency.
+
+10. **Technology and Development Updates**: Information about technological advancements, updates, and roadmaps of a particular cryptocurrency project.
+
+11. **Community Metrics**: Size and activity of the cryptocurrency's community, measured by followers on social media platforms, activity on Reddit, or members in Telegram/Discord groups.
+
+12. **Liquidity Metrics**: Data on liquidity such as bid-ask spreads, order book depth, and slippage.
+
+13. **DeFi Metrics**: For DeFi (Decentralized Finance) tokens, scraping data related to total value locked (TVL), lending rates, borrowing rates, and yield farming opportunities.
+
+14. **Staking and Yield Information**: Details about staking rewards, yield farming options, and other passive income opportunities associated with certain cryptocurrencies.
+"""
+
 """
 def get_cryptocurrency_data(coin_id):
     url = f"https://api.coingecko.com/api/v3/coins/{coin_id}"

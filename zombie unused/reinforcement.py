@@ -151,6 +151,73 @@ def q_learning(env, episodes, initial_learning_rate, min_learning_rate, learning
     return final_policy_q_learning, q_learning_snapshots, simulation_rewards
 
 
+# Value Iteration
+def value_iteration(env, episodes, gamma=0.9, theta=1e-3, snapshot_interval=100, simulation_interval=100):
+    def one_step_lookahead(state, V):
+        action_values = np.zeros(len(env.actions))
+        for a, action in enumerate(env.actions):
+            next_state = env.get_next_state(state, action)
+            reward = env.calculate_reward(next_state)
+            action_values[a] = reward + gamma * V[next_state.position]
+        return action_values
+
+    V = np.zeros((env.grid_size, env.grid_size))
+    policy_value_snapshots = []
+    value_function_snapshots = []
+    simulation_rewards = []
+
+    for episode in range(episodes):
+        delta = 0
+        for i in range(env.grid_size):
+            for j in range(env.grid_size):
+                state = State((i, j))
+                if env.is_terminal_state(state):
+                    continue
+
+                A = one_step_lookahead(state, V)
+                best_action_value = np.max(A)
+                delta = max(delta, np.abs(best_action_value - V[i, j]))
+                V[i, j] = best_action_value
+
+        if delta < theta:
+            break
+
+        if episode % snapshot_interval == 0:
+            # Snapshot of policy and value function
+            current_policy = np.zeros((env.grid_size, env.grid_size), dtype=object)
+            for i in range(env.grid_size):
+                for j in range(env.grid_size):
+                    state = State((i, j))
+                    if env.is_terminal_state(state):
+                        continue
+
+                    A = one_step_lookahead(state, V)
+                    best_action = np.argmax(A)
+                    current_policy[i, j] = env.actions[best_action].move
+
+            policy_value_snapshots.append(np.copy(current_policy))
+            value_function_snapshots.append(np.copy(V))
+            logger.info(f'Episode {episode + 1}, Average Value: {np.mean(V):.4f}')
+
+            if episode % simulation_interval == 0:
+                # Simulate episodes with the current policy
+                rewards = simulate_episodes(env, current_policy, episodes=10)
+                simulation_rewards.append(rewards)
+
+    # Final policy
+    final_policy_value = np.zeros((env.grid_size, env.grid_size), dtype=object)
+    for i in range(env.grid_size):
+        for j in range(env.grid_size):
+            state = State((i, j))
+            if env.is_terminal_state(state):
+                continue
+
+            A = one_step_lookahead(state, V)
+            best_action = np.argmax(A)
+            final_policy_value[i, j] = env.actions[best_action].move
+
+    return V, final_policy_value, policy_value_snapshots, value_function_snapshots, simulation_rewards
+
 # Dynamic Programming (DP) - Policy Iteration
 def policy_iteration(env, episodes, gamma, theta=0.0001, policy_store_interval=1, simulation_interval=10):
     def calculate_state_value(policy, V):
@@ -482,6 +549,9 @@ env = GridEnvironment(grid_size=5, safe_zone=(0, 0), zombie_positions=[(2, 2), (
 # Q-Learning
 final_policy_q_learning, q_learning_snapshots, q_learning_sim_rewards = q_learning(env, episodes=1000, initial_learning_rate=0.1, min_learning_rate=0.01, learning_rate_decay=0.99, discount_factor=0.9, initial_epsilon=0.5, min_epsilon=0.01, epsilon_decay=0.99)
 
+# Value Iteration
+V_value, final_policy_value, policy_value_snapshots, V_value_snapshots, value_iter_sim_rewards = value_iteration(env, episodes=1000, gamma=0.9)
+
 # Policy Iteration
 final_policy_dp, policy_snapshots, policy_iter_sim_rewards = policy_iteration(env, episodes=1000, gamma=0.9)
 
@@ -489,18 +559,22 @@ final_policy_dp, policy_snapshots, policy_iter_sim_rewards = policy_iteration(en
 V_mc, final_policy_mc, policy_mc_snapshots, V_mc_snapshots, monte_carlo_sim_rewards = monte_carlo(env, episodes=1000, gamma=0.9)
 
 # Display reward curves
-plot_reward_curves([q_learning_sim_rewards, policy_iter_sim_rewards, monte_carlo_sim_rewards], ['Q-Learning (During Training)', 'Policy Iteration (During Training)', 'Monte Carlo (During Training)'])
+plot_reward_curves([q_learning_sim_rewards, value_iter_sim_rewards, policy_iter_sim_rewards, monte_carlo_sim_rewards], ['Q-Learning (During Training)', 'Policy Iteration (During Training)', 'Monte Carlo (During Training)'])
 
 # Display policy evolution
 plot_policy_evolution(env, q_learning_snapshots, 'Q-Learning Evolution')
+plot_policy_evolution(env, policy_value_snapshots, 'Value Iteration Evolution')
 plot_policy_evolution(env, policy_snapshots, 'Policy Iteration Evolution')
 plot_policy_evolution(env, policy_mc_snapshots, 'Monte Carlo Evolution')
+plot_value_function_evolution(env, V_value_snapshots, 'Value Iteration Evolution')
 plot_value_function_evolution(env, V_mc_snapshots, 'Monte Carlo Evolution')
 
 # Display final results
 plot_policy(env, final_policy_q_learning, "Final Q-Learning Policy")
+plot_policy(env, final_policy_value, "Final Value Iteration Policy")
 plot_policy(env, final_policy_dp, "Final Policy Iteration Policy")
 plot_policy(env, final_policy_mc, "Final Monte Carlo Policy")
+plot_value_function(env, V_value, "Final Value Iteration Value Function")
 plot_value_function(env, V_mc, "Final Monte Carlo Value Function")
 
 """
