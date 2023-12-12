@@ -1,229 +1,637 @@
+import logging
+import random
 
+import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.animation import FuncAnimation
+from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.table import Table
+from matplotlib.transforms import Bbox
 
 
-class Environment:
-    def __init__(self, grid):
-        self.grid = grid
-        self.n_rows = len(grid)
-        self.n_cols = len(grid[0])
-        self.transitions = {'U': (-1, 0), 'D': (1, 0), 'L': (0, -1), 'R': (0, 1)}
-        self.costs = {'S': 1, 'G': 0, 'X': 0, 'T': 1}
+# Abstract State and Action Representations
+class State:
+    def __init__(self, position):
+        self.position = position
 
-    def is_valid(self, row, col):
-        return 0 <= row < self.n_rows and 0 <= col < self.n_cols and self.grid[row][col] != 'X'
+    def __eq__(self, other):
+        return self.position == other.position
+
+    def __hash__(self):
+        return hash(self.position)
+
+    def __repr__(self):
+        return str(self.position)
+
+class Action:
+    def __init__(self, move):
+        self.move = move
+
+    def __eq__(self, other):
+        return self.move == other.move
+
+    def __hash__(self):
+        return hash(self.move)
+
+    def __repr__(self):
+        return str(self.move)
+
+# Grid Environment
+class GridEnvironment:
+    def __init__(self, grid_size, safe_zone, zombie_positions, start_position, zombie_penalty=-100, safe_zone_reward=100, step_cost=-1):
+        self.grid_size = grid_size
+        self.safe_zone = State(safe_zone)
+        self.zombie_positions = list(map(State, zombie_positions))
+        self.start_position = State(start_position)
+        self.zombie_penalty = zombie_penalty
+        self.safe_zone_reward = safe_zone_reward
+        self.step_cost = step_cost
+        # Define rewards
+        self.rewards = {State(pos): step_cost for pos in np.ndindex(grid_size, grid_size)}
+        self.rewards[State(safe_zone)] = self.safe_zone_reward
+        for z in self.zombie_positions:
+            self.rewards[z] = self.zombie_penalty
+        # Define actions
+        self.actions = [Action((0, -1)), Action((0, 1)), Action((-1, 0)), Action((1, 0))]
+
+    def is_terminal_state(self, state):
+        return state in self.zombie_positions or state == self.safe_zone
 
     def get_next_state(self, state, action):
-        row, col = state
-        drow, dcol = self.transitions[action]
-        new_row, new_col = row + drow, col + dcol
+        if self.is_terminal_state(state):
+            return state  # No movement in terminal state
+        next_position = tuple(np.clip(np.array(state.position) + np.array(action.move), 0, self.grid_size - 1))
+        return State(next_position)
 
-        if self.is_valid(new_row, new_col):
-            return (new_row, new_col)
+    def calculate_reward(self, state):
+        return self.rewards.get(state, self.step_cost)
+
+    def is_valid_state(self, state):
+        return 0 <= state.position[0] < self.grid_size and 0 <= state.position[1] < self.grid_size
+
+    def step(self, state, action):
+        next_state = self.get_next_state(state, action)
+        reward = self.calculate_reward(next_state)
+        done = self.is_terminal_state(next_state)
+        return next_state, reward, done
+
+    def reset(self):
+        return self.start_position
+
+# Temporal-Difference Learning (TD) - Q-Learning
+def q_learning(env, logger, episodes, initial_learning_rate, min_learning_rate, learning_rate_decay, discount_factor, initial_epsilon, min_epsilon, epsilon_decay, policy_store_interval=10, simulation_interval=100):
+    def state_action_index(state, action):
+        return state.position[0], state.position[1], env.actions.index(action)
+
+    def choose_action(state, q_table, epsilon):
+        if random.uniform(0, 1) < epsilon:
+            return random.choice(env.actions)  # Explore
         else:
-            return state
+            # Exploit
+            state_index = state.position[0], state.position[1]
+            return env.actions[np.argmax(q_table[state_index])]
 
-    def get_cost(self, state):
-        row, col = state
-        return self.costs[self.grid[row][col]]
+    def update_q_table(state, action, reward, next_state, q_table):
+        current_index = state_action_index(state, action)
+        next_state_index = next_state.position[0], next_state.position[1]
+        next_max = np.max(q_table[next_state_index])
+        q_table[current_index] = (1 - learning_rate) * q_table[current_index] + learning_rate * (reward + discount_factor * next_max)
 
-    def get_actions(self, state):
-        return list(self.transitions.keys())
+    def convert_to_policy(q_table, env):
+        policy_actions = np.empty((env.grid_size, env.grid_size), dtype=object)
+        for i in range(env.grid_size):
+            for j in range(env.grid_size):
+                state_index = (i, j)
+                best_action_index = np.argmax(q_table[state_index])
+                policy_actions[i, j] = env.actions[best_action_index].move
+        return policy_actions
 
+    num_actions = len(env.actions)
+    q_table = np.random.uniform(low=-0.1, high=0.1, size=(env.grid_size, env.grid_size, num_actions))
 
-def compute_action_values(env, state: tuple[int, int], value_function: np.ndarray, gamma: float = 0.99) -> np.ndarray:
-    """Compute the action values for a state using the value function."""
-    if env.grid[state[0]][state[1]] in ('X', 'G'):
-        return np.array([])
-
-    action_values = np.zeros(len(env.transitions))
-
-    for i, action in enumerate(env.transitions):
-        next_state = env.get_next_state(state, action)
-        next_reward = env.get_cost(next_state) + gamma * value_function[next_state]
-        action_values[i] = next_reward
-
-    return action_values
-
-def update_value_function(env, gamma: float, state: tuple[int, int], value_function: np.ndarray) -> float:
-    """Update the value of a state using the Bellman equation."""
-    current_value = value_function[state]
-    action_values = compute_action_values(env, state, value_function, gamma)
+    # Set values for terminal states
+    for z in env.zombie_positions:
+        for a in env.actions:
+            q_table[state_action_index(z, a)] = env.zombie_penalty
+    for a in env.actions:
+        q_table[state_action_index(env.safe_zone, a)] = env.safe_zone_reward
     
-    if len(action_values) > 0:
-        value_function[state] = np.min(action_values)
+    epsilon = initial_epsilon
+    learning_rate = initial_learning_rate
+    q_learning_snapshots = []
+    simulation_rewards = []
 
-    return abs(current_value - value_function[state])
+    for episode in range(episodes):
+        state = env.reset()
+        done = False
+        total_reward = 0
+        steps = 0
 
-def select_best_action(env, state: tuple[int, int], value_function: np.ndarray) -> str:
-    """Select the best action for a state using the value function."""
-    action_values = compute_action_values(env, state, value_function)
+        while not done:
+            action = choose_action(state, q_table, epsilon)
+            next_state, reward, done = env.step(state, action)
+            update_q_table(state, action, reward, next_state, q_table)
+
+            state = next_state
+            total_reward += reward
+            steps += 1
+
+        if episode % policy_store_interval == 0 or episode == episodes - 1:
+            best_policy = convert_to_policy(q_table, env)
+            q_learning_snapshots.append(best_policy)
+            logger.info("Episode completed", episode=episode+1, total_reward=total_reward, steps=steps, epsilon=epsilon, learning_rate=learning_rate)
+
+        if episode % simulation_interval == 0 or episode == episodes - 1:
+            # Simulate episodes with the current policy
+            current_policy = convert_to_policy(q_table, env)
+            rewards = simulate_episodes(env, current_policy, episodes=10)
+            simulation_rewards.append(rewards)
+
+        epsilon = max(min_epsilon, epsilon * epsilon_decay)
+        learning_rate = max(min_learning_rate, learning_rate * learning_rate_decay)
     
-    if len(action_values) == 0:
-        return ""
-
-    return list(env.transitions.keys())[np.argmin(action_values)]
-
-
-def value_iteration(env, gamma: float=0.99, epsilon: float=1e-5) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Run the value iteration algorithm to find the optimal value function and policy.
-
-    Args:
-        env: The environment object that defines the MDP.
-        gamma: The discount factor for future rewards.
-        epsilon: The convergence threshold for the algorithm.
-
-    Returns:
-        A tuple (value_function, policy) of numpy arrays representing the optimal value function
-        and policy, respectively.
-    """
-    # Initialize the value function and policy arrays
-    value_function = np.zeros((env.n_rows, env.n_cols))
-    policy = np.empty((env.n_rows, env.n_cols), dtype='<U1')
-
-    while True:
-        max_change = 0
-
-        # Update the value function for each state
-        for row in range(env.n_rows):
-            for col in range(env.n_cols):
-                state = (row, col)
-
-                change = update_value_function(env, gamma, state, value_function)
-                max_change = max(max_change, change)
-
-                # Select the best action for the state
-                policy[state] = select_best_action(env, state, value_function)
-
-        if max_change < epsilon:
-            # The algorithm has converged, return the optimal value function and policy
-            return value_function, policy
+    final_policy_q_learning = convert_to_policy(q_table, env)
+    
+    return final_policy_q_learning, q_learning_snapshots, simulation_rewards
 
 
-def policy_evaluation(env, policy, V, gamma=0.99, epsilon=1e-5):
-    while True:
+# Value Iteration
+def value_iteration(env, logger, episodes, gamma=0.9, theta=1e-3, snapshot_interval=100, simulation_interval=100):
+    def one_step_lookahead(state, V):
+        action_values = np.zeros(len(env.actions))
+        for a, action in enumerate(env.actions):
+            next_state = env.get_next_state(state, action)
+            reward = env.calculate_reward(next_state)
+            action_values[a] = reward + gamma * V[next_state.position]
+        return action_values
+
+    V = np.zeros((env.grid_size, env.grid_size))
+    policy_value_snapshots = []
+    value_function_snapshots = []
+    simulation_rewards = []
+
+    for episode in range(episodes):
         delta = 0
-
-        for row in range(env.n_rows):
-            for col in range(env.n_cols):
-                state = (row, col)
-                if env.grid[row][col] in ('X', 'G'):
+        for i in range(env.grid_size):
+            for j in range(env.grid_size):
+                state = State((i, j))
+                if env.is_terminal_state(state):
                     continue
 
-                v = V[state]
-                action = policy[state]
-                next_state = env.get_next_state(state, action)
-                next_reward = env.get_cost(next_state) + gamma * V[next_state]
+                A = one_step_lookahead(state, V)
+                best_action_value = np.max(A)
+                delta = max(delta, np.abs(best_action_value - V[i, j]))
+                V[i, j] = best_action_value
 
-                V[state] = next_reward
-                delta = max(delta, abs(v - V[state]))
-
-        if delta < epsilon:
+        if delta < theta:
             break
 
-    return V
+        if episode % snapshot_interval == 0:
+            # Snapshot of policy and value function
+            current_policy = np.zeros((env.grid_size, env.grid_size), dtype=object)
+            for i in range(env.grid_size):
+                for j in range(env.grid_size):
+                    state = State((i, j))
+                    if env.is_terminal_state(state):
+                        continue
 
-def policy_improvement(env, policy, V, gamma=0.99):
-    stable = True
+                    A = one_step_lookahead(state, V)
+                    best_action = np.argmax(A)
+                    current_policy[i, j] = env.actions[best_action].move
 
-    for row in range(env.n_rows):
-        for col in range(env.n_cols):
-            state = (row, col)
-            if env.grid[row][col] in ('X', 'G'):
+            policy_value_snapshots.append(np.copy(current_policy))
+            value_function_snapshots.append(np.copy(V))
+            logger.info("Episode completed", episode=episode+1, average_value=np.mean(V))
+
+            if episode % simulation_interval == 0:
+                # Simulate episodes with the current policy
+                rewards = simulate_episodes(env, current_policy, episodes=10)
+                simulation_rewards.append(rewards)
+
+    # Final policy
+    final_policy_value = np.zeros((env.grid_size, env.grid_size), dtype=object)
+    for i in range(env.grid_size):
+        for j in range(env.grid_size):
+            state = State((i, j))
+            if env.is_terminal_state(state):
                 continue
 
-            old_action = policy[state]
-            values = []
+            A = one_step_lookahead(state, V)
+            best_action = np.argmax(A)
+            final_policy_value[i, j] = env.actions[best_action].move
 
-            for action in env.get_actions(state):
-                next_state = env.get_next_state(state, action)
-                next_reward = env.get_cost(next_state) + gamma * V[next_state]
-                values.append(next_reward)
+    return V, final_policy_value, policy_value_snapshots, value_function_snapshots, simulation_rewards
 
-            policy[state] = env.get_actions(state)[np.argmin(values)]
+# Dynamic Programming (DP) - Policy Iteration
+def policy_iteration(env, logger, episodes, gamma, theta=0.0001, policy_store_interval=1, simulation_interval=10):
+    def calculate_state_value(policy, V):
+        while True:
+            new_V = np.zeros_like(V)
+            for action_index, action in enumerate(env.actions):
+                # Calculate next states for each action
+                action_move = np.array(action.move)
+                next_positions = np.clip(np.dstack(np.indices(V.shape)) + action_move, 0, env.grid_size - 1)
+                next_states = next_positions.reshape(-1, 2)
 
-            if old_action != policy[state]:
-                stable = False
+                # Vectorized check for valid and non-terminal states
+                valid_mask = np.all((next_states >= 0) & (next_states < env.grid_size), axis=1)
+                terminal_mask = np.array([env.is_terminal_state(State(tuple(pos))) for pos in next_states])
+                combined_mask = valid_mask & ~terminal_mask
+                combined_mask = combined_mask.reshape(V.shape)
 
-    return stable, policy
+                # Apply policy and combined mask
+                policy_combined_mask = (policy == action_index) & combined_mask
 
-def policy_iteration(env, gamma=0.99, epsilon=1e-5):
-    V = np.zeros((env.n_rows, env.n_cols))
-    policy = np.random.choice(list(env.transitions.keys()), (env.n_rows, env.n_cols))
-    policy = np.array([['' if env.grid[row][col] in ('X', 'G') else policy[row, col] for col in range(env.n_cols)] for row in range(env.n_rows)])
+                # Vectorized calculation of rewards
+                rewards = np.array([env.calculate_reward(State(tuple(pos))) for pos in next_states])
+                rewards = rewards.reshape(V.shape)
 
-    while True:
-        V = policy_evaluation(env, policy, V, gamma, epsilon)
-        stable, policy = policy_improvement(env, policy, V, gamma)
+                # Update value function
+                next_values = V[next_positions[..., 0], next_positions[..., 1]]
+                new_V[policy_combined_mask] = rewards[policy_combined_mask] + gamma * next_values[policy_combined_mask]
 
-        if stable:
+            delta = np.max(np.abs(new_V - V))
+            V[:] = new_V
+
+            if delta < theta:
+                break
+
+    def policy_improvement(V):
+        # Initialize new policy
+        new_policy = np.zeros((env.grid_size, env.grid_size), dtype=int)
+
+        # Calculate next states for each action
+        all_actions = np.array([a.move for a in env.actions])  # Shape: [num_actions, 2]
+        grid_indices = np.dstack(np.indices(V.shape))  # Shape: [grid_size, grid_size, 2]
+        next_states = grid_indices[:, :, None, :] + all_actions[None, None, :, :]  # Shape: [grid_size, grid_size, num_actions, 2]
+
+        # Clip next states to valid grid positions
+        valid_next_states = np.clip(next_states, 0, env.grid_size - 1)
+
+        # Calculate rewards and values for next states
+        next_state_rewards = np.array([[env.calculate_reward(State(tuple(pos))) for pos in valid_next_states[i, j]] for i in range(env.grid_size) for j in range(env.grid_size)]).reshape(env.grid_size, env.grid_size, len(env.actions))
+        next_state_values = V[valid_next_states[..., 0], valid_next_states[..., 1]]  # Shape: [grid_size, grid_size, num_actions]
+
+        # Compute action values
+        action_values = next_state_rewards + gamma * next_state_values  # Shape: [grid_size, grid_size, num_actions]
+
+        # Update policy
+        new_policy = np.argmax(action_values, axis=2)
+
+        return new_policy
+
+    def convert_to_policy(policy_matrix, env):
+        policy_actions = np.empty((env.grid_size, env.grid_size), dtype=object)
+        for i in range(env.grid_size):
+            for j in range(env.grid_size):
+                action_index = policy_matrix[i, j]
+                action = env.actions[action_index]
+                policy_actions[i, j] = action.move
+        return policy_actions
+
+    V = np.zeros((env.grid_size, env.grid_size))
+    policy = np.random.randint(len(env.actions), size=(env.grid_size, env.grid_size))
+    policy_snapshots = []
+    simulation_rewards = []
+
+    for episode in range(episodes):
+        calculate_state_value(policy, V)
+        new_policy = policy_improvement(V)
+
+        if episode % policy_store_interval == 0 or np.array_equal(new_policy, policy):
+            policy_snapshots.append(convert_to_policy(new_policy, env))
+            logger.info("Episode completed", episode=episode+1, average_value=np.mean(V))
+
+        if episode % simulation_interval == 0 or np.array_equal(new_policy, policy):
+            # Simulate episodes with the current policy
+            current_policy = convert_to_policy(policy, env)
+            rewards = simulate_episodes(env, current_policy, episodes=10)
+            simulation_rewards.append(rewards)
+
+        if np.array_equal(new_policy, policy):
             break
+        policy = new_policy
 
-    return V, policy
+    final_policy_dp = convert_to_policy(policy, env)
+
+    return final_policy_dp, policy_snapshots, simulation_rewards
 
 
+# Monte Carlo (MC) - First-visit MC Prediction
+def monte_carlo(env, logger, episodes, gamma, value_function_store_interval=10, simulation_interval=100):
+    def convert_to_policy(env, V):
+        policy = np.empty((env.grid_size, env.grid_size), dtype=tuple)
+        for i in range(env.grid_size):
+            for j in range(env.grid_size):
+                state = State((i, j))
+                if state in env.zombie_positions or state == env.safe_zone:
+                    continue
 
-def print_map(env):
-    color_map = {'S': '\033[92mS\033[0m', 'G': '\033[94mG\033[0m', 'X': '\033[91mX\033[0m', 'T': '\033[93mT\033[0m'}
+                # Evaluate the value of each possible action from the current state
+                action_values = []
+                for action in env.actions:
+                    next_state = env.get_next_state(state, action)
+                    # Skip invalid or terminal states
+                    if next_state == state or next_state in env.zombie_positions:
+                        continue
+                    value = V[next_state.position[0], next_state.position[1]]
+                    action_values.append((action.move, value))
+
+                # Choose the action leading to the state with highest value
+                if action_values:
+                    best_action = max(action_values, key=lambda x: x[1])[0]
+                else:
+                    raise Exception(f'No valid actions found for state {state}')
+
+                policy[i, j] = best_action
+        return policy
+
+    V = np.zeros((env.grid_size, env.grid_size))
+    # Set values for terminal states
+    for z in env.zombie_positions:
+        V[z.position] = env.zombie_penalty
+    V[env.safe_zone.position] = env.safe_zone_reward
+    V[env.start_position.position] = -np.inf
     
-    for row in env.grid:
-        print(' '.join([color_map[cell] for cell in row]))
+    returns_sum = np.zeros((env.grid_size, env.grid_size))
+    returns_count = np.zeros((env.grid_size, env.grid_size))
+    value_function_snapshots = []
+    policy_snapshots = []
+    simulation_rewards = []
 
-def printV(V):
-    for row in range(V.shape[0]):
-        for col in range(V.shape[1]):
-            print(f"{V[row, col]:.2f}", end=' ')
-        print()
+    for episode in range(episodes):
+        states, rewards = [], []
+        state = env.start_position
+        done = False
 
-def printPolicy(policy):
-    for row in range(policy.shape[0]):
-        for col in range(policy.shape[1]):
-            if policy[row, col] == 'U':
-                print('\u2191', end=' ')
-            elif policy[row, col] == 'D':
-                print('\u2193', end=' ')
-            elif policy[row, col] == 'L':
-                print('\u2190', end=' ')
-            elif policy[row, col] == 'R':
-                print('\u2192', end=' ')
-            else:
-                print('-', end=' ')
-        print()
+        while not done:
+            action = random.choice(env.actions)
+            next_state, reward, done = env.step(state, action)
+            states.append(state)
+            rewards.append(reward)
+            state = next_state
 
-grid = [
-    ['S', 'T', 'X', 'T', 'G'],
-    ['T', 'X', 'T', 'T', 'T'],
-    ['T', 'T', 'T', 'X', 'T'],
-    ['X', 'T', 'X', 'T', 'T'],
-    ['T', 'T', 'T', 'T', 'T']
-]
+        unique_states = list(set(states))
+        G = np.zeros((env.grid_size, env.grid_size))
+        for state in unique_states:
+            first_occurrence_idx = next(i for i, x in enumerate(states) if x == state)
+            G[state.position] = sum([gamma ** i * r for i, r in enumerate(rewards[first_occurrence_idx:])])
 
-env = Environment(grid)
-print_map(env)
+        for state in unique_states:
+            if state not in env.zombie_positions and state != env.safe_zone and state != env.start_position:
+                returns_sum[state.position] += G[state.position]
+                returns_count[state.position] += 1
+                V[state.position] = returns_sum[state.position] / returns_count[state.position]
+
+        if episode % value_function_store_interval == 0 or episode == episodes - 1:
+            value_function_snapshots.append(np.copy(V))
+            current_policy = convert_to_policy(env, V)
+            policy_snapshots.append(current_policy)
+            logger.info("Episode completed", episode=episode+1, average_return=np.mean(rewards), average_value=np.nanmean(np.where(np.ravel_multi_index(env.start_position.position, V.shape) != np.arange(V.size).reshape(V.shape), V, np.nan)))
+
+        if episode % simulation_interval == 0 or episode == episodes - 1:
+            # Simulate episodes with the current policy
+            current_policy = convert_to_policy(env, V)
+            rewards = simulate_episodes(env, current_policy, episodes=10)
+            simulation_rewards.append(rewards)
+
+    final_policy_mc = convert_to_policy(env, V)
+
+    return V, final_policy_mc, policy_snapshots, value_function_snapshots, simulation_rewards
 
 
-# Testing the value iteration
-# V_value_iter, policy_value_iter = value_iteration(env)
-# print("\nState Values (Value Iteration):")
-# printV(V_value_iter)
+def simulate_episodes(env, policy, episodes):
+    total_rewards = []
 
-# print("\nOptimal Policy (Value Iteration):")
-# printPolicy(policy_value_iter)
+    for episode in range(episodes):
+        state = env.reset()
+        episode_reward = 0
+        done = False
+        step_count = 0
+
+        while not done:
+            action_move = policy[state.position]
+            action = next(a for a in env.actions if a.move == action_move)
+
+            next_state, reward, done = env.step(state, action)
+            episode_reward += reward
+
+            # Debugging output
+            # print(f"Episode: {episode}, Step: {step_count}, State: {state}, Action: {action}, Next State: {next_state}, Reward: {reward}, Done: {done}")
+
+            state = next_state
+            step_count += 1
+
+            # Safety check to prevent infinite loops in case of incorrect logic
+            if step_count >= 1000:  # Arbitrary large number
+                logger.info(f"Warning: Did not finish after {step_count} steps, terminating episode to avoid infinite loop")
+                break
+
+        total_rewards.append(episode_reward)
+
+    # Compute and return the average reward
+    avg_reward = np.mean(total_rewards)
+    return avg_reward
 
 
-# Testing the policy iteration
-# V_policy_iter, policy_policy_iter = policy_iteration(env)
-# print("\nState Values (Policy Iteration):")
-# printV(V_policy_iter)
+class Logger:
+    def __init__(self):
+        # Set up the basic configuration for the logger
+        logging.basicConfig(level=logging.INFO, 
+                            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                            datefmt='%Y-%m-%d %H:%M:%S')
+        self.logger = logging.getLogger('Reinforcement Learning Logger')
 
-# print("\nOptimal Policy (Policy Iteration):")
-# printPolicy(policy_policy_iter)
+    def debug(self, message, **kwargs):
+        self.logger.debug(self._format_message(message, kwargs))
 
-print("\n")
+    def info(self, message, **kwargs):
+        self.logger.info(self._format_message(message, kwargs))
 
+    def warning(self, message, **kwargs):
+        self.logger.warning(self._format_message(message, kwargs))
+
+    def error(self, message, **kwargs):
+        self.logger.error(self._format_message(message, kwargs))
+
+    def critical(self, message, **kwargs):
+        self.logger.critical(self._format_message(message, kwargs))
+
+    def _format_message(self, message, kwargs):
+        context = ' '.join([f'{key}: {value:.4f}' if isinstance(value, float) else f'{key}: {value}' for key, value in kwargs.items()])
+        return f'{message} - {context}' if context else message
+
+
+class Visualization:
+    def __init__(self, env):
+        self.env = env
+
+    def plot_policy(self, policy, title, ax=None):
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(8, 8))
+            show_plot = True
+        else:
+            show_plot = False
+
+        nrows, ncols = policy.shape
+        ax.set_title(title)
+        ax.set_axis_off()
+        bbox = Bbox.from_bounds(0, 0, 1, 1)
+        tb = Table(ax, bbox=bbox)
+
+        width, height = 1.0 / ncols, 1.0 / nrows
+        action_arrows = {(-1, 0): '↑', (1, 0): '↓', (0, -1): '←', (0, 1): '→'}
+
+        for (i, j), action in np.ndenumerate(policy):
+            cell_text, color = self._get_cell_text_and_color(i, j, action, action_arrows)
+            tb.add_cell(i, j, width, height, text=cell_text, loc='center', facecolor=color)
+
+        ax.add_table(tb)
+        if show_plot:
+            plt.show()
+
+    def plot_value_function(self, V, title, ax=None):
+        if ax is None:
+            fig, ax = plt.subplots(figsize=(8, 8))
+            show_plot = True
+        else:
+            show_plot = False
+
+        cmap = LinearSegmentedColormap.from_list('Value Function', ['white', 'yellow', 'orange', 'red'])
+        im = ax.imshow(V, cmap=cmap)
+
+        for i in range(V.shape[0]):
+            for j in range(V.shape[1]):
+                text, color = self._get_value_text_and_color(i, j, V)
+                ax.text(j, i, text, ha="center", va="center", color=color)
+
+        ax.set_title(title)
+
+        if show_plot:
+            fig.colorbar(im, ax=ax)
+            plt.show()
+
+    def animate_policy_evolution(self, policies, title, interval=200):
+        fig, ax = plt.subplots(figsize=(8, 8))
+
+        def update(frame):
+            ax.clear()
+            self.plot_policy(policies[frame], f"{title} - Step {frame}", ax=ax)
+
+        ani = FuncAnimation(fig, update, frames=len(policies), interval=interval, repeat=False)
+        plt.show()
+
+    def animate_value_function_evolution(self, value_functions, title, interval=200):
+        fig, ax = plt.subplots(figsize=(8, 8))
+        cmap = LinearSegmentedColormap.from_list('Value Function', ['white', 'yellow', 'orange', 'red'])
+
+        im = ax.imshow(value_functions[0], cmap=cmap)
+        cbar = fig.colorbar(im, ax=ax)
+
+        def update(frame):
+            ax.clear()
+            im.set_data(value_functions[frame])
+            im.autoscale()
+            cbar.update_normal(im)
+            self.plot_value_function(value_functions[frame], f"{title} - Episode {frame}", ax=ax)
+
+        ani = FuncAnimation(fig, update, frames=len(value_functions), interval=interval, repeat=False)
+        plt.show()
+
+    def _get_cell_text_and_color(self, i, j, action, action_arrows):
+        if (i, j) in [z.position for z in self.env.zombie_positions]:
+            color, cell_text = 'red', 'Z'
+        elif (i, j) == self.env.safe_zone.position:
+            color, cell_text = 'green', 'S'
+        elif (i, j) == self.env.start_position.position:
+            color, cell_text = 'blue', 'Start'
+        else:
+            color, cell_text = 'lightgray', action_arrows.get(action, '')
+        return cell_text, color
+
+    def _get_value_text_and_color(self, i, j, V):
+        color = 'black' if V[i, j] < V.max() / 2 else 'white'
+        current_position = (i, j)
+
+        if current_position in [z.position for z in self.env.zombie_positions]:
+            text = 'Z'
+        elif current_position == self.env.safe_zone.position:
+            text = 'S'
+        elif current_position == self.env.start_position.position:
+            text = 'Start'
+        else:
+            text = f'{V[i, j]:.2f}'
+        return text, color
+
+    def plot_reward_curves(self, reward_curves, labels):
+        plt.figure(figsize=(10, 6))
+        for rewards, label in zip(reward_curves, labels):
+            plt.plot(rewards, label=label)
+        plt.xlabel('Episodes (in intervals)')
+        plt.ylabel('Average Reward')
+        plt.title('Average Reward vs. Episodes')
+        plt.legend()
+        plt.show()
+
+# Example usage
+env = GridEnvironment(grid_size=5, safe_zone=(0, 0), zombie_positions=[(2, 2), (1, 3)], start_position=(4, 4))
+logger = Logger()
+visualization = Visualization(env)
+
+# Q-Learning
+final_policy_q_learning, q_learning_snapshots, q_learning_sim_rewards = q_learning(env, logger, episodes=1000, initial_learning_rate=0.1, min_learning_rate=0.01, learning_rate_decay=0.99, discount_factor=0.9, initial_epsilon=0.5, min_epsilon=0.01, epsilon_decay=0.99)
+
+# Value Iteration
+V_value, final_policy_value, policy_value_snapshots, V_value_snapshots, value_iter_sim_rewards = value_iteration(env, logger, episodes=1000, gamma=0.9)
+
+# Policy Iteration
+final_policy_dp, policy_snapshots, policy_iter_sim_rewards = policy_iteration(env, logger, episodes=1000, gamma=0.9)
+
+# Monte Carlo
+V_mc, final_policy_mc, policy_mc_snapshots, V_mc_snapshots, monte_carlo_sim_rewards = monte_carlo(env, logger, episodes=1000, gamma=0.9)
+
+# Display reward curves
+visualization.plot_reward_curves([q_learning_sim_rewards, value_iter_sim_rewards, policy_iter_sim_rewards, monte_carlo_sim_rewards], ['Q-Learning', 'Value Iteration', 'Policy Iteration', 'Monte Carlo'])
+
+# Display policy evolution
+visualization.animate_policy_evolution(q_learning_snapshots, 'Q-Learning Evolution')
+visualization.animate_policy_evolution(policy_value_snapshots, 'Value Iteration Evolution')
+visualization.animate_policy_evolution(policy_snapshots, 'Policy Iteration Evolution')
+visualization.animate_policy_evolution(policy_mc_snapshots, 'Monte Carlo Evolution')
+visualization.animate_value_function_evolution(V_value_snapshots, 'Value Iteration Evolution')
+visualization.animate_value_function_evolution(V_mc_snapshots, 'Monte Carlo Evolution')
+
+# Display final results
+visualization.plot_policy(final_policy_q_learning, "Final Q-Learning Policy")
+visualization.plot_policy(final_policy_value, "Final Value Iteration Policy")
+visualization.plot_policy(final_policy_dp, "Final Policy Iteration Policy")
+visualization.plot_policy(final_policy_mc, "Final Monte Carlo Policy")
+visualization.plot_value_function(V_value, "Final Value Iteration Value Function")
+visualization.plot_value_function(V_mc, "Final Monte Carlo Value Function")
+
+"""
+**Vectorization with NumPy**:
+    - You are currently using for-loops for operations on grid-like data structures. These can be optimized using NumPy's vectorized operations. For example, in functions like convert_to_policy used across different methods, you can use NumPy's array operations to directly map actions to their corresponding moves to simplify the code while optimize the performance.
+
+**Refactoring for Code Reuse**:
+    - There are some common functionalities across different methods (like `convert_to_policy`). You might want to refactor these into separate functions to avoid code duplication.
+
+Please move all algorithms into agent class and let the agent class have a method to run the algorithm and return the policy and value function to move the agent in the grid.
+
+State and Action Space Analysis: Add functions to analyze the state and action spaces, such as frequency of visiting each state and selecting each action. This could provide insight into the behavior of the agent and the effectiveness of the exploration strategy.
+
+Visualization Enhancements:
+Parameter Tuning Interface: Implement a user-friendly interface or a set of functions to easily modify and experiment with different hyperparameters like learning rate, discount factor, epsilon values, etc.
+Consider using interactive visualizations (like using matplotlib.widgets or a web-based solution) for a more dynamic and informative experience.
+Algorithm Comparisons: Develop a comparison framework to evaluate the performance of each algorithm under similar conditions. This could include metrics like convergence speed, final reward, or robustness to changes in the environment.
+
+Environment Complexity: Introduce more complex environments with dynamic obstacles or changing rewards to test the adaptability and robustness of the algorithms.
+
+Extend to Multi-Agent Scenarios: Expand the environment to support multiple agents, which could lead to more complex and interesting interactions and learning dynamics.
+"""
+"""
 class Agent:
-    def __init__(self, env, gamma=0.99, epsilon=1e-5, algorithm=value_iteration):
+    def __init__(self, env, gamma=0.99, epsilon=1e-5, algorithm):
         self.env = env
         self.gamma = gamma
         self.epsilon = epsilon
@@ -237,31 +645,16 @@ class Agent:
     def move(self, state):
         return self.env.get_next_state(state, self.policy[state])
 
-grid = [
-    ['S', 'T', 'X', 'T', 'G'],
-    ['T', 'X', 'T', 'T', 'T'],
-    ['T', 'T', 'T', 'X', 'T'],
-    ['X', 'T', 'X', 'T', 'T'],
-    ['T', 'T', 'T', 'T', 'T']
-]
-
-env = Environment(grid)
-agent = Agent(env, algorithm=policy_iteration)
-
-current_state = (0, 0)
-print(f"Current state: {current_state}")
-
-next_state = agent.move(current_state)
-print(f"Next state: {next_state}")
-print(f"Cost: {env.get_cost(next_state)}")
-
-next_state = agent.move(next_state)
-print(f"Next state: {next_state}")
-print(f"Cost: {env.get_cost(next_state)}")
-
-next_state = agent.move(next_state)
-print(f"Next state: {next_state}")
-print(f"Cost: {env.get_cost(next_state)}")
-
-
+"""
 # https://www.datascienceblog.net/post/reinforcement-learning/mdps_dynamic_programming/
+# Monte Carlo Policy Gradient
+# actor critic
+# about monte carlo
+# https://blog.csdn.net/hiwallace/article/details/81284799
+# Sarsa、Qlearning；蒙特卡洛策略、时序差分等
+# https://cloud.tencent.com/developer/article/2338239?areaId=106001
+# gym environment+pytorch
+# https://zhiqingxiao.github.io/rl-book/en2023/code/CartPole-v0_VPG_torch.html
+# gym environment+tensorflow
+# https://zhiqingxiao.github.io/rl-book/en2023/code/CartPole-v0_VPG_tf.html
+
