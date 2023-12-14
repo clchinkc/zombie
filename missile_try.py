@@ -134,6 +134,12 @@ class BallisticMissile(Missile):
         result = minimize(_objective, initial_guess, bounds=bounds, callback=callback)
         return result.x
 
+    def simulate_trajectory(self):
+        while not self.target.is_hit_by(self):
+            self.update_motion()
+            if self.position[1] < 0 and self.velocity[1] < 0:
+                break
+
     def plot_trajectory(self, target):
         super().plot_trajectory(target)
         if self.propulsion_end_position is not None:
@@ -278,6 +284,12 @@ class CruiseMissile(Missile):
         result = minimize(_objective, initial_guess, bounds=bounds, callback=_callback)
         return result.x
 
+    def simulate_trajectory(self):
+        while not self.target.is_hit_by(self):
+            self.update_motion(self.target)
+            if self.time_elapsed >= self.max_flight_time:
+                break
+
     def plot_trajectory(self, target):
         super().plot_trajectory(target)
         for pos in self.phase_switch_positions:
@@ -312,12 +324,7 @@ def main():
         launch_angle=optimal_launch_angle, max_thrust=optimal_thrust, burn_time=optimal_burn_time
     )
 
-    # Update and plot the ballistic missile's trajectory
-    while not ballistic_target.is_hit_by(ballistic_missile):
-        ballistic_missile.update_motion()
-        if ballistic_missile.position[1] < 0 and ballistic_missile.velocity[1] < 0:
-            break
-
+    ballistic_missile.simulate_trajectory()
     ballistic_missile.plot_trajectory(ballistic_target)
 
     # Cruise Missile Optimization
@@ -331,12 +338,7 @@ def main():
         launch_angle=optimal_launch_angle, engine_thrust=optimal_engine_thrust, boost_time=optimal_boost_time
     )
 
-    # Update and plot the cruise missile's trajectory
-    while not cruise_target.is_hit_by(cruise_missile):
-        cruise_missile.update_motion(cruise_target)
-        if cruise_missile.time_elapsed >= cruise_missile.max_flight_time:
-            break
-
+    cruise_missile.simulate_trajectory()
     cruise_missile.plot_trajectory(cruise_target)
 
     plt.legend()
@@ -345,10 +347,7 @@ def main():
 if __name__ == "__main__":
     main()
 
-
 """
-Ensure the velocity and position is not manipulated directly in the process. Only the acceleration should be used to update the velocity and position. The acceleration should be calculated based on the forces acting on the missile.
-
 Apply proportional navigation guidance to adjust the missile's trajectory based on the rate of change of the line-of-sight angle to the target.
 
 Please adjust so that the lift force is applied on all phases of cruise missile, but adjusted according to angle of attack and other factors.

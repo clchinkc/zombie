@@ -78,7 +78,8 @@ class GridEnvironment:
     def reset(self):
         return self.start_position
 
-# Temporal-Difference Learning (TD) - Q-Learning
+
+# Q-Learning
 def q_learning(env, logger, episodes, initial_learning_rate, min_learning_rate, learning_rate_decay, discount_factor, initial_epsilon, min_epsilon, epsilon_decay, policy_store_interval=10, simulation_interval=100):
     def state_action_index(state, action):
         return state.position[0], state.position[1], env.actions.index(action)
@@ -154,6 +155,78 @@ def q_learning(env, logger, episodes, initial_learning_rate, min_learning_rate, 
     
     return final_policy_q_learning, q_learning_snapshots, simulation_rewards
 
+# TD-Lambda
+def td_lambda(env, logger, episodes, gamma, lambda_, initial_learning_rate, min_learning_rate, learning_rate_decay, initial_epsilon, min_epsilon, epsilon_decay, policy_store_interval=10, simulation_interval=100):
+    def state_action_index(state, action):
+        return state.position[0], state.position[1], env.actions.index(action)
+
+    def choose_action(state, q_table, epsilon):
+        if random.uniform(0, 1) < epsilon:
+            return random.choice(env.actions)  # Explore
+        else:
+            state_index = state.position[0], state.position[1]
+            return env.actions[np.argmax(q_table[state_index])]  # Exploit
+
+    def convert_to_policy(q_table, env):
+        policy_actions = np.empty((env.grid_size, env.grid_size), dtype=object)
+        for i in range(env.grid_size):
+            for j in range(env.grid_size):
+                state_index = (i, j)
+                best_action_index = np.argmax(q_table[state_index])
+                policy_actions[i, j] = env.actions[best_action_index].move
+        return policy_actions
+
+    num_actions = len(env.actions)
+    q_table = np.random.uniform(low=-0.1, high=0.1, size=(env.grid_size, env.grid_size, num_actions))
+    eligibility_traces = np.zeros_like(q_table)
+    td_lambda_snapshots = []
+    simulation_rewards = []
+
+    epsilon = initial_epsilon
+    learning_rate = initial_learning_rate
+
+    for episode in range(episodes):
+        state = env.reset()
+        action = choose_action(state, q_table, epsilon)
+        done = False
+        eligibility_traces.fill(0)  # Reset eligibility traces at the start of each episode
+
+        while not done:
+            next_state, reward, done = env.step(state, action)
+            next_action = choose_action(next_state, q_table, epsilon)  # Choose next action based on the policy
+
+            td_error = reward + gamma * q_table[state_action_index(next_state, next_action)] - q_table[state_action_index(state, action)]
+            eligibility_traces[state_action_index(state, action)] += 1
+
+            # Update Q-values and traces for all state-action pairs
+            for s in np.ndindex(env.grid_size, env.grid_size):
+                for a in range(num_actions):
+                    sa_index = (s[0], s[1], a)
+                    q_table[sa_index] += learning_rate * td_error * eligibility_traces[sa_index]
+                    eligibility_traces[sa_index] *= gamma * lambda_
+
+            state, action = next_state, next_action
+
+        # Adjust epsilon and learning rate after each episode
+        epsilon = max(min_epsilon, epsilon * epsilon_decay)
+        learning_rate = max(min_learning_rate, learning_rate * learning_rate_decay)
+
+        # Store policy and log information at intervals
+        if episode % policy_store_interval == 0 or episode == episodes - 1:
+            best_policy = convert_to_policy(q_table, env)
+            td_lambda_snapshots.append(best_policy)
+            logger.info("Episode completed", episode=episode+1, td_error=td_error, epsilon=epsilon, learning_rate=learning_rate)
+
+        # Simulate with current policy at intervals
+        if episode % simulation_interval == 0 or episode == episodes - 1:
+            current_policy = convert_to_policy(q_table, env)
+            rewards = simulate_episodes(env, current_policy, episodes=10)
+            simulation_rewards.append(rewards)
+
+    final_policy_td_lambda = convert_to_policy(q_table, env)
+    return final_policy_td_lambda, td_lambda_snapshots, simulation_rewards
+
+
 
 # Value Iteration
 def value_iteration(env, logger, episodes, gamma=0.9, theta=1e-3, snapshot_interval=100, simulation_interval=100):
@@ -222,7 +295,7 @@ def value_iteration(env, logger, episodes, gamma=0.9, theta=1e-3, snapshot_inter
 
     return V, final_policy_value, policy_value_snapshots, value_function_snapshots, simulation_rewards
 
-# Dynamic Programming (DP) - Policy Iteration
+# Policy Iteration
 def policy_iteration(env, logger, episodes, gamma, theta=0.0001, policy_store_interval=1, simulation_interval=10):
     def calculate_state_value(policy, V):
         while True:
@@ -316,8 +389,7 @@ def policy_iteration(env, logger, episodes, gamma, theta=0.0001, policy_store_in
 
     return final_policy_dp, policy_snapshots, simulation_rewards
 
-
-# Monte Carlo (MC) - First-visit MC Prediction
+# Monte Carlo
 def monte_carlo(env, logger, episodes, gamma, value_function_store_interval=10, simulation_interval=100):
     def convert_to_policy(env, V):
         policy = np.empty((env.grid_size, env.grid_size), dtype=tuple)
@@ -581,6 +653,9 @@ visualization = Visualization(env)
 # Q-Learning
 final_policy_q_learning, q_learning_snapshots, q_learning_sim_rewards = q_learning(env, logger, episodes=1000, initial_learning_rate=0.1, min_learning_rate=0.01, learning_rate_decay=0.99, discount_factor=0.9, initial_epsilon=0.5, min_epsilon=0.01, epsilon_decay=0.99)
 
+# TD-Lambda
+final_policy_td_lambda, td_lambda_snapshots, td_lambda_sim_rewards = td_lambda(env, logger, episodes=1000, gamma=0.9, lambda_=0.9, initial_learning_rate=0.1, min_learning_rate=0.01, learning_rate_decay=0.99, initial_epsilon=0.5, min_epsilon=0.01, epsilon_decay=0.999)
+
 # Value Iteration
 V_value, final_policy_value, policy_value_snapshots, V_value_snapshots, value_iter_sim_rewards = value_iteration(env, logger, episodes=1000, gamma=0.9)
 
@@ -591,10 +666,11 @@ final_policy_dp, policy_snapshots, policy_iter_sim_rewards = policy_iteration(en
 V_mc, final_policy_mc, policy_mc_snapshots, V_mc_snapshots, monte_carlo_sim_rewards = monte_carlo(env, logger, episodes=1000, gamma=0.9)
 
 # Display reward curves
-visualization.plot_reward_curves([q_learning_sim_rewards, value_iter_sim_rewards, policy_iter_sim_rewards, monte_carlo_sim_rewards], ['Q-Learning', 'Value Iteration', 'Policy Iteration', 'Monte Carlo'])
+visualization.plot_reward_curves([q_learning_sim_rewards, td_lambda_sim_rewards, value_iter_sim_rewards, policy_iter_sim_rewards, monte_carlo_sim_rewards], ['Q-Learning', 'TD-Lambda', 'Value Iteration', 'Policy Iteration', 'Monte Carlo'])
 
 # Display policy evolution
 visualization.animate_policy_evolution(q_learning_snapshots, 'Q-Learning Evolution')
+visualization.animate_policy_evolution(td_lambda_snapshots, 'TD-Lambda Evolution')
 visualization.animate_policy_evolution(policy_value_snapshots, 'Value Iteration Evolution')
 visualization.animate_policy_evolution(policy_snapshots, 'Policy Iteration Evolution')
 visualization.animate_policy_evolution(policy_mc_snapshots, 'Monte Carlo Evolution')
@@ -603,6 +679,7 @@ visualization.animate_value_function_evolution(V_mc_snapshots, 'Monte Carlo Evol
 
 # Display final results
 visualization.plot_policy(final_policy_q_learning, "Final Q-Learning Policy")
+visualization.plot_policy(final_policy_td_lambda, "Final TD-Lambda Policy")
 visualization.plot_policy(final_policy_value, "Final Value Iteration Policy")
 visualization.plot_policy(final_policy_dp, "Final Policy Iteration Policy")
 visualization.plot_policy(final_policy_mc, "Final Monte Carlo Policy")

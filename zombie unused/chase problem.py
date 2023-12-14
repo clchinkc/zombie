@@ -530,6 +530,10 @@ if __name__ == '__main__':
 # https://worldmodels.github.io/
 # https://github.com/ctallec/world-models
 # https://blog.otoro.net/2018/06/09/world-models-experiments/
+# https://github.com/hardmaru/WorldModelsExperiments
+# https://github.com/topics/world-models
+# https://telefonicatech.com/en/blog/realistic-worlds-procedural-generation-artificial-intelligence-video-games
+# https://arxiv.org/abs/2209.00588
 # https://people.idsia.ch/~juergen/FKI-126-90_(revised)bw_ocr.pdf
 # https://arxiv.org/pdf/1511.09249.pdf
 # https://github.com/zhongwen/predictron
