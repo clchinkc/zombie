@@ -307,10 +307,18 @@ class GUI:
 
     def update_position_plot(self):
         self.ax1.clear()
+        
+        # Plot current position of multiple survivors and zombies
         for i, survivor in enumerate(self.simulation.survivors):
-            self.ax1.plot(*zip(*survivor.position_history), color="blue", label="Survivors" if i == 0 else "")
+            self.ax1.scatter(*survivor.position, color="blue", label="Survivors" if i == 0 else "")
         for i, zombie in enumerate(self.simulation.zombies):
-            self.ax1.plot(*zip(*zombie.position_history), color="red", label="Zombies" if i == 0 else "")
+            self.ax1.scatter(*zombie.position, color="red", label="Zombies" if i == 0 else "")
+        
+        # Plot position history for multiple survivors and zombies
+        for i, survivor in enumerate(self.simulation.survivors):
+            self.ax1.plot(*zip(*survivor.position_history), alpha=0.5, color="blue", label="Survivors" if i == 0 else "")
+        for i, zombie in enumerate(self.simulation.zombies):
+            self.ax1.plot(*zip(*zombie.position_history), alpha=0.5, color="red", label="Zombies" if i == 0 else "")
 
         if self.simulation.health_drop_positions:
             self.ax1.scatter(*zip(*self.simulation.health_drop_positions), color="purple", marker='x', label="Health Drop")
@@ -351,9 +359,9 @@ class GUI:
     def update_movement_plot(self):
         self.ax4.clear()
         for survivor in self.simulation.survivors:
-            self.ax4.quiver(*survivor.position, *survivor.velocity, color='blue', scale=5, label='Survivors' if survivor == self.simulation.survivors[0] else "")
+            self.ax4.quiver(*survivor.position, *survivor.velocity, scale=10, color='blue', label='Survivors' if survivor == self.simulation.survivors[0] else "")
         for zombie in self.simulation.zombies:
-            self.ax4.quiver(*zombie.position, *zombie.velocity, color='red', scale=5, label='Zombies' if zombie == self.simulation.zombies[0] else "")
+            self.ax4.quiver(*zombie.position, *zombie.velocity, scale=10, color='red', label='Zombies' if zombie == self.simulation.zombies[0] else "")
 
         self.ax4.set_title('Movement Direction and Speed')
         self.ax4.set_xlabel('X Position')
