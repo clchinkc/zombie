@@ -260,7 +260,7 @@ class GUI:
 
     def setup_plot(self):
         # Adjust plot size and positioning
-        self.fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(5, 8), dpi=100)
+        self.fig, (self.ax1, self.ax2, self.ax3, self.ax4) = plt.subplots(4, 1, figsize=(5, 16), dpi=100)
         self.canvas_fig = FigureCanvasTkAgg(self.fig, master=self.root)
         self.canvas_fig_widget = self.canvas_fig.get_tk_widget()
         self.canvas_fig_widget.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
@@ -305,17 +305,11 @@ class GUI:
                 entity.position[0] * 10 + 5, canvas_height - entity.position[1] * 10 + 5
             )
 
-    def update_plot(self):
+    def update_position_plot(self):
         self.ax1.clear()
-        self.ax2.clear()
-
-        # Plot for the positions
         for i, survivor in enumerate(self.simulation.survivors):
-            # Plot the movement history of each survivor
             self.ax1.plot(*zip(*survivor.position_history), color="blue", label="Survivors" if i == 0 else "")
-
         for i, zombie in enumerate(self.simulation.zombies):
-            # Plot the movement history of each zombie
             self.ax1.plot(*zip(*zombie.position_history), color="red", label="Zombies" if i == 0 else "")
 
         if self.simulation.health_drop_positions:
@@ -327,9 +321,10 @@ class GUI:
         self.ax1.grid(True, which='both', linestyle='--', linewidth=0.5)
         self.ax1.legend(loc='upper right')
 
-        # Plot for the health of each survivor
+    def update_health_plot(self):
+        self.ax2.clear()
         for idx, survivor in enumerate(self.simulation.survivors):
-            if survivor.health_history:  # Check if health history data is available
+            if survivor.health_history:
                 self.ax2.plot(survivor.health_history, label=f"Survivor {idx+1}", linestyle='-', linewidth=2)
 
         self.ax2.set_xlabel('Step', fontsize=14)
@@ -337,7 +332,40 @@ class GUI:
         self.ax2.set_title('Survivor Health Over Time', fontsize=16, fontweight='bold')
         self.ax2.grid(True, which='both', linestyle='--', linewidth=0.5)
         self.ax2.legend(loc='upper right')
-        
+
+    def update_distribution_plot(self):
+        self.ax3.clear()
+        survivor_positions = np.array([s.position for s in self.simulation.survivors])
+        zombie_positions = np.array([z.position for z in self.simulation.zombies])
+
+        if len(survivor_positions) > 0:
+            self.ax3.hexbin(survivor_positions[:, 0], survivor_positions[:, 1], gridsize=20, alpha=0.5, cmap='Greens', label='Survivors')
+        if len(zombie_positions) > 0:
+            self.ax3.hexbin(zombie_positions[:, 0], zombie_positions[:, 1], gridsize=20, alpha=0.5, cmap='Reds', label='Zombies')
+
+        self.ax3.set_title('Distribution Over Time')
+        self.ax3.set_xlabel('X Position')
+        self.ax3.set_ylabel('Y Position')
+        self.ax3.legend()
+
+    def update_movement_plot(self):
+        self.ax4.clear()
+        for survivor in self.simulation.survivors:
+            self.ax4.quiver(*survivor.position, *survivor.velocity, color='blue', scale=5, label='Survivors' if survivor == self.simulation.survivors[0] else "")
+        for zombie in self.simulation.zombies:
+            self.ax4.quiver(*zombie.position, *zombie.velocity, color='red', scale=5, label='Zombies' if zombie == self.simulation.zombies[0] else "")
+
+        self.ax4.set_title('Movement Direction and Speed')
+        self.ax4.set_xlabel('X Position')
+        self.ax4.set_ylabel('Y Position')
+        if self.simulation.survivors and self.simulation.zombies:
+            self.ax4.legend()
+
+    def update_plot(self):
+        self.update_position_plot()
+        self.update_health_plot()
+        self.update_distribution_plot()
+        self.update_movement_plot()
         plt.tight_layout()
         self.fig.canvas.draw()
 
