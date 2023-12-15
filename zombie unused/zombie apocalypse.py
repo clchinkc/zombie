@@ -39,6 +39,19 @@ functional programming 教學
 https://medium.com/onedegree-tech-blog/%E7%82%BA%E4%BB%80%E9%BA%BC%E6%88%91%E8%A6%81%E5%AD%B8-functional-programming-%E5%8F%AF%E8%AE%80-%E5%8F%AF%E9%9D%A0-%E6%9C%89%E4%BF%A1%E5%BF%83-160e39f1632b
 https://www.youtube.com/watch?v=ZtInesLXD-Y
 use np.unravel_index to turn 1d index to 2d index
+abstract class vs protocol vs data class
+### Abstract Class
+- **Purpose**: Used for creating a base class that defines a common API for a set of subclasses, enforcing certain methods to be implemented by child classes.
+- **Use Case**: Ideal when there's a group of classes with shared functionality, but with a requirement that certain methods are implemented in all subclasses.
+
+### Protocol
+- **Purpose**: Used for runtime type checking and static type analysis, specifying one or more methods that must be implemented. 
+- **Use Case**: Best suited for scenarios where the presence of certain methods is more important than the actual inheritance hierarchy of the classes implementing them.
+
+### Data Class
+- **Purpose**: Introduced in Python 3.7 to make classes primarily used for storing data more concise and readable, automatically generating special methods like `__init__`, `__repr__`, and `__eq__`.
+- **Use Case**: Useful when a class is needed primarily to store data with little to no custom behavior, akin to a record or a struct in other languages.
+Use them together for different purposes
 """
 
 import random
