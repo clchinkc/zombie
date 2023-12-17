@@ -338,10 +338,8 @@ class GUI:
         survivor_vectors = np.array([s.velocity for s in self.simulation.survivors])
         zombie_vectors = np.array([z.velocity for z in self.simulation.zombies])
 
-        if len(self.simulation.survivors) > 0:
-            self.ax1.hexbin(survivor_positions[:, 0], survivor_positions[:, 1], gridsize=50, alpha=0.7, cmap='Blues', label='Survivors')
-        if len(self.simulation.zombies) > 0:
-            self.ax1.hexbin(zombie_positions[:, 0], zombie_positions[:, 1], gridsize=50, alpha=0.7, cmap='Reds', label='Zombies')
+        self.ax1.hexbin(survivor_positions[:, 0], survivor_positions[:, 1], gridsize=100, alpha=0.7, cmap='Blues', label='Survivors')
+        self.ax1.hexbin(zombie_positions[:, 0], zombie_positions[:, 1], gridsize=100, alpha=0.7, cmap='Reds', label='Zombies')
 
         # Plot current position of multiple survivors and zombies
         self.ax1.scatter(*zip(*survivor_positions), color="blue", label="Survivors")
@@ -421,8 +419,8 @@ class GUI:
         self.update_health_plot()
         self.update_speed_plot()
         self.update_distribution_plot()
-        plt.tight_layout()
         self.fig.canvas.draw()
+        plt.tight_layout()
 
     def update_performance_metrics(self):
         survival_time = self.simulation.steps * self.simulation.dt
