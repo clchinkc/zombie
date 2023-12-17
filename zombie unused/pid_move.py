@@ -70,7 +70,7 @@ class PIDController:
         return control_signal
 
 def distance(entity1, entity2):
-    return np.linalg.norm(entity1.position - entity2.position)
+    return float(np.linalg.norm(entity1.position - entity2.position))
 
 def normalize(vector):
     norm = np.linalg.norm(vector)
@@ -101,7 +101,6 @@ class Simulation:
 
         # Data for plotting
         self.health_drop_positions = []
-
 
     def setup_entities(self):
         # Clear previous entities
@@ -211,15 +210,15 @@ class GUI:
 
         self.control_panel.pack(side=tk.BOTTOM, fill=tk.X, expand=False)
 
-    def update_speed_debounced(self):
-        speed = self.speed_slider.get()
-        self.speed_label.config(text=f"Speed: {speed:.2f}")
-        self.simulation.survivor_speed = speed
-
     def update_speed(self, event):
         if self.debounce_job is not None:
             self.root.after_cancel(self.debounce_job)
         self.debounce_job = self.root.after(100, self.update_speed_debounced)
+
+    def update_speed_debounced(self):
+        speed = self.speed_slider.get()
+        self.speed_label.config(text=f"Speed: {speed:.2f}")
+        self.simulation.survivor_speed = speed
 
     def reset_throttle(self):
         self.throttle_job = None
