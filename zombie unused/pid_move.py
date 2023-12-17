@@ -188,7 +188,6 @@ class GUI:
 
     def setup_control_panel(self):
         self.control_panel = tk.Frame(self.root)
-        self.control_panel.pack(side=tk.BOTTOM, fill=tk.X)
 
         self.start_button = tk.Button(self.control_panel, text="Start", command=self.start_simulation)
         self.pause_button = tk.Button(self.control_panel, text="Pause", command=self.pause_simulation)
@@ -210,6 +209,8 @@ class GUI:
         self.speed_label = tk.Label(self.control_panel, text="Speed: 0")
         self.speed_label.pack(side=tk.LEFT)
 
+        self.control_panel.pack(side=tk.BOTTOM, fill=tk.X, expand=False)
+
     def update_speed_debounced(self):
         speed = self.speed_slider.get()
         self.speed_label.config(text=f"Speed: {speed:.2f}")
@@ -230,8 +231,8 @@ class GUI:
 
     def start_simulation(self):
         self.simulation.resume()
-        self.start_button.config(state='disabled')
-        self.pause_button.config(state='normal')
+        self.start_button.config(state=tk.DISABLED)
+        self.pause_button.config(state=tk.NORMAL)
 
     def throttled_pause_simulation(self):
         if not self.throttle_job:
@@ -240,8 +241,8 @@ class GUI:
 
     def pause_simulation(self):
         self.simulation.pause()
-        self.pause_button.config(state='disabled')
-        self.start_button.config(state='normal')
+        self.pause_button.config(state=tk.DISABLED)
+        self.start_button.config(state=tk.NORMAL)
 
     def throttled_reset_simulation(self):
         if not self.throttle_job:
@@ -279,7 +280,7 @@ class GUI:
     def setup_canvas(self):
         # Adjust canvas size and positioning to maximize space usage
         self.canvas = tk.Canvas(self.root, width=self.simulation.boundary[0]*10, height=self.simulation.boundary[1]*10)
-        self.canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.canvas.pack(side=tk.LEFT, fill=tk.X, expand=False)
 
     def setup_plot(self):
         # Adjust plot size and positioning
@@ -297,12 +298,12 @@ class GUI:
         self.count_label = tk.Label(self.performance_frame, text="Survivors: 0 | Zombies: 0")
         self.health_depletion_label = tk.Label(self.performance_frame, text="Health Depletion Rate: 0.00")
 
-        self.survival_time_label.pack()
-        self.distance_label.pack()
-        self.health_label.pack()
-        self.count_label.pack()
-        self.health_depletion_label.pack()
-        self.performance_frame.pack(side=tk.TOP, fill=tk.X)
+        self.survival_time_label.pack(side=tk.TOP)
+        self.distance_label.pack(side=tk.TOP)
+        self.health_label.pack(side=tk.TOP)
+        self.count_label.pack(side=tk.TOP)
+        self.health_depletion_label.pack(side=tk.TOP)
+        self.performance_frame.pack(side=tk.TOP, fill=tk.X, expand=False)
 
     def update_canvas(self):
         # Update for multiple survivors and zombies
@@ -362,7 +363,7 @@ class GUI:
 
         self.ax1.set_xlabel('X Position', fontsize=14)
         self.ax1.set_ylabel('Y Position', fontsize=14)
-        self.ax1.set_title('Survivor vs Zombie Position and Movement', fontsize=16, fontweight='bold')
+        self.ax1.set_title('Survivor vs Zombie Position and Movement', fontsize=14, fontweight='bold')
         self.ax1.grid(True, which='both', linestyle='--', linewidth=0.5)
         self.ax1.legend(loc='upper right')
 
@@ -383,7 +384,7 @@ class GUI:
             H, _, _ = np.histogram2d(zombie_positions[:, 0], zombie_positions[:, 1], bins=[xedges, yedges])
             self.ax2.imshow(H.T, origin='lower', extent=[0, self.simulation.boundary[0], 0, self.simulation.boundary[1]], cmap='Reds', alpha=0.5)
 
-        self.ax2.set_title('Density Heatmap of Survivors and Zombies', fontsize=16, fontweight='bold')
+        self.ax2.set_title('Density Heatmap of Survivors and Zombies', fontsize=14, fontweight='bold')
         self.ax2.set_xlabel('X Position')
         self.ax2.set_ylabel('Y Position')
 
@@ -395,7 +396,7 @@ class GUI:
 
         self.ax3.set_xlabel('Step', fontsize=14)
         self.ax3.set_ylabel('Health', fontsize=14)
-        self.ax3.set_title('Survivor Health Over Time', fontsize=16, fontweight='bold')
+        self.ax3.set_title('Survivor Health Over Time', fontsize=14, fontweight='bold')
         self.ax3.grid(True, which='both', linestyle='--', linewidth=0.5)
         self.ax3.legend()
 
@@ -410,7 +411,7 @@ class GUI:
         self.ax4.hist(survivor_speeds, bins=10, alpha=0.7, color='blue', label='Survivors')
         self.ax4.hist(zombie_speeds, bins=10, alpha=0.7, color='red', label='Zombies')
 
-        self.ax4.set_title('Speed Distribution of Survivors and Zombies', fontsize=16, fontweight='bold')
+        self.ax4.set_title('Speed Distribution of Survivors and Zombies', fontsize=14, fontweight='bold')
         self.ax4.set_xlabel('Speed')
         self.ax4.set_ylabel('Count')
         self.ax4.legend()
