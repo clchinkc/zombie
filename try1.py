@@ -1,3 +1,4 @@
+import pickle
 import random
 import tkinter as tk
 from tkinter import ttk
@@ -162,6 +163,13 @@ class Simulation:
         if self.paused:
             self.update_simulation()
 
+    def get_state(self):
+        return pickle.dumps(self)
+
+    def set_state(self, state_data):
+        state = pickle.loads(state_data)
+        self.__dict__.update(state.__dict__)
+
 class GUI:
     def __init__(self, simulation):
         self.simulation = simulation
@@ -186,11 +194,15 @@ class GUI:
         self.pause_button = tk.Button(self.control_panel, text="Pause", command=self.pause_simulation)
         self.reset_button = tk.Button(self.control_panel, text="Reset", command=self.reset_simulation)
         self.step_button = tk.Button(self.control_panel, text="Step", command=self.step_simulation)
+        self.save_button = tk.Button(self.control_panel, text="Save", command=self.save_simulation)
+        self.load_button = tk.Button(self.control_panel, text="Load", command=self.load_simulation)
 
         self.start_button.pack(side=tk.LEFT)
         self.pause_button.pack(side=tk.LEFT)
         self.reset_button.pack(side=tk.LEFT)
         self.step_button.pack(side=tk.LEFT)
+        self.save_button.pack(side=tk.LEFT)
+        self.load_button.pack(side=tk.LEFT)
 
         # Sliders for interactive controls
         self.speed_slider = ttk.Scale(self.control_panel, from_=0, to=10, orient="horizontal", command=self.update_speed)
@@ -252,6 +264,17 @@ class GUI:
         self.simulation.step_forward()
         self.update_canvas()
         self.update_plot()
+
+    def save_simulation(self):
+        with open("simulation_state.pkl", "wb") as file:
+            file.write(self.simulation.get_state())
+
+    def load_simulation(self):
+        with open("simulation_state.pkl", "rb") as file:
+            self.simulation.set_state(file.read())
+            self.update_canvas()
+            self.update_plot()
+            self.update_performance_metrics()
 
     def setup_canvas(self):
         # Adjust canvas size and positioning to maximize space usage
@@ -374,7 +397,7 @@ class GUI:
         self.ax3.set_ylabel('Health', fontsize=14)
         self.ax3.set_title('Survivor Health Over Time', fontsize=16, fontweight='bold')
         self.ax3.grid(True, which='both', linestyle='--', linewidth=0.5)
-        self.ax3.legend(loc='upper right')
+        self.ax3.legend()
 
     def update_speed_plot(self):
         self.ax4.clear()
