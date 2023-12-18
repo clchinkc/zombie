@@ -158,12 +158,9 @@ class Simulation:
 
     def pause(self):
         self.paused = True
-        with self.update_condition:
-            self.update_condition.notify_all()
 
     def resume(self):
         self.paused = False
-        self.run()
 
     def reset(self):
         self.setup_entities()
