@@ -1,5 +1,7 @@
 import pickle
 import random
+import threading
+import time
 import tkinter as tk
 from tkinter import ttk
 
@@ -93,6 +95,7 @@ class Simulation:
         self.zombie_speed = 0.5
         self.steps = 0  # Step counter
         self.paused = True
+        self.update_condition = threading.Condition() # Condition for pausing and resuming the simulation
         
         self.survivors = []  # List to store multiple survivors
         self.zombies = []    # List to store multiple zombies
@@ -142,11 +145,21 @@ class Simulation:
             zombie.position_history.append(zombie.position.copy())
 
     def run(self):
-        if not self.paused:
-            self.update_simulation()
+        while not self.paused:
+            with self.update_condition:
+                self.update_simulation()
+                self.update_condition.wait()  # Wait for signal from GUI thread
+
+    def start(self):
+        if not hasattr(self, 'thread') or not self.thread.is_alive():
+            self.thread = threading.Thread(target=self.run)
+            self.thread.daemon = True
+            self.thread.start()
 
     def pause(self):
         self.paused = True
+        with self.update_condition:
+            self.update_condition.notify_all()
 
     def resume(self):
         self.paused = False
@@ -162,12 +175,26 @@ class Simulation:
         if self.paused:
             self.update_simulation()
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Remove the non-pickleable entries
+        del state['update_condition']
+        del state['thread']
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # Reinitialize the non-pickleable entries
+        self.update_condition = threading.Condition()
+        self.thread = threading.Thread(target=self.run)
+        self.thread.daemon = True
+
     def get_state(self):
         return pickle.dumps(self)
 
     def set_state(self, state_data):
         state = pickle.loads(state_data)
-        self.__dict__.update(state.__dict__)
+        self.__setstate__(state.__dict__)
 
 class GUI:
     def __init__(self, simulation):
@@ -182,8 +209,6 @@ class GUI:
         self.setup_refresh()
         
         self.debounce_job = None
-        self.throttle_job = None
-        self.throttle_interval = 500
 
     def setup_control_panel(self):
         self.control_panel = tk.Frame(self.root)
@@ -220,33 +245,20 @@ class GUI:
         self.speed_label.config(text=f"Speed: {speed:.2f}")
         self.simulation.survivor_speed = speed
 
-    def reset_throttle(self):
-        self.throttle_job = None
-
-    def throttled_start_simulation(self):
-        if not self.throttle_job:
-            self.start_simulation()
-            self.throttle_job = self.root.after(self.throttle_interval, self.reset_throttle)
-
     def start_simulation(self):
-        self.simulation.resume()
+        self.simulation.paused = False
+        if not hasattr(self.simulation, 'thread') or not self.simulation.thread.is_alive():
+            self.simulation.start()
         self.start_button.config(state=tk.DISABLED)
         self.pause_button.config(state=tk.NORMAL)
 
-    def throttled_pause_simulation(self):
-        if not self.throttle_job:
-            self.pause_simulation()
-            self.throttle_job = self.root.after(self.throttle_interval, self.reset_throttle)
-
     def pause_simulation(self):
         self.simulation.pause()
+        self.update_canvas()
+        self.update_plot()
+        self.update_performance_metrics()
         self.pause_button.config(state=tk.DISABLED)
         self.start_button.config(state=tk.NORMAL)
-
-    def throttled_reset_simulation(self):
-        if not self.throttle_job:
-            self.reset_simulation()
-            self.throttle_job = self.root.after(self.throttle_interval, self.reset_throttle)
 
     def reset_simulation(self):
         self.simulation.reset()
@@ -255,15 +267,11 @@ class GUI:
         self.update_plot()
         self.update_performance_metrics()
 
-    def throttled_step_simulation(self):
-        if not self.throttle_job:
-            self.step_simulation()
-            self.throttle_job = self.root.after(self.throttle_interval, self.reset_throttle)
-
     def step_simulation(self):
         self.simulation.step_forward()
         self.update_canvas()
         self.update_plot()
+        self.update_performance_metrics()
 
     def save_simulation(self):
         with open("simulation_state.pkl", "wb") as file:
@@ -445,10 +453,14 @@ class GUI:
         self.root.after(100, self.refresh)
 
     def refresh(self):
-        self.simulation.run()
-        self.update_canvas()
-        self.update_plot()
-        self.update_performance_metrics()
+        if not self.simulation.paused or self.simulation.steps == 0:
+            self.update_canvas()
+            self.update_plot()
+            self.update_performance_metrics()
+
+            with self.simulation.update_condition:
+                self.simulation.update_condition.notify()
+
         self.root.after(100, self.refresh)
 
     def start(self):

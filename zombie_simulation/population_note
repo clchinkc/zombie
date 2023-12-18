@@ -1754,6 +1754,10 @@ A player class can be inherited from the agent class and override the control co
 """
 
 """
+field and default factory in dataclass
+"""
+
+"""
 classes
 environment: logic, graphic, state
 agent: control(user, ml), perception, reasoning, action, learning, graphic, state
