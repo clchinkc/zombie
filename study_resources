@@ -1321,6 +1321,12 @@ jina-embeddings-v2
 大規模文字嵌入基準排名
 SDXL Turbo
 https://github.com/patrickloeber/llama-hub
+XunziALLM
+Mixtral 8x7B
+Phi-2
+https://makersuite.google.com/app/apikey
+https://python.langchain.com/docs/integrations/chat/google_generative_ai
+https://twitter.com/LangChainAI/status/1734982565352845428?ref_src=twsrc%5Etfw%7Ctwcamp%5Etweetembed%7Ctwterm%5E1734982565352845428%7Ctwgr%5Eed12d765421df8d620af7916bb47d761ca52beab%7Ctwcon%5Es1_&ref_url=https%3A%2F%2Fanalyticsindiamag.com%2Flangchain-integrates-gemini-pro-api-enables-multimodal-capabilities%2F
 
 bard api
 https://github.com/dsdanielpark/Bard-API

@@ -16,32 +16,24 @@ from nltk.tokenize import word_tokenize
 from rank_bm25 import BM25L
 from scipy.special import softmax
 from sentence_transformers import SentenceTransformer, util
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import linear_kernel
+from sklearn.decomposition import LatentDirichletAllocation, TruncatedSVD
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity, linear_kernel
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import Normalizer
 from transformers import BertModel, BertTokenizer
 
 # nltk.download('punkt')
 # nltk.download('averaged_perceptron_tagger')
 # nltk.download('wordnet')
 
-# Sample text for demonstration
-sample_text = """
-Fuzzy searches help in finding words that are close in spelling. Semantic searches is more complex.
-It is used to search for words that are similar in meaning.
-We are trying to find exact and inexact matches.
-This is the end of the sample text.
-"""
+# Sample text
+with open('search_text.txt', 'r', encoding='utf-8') as file:
+    sample_text = file.read()
 
 # Initialize translator
 translator = Translator()
 
-# setup Chroma in-memory, for easy prototyping. Can add persistence easily
-# client = chromadb.Client()
-# client = chromadb.EphemeralClient()
-# setup Chroma with persistence, for production use. Can also use a remote database
-client = chromadb.PersistentClient(path="chroma.db", settings=Settings(allow_reset=True))
-
-client.reset() # reset the database
 
 sentence_transformer_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="distiluse-base-multilingual-cased-v1")
 
@@ -76,26 +68,41 @@ model = BertModel.from_pretrained('google/bert_uncased_L-2_H-128_A-2')
 # bert-base-cased
 # ckiplab/bert-base-chinese-ner
 
+
+# setup Chroma in-memory, for easy prototyping. Can add persistence easily
+# client = chromadb.Client()
+# client = chromadb.EphemeralClient()
+# setup Chroma with persistence, for production use. Can also use a remote database
+client = chromadb.PersistentClient(path="chroma.db", settings=Settings(allow_reset=True))
+# client.reset() # reset the database
+
 # Create collection. get_collection, get_or_create_collection, delete_collection also available!
-# collection = client.create_collection(name="all-my-documents", embedding_function=sentence_transformer_ef, metadata={"hnsw:space": "cosine"}) # Valid options for hnsw:space are "l2", "ip, "or "cosine". The default is "l2".
-# collection = client.get_collection(name="all-my-documents")
 collection = client.get_or_create_collection(name="all-my-documents", embedding_function=sentence_transformer_ef, metadata={"hnsw:space": "cosine"})
 
+def add_documents_to_collection(collection, documents):
+    data = collection.get()
+    existing_ids = set(data["ids"])
 
-# Add docs to the collection. Can also update and delete. Row-based API coming soon!
-collection.add(
-    documents=[
-        doc for doc in sample_text.split("\n") if doc
-    ], # we handle tokenization, embedding, and indexing automatically. You can skip that and add your own embeddings as well
-    # embeddings=[get_word_embeddings(doc).tolist() for doc in sample_text.split("\n") if doc], # optional
-    metadatas=[
-        {"metadata_field": "metadata_value"} for doc in sample_text.split("\n") if doc
-    ], # filter by metadata
-    ids=[
-        f"sample-text-{i+1}" for i, line in enumerate(sample_text.split("\n")) if line
-    ], # unique for each doc
-)
+    for i, doc in enumerate(documents):
+        doc_id = f"sample-text-{i+1}"
+        metadata = {"metadata_field": "metadata_value"}
 
+        if doc_id not in existing_ids:
+            collection.add(
+                documents=[doc],
+                metadatas=[metadata],
+                ids=[doc_id],
+                # we handle tokenization, embedding, and indexing automatically. You can skip that and add your own embeddings as well
+                # embeddings=[get_word_embeddings(doc).tolist() for doc in sample_text.split("\n") if doc], # optional
+            )
+            print(f"Added document with ID: {doc_id}")
+        else:
+            print(f"Document with ID {doc_id} already exists. Skipping.")
+
+# Add documents to the collection
+documents = [doc for doc in sample_text.split("\n") if doc]
+
+add_documents_to_collection(collection, documents)
 
 
 def get_ngrams(text: str, n: int) -> list[str]:
@@ -129,7 +136,6 @@ def get_word_embeddings(sentence: str) -> torch.Tensor:
 def word_embedding_similarity(word1_embedding: torch.Tensor, word2_embedding: torch.Tensor) -> float:
     similarity = torch.nn.functional.cosine_similarity(word1_embedding, word2_embedding)
     return similarity.item()
-
 
 
 
@@ -202,6 +208,38 @@ def tfidf_search(keyword: str, text: str) -> list[tuple[str, float]]:
     query_vector = vectorizer.transform([keyword])
     cosine_similarities = linear_kernel(query_vector, line_vectors).flatten()
     print("TF-IDF search scores:", cosine_similarities)
+    return list(zip(lines, cosine_similarities))
+
+
+def lsa_search(keyword: str, text: str) -> list[tuple[str, float]]:
+    """Search for the query in the text using LSA."""
+    lines = [line for line in text.split("\n") if line.strip()]
+    vectorizer.set_params(ngram_range=(1, len(keyword.split())))
+    dtm = vectorizer.fit_transform(lines)
+    n_components = min(64, dtm.shape[1] - 1)
+    svd = TruncatedSVD(n_components)
+    normalizer = Normalizer(copy=False)
+    lsa = make_pipeline(svd, normalizer)
+    dtm_lsa = lsa.fit_transform(dtm)
+    query_vector = vectorizer.transform([keyword])
+    query_vector_lsa = lsa.transform(query_vector)
+    cosine_similarities = linear_kernel(query_vector_lsa, dtm_lsa).flatten()
+    print("LSA search scores:", cosine_similarities)
+    return list(zip(lines, cosine_similarities))
+
+
+def lda_search(keyword: str, text: str, n_topics=5) -> list[tuple[str, float]]:
+    """Search for the query in the text using Latent Dirichlet Allocation (LDA)."""
+    lines = [line for line in text.split("\n") if line.strip()]
+    count_vectorizer = CountVectorizer()
+    dtm = count_vectorizer.fit_transform(lines)
+    lda = LatentDirichletAllocation(n_components=n_topics)
+    lda.fit(dtm)
+    keyword_vector = count_vectorizer.transform([keyword])
+    keyword_topic_distribution = lda.transform(keyword_vector).flatten()
+    line_topic_distribution = lda.transform(dtm)
+    cosine_similarities = linear_kernel([keyword_topic_distribution], line_topic_distribution).flatten()
+    print("LDA search scores:", cosine_similarities)
     return list(zip(lines, cosine_similarities))
 
 
@@ -461,17 +499,18 @@ def search_and_rank(keyword, text=sample_text, preprocess=True, weights={'exact'
 
     scores = {}
 
-    for lang, kw in preprocessed_keywords.items():
-        search_methods = {
-            'exact': exact_search if 'exact' in weights else None,
-            'regex': regex_search if 'regex' in weights else None,
-            'fuzzy': fuzzy_search if 'fuzzy' in weights else None,
-            'ngram': ngram_search if 'ngram' in weights else None,
-            'tfidf': tfidf_search if 'tfidf' in weights else None,
-            'bm25': bm25_search if 'bm25' in weights else None,
-            'word_embedding': word_embedding_search if 'word_embedding' in weights else None,
-            'semantic': semantic_search if 'semantic' in weights else None,
-        }
+    search_methods = {
+        'exact': exact_search if 'exact' in weights else None,
+        'regex': regex_search if 'regex' in weights else None,
+        'fuzzy': fuzzy_search if 'fuzzy' in weights else None,
+        'ngram': ngram_search if 'ngram' in weights else None,
+        'tfidf': tfidf_search if 'tfidf' in weights else None,
+        'lsa': lsa_search if 'lsa' in weights else None,
+        'lda': lda_search if 'lda' in weights else None,
+        'bm25': bm25_search if 'bm25' in weights else None,
+        'word_embedding': word_embedding_search if 'word_embedding' in weights else None,
+        'semantic': semantic_search if 'semantic' in weights else None,
+    }
 
     # Retrieve matches
     retrieved_matches = retrieve_matches(preprocessed_keywords, preprocessed_lines, search_methods, threshold=threshold, required_matches=required_matches)
@@ -489,6 +528,8 @@ default_weights = {
     'fuzzy': 0.8,          # Useful for variations in spellings.
     'ngram': 0.6,          # Useful for broader matches.
     'tfidf': 0.7,          # Weighs importance of words in a dataset.
+    'lsa': 0.7,            # Finds semantically similar terms.
+    'lda': 0.7,            # High weight for context and meaning.
     'bm25': 0.7,           # Weighs importance of words in a dataset.
     'word_embedding': 0.8, # Finds semantically similar terms.
     'semantic': 1.0        # High weight for context and meaning.
@@ -620,24 +661,9 @@ for line, score in results:
 """
 Methods to improve the representation (dimension instantiation) of text data for similarity or search applications, as well as methods to improve the way we measure the similarity between these representations.
 
-### Instantiation of Dimension:
-
-1. **Latent Semantic Indexing (LSI)**: 
-   - This approach processes text by creating a term-document matrix, where each entry represents the frequency of a term in a document.
-   - Singular Value Decomposition (SVD) is then applied to reduce the number of rows while preserving the similarity structure among columns. This reduces dimensionality and captures the underlying meaning of words by grouping together terms that occur in similar contexts.
-   - LSI can handle synonyms effectively and is robust against noise in the data.
-
-2. **Latent Dirichlet Allocation (LDA)**: 
-   - LDA models each document as a mixture of various topics, and each topic as a mixture of words.
-   - The model assumes that documents are produced by picking a distribution over topics and then picking a distribution over words for each topic.
-   - It's particularly useful for finding topics that describe a collection of documents.
-
 ### Similarity Measurement:
 
 1. **Cosine Similarity**: Measures the cosine of the angle between two vectors in the vector space, which is widely used for text similarity because it is effective and efficient.
-   - **Improvement Tips**:
-     - Normalize the vectors before applying cosine similarity to prevent the dominance of longer documents.
-     - Consider the context of words (n-grams or skip-grams) to better capture the meaning in comparison.
 
 2. **Jaccard Similarity**: Used for comparing the similarity and diversity of sample sets, assessing the size of the intersection divided by the size of the union of the sample sets.
 

@@ -1,0 +1,5 @@
+Fuzzy searches help in finding words that are close in spelling. Semantic searches is more complex.
+It is used to search for words that are similar in meaning.
+We are trying to find exact and inexact matches.
+This is the end of the sample text.
+This is really the end of the sample text.
