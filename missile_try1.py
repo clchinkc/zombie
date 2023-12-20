@@ -427,7 +427,7 @@ class Target:
         self.position = np.array(position)
 
     def is_hit_by(self, missile):
-        distance_to_missile = np.linalg.norm(missile.position - self.position)
+        distance_to_missile = float(np.linalg.norm(missile.position - self.position))
         return distance_to_missile < HIT_RADIUS
 
     def plot(self):
@@ -494,6 +494,11 @@ def main():
 if __name__ == "__main__":
     main()
 
-# After the boost phase, the missile should descend for some altitude while regaining the forward velocity.
-# Change the angle of attack to adjust the lift force to maintain altitude.
+# The desirable trajectory for a boost-glide vehicle involves three distinct phases:
+# A boost phase where the missile is launched and gains altitude quickly.
+# A glide phase where the missile levels out and glides at a constant altitude, potentially with some slight descent to maintain speed and extend range.
+# A terminal phase where the missile descends rapidly to the target.
+
+
+# May change the angle of attack to adjust the lift force to maintain altitude.
 # https://chat.openai.com/c/77161094-a1d1-46d3-8062-3cf37e08689e

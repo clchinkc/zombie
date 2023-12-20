@@ -499,6 +499,8 @@ Allow users to interact with the simulation by adding new entities, modifying ex
 Environment and Weather that affect the behavior and effectiveness of the survivor and zombie in the simulation.
 
 Resources and Population Control
+
+https://github.com/thom-jp/tkinter_pack_simulator
 """
 
 """

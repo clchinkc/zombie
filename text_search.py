@@ -777,38 +777,6 @@ In essence, while TextRank and RAKE are primarily designed for keyword extractio
 """
 
 """
-1. **WordNet**:
-   - **Origin**: Developed by the Cognitive Science Laboratory at Princeton University.
-   - **Content**: It focuses on the English language and represents words as synsets (sets of synonymous words) that express a distinct concept. It interlinks these synsets using semantic relationships, like hypernyms, hyponyms, meronyms, holonyms, and antonyms.
-   - **Use**: Widely used for various NLP tasks, including word sense disambiguation, semantic similarity measures, and text classification.
-   - **Structure**: Hierarchical (tree-like), focusing on the "is-a" relationships between concepts.
-
-2. **HowNet**:
-   - **Origin**: Developed in China by Zhendong Dong.
-   - **Content**: Focuses on the semantic relationships between Chinese and English words. HowNet defines concepts using sememes, which are the smallest semantic units in language.
-   - **Use**: Especially valuable for research involving Chinese NLP and cross-lingual tasks.
-   - **Structure**: It emphasizes "deep" semantic descriptions using sememes to detail the inherent qualities and relationships of words and phrases.
-
-3. **FrameNet**:
-   - **Origin**: Initiated at the International Computer Science Institute in Berkeley, California.
-   - **Content**: Based on the theory of Frame Semantics by Charles Fillmore, it represents the meaning of lexical items in terms of semantic frames, which are schematic representations of events, relations, or entities and their participants. Each frame is defined by a description and contains a set of frame elements (roles that participants play in the event or relation).
-   - **Use**: Commonly used for semantic role labeling and understanding events in text.
-   - **Structure**: Not hierarchical like WordNet. It emphasizes the relationships between words, their semantic roles, and the scenarios or "frames" they typically evoke.
-
-4. **ConceptNet**:
-   - **Origin**: Emerged from the Open Mind Common Sense (OMCS) project at the Massachusetts Institute of Technology Media Lab.
-   - **Content**: A semantic network that connects words and phrases of natural language with labeled edges. It focuses on general knowledge facts, representing them as relations between concepts (e.g., "is a", "used for", "part of").
-   - **Use**: Boosting common sense reasoning in AI, improving word embeddings, and building knowledge graphs.
-   - **Structure**: Graph-like. The focus is on a broad range of relationships between concepts, not limited to just "is-a" or hierarchical relations.
-
-**Summary**:
-- **WordNet** provides a hierarchical representation of English word meanings.
-- **HowNet** offers deep semantic descriptions, especially for Chinese.
-- **FrameNet** is based on frame semantics, detailing how words relate to the frames or scenarios they evoke.
-- **ConceptNet** emphasizes general knowledge and common sense relations in a graph-like structure.
-"""
-
-"""
 Handling mixed language content in a text search program can be challenging but rewarding, as it can provide a richer user experience. Here's how you can approach this:
 
 1. **Indexing**:
