@@ -385,6 +385,13 @@ Sanger彈道
 """
 
 """
+https://indsr.org.tw/respublicationcon?uid=12&resid=705&pid=2588&typeid=3
+1.20 u@s.RX 04/23 fBg:/ 复制打开抖音，看看【娱小扒的作品】狼群特有的行进站位，感觉它们好有谋略 # 狼群 #... https://v.douyin.com/iRrP8wnk/
+https://academic-accelerator.com/encyclopedia/zh/list-of-military-tactics
+https://zh.wikipedia.org/zh-hant/%E5%86%9B%E4%BA%8B%E6%88%98%E6%9C%AF%E5%88%97%E8%A1%A8
+"""
+
+"""
 Let’s synthesize a comprehensive overview of missile technology development over time by incorporating the previously provided information:
 
 **Early Missile Development:**
