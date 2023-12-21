@@ -378,6 +378,10 @@ A GuidanceSystem class with methods for updating missile heading and position. T
 """
 
 """
+總體而言，由彈道飛彈發射的「機動重返載具」（MaRV）在許多情況下，性能都優於高超音速武器，美國國會預算辦公室（CBO）最近一項分析預測，其成本將比高超音速武器便宜3分之1。
+"""
+
+"""
 Let’s synthesize a comprehensive overview of missile technology development over time by incorporating the previously provided information:
 
 **Early Missile Development:**

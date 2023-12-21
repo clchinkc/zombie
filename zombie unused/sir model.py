@@ -12,7 +12,7 @@
 
 # https://www.youtube.com/watch?v=qwrp3lB-jkQ
 # https://gautamdayal.github.io/natural-selection/
-
+# https://jasmcole.com/2014/10/19/going-viral/
 
 
 import numpy as np
