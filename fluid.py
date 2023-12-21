@@ -237,3 +237,22 @@ if __name__ == "__main__":
     app = FluidApp()
     app.run()
 
+"""
+The "Steps of Reduction" refer to a conceptual framework used to simplify complex systems into more manageable models. This is often applied in fields such as physics or applied mathematics. The framework is as follows:
+
+1. **Reversible Micro-model**: This initial stage involves a microscopic model of a system where all processes are time-reversible, capturing the intricate details at the smallest scale.
+
+2. **First Irreversible Model**: The system transitions from the reversible micro-model to an irreversible one. This marks a shift from time-reversible processes to those where the symmetry of time is not maintained, which is a common phenomenon when moving from microscopic to macroscopic descriptions.
+
+3. **Kinetic Equation (Boltzmann)**: After achieving the first irreversible model, the next level of simplification is reached through the kinetic equation, specifically the Boltzmann equation. This is a cornerstone of statistical mechanics and provides a statistical representation of a thermodynamic system that is out of equilibrium.
+
+4. **Hydrodynamic Equation**: The final reduction leads to the hydrodynamic equations, which are used to describe fluid flow at the macroscopic level. These equations generally encompass the principles of fluid dynamics, including the equations of continuity, motion (Navier-Stokes), and energy conservation.
+
+Integral to this framework are the conceptual transitions between stages:
+
+- The change from a **Reversible micro-description to a Dissipative macro-description** questions how processes known for their time-reversibility at the microscopic level manifest as dissipative and irreversible at the macroscopic level, where phenomena such as friction and viscosity become apparent, leading to energy dissipation.
+
+- Understanding **how a system with many degrees of freedom is reduced to a system with a few degrees of freedom** addresses the method by which complex systems, characterized by numerous variables, can be simplified into models with far fewer variables. This simplification often involves the identification of collective behaviors or emergent properties that can effectively encapsulate the system's macroscopic behavior. 
+
+This framework illustrates the methodology of systematically reducing the complexity of a system to make it more understandable and to derive predictive macroscopic models from detailed microscopic descriptions.
+"""
