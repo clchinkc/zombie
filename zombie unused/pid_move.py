@@ -301,13 +301,11 @@ class GUI:
         self.performance_frame = tk.Frame(self.root)
         self.survival_time_label = tk.Label(self.performance_frame, text="Survival Time: 0")
         self.distance_label = tk.Label(self.performance_frame, text="Distance Between: 0")
-        self.health_label = tk.Label(self.performance_frame, text="Survivor Health: 100")
         self.count_label = tk.Label(self.performance_frame, text="Survivors: 0 | Zombies: 0")
         self.health_depletion_label = tk.Label(self.performance_frame, text="Health Depletion Rate: 0.00")
 
         self.survival_time_label.pack(side=tk.TOP)
         self.distance_label.pack(side=tk.TOP)
-        self.health_label.pack(side=tk.TOP)
         self.count_label.pack(side=tk.TOP)
         self.health_depletion_label.pack(side=tk.TOP)
         self.performance_frame.pack(side=tk.TOP, fill=tk.X, expand=False)
@@ -397,7 +395,13 @@ class GUI:
         self.ax3.clear()
         for idx, survivor in enumerate(self.simulation.survivors):
             if survivor.health_history:
-                self.ax3.plot(survivor.health_history, label=f"Survivor {idx+1}", linestyle='-', linewidth=2)
+                line, = self.ax3.plot(survivor.health_history, label=f"Survivor {idx+1}", linestyle='-', linewidth=2)
+                # Annotate the last point with health value
+                self.ax3.annotate(f"{survivor.health}",
+                                  xy=(len(survivor.health_history)-1, survivor.health),
+                                  xytext=(3, 3),
+                                  textcoords="offset points",
+                                  color=line.get_color())
 
         self.ax3.set_xlabel('Step', fontsize=14)
         self.ax3.set_ylabel('Health', fontsize=14)
@@ -439,10 +443,6 @@ class GUI:
         # Update labels
         self.survival_time_label.config(text=f"Survival Time: {survival_time:.2f}s")
         self.distance_label.config(text=f"Avg. Distance Between: {avg_distance:.2f}")
-
-        health_text = " | ".join(f"S{idx+1}: {survivor.health}" for idx, survivor in enumerate(self.simulation.survivors))
-        self.health_label.config(text=f"Survivor Health: {health_text}")
-
         self.count_label.config(text=f"Survivors: {len(self.simulation.survivors)} | Zombies: {len(self.simulation.zombies)}")
 
         if self.simulation.survivors and len(self.simulation.survivors[0].health_history) > 1:
@@ -475,13 +475,12 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
+
 """
 When I press pause button, it skipped one step and directly show the second step.
 
-use plt.cif() plt.ion() plt.pause() plt.ioff() plt.gcf()
 change canvas to pygame
-send json between server and client
+
 
 Terrain that affect moving policy and can be altered
 

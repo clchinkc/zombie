@@ -40,6 +40,12 @@ macroeconomic indicators, news events, or social media sentiment
 """
 
 """
+https://streetfins.com/calculus-in-the-stock-market/
+
+(vector) error correction models
+"""
+
+"""
 There are several stochastic investment models used in finance and investment analysis. These models incorporate randomness and uncertainty into the investment decision-making process. Here are a few examples:
 
 1. Black-Scholes Model: The Black-Scholes model is a widely used option pricing model that assumes the underlying asset price follows a geometric Brownian motion. It allows investors to calculate the theoretical value of options and derivatives based on factors such as the asset price, strike price, time to expiration, risk-free interest rate, and volatility.

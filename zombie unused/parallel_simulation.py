@@ -9,74 +9,57 @@ class Grid:
         self.width = width
         self.height = height
         self.cells = [[None for _ in range(width)] for _ in range(height)]
-        self.locks = [[asyncio.Lock() for _ in range(width)] for _ in range(height)]
+        self.grid_lock = asyncio.Lock()
 
     def is_within_bounds(self, x, y):
         return 0 <= x < self.width and 0 <= y < self.height
+
+    async def move_entity(self, entity, new_x, new_y):
+        if not self.is_within_bounds(new_x, new_y) or not entity.is_valid_move(new_x, new_y):
+            return False
+
+        async with self.grid_lock:
+            if self.cells[new_x][new_y] is None:
+                self.cells[entity.x][entity.y] = None
+                self.cells[new_x][new_y] = entity
+                entity.x, entity.y = new_x, new_y
+                return True
+        return False
 
 class Entity:
     def __init__(self, name, x, y):
         self.name = name
         self.x = x
         self.y = y
-        self.override_decision = None  # Added for testing specific movements
+        self.override_decision = None
 
     def is_valid_move(self, new_x, new_y):
         return (new_x, new_y) in [(self.x, self.y), (self.x, self.y + 1), (self.x + 1, self.y), (self.x, self.y - 1), (self.x - 1, self.y)]
 
-    async def move_to(self, new_x, new_y, grid, max_retries=3):
-        if not self.is_valid_move(new_x, new_y):
-            print(f"{self.name} tried to move in an invalid direction!")
-            return
-
-        for _ in range(max_retries):
-            if not grid.is_within_bounds(new_x, new_y):
-                print(f"{self.name} tried to move out of bounds!")
+    async def act(self, grid, max_attempts=3):
+        for _ in range(max_attempts):
+            new_x, new_y = await self.make_decision()
+            if await grid.move_entity(self, new_x, new_y):
+                print(f"{self.name} moved to ({new_x}, {new_y})")
                 return
-
-            async with grid.locks[self.x][self.y]:
-                if grid.cells[new_x][new_y] is not None:
-                    print(f"{self.name} found {grid.cells[new_x][new_y].name} at ({new_x}, {new_y})")
-                    await asyncio.sleep(0.1)
-                    continue
-
-                if grid.locks[new_x][new_y].locked():
-                    print(f"{self.name} found the lock at ({new_x}, {new_y}) is already acquired")
-                    await asyncio.sleep(0.1)
-                    continue
-
-                async with grid.locks[new_x][new_y]:
-                    grid.cells[self.x][self.y] = None
-                    grid.cells[new_x][new_y] = self
-                    self.x, self.y = new_x, new_y
-                    print(f"{self.name} moved to ({new_x}, {new_y})")
-                    return
-
-        print(f"{self.name} couldn't find a place to move!")
+            await asyncio.sleep(0.1)  # Brief pause before retrying
+        print(f"{self.name} couldn't move after {max_attempts} attempts")
 
     async def make_decision(self):
         loop = asyncio.get_running_loop()
-        with concurrent.futures.ThreadPoolExecutor() as pool:
-            decision = await loop.run_in_executor(pool, self.complex_decision_logic, self.x, self.y)
+        with concurrent.futures.ProcessPoolExecutor() as pool:
+            decision = await loop.run_in_executor(pool, self.complex_decision_logic)
             return decision
 
-    def complex_decision_logic(self, x, y):
-        time.sleep(random.uniform(0.3, 0.5))  # Simulate delay
-        if self.override_decision is not None:
-            # Use the overridden decision for testing specific movements
+    def complex_decision_logic(self):
+        time.sleep(random.uniform(0.3, 0.5))  # Simulate decision-making delay
+        if self.override_decision:
             return self.override_decision
-        while True:
-            move_x = random.choice([True, False])
-            step = random.choice([-1, 1])
-            new_x = x + step if move_x else x
-            new_y = y + step if not move_x else y
-            # check if the new position is valid
-            if self.is_valid_move(new_x, new_y):
-                return new_x, new_y
-
-    async def act(self, grid):
-        new_x, new_y = await self.make_decision()
-        await self.move_to(new_x, new_y, grid)
+        move_x = random.choice([True, False])
+        step = random.choice([-1, 1])
+        new_x = self.x + step if move_x else self.x
+        new_y = self.y + step if not move_x else self.y
+        return new_x, new_y
 
 async def main():
     grid = Grid(5, 5)
@@ -99,8 +82,14 @@ async def main():
     entity2.override_decision = (2, 2)
     # Move both entities in parallel to test whether entity2 can move to the original position of entity1
     await asyncio.gather(entity1.act(grid), entity2.act(grid))
+    
+    entity1.override_decision = (2, 2)
+    entity2.override_decision = None
+    await asyncio.gather(entity1.act(grid), entity2.act(grid))
 
-asyncio.run(main())
+if __name__ == '__main__':
+    asyncio.run(main())
+
 
 
 
@@ -147,6 +136,11 @@ def io_worker(num):
     os.remove(filename)
 
     return len(data)
+
+# Asynchronous CPU-bound worker function
+async def async_cpu_worker(num):
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, cpu_worker, num)
 
 # Asynchronous I/O-bound worker function
 async def async_io_worker(num):
@@ -231,6 +225,7 @@ if __name__ == "__main__":
     print(f"ProcessPoolExecutor time: {run_with_process_pool_executor(cpu_worker, numbers)} seconds")
     print(f"Threading time: {run_with_threading(cpu_worker, numbers)} seconds")
     print(f"ThreadPoolExecutor time: {run_with_thread_pool_executor(cpu_worker, numbers)} seconds")
+    print(f"Asyncio time: {asyncio.run(run_asyncio([async_cpu_worker(num) for num in numbers]))} seconds")
 
     # Testing I/O-bound tasks
     print("\nI/O-bound tasks:")
@@ -243,6 +238,22 @@ if __name__ == "__main__":
 
 # Multiprocessing and ProcessPoolExecutor are faster for CPU-bound tasks
 # Threading and ThreadPoolExecutor are faster for I/O-bound tasks
+
+# CPU-bound tasks:
+# Sequential time: 5.640041351318359 seconds
+# Multiprocessing time: 2.280035972595215 seconds
+# ProcessPoolExecutor time: 2.140997886657715 seconds
+# Threading time: 5.285039901733398 seconds
+# ThreadPoolExecutor time: 5.435959815979004 seconds
+# Asyncio time: 5.488828659057617 seconds
+
+# I/O-bound tasks:
+# Sequential time: 1.822998285293579 seconds
+# Multiprocessing time: 1.2620019912719727 seconds
+# ProcessPoolExecutor time: 1.740999698638916 seconds
+# Threading time: 1.291999340057373 seconds
+# ThreadPoolExecutor time: 1.2890028953552246 seconds
+# Asyncio time: 1.3189995288848877 seconds
 """
 
 """
@@ -259,39 +270,7 @@ joblib vs dask vs mpi4py
 4. **Multithreading**: Multithreading is a technique where multiple threads of execution are created within a single process. Each thread represents an independent sequence of instructions that can run concurrently with other threads. Multithreading allows different parts of a program to execute simultaneously, taking advantage of systems with multiple CPU cores. It is commonly used for concurrent and parallel programming, especially for applications with many I/O-bound tasks or where responsiveness is critical.
 """
 
-"""
-Combining `threading`, `multiprocessing`, and `asyncio` in a zombie apocalypse simulation can help you create a realistic and efficient simulation. Here's how you could use each approach to model different aspects of the simulation:
 
-1. **Threading (`threading` module):**
-Use threading to manage concurrent I/O-bound tasks that involve interactions with the environment, such as:
-- Simulating survivors' movements and actions.
-- Interactions with non-zombie entities (e.g., finding resources, communicating with other survivors).
-- Handling environmental changes (e.g., weather conditions, time progression).
-
-Since these tasks involve waiting for I/O operations (like user input or external data), threading can help improve responsiveness and simulate multiple actions happening simultaneously.
-
-2. **Multiprocessing (`multiprocessing` module):**
-Leverage multiprocessing for CPU-bound tasks that can be parallelized, such as:
-- Simulating the behavior of individual zombies and their interactions with the environment.
-- Performing complex calculations related to pathfinding or zombie behavior.
-
-By using multiprocessing, you can distribute the load across multiple CPU cores, effectively achieving true parallelism and speeding up the simulation for these computationally intensive tasks.
-
-3. **Asyncio (`asyncio` module):**
-Utilize asyncio to handle asynchronous interactions that involve waiting for I/O operations or events. This can include:
-- Managing communication between survivor groups.
-- Handling asynchronous events like survivors being attacked or finding shelter.
-
-Asyncio's non-blocking nature allows you to efficiently simulate these interactions without creating a large number of threads or processes, resulting in better performance for I/O-bound tasks.
-
-Overall, you can structure your simulation with a combination of these approaches:
-
-- Use `threading` for tasks that involve I/O interactions with the environment and non-zombie entities.
-- Use `multiprocessing` for CPU-bound tasks related to zombie behavior and complex calculations.
-- Use `asyncio` for managing asynchronous events and interactions between survivor groups.
-
-Keep in mind that combining these concurrency approaches requires careful design to avoid potential pitfalls like race conditions, deadlocks, or inefficient resource usage. Additionally, ensure that you're aware of the limitations and considerations of each approach to make the most appropriate choice for each aspect of your simulation.
-"""
 
 """
 For your server-client zombie apocalypse simulation, using a combination of `asyncio` for handling client connections and `multiprocessing` for executing CPU-bound tasks offers a robust and efficient solution:
