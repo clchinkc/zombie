@@ -608,6 +608,7 @@ class PopulationObserver(Observer):
         plt.tight_layout()
         plt.show()
 
+
 class PopulationAnimator(Observer):
     def __init__(self, population: Population) -> None:
         self.subject = population
@@ -617,15 +618,15 @@ class PopulationAnimator(Observer):
     def update(self) -> None:
         self.agent_history.append(deepcopy(self.subject.agent_list))
 
-    def display_observation(self, format="chart"):
-        if format == "chart":
-            self.print_chart_animation()
+    def display_observation(self, format="bar"):
+        if format == "bar":
+            self.print_bar_animation()
         elif format == "scatter":
             self.print_scatter_animation()
         elif format == "table":
             self.print_table_animation()
 
-    def print_chart_animation(self):
+    def print_bar_animation(self):
         counts = []
         for i in range(len(self.agent_history)):
             cell_states = [individual.state for individual in self.agent_history[i]]
@@ -789,6 +790,11 @@ class MatplotlibAnimator(Observer):
         self.bars = None
         self.table = None
 
+        self.cell_states = [individual.state for individual in self.subject.agent_list]
+        self.cell_states_value = [state.value for state in self.cell_states]
+        self.cell_x_coords = [individual.location[0] for individual in self.subject.agent_list]
+        self.cell_y_coords = [individual.location[1] for individual in self.subject.agent_list]
+
         if self.mode == "bar":
             self.setup_bar_chart()
         elif self.mode == "scatter":
@@ -796,25 +802,6 @@ class MatplotlibAnimator(Observer):
         elif self.mode == "table":
             self.setup_table()
 
-    @property
-    def cell_states(self):
-        """Returns list of states for all individuals in the population."""
-        return [individual.state for individual in self.subject.agent_list]
-
-    @property
-    def cell_states_value(self):
-        """Returns list of state values for all individuals in the population."""
-        return [state.value for state in self.cell_states]
-
-    @property
-    def cell_x_coords(self):
-        """Returns list of x-coordinates for all individuals in the population."""
-        return [individual.location[0] for individual in self.subject.agent_list]
-
-    @property
-    def cell_y_coords(self):
-        """Returns list of y-coordinates for all individuals in the population."""
-        return [individual.location[1] for individual in self.subject.agent_list]
 
     def setup_bar_chart(self):
         """Set up the initial state of the bar chart."""
@@ -889,6 +876,11 @@ class MatplotlibAnimator(Observer):
 
     def update(self) -> None:
         """Update the plot based on the mode."""
+        self.cell_states = [individual.state for individual in self.subject.agent_list]
+        self.cell_states_value = [state.value for state in self.cell_states]
+        self.cell_x_coords = [individual.location[0] for individual in self.subject.agent_list]
+        self.cell_y_coords = [individual.location[1] for individual in self.subject.agent_list]
+        
         if self.mode == "bar":
             self.update_bar_chart()
         elif self.mode == "scatter":
@@ -909,7 +901,7 @@ class MatplotlibAnimator(Observer):
         self.scatter.set_offsets(np.c_[self.cell_x_coords, self.cell_y_coords])
         self.scatter.set_array(self.cell_states_value)
         plt.draw()
-        plt.pause(1.5)
+        plt.pause(0.5)
         
     def update_table(self):
         """Update and redraw the table with new data."""
@@ -932,7 +924,7 @@ class MatplotlibAnimator(Observer):
                 self.table[i, j].get_text().set_text('')  # Clear the text
 
         plt.draw()
-        plt.pause(1.5)
+        plt.pause(0.5)
 
     def display_observation(self):
         """Display the final plot."""
@@ -1053,7 +1045,7 @@ def main():
     # create Observer objects
     # population_observer = PopulationObserver(school_sim)
     # population_animator = PopulationAnimator(school_sim)
-    matplotlib_animator = MatplotlibAnimator(school_sim, mode="table")
+    matplotlib_animator = MatplotlibAnimator(school_sim, mode="table") # "bar" or "scatter" or "table"
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
@@ -1063,13 +1055,8 @@ def main():
     # print(population_animator.agent_history[-1])
 
     # observe the statistics of the population
-    # population_observer.display_observation(format="statistics")
-    # population_observer.display_observation(format="grid")
-    # population_observer.display_observation(format="chart")
-    # population_observer.display_observation(format="scatter")
-    # population_animator.display_observation(format="chart")
-    # population_animator.display_observation(format="scatter")
-    # population_animator.display_observation(format="table")
+    # population_observer.display_observation(format="statistics") # "statistics" or "grid" or "chart" or "scatter"
+    # population_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
     matplotlib_animator.display_observation()
 
 

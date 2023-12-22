@@ -55,6 +55,7 @@ Use them together for different purposes
 use lambda function for small function
 pass function as argument, return function as output, treat function as object, higher order function
 https://docs.scipy.org/doc/scipy/reference/spatial.distance.html
+use data structure in collections like deque, defaultdict, namedtuple, OrderedDict, Counter, ChainMap, UserDict, UserList, UserString
 """
 
 import random
