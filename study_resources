@@ -788,6 +788,7 @@ https://www.udacity.com/course/intro-to-programming-nanodegree--nd000
 https://towardsdatascience.com/combining-traditional-thread-based-code-and-asyncio-in-python-dc162084756c
 Comprehensive Guide to Concurrency and Parallelism in Python
 https://github.com/walter201230/Python
+https://www.tenlong.com.tw/products/9786267383223
 
 c++
 “The Most Important C++ Books...Ever”
@@ -809,6 +810,8 @@ Visual C++ by Microsoft
 The Standard Template Library, originally by HP
 The Libraries at Boost
 https://www.udacity.com/course/c-plus-plus-nanodegree--nd213
+Engineering a Sort Function, J. L. Bentley & M.D. McIlroy
+SOFTWARE—PRACTICE AND EXPERIENCE, VOL. 23(11), 1249–1265 (NOV 1993)
 
 All language
 https://github.com/8483/notes
@@ -1332,6 +1335,9 @@ Phi-2
 https://makersuite.google.com/app/apikey
 https://python.langchain.com/docs/integrations/chat/google_generative_ai
 https://twitter.com/LangChainAI/status/1734982565352845428?ref_src=twsrc%5Etfw%7Ctwcamp%5Etweetembed%7Ctwterm%5E1734982565352845428%7Ctwgr%5Eed12d765421df8d620af7916bb47d761ca52beab%7Ctwcon%5Es1_&ref_url=https%3A%2F%2Fanalyticsindiamag.com%2Flangchain-integrates-gemini-pro-api-enables-multimodal-capabilities%2F
+whisper
+https://www.kocpc.com.tw/archives/520051
+
 
 bard api
 https://github.com/dsdanielpark/Bard-API

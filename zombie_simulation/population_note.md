@@ -2720,10 +2720,806 @@ In the context of a zombie apocalypse, the use of a Pattern Matching Automaton e
 """
 
 """
+In the hypothetical context of a zombie apocalypse simulation, a number of mathematical and computational methodologies are employed to construct a representative model of this scenario. These methods each have their unique strengths, weaknesses, and applicability.
+
+1. Dynamic System: This approach, used in both epidemiological and hypothetical scenarios like a zombie apocalypse, involves the representation of a continuously changing state of the world. This model assumes a homogeneous population where each individual is considered equal and interchangeable, all with the same probability of interacting with any other individual. A dynamic system allows for the temporal depiction of the system, thereby providing insights into long-term trends and behaviors. However, these systems can be computationally demanding, and results may be complex to interpret due to the dynamic nature of the model.
+
+2. Graph Theory: This mathematical discipline is used to understand relationships and connections between nodes (vertices) and edges. It can symbolize a network of locations or people, with nodes representing individuals or locations, and edges symbolizing interactions or connections between them. This approach addresses the limitations of the dynamic system by taking into account geolocation and social circles, thereby constraining the likelihood of infection based on specific interactions. However, the accuracy of the simulation relies heavily on the quality of the network representation, and large, complex graphs can be computationally intensive.
+
+3. Edge-Based Compartmental Model: This is a graph theory-based model that focuses on the connections (edges) between individuals in a population. The model describes the spread of infection within a network, which, in a zombie apocalypse, could illustrate how the infection spreads through interactions between different entities in the graph. Although this model requires precise data about the network structure and interactions, and may struggle to capture individual-level variations and behaviors, it is often chosen for simulation due to its simplicity and lower time complexity compared to other models.
+
+4. Pair Approximation and Degree-Based Approximation: These are graph theory approximation techniques which aim to simplify complex models like the edge-based compartmental model, making them computationally more feasible. Pair approximation requires a system of equations based on the total number of distinct degrees (K), while degree-based approximation requires equations based on the maximum degree (M). Although these methods may overlook some details, they facilitate analysis by providing reasonably accurate approximations under specific conditions.
+
+5. SIR Model: This epidemiological model categorizes a population into Susceptible (S), Infected (I), and Recovered (R) compartments. It's typically used in the edge-based compartmental model and requires two equations for the SIR model, plus an additional equation for virus-caused deaths. This model could be adapted to represent the spread of the infection in a zombie apocalypse simulation, with susceptible individuals transforming into infected zombies and eventually recovering or dying. Despite its simplicity, it assumes homogeneous mixing and uniform transmission probabilities, which may not fully capture the complexity of a zombie apocalypse scenario.
+
+6. Agent-Based Model: This is a simulation model that focuses on individual entities, or agents, and their interactions. In the context of a zombie apocalypse, this could depict individuals or groups of survivors and zombies, each with unique characteristics and behaviors. Although this model requires fewer assumptions and allows for testing different scenarios, it is often more computationally expensive and requires detailed data about individual behaviors. As a result, it may take a extremely long time unless run on research facilities with supercomputers.
+
+7. Random Graph: This graph has edges that are randomly generated, usually following a specific probability distribution. It's an alternative to homogeneous assumptions in dynamic systems, considering the specific connections between individuals. In a random graph, the daily infection rate represents an individual's ability to pass the disease to another individual they are connected to, and the daily recovery and fatality rates also depend on these connections. This approach takes into account the real-world constraints of geolocation and social circles that influence the likelihood of infection between individuals. However, it may not accurately reflect real-world social or geographical structures or capture complex dynamics and behaviors.
+"""
+
+"""
+
+Let's compare the simulation approaches mentioned in the context of a zombie apocalypse simulation based on various criteria:
+
+1. Complexity:
+   - Dynamic System: Can capture complex and dynamic interactions, but can be computationally expensive and challenging to interpret.
+   - Graph Theory: Provides a framework for representing relationships, but may not capture all real-world interactions accurately.
+   - Edge-Based Compartmental Model: Allows modeling of spread on networks, but simplifications and approximations may limit accuracy.
+   - Pair Approximation and Degree-Based Approximation: Simplify models, but may lead to a loss of accuracy and overlook important details.
+   - SIR Model: Simple framework for modeling infectious diseases, but assumes homogeneous mixing and ignores individual-level variations.
+   - Agent-Based Model: Captures individual-level behaviors and interactions, but can be computationally expensive and require detailed data.
+   - Random Graph: Simple way to generate network structures, but may not reflect real-world structures or capture complex dynamics.
+
+2. Representation of Interactions:
+   - Dynamic System: Captures temporal evolution and changes in the system.
+   - Graph Theory: Represents relationships and connections in a network.
+   - Edge-Based Compartmental Model: Models disease spread on networks, considering interactions between individuals or locations.
+   - Pair Approximation and Degree-Based Approximation: Approximate the dynamics of spread on networks.
+   - SIR Model: Represents disease spread in a population without explicit network interactions.
+   - Agent-Based Model: Captures individual-level behaviors and interactions explicitly.
+   - Random Graph: Provides a random distribution of connections or interactions.
+
+3. Computational Requirements:
+   - Dynamic System: Can be computationally expensive, especially with complex models.
+   - Graph Theory: Computationally intensive for large and complex graphs.
+   - Edge-Based Compartmental Model: Requires accurate network data but can be computationally tractable.
+   - Pair Approximation and Degree-Based Approximation: Reduce computational burden and facilitate analysis.
+   - SIR Model: Computationally efficient due to its simplicity.
+   - Agent-Based Model: Can be computationally expensive, especially for large populations.
+   - Random Graph: Computationally efficient.
+
+4. Capturing Realism:
+   - Dynamic System: Can capture realistic changes and long-term trends.
+   - Graph Theory: Provides insights into network properties but may not capture all real-world interactions.
+   - Edge-Based Compartmental Model: Considers network interactions but simplifications may limit realism.
+   - Pair Approximation and Degree-Based Approximation: Approximate dynamics but may lose realism.
+   - SIR Model: Simple representation, may not capture all real-world complexities.
+   - Agent-Based Model: Captures individual-level behaviors but requires detailed data for realism.
+   - Random Graph: Does not necessarily reflect real-world structures or capture complex dynamics.
+
+5. Flexibility:
+   - Dynamic System: Offers flexibility but requires extensive data and expertise.
+   - Graph Theory: Flexible in representing different network structures and analyzing properties.
+   - Edge-Based Compartmental Model: Flexible in modeling different network structures and spread dynamics.
+   - Pair Approximation and Degree-Based Approximation: Provide flexibility by simplifying complex models.
+   - SIR Model: Simple and flexible, but limited in capturing complex dynamics.
+   - Agent-Based Model: Highly flexible, allowing for various behaviors and interventions.
+   - Random Graph: Provides flexibility in generating different network structures.
+
+"""
+
+"""
+Based on the provided text, here is the information useful for implementing the simulation models:
+
+1. Model Type: The simulation models discussed are edge-based compartmental models, specifically applied to epidemic dynamics.
+
+2. Graph Models: Two common graph models are proposed for the simulations: Erdős-Rényi model and Barabási-Albert model.
+
+3. Erdős-Rényi Model:
+   - Edge generation: Each pair of vertices has an edge based on a common Bernoulli random variable.
+   - Degree distribution: Converges to a Poisson distribution as the number of vertices increases.
+   - Mean degree: Assumed to be 120 (can be adjusted).
+
+4. Barabási-Albert Model:
+   - Edge generation: New vertices connect preferentially to existing vertices with higher degrees.
+   - Degree distribution: Follows an asymptotic power law distribution.
+   - Mean degree: Set based on the minimum degree assumption, with a specific formula provided. Minimum degree assumed to be 60, resulting in a mean degree of approximately twice the minimum degree.
+
+5. Calculation of θ:
+   - θ is the key variable in the system, representing the probability that a random neighbor of a selected vertex has not transmitted the disease yet.
+   - θ is composed of four parts: ΦS, ΦI, ΦR, and ΦD, representing the probabilities of a neighbor being in a given state (susceptible, infected, recovered, or dead) while not transmitting the disease yet.
+   - ΦS, ΦI, ΦR, and ΦD are derived using probability generating functions and differential equations.
+
+6. Assumptions:
+   - Neighbor status independence: The status of one neighbor does not depend on the status of other neighbors.
+   - Deterministic performance: Infection, recovery, and fatality rates are fractions of the infected, recovered, and dead individuals in the overall population.
+
+7. Basic Reproduction Ratio: The computation of the basic reproduction ratio (R0) is adjusted for the random graph models.
+
+8. Population Growth: Daily population growth is assumed to be negligible and not considered in the simulation.
+
+9. Simulation Algorithm: The Gillespie algorithm is mentioned as the algorithm used for simulating the epidemic process.
+
+10. Susceptible Dynamics: The simulation focuses on the dynamics of the susceptible population, while the recovered and dead individuals remain in the model but do not interact with the susceptible and infected individuals.
+
+Note: While the text provides some mathematical equations and formulas, the exact implementation details and code are not provided. Additional steps would be required to translate the concepts into executable code for the simulation models.
+"""
+
+"""
+Parameter Estimation for Wildlife Population Models
+
+Introduction:
+In this article, we will focus on the process of estimating parameters for wildlife population models. Parameter estimates are crucial for accurately representing and understanding population dynamics. We will discuss the data requirements for different types of models and explore strategies to deal with situations where limited or no data is available.
+
+Data Requirements:
+
+1. Scalar Models (No Age Structure):
+   - Initial abundance (N0): The starting population size.
+   - Mean population growth rate (r or rmax): The average rate at which the population increases or decreases.
+   - Variation in population growth rate: The standard deviation representing environmental stochasticity.
+   - Carrying capacity (K): The maximum population size the environment can support in a logistic model.
+
+2. Stage-Structured (Life History) Models:
+   - Initial abundance (N0): A vector of initial abundances for all stages of the population.
+   - Stage-specific vital rates: Factors influencing population dynamics such as fecundity (reproductive rate) and survival. These are typically represented in a transition matrix.
+   - Temporal variation in stage-specific vital rates: Accounting for fluctuations in vital rates due to environmental stochasticity.
+   - Density-dependent effects: How vital rates are affected by population density, such as decreasing fecundity with crowding.
+
+3. Metapopulation (Spatial) Models:
+   - Spatial distributions of suitable habitat patches: Defining the locations and characteristics of habitat patches.
+   - Spatial variation in vital rates: Accounting for differences in habitat quality among patches and how it influences population dynamics.
+   - Correlation in environmental stochasticity among patches: The degree of similarity in environmental fluctuations across different patches.
+   - Dispersal rates among habitat patches: Movement of individuals between patches affecting colonization and extinction rates.
+   - Habitat requirements of different life stages: Identifying specific needs during different developmental stages.
+
+Dealing with Limited Data:
+
+1. Utilize Algebra:
+   - Construct age-structured transition matrices using available information, even if some vital rates are missing.
+   - Solve for missing vital rates based on known information and population growth estimates.
+
+2. Simplify the Models:
+   - Ignore age structure when data is lacking or limited.
+   - Disregard density-dependence if data is insufficient.
+   - Simplify trophic interactions, as this is a common simplification in population models.
+   - In classical metapopulation models, ignore abundance and focus on colonization and extinction rates.
+
+3. Conservative Strategies:
+   - Worst case scenario: Consider parameter uncertainty and use the values that lead to the most conservative (e.g., pessimistic) population outcomes.
+   - When data on density-dependence is lacking, assume density-independent dynamics for a conservative approach.
+   - When dealing with declining populations, consider the worst case scenario to inform conservation strategies.
+
+4. Use Data from Similar Species:
+   - If data on the target species is limited, leverage information from closely related species with similar life histories to inform parameter estimation.
+
+Conclusion:
+Accurate parameter estimation is crucial for wildlife population models. Even when data is limited or seemingly unavailable, various strategies can be employed to estimate missing parameters. By simplifying models, utilizing algebraic techniques, and considering conservative scenarios, we can improve our understanding of population dynamics and inform effective conservation strategies.
+"""
+
+"""
+https://kevintshoemaker.github.io/NRES-470/LECTURE13.html#Metapopulations
+
+Metapopulation simulation models are used to study the dynamics and behavior of metapopulations, which are collections of interconnected subpopulations occupying distinct habitat patches. These models incorporate both population ecology and movement ecology to understand how dispersal and colonization affect the persistence and distribution of species across the landscape.
+
+In metapopulation simulation models, the movement of individuals among habitat patches is a crucial factor. Dispersal allows individuals to colonize new patches, rescue declining subpopulations, and maintain gene flow among the subpopulations. The connectivity among patches determines the level of genetic exchange and influences the overall dynamics of the metapopulation.
+
+One commonly used framework in metapopulation modeling is the "BIDE" equation, which describes the population dynamics of a metapopulation:
+
+ΔN = B + I - D - E
+
+where:
+- ΔN represents the change in population size of a given subpopulation.
+- B denotes births or reproductive output within the subpopulation.
+- I represents immigration of individuals from other patches.
+- D indicates deaths or mortality within the subpopulation.
+- E denotes emigration of individuals from the subpopulation to other patches.
+
+By considering these processes, metapopulation simulation models can provide insights into the factors influencing population persistence, colonization dynamics, extinction risk, genetic diversity, and the overall stability of metapopulations.
+
+It's important to note that metapopulation simulation models can vary in their level of spatial representation. Some models use abstract representations of space, while others incorporate more detailed spatial structures. The specific characteristics of the metapopulation being studied, as well as the research questions being addressed, guide the choice of model complexity.
+"""
+
+"""
+The concept of "metapopulation" in ecology typically involves models that focus on whether specific geographical patches are occupied or not, rather than tracking the abundance of individual organisms within these patches. These models allow for dynamic changes, with different sets of patches being occupied at different points in time.
+
+However, more complex metapopulation models can consider patch abundance. In these models, each patch could contain a stage-structured, density-dependent population, or an assemblage of individuals, akin to an individual-based model.
+
+A subcategory of these models, known as "classical metapopulation models", focus purely on the occupancy of patches. These models assume that the surrounding areas outside a given patch are unsuitable for habitation, and all patches are considered similar in terms of their habitat quality, area, and their connectivity to other patches.
+
+This view implies that the patches are more or less interchangeable, although this assumption is revisited when considering more nuanced 'source and sink' models. Furthermore, rather than tracking the population in each patch, classical metapopulation models often just track the fraction of patches that are occupied within a landscape.
+
+Another important element of classical metapopulation models is their consideration of the consequences of dispersal. Instead of focusing on the number of individuals moving among patches, these models examine the effects of dispersal, such as the colonization of unoccupied patches via immigration and the prevention of patch extinction due to the influx of new individuals, often referred to as the "rescue effect".
+"""
+
+"""
+The concept of a classical metapopulation model offers a unique perspective on the spatial organization of populations. In this model, populations are distributed across 'patches' that can be either occupied or unoccupied. Interestingly, this model does not primarily track the total number of individuals in a population; instead, it focuses on the fraction of patches that are occupied at a given moment, designated as 'ft'.
+
+The 'stock' in this context refers to this fraction of occupied patches, ft. The investigation of fluctuations in ft over time has led to a new field of study, metapopulation occupancy dynamics.
+
+Metapopulation growth and shrinkage are conceptualized through the processes of colonization and extirpation respectively. Colonization is the transition of a previously unoccupied patch to an occupied state due to immigration from another patch. On the other hand, extirpation, also known as localized extinction, is the transition from an occupied to an unoccupied state. Global extinction occurs when all patches within the metapopulation are extirpated.
+
+Key variables used in this model include the colonization rate 'I', which is the total fraction of patches that are colonized by immigrants per time period, and the extirpation rate 'E', the total fraction of patches that are extirpated per time period. Additionally, 'pi' and 'pe' represent the probabilities of colonization and extinction for non-occupied and occupied patches respectively.
+
+The metapopulation model's dynamics are encapsulated by the equation Δf = I - E. This equation shows that the change in the fraction of occupied patches, ft, over time (Δf) is the difference between the colonization rate (I) and the extirpation rate (E). Thus, the balance between colonization and extirpation drives the metapopulation's occupancy dynamics.
+"""
+
+"""
+The classical metapopulation model provides an important theoretical framework in understanding spatially structured populations. This model, though somewhat simplified, sets certain key assumptions. Firstly, it treats all habitat patches as homogenous and identical with no consideration for variation in size or quality. Secondly, the processes of extinction and colonization remain unaffected by the spatial context or the so-called neighborhood effects. Thirdly, the model presumes no time lags, signifying that the metapopulation growth adjusts instantly to any changes. Finally, the model stipulates an infinitely large number of patches, making global extinction an impossibility, regardless of how few patches are occupied.
+
+Building on this foundational model, there are three notable variants that introduce a bit more realism. The first is the Island-Mainland Model. This is the simplest of all metapopulation models and is characterized by colonization occurring via a constant external source, known as a constant propagule rain. The probabilities of colonization (pi) and extinction (pe) in this model remain constant.
+
+The second variant introduces the concept of Internal Colonization. Here, the possibility of colonization is restricted to immigration from within the metapopulation itself. The equation pi=i⋅f describes this model, where 'i' represents the intensity of internal immigration. This factor determines how much the probability of colonization increases for each new occupied patch within the metapopulation. Another way to think of i in this model is the maximum rate of successful colonization of an unoccupied patch when nearly all patches in the metapopulation are occupied.
+
+The third and final variant discussed is the Rescue Effect. This innovative model allows the extinction rate to be lowered through immigration from other populations within the metapopulation. This phenomenon is defined by the equation pe=e(1−f), where 'e' signifies the strength of the rescue effect, or in other words, the maximum rate of extinction when the rescue effect is negligible because nearly all patches are unoccupied.
+"""
+
+"""
+In the context of a classical metapopulation model, dynamic stability plays a pivotal role. This model accepts local extinctions within individual patches as a common event. These extinctions, often a consequence of demographic stochasticity, are especially prevalent in smaller patches. However, the equilibrium of the metapopulation remains stable due to the balance achieved by re-colonization.
+
+The nature of this dynamically stable metapopulation is such that local extinctions are always possible, as represented by the probability of extinction (pe) being more than zero. Nonetheless, the metapopulation's overall size, denoted by the total occupied patches, is maintained at a stable level. Importantly, this metapopulation does not face the threat of regional or global extinction.
+
+Interestingly, this model of dynamic stability in a metapopulation bears significant resemblance to the dynamic stability observed in a single population that is at its carrying capacity. In both instances, a balance is struck—between extinctions and colonizations in the metapopulation model, and between deaths and births in the single population model.
+
+While classical metapopulation models operate under the assumption of a large number of patches, thereby mitigating the risk of regional or global extinction, real-world metapopulations are often smaller. This difference necessitates an acknowledgement and consideration of the potential risk of global extinction in these smaller metapopulations.
+
+In order to manage this risk, it is dispersed across numerous patches within the metapopulation. By this approach, despite each individual patch having a high risk of extinction, the metapopulation as a whole is safeguarded from the threat of global extinction.
+"""
+
+"""
+Metapopulations comprise populations of organisms distributed across separate patches or fragments. These patches display a significant variation in both size and quality, which gives rise to differing vital rates and population abundances. These differences arise from variations in habitat quality, resource availability, and the degree of protection from predators, making each patch unique in its characteristics.
+
+Within this patchwork, we identify three distinct types of populations: source, sink, and pseudo-sink.
+
+A source population stands out with its positive growth rate and its propensity to contribute more immigrants to adjacent patches than it receives. Crucially, a source population has the resilience to persist indefinitely, irrespective of interactions with other populations.
+
+Contrastingly, a sink population is characterized by a negative growth rate and its survival is predicated on a constant influx of immigrants from nearby source populations. In the absence of this association with a source population, a sink population would invariably face extinction.
+
+Occupying an intermediate position, we find the pseudo-sink population. While it is artificially buoyed by immigrants from nearby source populations, unlike a true sink, it wouldn't face extinction in isolation. However, without this external support from a source population, a pseudo-sink would stabilize at a lower equilibrium abundance or carrying capacity.
+
+The sink population concept is intrinsically linked to the rescue effect phenomenon. This effect paints the scenario where an incoming wave of individuals can avert the extinction of a small, declining population. This is the exact circumstance a sink population often finds itself in.
+
+Thus, in metapopulations, the spatial variations in vital rates and equilibrium abundance play a significant role, leading to the formation of source, sink, and pseudo-sink populations. The interplay among these disparate population types underpins the overall persistence and dynamics of metapopulations, making each population a crucial component in the broader metapopulation tapestry.
+"""
+
+"""
+Implementing a full metapopulation simulation model involves considering several key aspects. Here are the details:
+
+1. Define the Patches: Identify the distinct habitat patches in the landscape that make up the metapopulation. Assign characteristics to each patch, such as size, quality, and connectivity to neighboring patches.
+
+2. Patch Occupancy: Keep track of whether each patch is occupied (N > 0) or unoccupied (N = 0) at each time step. This binary representation simplifies the model and focuses on patch occupancy dynamics.
+
+3. Dispersal and Colonization: Incorporate dispersal processes between patches. Dispersal allows individuals to move from occupied patches to unoccupied ones, facilitating colonization. Define parameters such as the dispersal rate and the probability of colonization for unoccupied patches.
+
+4. Extinction: Account for the possibility of extirpation (extinction) of occupied patches. Determine the extinction rate, which represents the probability of a patch transitioning from occupied to unoccupied.
+
+5. Metapopulation Growth: Model the growth of the metapopulation by considering the balance between colonization and extinction. The change in occupancy (Δf) can be expressed as Δf = I - E, where I is the fraction of patches colonized by immigrants, and E is the fraction of patches extirpated.
+
+6. Probability of Colonization and Extinction: Calculate the probability of colonization (pi) and the probability of extinction (pe) for any given patch. These probabilities may be influenced by factors such as patch characteristics, habitat quality, and connectivity.
+
+7. Dynamic Stability: Investigate the dynamic stability of the metapopulation. A metapopulation is dynamically stable when extinctions and colonizations balance out, resulting in a relatively stable fraction of occupied patches over time.
+
+8. Source-Sink Dynamics: Consider the heterogeneity of patches in terms of size, quality, and population growth rates. Identify source populations (positive growth rate) that contribute more immigrants than they receive, sink populations (negative growth rate) that require immigration to persist, and pseudo-sink populations that maintain higher abundances due to immigration.
+
+9. Risk of Extinction: Assess the risk of regional or global extinction in the metapopulation. Calculate the probability of persistence over a specified time period, taking into account factors such as the probability of extinction per patch, the number of patches, and the level of connectivity.
+
+10. Model Evaluation: Analyze the model's outputs, including changes in patch occupancy, colonization and extinction rates, and the overall stability of the metapopulation. Compare the model's results to empirical data or theoretical expectations to validate its performance.
+
+By implementing these components, a full metapopulation simulation model can provide insights into the dynamics, persistence, and conservation implications of metapopulations in various ecological scenarios.
+"""
+
+"""
+Principle of population
+
+This essay can be summarized in the following key points, relevant for a population simulation:
+
+1. Human population has the potential to grow at a much faster rate than the capacity of the earth to provide enough resources, specifically food, to sustain that growth.
+
+2. The growth rate of population can be characterized as a geometrical progression (exponential), whereas the increase in subsistence, primarily food, can be characterized as an arithmetical progression (linear).
+
+3. Given that food is a basic requirement for human survival and reproduction, the difference in the rates of population growth and food supply must be balanced. This implies that population growth will encounter consistent checks due to the difficulty in obtaining subsistence.
+
+4. The constraints on population growth imposed by limited food resources will lead to periods of crisis. During these times, challenges such as widespread famine and disease can be expected, predominantly impacting the poor and disadvantaged populations.
+
+5. The dynamics of population growth under these constraints inspired Charles Darwin's theory of natural selection. Darwin postulated that the struggle for resources in a population surplus would lead to the preservation of favorable variations and destruction of unfavorable ones, culminating in the formation of new species.
+
+Thus, any realistic population simulation needs to consider the impact of resource limitations (particularly food availability) on population growth rates, as well as the potential for crises and variations in population dynamics over time.
+"""
+
+"""
+Exponential growth
+
+In the context of a population simulation, the key takeaway from your text revolves around the concept of exponential growth as a positive feedback loop, as it underlies the dynamic changes in population size.
+
+Exponential growth is a process that occurs when the growth rate of a value becomes increasingly faster in relation to its current value. In the case of a wild population, for instance, the input and output rates (births and deaths per year) are dependent on the value of the population stock at a given time.
+
+Exponential growth is characterized by what's known as a positive feedback loop or a reinforcing loop. In a positive feedback, an increase in the population size leads to a further increase in the growth rate, resulting in a snowball effect. This positive feedback can lead to extraordinarily high population numbers over time.
+
+The basic mathematical model of exponential growth can be expressed with the formula ΔN = r⋅Nt, where:
+
+- ΔN is the change in population size,
+- r is the intrinsic rate of increase, and
+- Nt is the population size at time t.
+
+It's worth noting that exponential growth is typically observed in populations when there are few or no growth limits. The population size grows slowly at first but rapidly increases over time due to the reinforcing effect.
+
+The concept of negative feedback also exists, which is a stabilizing feedback. This leads to more regulated population sizes and is a vital part of population regulation.
+
+These concepts are foundational in population ecology and are necessary to accurately simulate population dynamics.
+"""
+
+"""
+Density dependence and Logistic growth
+
+For a population simulation, the concepts of density dependence and logistic growth are fundamental. They describe how population size is regulated in relation to resource availability.
+
+Density Dependence:
+In density-dependent regulation, population growth rates are affected by the density of the population. This refers to the number of individuals of the same species that are competing for the same resources. As population density increases, competition intensifies, leading to an increased death rate or a decreased birth rate. This kind of interaction forms a negative or stabilizing feedback loop, which is essential for maintaining population regulation. The higher the population density, the less favorable the survival conditions become, due to heightened competition for resources.
+
+Logistic Growth:
+Logistic growth describes a more realistic population growth model than exponential growth, taking into account limitations in resources. The model is mathematically represented as:
+
+ΔN = r⋅Nt⋅(1−N/K)
+
+Here,
+- ΔN is the change in population size,
+- r is the intrinsic rate of increase,
+- Nt is the population size at time t, and
+- K is the carrying capacity of the environment.
+
+The equation can be broken down into two parts:
+
+- The first part, r⋅Nt, represents basic exponential growth.
+- The second part, (1−N/K), accounts for the effect of the carrying capacity. It represents the unused portion of the carrying capacity.
+
+When the carrying capacity is largely unused, the population growth resembles exponential growth. When the carrying capacity is mostly used up, the population growth approaches zero.
+
+The carrying capacity represents an equilibrium point in the system, where the inflow equals the outflow, the number of births equals the number of deaths, and the population size stabilizes. Birth and death rates (b and d) can be made dependent on density:
+
+- b=bmax−a∗[Density], where bmax is the maximum per-capita birth rate and a is the density dependence term.
+- d=dmin+c∗[Density], where dmin is the minimum per-capita death rate and c is the density dependence term.
+
+These concepts play a key role in accurately modeling and simulating population dynamics and will help simulate the variations in population sizes over time in different conditions.
+"""
+
+"""
+Allee effect
+
+The discussion introduces the idea of positive density dependence or the Allee effect, a critical element to include in a population simulation, especially when modeling social species.
+
+The Allee effect describes a scenario where an increase in population density leads to an increase in the population growth rate, a positive feedback. This effect can be observed in highly social species, like prairie dogs. For example, in high-density populations, individuals can collectively warn each other about predators, reducing the per-capita death rate. Conversely, in low-density populations, predation rates may increase, leading to a higher death rate. This dynamic can lead to unstable or non-regulated systems if the feedback loop becomes too strong.
+
+A real-world example of the Allee effect is the case of the passenger pigeon, once one of the most abundant bird species in North America. These birds were highly gregarious, and as their numbers dwindled due to overhunting and habitat loss, their social systems broke down. This resulted in a reduced ability to reproduce effectively or protect themselves from predators, which likely contributed to their extinction.
+
+In a population simulation, it would be crucial to incorporate such density-dependent effects, as they significantly influence population dynamics. For species exhibiting the Allee effect, particular attention should be given to the consequences of low population densities on the per-capita birth and death rates.
+"""
+
+"""
+Nomenclature for Population Ecology
+
+For a population simulation, the nomenclature and equations for population ecology are important to understand and apply. Here are the key points to consider:
+
+1. "N" represents the population size or abundance.
+2. "ΔN" represents the change in population size between time t and time t+1, expressed as Nt+1−Nt.
+3. The "BIDE" equation breaks down ΔN into components: ΔN=B+I−D−E, where:
+    - "B" is the total number of births per time period,
+    - "I" is the number of immigrants,
+    - "D" is the number of deaths, and
+    - "E" is the number of emigrants.
+
+If you ignore immigration and emigration, the equation simplifies to: ΔN=B−D.
+
+The number of births (B) and deaths (D) in a population is dependent on population size and is not constant.
+
+Per capita rates of births and deaths are represented by "b" and "d", respectively. These can be more constant across different population sizes.
+
+The per capita birth rate is calculated as b=Bt/Nt, implying the number of births at a given time equals the per capita birth rate times the total population size at that time. Similarly, the per capita death rate is calculated as d=Dt/Nt.
+
+Therefore, the change in population size (ΔN) can be written as ΔN=(b−d)⋅Nt, where (b−d) represents the difference between the birth and death rates and is represented as "r". If "r" is positive, the population is growing, and if "r" is negative, the population is declining.
+"""
+
+"""
+There are two types of population growth models – discrete and continuous – both of which are essential when constructing a population simulation.
+
+1. **Discrete Population Growth**: This model is often used in Population Viability Analysis (PVAs) where population growth happens at regular intervals (usually annually). The population size remains constant until the next growth event. This model suits organisms like plants that reproduce annually. The key element in this model is the Greek symbol lambda (λ), which represents the finite rate of growth or Nt+1/Nt. Lambda is multiplied with the current population size to estimate the population size in the next time step. The formulae used include:
+    - Nt+1=Nt+ΔNt (Equation 9)
+    - Nt+1=Nt+rd⋅Nt (Equation 10)
+    - Nt+1=Nt⋅(1+rd) (Equation 11)
+    - Nt+1=λ⋅Nt (Equation 12)
+    - Nt=λt⋅N0 (Equation 13)
+
+2. **Continuous Population Growth**: This model applies to populations that are always changing, such as human populations. No matter how small the time interval, the population will be larger at the next time step. The notation ∂N/∂t=r⋅N (Equation 9) depicts the instantaneous change in population size and represents continuous exponential growth. To calculate the abundance at a certain time 't', the formula Nt=N0ert (Equation 10) is used, integrating the differential equation.
+
+For a population simulation, you would need to decide whether a discrete or continuous model is more appropriate based on the biology and life history of the species being studied.
+"""
+
+"""
+matrix population matrix for calculating using experience level
+https://github.com/welsberr/matpopdyn/blob/master/matpopdyn.py
+https://bienvenu.gitlab.io/matpopmod/
+https://kevintshoemaker.github.io/NRES-470/LECTURE7.html
+https://kevintshoemaker.github.io/NRES-470/LAB4.html
+
+Population dynamics can be analyzed and predicted using matrix models, such as the Leslie and Lefkovitch matrices. These models are commonly used in population ecology to study the changes in population size and structure over time.
+
+The Leslie matrix is used to model age-structured populations, where individuals are categorized into different age classes. It is a square matrix where the rows represent the age classes or time intervals, and the columns represent the subsequent age classes or time intervals. The elements of the matrix correspond to demographic parameters such as fertility rates and survival rates for each age class. By multiplying the current population vector (number of individuals in each age class) by the Leslie matrix, population size and age distribution can be projected into the future.
+
+For example, consider a population with three age classes: juveniles (J), subadults (S), and adults (A). The Leslie matrix might look like this:
+
+```
+       J    S    A
+J   | 0.2  0.6  0.0 |
+S   | 0.8  0.0  0.4 |
+A   | 0.0  0.4  0.6 |
+```
+
+To predict the population size in the next time step, you multiply the current population vector by the Leslie matrix:
+
+```
+Population(t+1) = LeslieMatrix * Population(t)
+```
+
+The Lefkovitch matrix, on the other hand, extends the analysis to include additional demographic factors such as stage or size structure. It is particularly useful for populations with multiple life stages or size classes. Like the Leslie matrix, it is a square matrix, but the rows and columns represent different stages or size classes. The elements of the matrix represent transition rates or probabilities between the stages or size classes. By multiplying the current population vector by the Lefkovitch matrix, population dynamics can be projected into the future.
+
+For example, consider a population with three size classes: small (S), medium (M), and large (L). The Lefkovitch matrix might look like this:
+
+```
+       S    M    L
+S   | 0.5  0.3  0.0 |
+M   | 0.3  0.4  0.2 |
+L   | 0.0  0.2  0.7 |
+```
+
+To project population dynamics using the Lefkovitch matrix, you multiply the current population vector by the matrix:
+
+```
+Population(t+1) = LefkovitchMatrix * Population(t)
+```
+
+By iterating this process, you can predict how the population will change over time based on the demographic rates represented in the matrix.
+
+Both the Leslie and Lefkovitch matrices provide a powerful framework for analyzing population dynamics and studying the effects of different demographic parameters on population growth, stability, and extinction risk. The choice between the two matrix models depends on the specific characteristics of the population being studied, whether it is more suitable to represent the population in terms of age structure (Leslie matrix) or stage/size structure (Lefkovitch matrix).
+"""
+
+"""
+How to deal with uncertainty
+
+We should emphasizes the importance of handling uncertainty in population ecology and presents two primary tools for managing this: uncertainty analysis and stochastic models.
+
+1. **Uncertainty Analysis**: This approach is used when there is not enough data to create a perfect model. This method explores a range of plausible values for a parameter we are unsure about, such as a per-capita vital rate like adult survival rate. For instance, we might consider the possible impacts if the adult survival rate is 0.6 or 0.7 and observe the effects on our population study (like the possibility of extinction or decline due to uncertainty in the true parameter value).
+
+2. **Stochastic Models**: These models are used to represent and manage three types of uncertainties:
+
+   - **Parameter Uncertainty**: This is when there is insufficient data to specify a model. We usually address this uncertainty by providing a range of plausible values for a particular vital rate. For instance, a birth rate (b) could be represented as b=[1.1,1.9] or b=1.5±0.4.
+
+   - **Demographic Stochasticity**: This uncertainty arises from the unpredictable nature of individual outcomes – we can't predict if an individual will live or die, breed or not, have males or females, etc. To deal with this, the total number of births and deaths are made stochastic through a random-number generator.
+
+   - **Environmental Stochasticity**: This refers to the unpredictability of future environmental conditions that might affect population growth, such as per-capita vital rates. This is dealt with by randomly varying these rates.
+
+   For each type of uncertainty, different distributions are often used in modeling, including the binomial distribution (total deaths), the Poisson distribution (total births), and the Normal distribution (variation in per-capita vital rates).
+
+We should also identifies potential threats that could affect a population, both deterministic (like habitat fragmentation or loss, direct harvest, invasive species, and environmental toxins) and stochastic (like demographic and environmental stochasticity, catastrophes, and loss of genetic diversity). These threats should be considered in any population simulation.
+"""
+
+"""
+species interaction - competition
+https://kevintshoemaker.github.io/NRES-470/LECTURE16.html
+Species interactions, particularly competition, is important in population ecology. In modeling these interactions, unpredictable properties can emerge. Species interactions are classified based on the effect on each species: (+,+), (+,-), (+,0), (-,-), (-,0), (0,0).
+
+**Competition** is a type of interaction where the vital rates of each species are negatively influenced by the presence of the other. It can be akin to within-species competition, a mechanism for density-dependent population regulation. There are two types:
+
+1. **Exploitation**: In this type of competition, all individuals compete for the same resources and have similar competitive abilities. The interaction is indirect - individuals of different species interact with a common resource pool rather than with each other.
+
+2. **Interference**: This type of competition involves direct behavioral exclusion. An example is territorial birds that keep other birds off their territory. In plants, this process can take the form of "allelopathy".
+
+When modeling competition, the logistic growth equation can be extended to incorporate two species, resulting in a **Lotka-Volterra competition model**. The model takes into account the presence of one species reducing the growth of the other, and vice versa:
+
+- Species 1: ΔN1=r⋅N1t⋅(1−N1+αN2/K1)
+- Species 2: ΔN2=r⋅N2t⋅(1−N2+βN1/K2)
+
+The constants α and β measure the effect of one species on the other's growth.
+
+There is a concept of a **phase plane**, a 2-D surface where each axis represents the abundance of one of the species. For each time step in the model, the abundances of the two species are plotted as a point on this plane. The direction and speed of the system's movement can be visualized with arrows in this plane, which can be highly instructive for understanding species interactions.
+
+The concept of **isoclines** is also introduced as a way to demarcate key features in the phase space - areas where the direction of system movement changes. These concepts are crucial for simulating multi-species dynamics in a population model.
+"""
+
+"""
+species interaction - prey predator
+https://kevintshoemaker.github.io/NRES-470/LECTURE17.html
+
+In order to simulate a predator-prey interaction, you will need to use a model that captures the dynamic relationship between both species.
+
+The framework for nearly all prey-predator models is:
+
+- ΔV = rV* - f(V)*P
+- ΔP = f(V)*conversion factor*P - qP*
+
+Here:
+
+- V represents the total prey abundance
+- P is the total predator abundance
+- rV* represents the growth of the prey population in the absence of predators
+- -qP* represents the growth of the predator population in the absence of prey
+- f(V) is the functional response – the per-capita rate of prey consumption, sometimes a function of both predator and prey densities (f(V,P))
+- f(V)*conversion factor is the numerical response – the increase in per-capita predator population growth due to prey consumption.
+
+
+The classic prey-predator model involves two parts, modeling the victims (prey) and the predators separately:
+
+**Prey (V for Victims) Model:**
+- In the absence of predators, the victim population grows exponentially, ΔV = rV.
+- If predators are present, the population growth of the victims slows down. The rate at which prey are consumed by predators is f(V)=α⋅V, and if there is more than one predator, the total rate of predation is f(V)⋅P=αVP.
+- The prey growth rate, therefore, is ΔV = rV - αVP.
+
+**Predators (P) Model:**
+- In the absence of prey, the predator population declines exponentially, ΔP = -qP.
+- The functional response is f(V)=αV. The numerical response, which describes how prey consumption translates into predator population growth, can be described as g(V)=β⋅V, where β is the conversion efficiency, and the increase in total predators due to prey consumption is g(V)⋅P=β⋅V⋅P.
+- The predator growth rate is thus defined as ΔP=βVP - qP.
+
+Combined, these models form the **Lotka-Volterra prey-predator model** which can be summed as:
+
+Prey growth: ΔV=rV−αVP
+Predator growth: ΔP=βVP−qP
+
+In your simulation, you'll also examine the phase plane to understand prey-predator dynamics over time. For a stable population, certain conditions must be met. These are illustrated by isoclines in the phase plane:
+
+Prey (Victims): P^=rα
+- Prey population is stable only if there are just enough predators to consume excess individuals produced each year.
+Predators: V^=qβ
+- Predator population is stable only if there are just enough prey to offset natural mortality.
+
+Key assumptions of the L-V prey-predator model are: the prey population is regulated only by predation, the predator feeds only on one species of prey, predators can theoretically consume infinite prey items per time step, there is no interference among predators, and prey have no refuge from predators.
+
+To make this model more realistic, you might consider giving prey a carrying capacity, modifying the functional response (which describes prey consumption rate per predator), adding a refuge for prey, and/or introducing a predator carrying capacity.
+
+You should also consider different functional responses:
+
+- Type I (Linear response): Predators never get full and stop eating. f(V)=α⋅V
+- Type II (Saturating response): Predators consume more prey with increasing prey densities, but only up to a point. f(V,P)=αV/(1+αhV)
+- Type III (Sigmoidal response): Predators develop a search image with increasing prey abundance, but capture efficiency decreases with low prey density. It also takes the form f(V,P)=αV/(1+αhV)
+
+In these equations, α is the "attack rate", and h is the handling time, which can be considered as the inverse of the maximum prey consumption rate.
+"""
+
+"""
+Small-population paradigm
+
+In order to understand and simulate population dynamics, particularly for small populations, the following principles and phenomena must be considered:
+
+1. **Demographic Stochasticity**: This occurs when the probability of an event happening to an individual varies randomly. It's more likely for all individuals in a small population to be affected by a single event than for a large population. This suggests that small populations are more vulnerable to extinction due to demographic stochasticity.
+
+2. **Genetic Drift**: This is a phenomenon where the gene pool of a population changes due to random events. In small populations, random events can drive genetic change over time, leading to a reduction in genetic diversity and an increase in susceptibility to certain challenges.
+
+3. **Inbreeding Depression**: This occurs in small populations where mating between closely related individuals is more common. It can lead to an increase in the frequency of deleterious alleles, reducing the overall fitness of the population.
+
+4. **Extinction Vortex**: A concept that encapsulates the cyclical nature of the challenges small populations face. When populations become small, they are more subject to demographic and environmental stochasticity, inbreeding, and loss of genetic diversity. These issues lead to smaller population sizes and further genetic degradation, creating a cycle that spirals towards extinction.
+
+5. **Minimum Viable Populations (MVP)**: This concept refers to the smallest size a population can be before the likelihood of it avoiding extinction is threatened. An MVP is usually quantified using stochastic population models.
+
+The quantitative definition used in population simulation is as follows:
+
+MVP: the abundance threshold below which extinction risk exceeds [a risk tolerance threshold] over [a time horizon]
+
+These elements can be analyzed and modeled using Population Viability Analysis (PVA), which can include factors such as genetic drift and inbreeding depression.
+"""
+
+"""
+Declining-population paradigm
+
+To simulate population dynamics accurately, one must take into account both intrinsic and extrinsic factors that affect populations.
+
+1. **Intrinsic Rate of Growth (rmax)**: While most species exhibit a positive intrinsic rate of growth, implying the capacity for population expansion under ideal conditions, this isn't always the reality due to various constraints and threats.
+
+2. **Threats to Populations**: Populations face both stochastic threats that primarily affect small populations, such as demographic stochasticity and genetic drift, and deterministic threats which can impact large populations as well.
+
+   Deterministic threats include:
+   - Over-harvesting
+   - Habitat loss and degradation
+   - Pathogens and parasites
+   - Climate change
+   - Exotic invasive species
+   - Pollution
+
+   In population simulation, these threats can be represented as factors that cause population decline, leading to a situation where deaths exceed births.
+
+3. **Declining-Population Paradigm vs. Small-Population Paradigm**: In conservation biology, two main paradigms are used to understand and manage population dynamics - the declining-population paradigm and the small-population paradigm.
+
+   - The declining-population paradigm focuses on deterministic processes that cause large populations to become small, and how these processes can be reversed through effective management.
+   - The small-population paradigm, on the other hand, is concerned with the effects of small population size on the persistence of a population, including genetic drift and inbreeding depression.
+
+To simulate a population accurately, both paradigms must be taken into account. The interplay between these paradigms can help identify critical factors and design interventions to maintain or increase population size.
+"""
+
+"""
+Population Viability Analysis (PVA)
+https://kevintshoemaker.github.io/NRES-470/FINAL_PROJECTS.html
+
+To successfully simulate population dynamics, a Population Viability Analysis (PVA) can be performed. PVA incorporates several essential elements and steps:
+
+1. **Life History**: Begin by creating a conceptual model of the life history of your species of interest. Decide on the number of life stages to include, identify which ones are reproductive, and which vital rates are density-dependent. Determine if there are any Allee effects, environmental stochasticities, or management activities that can alter the vital rates. Include any catastrophes that can affect the system.
+
+2. **Demographic Model Parameterization**: Assign real numbers to the stocks and flows in your conceptual life history diagram. Parameters will include survival and fecundity, annual variation in survival and fecundity (environmental stochasticity), initial abundances, density dependence functions, Allee thresholds (if applicable), catastrophe probabilities, and the effects of management actions.
+
+3. **Spatial Structure**: If you wish to include spatial aspects in your model, consider how many discrete populations exist within your metapopulation. Assess if different populations have different mean vital rates, if some are likely to be sources and others sinks. Determine if environmental stochasticity is spatially correlated, the rate of individual movements among populations, and the potential for connectivity enhancement via habitat management.
+
+4. **Simulation**: Using suitable software or programming platform, simulate your model. Set up the simulation to answer key research questions, decide on the scenarios to test, the sufficient number of replicates, and the data you need to store for your analyses.
+
+5. **Results Analysis**: Analyze and interpret your simulation results. This might include graphical visualization for understanding the trends and patterns, and statistical analysis for hypothesis testing.
+
+For successful PVA implementation, you will need parameters like survival rates (usually age-structured), fecundity rates (often age-structured), age at maturity, stochasticity, initial abundance, mode of population regulation, carrying capacity (K), dispersal rates (for metapopulation models), habitat quality (for metapopulation models), and linkages between management activities and vital rates (to run scenario tests).
+"""
+
+"""
+https://colab.research.google.com/drive/1OJ5HD9WtQ9BiPfnvXHmt8pwHGbnCkVu2#scrollTo=WocxvpoMAXa0
+"""
+
+"""
 https://indsr.org.tw/respublicationcon?uid=12&resid=705&pid=2588&typeid=3
 1.20 u@s.RX 04/23 fBg:/ 复制打开抖音，看看【娱小扒的作品】狼群特有的行进站位，感觉它们好有谋略 # 狼群 #... https://v.douyin.com/iRrP8wnk/
 https://academic-accelerator.com/encyclopedia/zh/list-of-military-tactics
 https://zh.wikipedia.org/zh-hant/%E5%86%9B%E4%BA%8B%E6%88%98%E6%9C%AF%E5%88%97%E8%A1%A8
 https://www.hk01.com/%E5%8D%B3%E6%99%82%E5%9C%8B%E9%9A%9B/958285/%E7%A7%91%E5%AD%B8%E5%AE%B6-%E9%BB%91%E7%8C%A9%E7%8C%A9%E7%82%BA%E7%88%AD%E5%A5%AA%E5%9C%B0%E7%9B%A4-%E9%81%8B%E7%94%A8%E8%BB%8D%E4%BA%8B%E5%81%B5%E5%AF%9F%E6%88%B0%E8%A1%93
+"""
 
+"""
+https://www.javatpoint.com/traffic-flow-simulation-in-python
+http://www.cromosim.fr/
+https://github.com/amiryanj/CrowdBag/tree/master
+
+https://github.com/crowddynamics/crowddynamics/tree/master/crowddynamics/core/motion
+https://arxiv.org/abs/1412.1082
+
+https://github.com/mblasiak/CrowdMovmentSimulation
+Discrete preprocessed shortest path agent movement
+Discrete gradient based agent movement
+
+https://github.com/fschur/Evacuation-Bottleneck
+We create different rooms with a variation of additional barriers inside. By running the simulation repeatedly we hope to find a relationship between the amount of barriers we added, their position and the number of casualties.
+
+https://github.com/jwmeindertsma/Social-Force-Model-Crowd-Simulation
+These programs corresponds to different rooms that are compared to eachother in order to find the effect of an obstacle near a door on the evacuation time of a crowd. It also including robustness checks for people with different sizes and weight and rooms with both bad visibility and two doors.
+
+https://github.com/crowdbotp/socialways
+https://lufor129.medium.com/%E8%BC%95%E8%AE%80%E8%AB%96%E6%96%87-%E4%B8%89-social-gan-socially-acceptable-trajectories-with-generative-adversarial-networks-d243c940d9c2
+The system is composed of two main components: Trajectory Generator and Trajectory Discriminator. For generating a prediction sample for Pedestrian of Interest (POI), the generator needs the following inputs:
+the observed trajectory of POI,
+the observed trajectory of surrounding agents,
+the noise signal (z),
+and the latent codes (c)
+The Discriminator takes a pair of observation and prediction samples and decides, if the given prediction sample is real or fake.
+"""
+
+"""
+https://github.com/shingkid/crowd-evacuation-simulation
+Crowd Evacuation Simulation
+Current practices are not sufficient to prepare humans for crowd evacuations in reality as there is no real sense of danger when running fire drills. Multi-agent systems provide a way to model individual behaviours in an emergency setting more accurately and realistically. Panic levels can be encoded to simulate irrational and chaotic behaviours that result in deadly stampedes that have been observed in such situations historically. This project attempts to find out the significance of various factors on the human stampede effect using the unsafe layout of The Float @ Marina Bay as a simulation environment. Using the experiment results, this project hopes to provides some form of insights into likely causes of human stampede effects and seeks to provide informed recommendations to increase survivability in crowd evacuations in such settings.
+
+NetLogo Model
+The NetLogo world is a 2-dimensional replication of The Float @ Marina Bay. Due to computational limitations, we halved the seating capacity from 30,000 to 14,178. The seating area can be divided into six sections, each with a distinct color. Lime-colored patches at the bottom of the staircases represent exits. The starting location of the fire can be set to a fixed or random location. Each tick represents a second, and each patch corresponds to a meter. The fire expands its reach every 10 ticks and consumes the entire stadium in approximately half an hour.
+
+Agents are spawned on the seats (we assume a full house) and are colored according to their seat sections. Each agent is given a set of characteristics during setup such as age group, gender, weight, and vision. These parameters are used to calculate the individual’s panic level, speed, health, and force which we further elaborate upon in the next section.
+
+Parameters
+Age
+Normal distribution following Singapore Age Structure 2017, grouped into three categories - child, adult, and elderly.
+
+Gender
+961 males per 1000 females (Population Trends 2017, Singapore Department of Statistics)
+
+Male: 48.05%
+Female: 51.95%
+Speed
+Each agent has a base walking speed depending on their age category.
+
+Child: 0.3889m/s (1.4km/h)
+Adult: Uniform distribution between 1.4778m/s (5.32km/h) and 1.5083m/s (5.43km/h)
+Elderly: Uniform distribution between 1.2528m/s (4.51km/h) and 1.3194m/s (4.75km/h)
+Vision
+Uniform distribution between 0 (vision can be extremely poor due to natural blindness or onset of smoke) and a maximum that can be set between 20 and 100.
+
+Panic (Levels 1-3)
+All agents start with a base level of 1
+If the fire is within the agent’s vision, panic rises to 2. The agent’s speed increases to average running pace (1.8056 m/s).
+If the fire is nearer (within half the distance that the agent can see), panic rises to 3. The agent’s speed increases to a fast running speed (2.5 m/s).
+Mass (Body weight)
+Each agent is given a mass (kg) drawn from a normal distribution depending on their age category and gender. Standard deviation was set to 4 in all cases.
+
+Child
+Female: mean=35
+Male: mean=40
+Adult/Elderly: mean=57.7
+Strategies
+"Smart"
+The “smart” strategy assumes that all survivors are equipped with the knowledge of the nearest exit location from where they are, and will try to proceed to the nearest possible exit with the use of the best-first search algorithm. In the event that the designated exit has been blocked by the fire, they will locate the next nearest exit.
+
+"Follow"
+The “follow” strategy is used to model the ‘herding behaviour’ of survivors, as similar in the flocking library. In this strategy, survivors only have limited vision with no knowledge of the nearest exits, and they will follow the exact action of the other survivors 1 patch in front of them. If the fire is within their vision, they would run in the opposite direction from the fire. If they see an available exit, they will run straight for the exit.
+
+Agent Death
+As our model does not take into account civil defence forces coming in to put out the fire or to rescue survivors, it is reasonable to assume that an agent dies once it comes in contact with fire.
+
+According to Ngai et al (2009), “the vast majority of human stampede casualties result from traumatic asphyxia caused by external compression of the thorax and/or upper abdomen, resulting in complete or partial cessation of respiration." In situations leading to stampedes, crowds do not stop accumulating even with local densities up to 10 people per square meter. People who succumb typically die standing up and do not collapse to the floor until after the crowd density and pressure have been relieved (Gill & Landi, 2004). Further, forces of up to 4500 N can be generated by just 6 to 7 people pushing in a single direction - large enough to bend steel railings.
+
+In our model, we calculate force/pressure exerted in a patch p as
+
+F_p=\sum _{a\in A} mass_a \times speed_a
+
+where A is the set of agents on patch p and each patch has a limit of 10 agents at a time.
+
+Each agent is given “health” which models the agent’s potential exertable force scaled by a global threshold specified during setup:
+
+health_a = mass_a \times speed_a \times threshold
+
+As the crowd scrambles towards the exits, overcrowding can occur as people push their way forward indiscriminately and the force exerted within a patch (which corresponds to a square meter) accumulates. A death from stampede occurs when the total patch force exceeds the “health” of an agent in the respective patch.
+"""
+
+"""
+https://www.youtube.com/watch?v=gxAaO2rsdIs
+https://github.com/3b1b/videos/blob/master/_2020/sir.py
+https://www.youtube.com/watch?v=D__UaR5MQao
+https://github.com/3b1b/videos/blob/master/_2020/covid.py
+https://scholar.google.com/scholar?scilib=1&hl=zh-TW&as_sdt=0,5
+https://www.youtube.com/watch?v=pV0Fwvc8QJ4
+https://www.youtube.com/watch?v=84njPYepKIU
+https://www.youtube.com/watch?app=desktop&v=6E8uhsfvYaU
+https://www.sciencedirect.com/science/article/abs/pii/S0092824085900072
+https://towardsdatascience.com/surviving-zombie-apocalypse-with-random-search-algorithm-b50c584e8066
+https://towardsdatascience.com/simulating-traffic-flow-in-python-ee1eab4dd20f
+https://github.com/davidrmiller/biosim4
+https://github.com/hunar4321/particle-life
+https://github.com/Revolutionary-Games/Thrive
+https://remptongames.com/2020/12/29/my-artificial-life-project-how-does-it-work/
+https://www.youtube.com/watch?v=osNl8eDxOus
+https://www.youtube.com/watch?v=sEPh6bAQVP0&t=1150s
+https://www.youtube.com/watch?v=viA-HIW-2C4
+https://www.youtube.com/watch?v=52ZeHGGEf6o
+https://www.youtube.com/watch?v=EWeSPOokclM
+https://www.youtube.com/watch?v=0Kx4Y9TVMGg
+https://www.youtube.com/watch?v=qwrp3lB-jkQ
+https://www.youtube.com/watch?v=citAiuIg670
+https://www.youtube.com/watch?v=KPoeNZZ6H4s
+https://www.youtube.com/watch?v=xBQ3knSi0Uo
+https://www.youtube.com/watch?v=lR2HLHJGzXM
+https://www.youtube.com/watch?v=YJRRu4dJnTI
+https://www.youtube.com/watch?v=JTnup-TxkbA
+https://youtu.be/kNWb7e8FZDo
+https://www.youtube.com/watch?v=f4BXY_vp4f8
+https://www.youtube.com/watch?v=4XEklaH9k6k
+https://www.youtube.com/watch?v=tVNoetVLuQg
+https://www.youtube.com/watch?v=PNtKXWNKGN8
+collision detection
+Ventrella's Clusters
+Code Parade
+Conway's game of life
+matching the velocity of nearby particles (not just matching the position), and matching the average position of nearby peers, then the Boids algorithm could be simulated. The "force range", or the distance at which a particle reacts to another particle, could also be made variable for a better simulation.
+I wonder how much more emerges if we make the rule coefficients a function of a common parameter (we can call it "temperature"), then have that variable go through a "day cycle" of sin(t).  This might make some of the very unstable/twitchy patterns more stable for a bit, and vice-versa.  Or make t itself a function of (x,y) and make warm/cool pockets with different stable patterns, swapping particles between them.
+Divide the screen into a grid, and give each cell a vector, make the cells influence their neighbors, make them change color depending on the intensity of the vector.
+start with 1 particle/entity that can only attract or repel
+artificial flocking algorithm
+https://www.youtube.com/watch?v=X-iSQQgOd1A&t=7s
+https://github.com/SebLague/Slime-Simulation
+https://cargocollective.com/sagejenson/physarum
+https://github.com/fogleman/physarum
+https://github.com/johnBuffer/AntSimulator/tree/master/include/simulation
+https://www.youtube.com/watch?v=81GQNPJip2Y
+https://www.youtube.com/watch?v=emRXBr5JvoY
+https://www.youtube.com/watch?v=V1GeNm2D2DU
+https://www.youtube.com/watch?v=a5u-7PuuUvM
+https://www.youtube.com/watch?v=citAiuIg670
+https://www.youtube.com/watch?v=QmhE6DAIZyI
+thermal model
+https://zh.wikipedia.org/zh-tw/%E6%B8%97%E6%B5%81%E7%90%86%E8%AE%BA
+https://github.com/dh4gan/percolation-model
+https://en.wikipedia.org/wiki/First_passage_percolation
+https://zh.wikipedia.org/zh-tw/%E8%80%97%E6%95%A3%E7%B3%BB%E7%B5%B1
+https://zh.wikipedia.org/zh-tw/%E7%86%B1%E5%8A%9B%E5%AD%B8%E5%B9%B3%E8%A1%A1
+https://www.youtube.com/watch?v=kbJxl7HU480
+https://www.youtube.com/watch?v=YNMkADpvO4w
+https://www.youtube.com/watch?v=iLX_r_WPrIw
+partial differential equations
+https://www.youtube.com/watch?v=7OLpKqTriio
+https://www.youtube.com/watch?v=goePYJ74Ydg
+https://www.youtube.com/watch?v=vs961OhnQg0
+https://www.youtube.com/watch?v=tKcKL1QJMuo
+https://www.youtube.com/watch?v=SldYiuIvsh4
+https://www.youtube.com/watch?v=-yBTOQAKFIU
+https://meltingasphalt.com/interactive/outbreak/
+https://www.youtube.com/watch?v=jO6qQDNa2UY
+https://www.youtube.com/watch?v=FfWpgLFMI7w
+https://www.youtube.com/watch?v=c-aEBxGPLB0
+https://zh.wikipedia.org/zh-tw/%E4%BB%A3%E7%A0%81%E9%87%8D%E6%9E%84
+https://nathanrooy.github.io/posts/2017-11-30/evolving-simple-organisms-using-a-genetic-algorithm-and-deep-learning/
+https://www.youtube.com/watch?v=2kupe2ZKK58
+https://medium.com/@benjamin22-314/evolving-simple-organisms-5b7599c4c2e9
+https://towardsdatascience.com/evolving-neural-networks-b24517bb3701
+https://www.youtube.com/watch?v=GvEywP8t12I
+https://www.youtube.com/watch?v=RjweUYtpNq4
+https://mofanpy.com/tutorials/machine-learning/evolutionary-algorithm/
+https://github.com/MorvanZhou/Evolutionary-Algorithm
+https://www.youtube.com/watch?v=myJ7YOZGkv0
+https://www.youtube.com/watch?v=M6RLGJceLJg
+https://youtu.be/kQVfWMn9mTg
+https://youtu.be/tIyvZKwuTmA
+https://zh.wikipedia.org/zh-tw/%E6%8A%BD%E8%B1%A1%E8%B3%87%E6%96%99%E5%9E%8B%E5%88%A5
+https://youtu.be/B6DrRN5z_uU
 """
