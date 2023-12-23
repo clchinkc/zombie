@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import math
 import random
+import time
+import tkinter as tk
 from abc import ABC, abstractmethod
 from collections import Counter
 from copy import deepcopy
@@ -901,7 +903,7 @@ class MatplotlibAnimator(Observer):
         self.scatter.set_offsets(np.c_[self.cell_x_coords, self.cell_y_coords])
         self.scatter.set_array(self.cell_states_value)
         plt.draw()
-        plt.pause(0.5)
+        plt.pause(1.5)
         
     def update_table(self):
         """Update and redraw the table with new data."""
@@ -924,12 +926,73 @@ class MatplotlibAnimator(Observer):
                 self.table[i, j].get_text().set_text('')  # Clear the text
 
         plt.draw()
-        plt.pause(0.5)
+        plt.pause(1.5)
 
     def display_observation(self):
         """Display the final plot."""
         plt.show()
 
+
+class TkinterObserver(Observer):
+    def __init__(self, population, grid_size=300, cell_size=30):
+        self.population = population
+        self.population.attach_observer(self)
+
+        # Define the size of the grid and cells
+        self.grid_size = grid_size
+        self.cell_size = cell_size
+        self.num_cells = self.population.school.school_size
+
+        # Initialize Tkinter window
+        self.root = tk.Tk()
+        self.root.title("Zombie Apocalypse Simulation")
+
+        # Create canvas for drawing the grid
+        self.canvas = tk.Canvas(self.root, width=self.grid_size, height=self.grid_size)
+        self.canvas.pack()
+
+        # Draw the initial state of the grid
+        self.update()
+
+    def update(self):
+        # Update the canvas with the new simulation state
+        self.draw_grid()
+        self.tkinter_mainloop()
+        time.sleep(0.5)
+
+    def draw_grid(self):
+        # Clear the canvas
+        self.canvas.delete("all")
+
+        # Draw the grid based on the current state of the simulation
+        for individual in self.population.agent_list:
+            x, y = individual.location
+            x1 = x * self.cell_size
+            y1 = y * self.cell_size
+            x2 = x1 + self.cell_size
+            y2 = y1 + self.cell_size
+
+            # Choose color based on the individual's state
+            color = "white"
+            if individual.state == State.HEALTHY:
+                color = "green"
+            elif individual.state == State.INFECTED:
+                color = "yellow"
+            elif individual.state == State.ZOMBIE:
+                color = "red"
+            elif individual.state == State.DEAD:
+                color = "gray"
+
+            self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="black")
+
+    def tkinter_mainloop(self):
+        """ Run a single iteration of the Tkinter main loop. """
+        self.root.update_idletasks()
+        self.root.update()
+
+    def display_observation(self):
+        """ Display the final plot. """
+        self.root.mainloop()
 
 
 class Population:
@@ -1045,7 +1108,8 @@ def main():
     # create Observer objects
     # population_observer = PopulationObserver(school_sim)
     # population_animator = PopulationAnimator(school_sim)
-    matplotlib_animator = MatplotlibAnimator(school_sim, mode="table") # "bar" or "scatter" or "table"
+    # matplotlib_animator = MatplotlibAnimator(school_sim, mode="table") # "bar" or "scatter" or "table"
+    tkinter_observer = TkinterObserver(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
@@ -1057,7 +1121,8 @@ def main():
     # observe the statistics of the population
     # population_observer.display_observation(format="statistics") # "statistics" or "grid" or "chart" or "scatter"
     # population_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
-    matplotlib_animator.display_observation()
+    # matplotlib_animator.display_observation()
+    tkinter_observer.display_observation()
 
 
 if __name__ == "__main__":

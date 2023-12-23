@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import numpy as np
 from AlgoAPI import AlgoAPI_Backtest, AlgoAPIUtil
-from talib import RSI
+from talib import MACD
 
 
 class AlgoEvent:
@@ -11,9 +11,9 @@ class AlgoEvent:
         self.instrument = "BTCUSD"
         self.position = 0
         self.last_tradeID = ""
-        self.rsi_period = 14
-        self.rsi_overbought = 70
-        self.rsi_oversold = 30
+        self.macd_fastperiod = 12
+        self.macd_slowperiod = 26
+        self.macd_signalperiod = 9
 
     def start(self, mEvt):
         self.evt = AlgoAPI_Backtest.AlgoEvtHandler(self, mEvt)
@@ -22,22 +22,22 @@ class AlgoEvent:
     def on_marketdatafeed(self, md, ab):
         if md.timestamp >= self.timer + timedelta(hours=24):
             # Get historical closing prices
-            res = self.evt.getHistoricalBar({"instrument": self.instrument}, self.rsi_period + 1, "D")
+            res = self.evt.getHistoricalBar({"instrument": self.instrument}, max(self.macd_slowperiod, self.macd_fastperiod) + self.macd_signalperiod, "D")
             arr = [res[t]['c'] for t in res]
 
-            # Calculate RSI
-            rsi = RSI(np.array(arr), self.rsi_period)
+            # Calculate MACD
+            macd, macdsignal, macdhist = MACD(np.array(arr), fastperiod=self.macd_fastperiod, slowperiod=self.macd_slowperiod, signalperiod=self.macd_signalperiod)
 
             # Strategy logic
             if self.position == 0:
-                if rsi[-1] > self.rsi_overbought:  # Sell signal
-                    self.open_order(-1)
-                elif rsi[-1] < self.rsi_oversold:  # Buy signal
+                if macd[-1] > macdsignal[-1]:  # Buy signal
                     self.open_order(1)
+                elif macd[-1] < macdsignal[-1]:  # Sell signal
+                    self.open_order(-1)
             else:
-                if self.position > 0 and rsi[-1] < 50:  # Close buy position
+                if self.position > 0 and macd[-1] < macdsignal[-1]:  # Close buy position
                     self.close_order()
-                elif self.position < 0 and rsi[-1] > 50:  # Close sell position
+                elif self.position < 0 and macd[-1] > macdsignal[-1]:  # Close sell position
                     self.close_order()
 
             # Update timer
@@ -47,8 +47,8 @@ class AlgoEvent:
         order = AlgoAPIUtil.OrderObject()
         order.instrument = self.instrument
         order.openclose = 'open'
-        order.buysell = buysell  # 1=buy, -1=sell
-        order.ordertype = 0  # 0=market, 1=limit
+        order.buysell = buysell    #1=buy, -1=sell
+        order.ordertype = 0  #0=market, 1=limit
         order.volume = 0.01
         self.evt.sendOrder(order)
         
