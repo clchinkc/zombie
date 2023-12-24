@@ -13,7 +13,6 @@ Classes and Abstraction: You've designed several classes (Individual, School, Po
 
 7. Make objects immutable where possible: Make objects immutable to avoid unintentional modifications and ensure safer concurrent behavior.
 
-8. Improve naming consistency: Ensure consistent and meaningful naming conventions across the entire codebase to make the code more self-explanatory.
 
 Simulation Parameters and Configurability: Your simulation has many hardcoded values (like infection probabilities, movement strategies, etc.). Consider making these parameters configurable either through a configuration file or through function arguments. This would make experimentation easier.
 
