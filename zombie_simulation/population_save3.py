@@ -29,7 +29,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from matplotlib import animation, colors, patches
-from matplotlib.transforms import Bbox
 from scipy import stats
 
 
@@ -54,34 +53,29 @@ class State(Enum):
 
 
 class StateMachine(ABC):
-    _instance = None
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+    def __init__(self, context: Individual) -> None:
+        self.context = context
 
     @abstractmethod
-    def update_state(self, individual: Individual, severity: float) -> None:
+    def update_state(self, severity: float) -> None:
         pass
 
-    def is_infected(self, individual: Individual, severity: float, randomness=random.random()) -> bool:
+    def is_infected(self, severity: float, randomness=random.random()) -> bool:
         infection_probability = 1 / (1 + math.exp(-severity))
-        if any(other.state == State.ZOMBIE for other in individual.connections):
+        if any(other.state == State.ZOMBIE for other in self.context.connections):
             if randomness < infection_probability:
                 return True
         return False
 
-    def is_turned(self, individual: Individual, severity: float, randomness=random.random()) -> bool:
-        turning_probability = individual.infection_severity
+    def is_turned(self, severity: float, randomness=random.random()) -> bool:
+        turning_probability = self.context.infection_severity
         if randomness < turning_probability:
             return True
         return False
 
-    def is_died(self, individual: Individual, severity: float, randomness=random.random()) -> bool:
+    def is_died(self, severity: float, randomness=random.random()) -> bool:
         death_probability = severity
-        if any(other.state == State.HEALTHY or other.state == State.INFECTED for other in individual.connections):
+        if any(other.state == State.HEALTHY or other.state == State.INFECTED for other in self.context.connections):
             if randomness < death_probability:
                 return True
         return False
@@ -89,25 +83,28 @@ class StateMachine(ABC):
 
 # can add methods that change behaviour based on the state
 
-class HealthyStateMachine(StateMachine):
-    def update_state(self, individual: Individual, severity: float) -> None:
-        if self.is_infected(individual, severity):
-            individual.state = State.INFECTED
+class HealthyMachine(StateMachine):
+    # cellular automaton
+    def update_state(self, severity: float) -> None:
+        if self.is_infected(severity):
+            self.context.state = State.INFECTED
 
+class InfectedMachine(StateMachine):
+    # cellular automaton
+    def update_state(self, severity: float) -> None:
+        self.context.infection_severity += 0.1
+        self.context.infection_severity = round(self.context.infection_severity, 1)
+        self.context.infection_severity = min(self.context.infection_severity, 1.0)
+        if self.is_turned(severity):
+            self.context.state = State.ZOMBIE
+        elif self.is_died(severity):
+            self.context.state = State.DEAD
 
-class InfectedStateMachine(StateMachine):
-    def update_state(self, individual: Individual, severity: float) -> None:
-        individual.infection_severity = round(min(1, individual.infection_severity + 0.1), 1)
-        if self.is_turned(individual, severity):
-            individual.state = State.ZOMBIE
-        elif self.is_died(individual, severity):
-            individual.state = State.DEAD
-
-
-class ZombieStateMachine(StateMachine):
-    def update_state(self, individual: Individual, severity: float) -> None:
-        if self.is_died(individual, severity):
-            individual.state = State.DEAD
+class ZombieMachine(StateMachine):
+    # cellular automaton
+    def update_state(self, severity: float) -> None:
+        if self.is_died(severity):
+            self.context.state = State.DEAD
 
 
 # Strategy pattern
@@ -168,10 +165,10 @@ class FleeZombiesStrategy(MovementStrategy):
 
     # find the closest zombie and move away from it
     def direction_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
-        distances = [np.linalg.norm(np.subtract(np.array(individual.location), np.array(target))) for target in target_locations]
+        distances = [np.linalg.norm(np.subtract(individual.location, target)) for target in target_locations]
         closest_index = np.argmin(distances)
         closest_target = target_locations[closest_index]
-        direction_distances = [np.linalg.norm(np.add(d, np.array(individual.location)) - closest_target) for d in np.array(legal_directions)]
+        direction_distances = [np.linalg.norm(np.add(d, individual.location) - closest_target) for d in legal_directions]
         max_distance = np.max(direction_distances)
         farthest_directions = np.where(direction_distances == max_distance)[0]
         return legal_directions[random.choice(farthest_directions)]
@@ -278,22 +275,24 @@ class Individual:
         self.connections.append(other)
 
     def move(self, direction: tuple[int, int]) -> None:
-        dx, dy = direction
-        x, y = self.location
-        self.location = (x + dx, y + dy)
+        self.location = tuple(np.add(self.location, direction))
+        # self.location[0] += direction[0]
+        # self.location[1] += direction[1]
 
     def choose_direction(self, movement_strategy) -> tuple[int, int]:
         return movement_strategy.choose_direction()
 
     def update_state(self, severity: float) -> None:
         if self.state == State.HEALTHY:
-            HealthyStateMachine.get_instance().update_state(self, severity)
+            self.state_machine = HealthyMachine(self)
         elif self.state == State.INFECTED:
-            InfectedStateMachine.get_instance().update_state(self, severity)
+            self.state_machine = InfectedMachine(self)
         elif self.state == State.ZOMBIE:
-            ZombieStateMachine.get_instance().update_state(self, severity)
+            self.state_machine = ZombieMachine(self)
         elif self.state == State.DEAD:
-            pass  # No action for dead individuals
+            pass
+        # Update the state of the individual based on the current state and the interactions with other people
+        self.state_machine.update_state(severity)
 
     def get_info(self) -> str:
         return f"Individual {self.id} is {self.state.name} and is located at {self.location}, having connections with {self.connections}, infection severity {self.infection_severity}, interact range {self.interact_range}, and sight range {self.sight_range}."
@@ -595,16 +594,12 @@ class PopulationObserver(Observer):
         y = [individual.location[1] for individual in self.agent_list]
         
         # create a colormap from the seaborn palette and the number of colors equal to the number of members in the State enum
-        color_palette = sns.color_palette("deep", n_colors=len(State))
-        cmap = colors.ListedColormap(color_palette)
+        cmap = colors.ListedColormap(sns.color_palette("deep", n_colors=len(State)))
         
         # create a list of legend labels and colors for each state in the State enum
-        handles = [patches.Patch(color=color, label=state.name) for color, state in zip(color_palette, State)]
+        handles = [patches.Patch(color=cmap(i), label=state.name) for i, state in enumerate(State)]
         
-        # Normalize the cell_states_value to be in the range [0, 1] for colormap
-        norm = colors.Normalize(vmin=min(cell_states_value), vmax=max(cell_states_value))
-        
-        sc = ax.scatter(x, y, c=cell_states_value, cmap=cmap, norm=norm)
+        ax.scatter(x, y, c=cell_states_value, cmap=cmap)
 
         # Set axis range
         ax.set_xlim(-1, self.subject.school.school_size + 1)
@@ -701,11 +696,10 @@ class PopulationAnimator(Observer):
             return sc, label
 
         # create a colormap from the seaborn palette and the number of colors equal to the number of members in the State enum
-        color_palette = sns.color_palette("deep", n_colors=len(State))
-        cmap = colors.ListedColormap(color_palette)
+        cmap = colors.ListedColormap(sns.color_palette("deep", n_colors=len(State)))
         
         # create a list of legend labels and colors for each state in the State enum
-        handles = [patches.Patch(color=color, label=state.name) for color, state in zip(color_palette, State)]
+        handles = [patches.Patch(color=cmap(i), label=state.name) for i, state in enumerate(State)]
 
         # Create a scatter plot
         sc = ax.scatter(x[0], y[0], c=cell_states_value[0], cmap=cmap)
@@ -768,7 +762,7 @@ class PopulationAnimator(Observer):
             return table, label
 
         # Create a table
-        table = ax.table(cellText=cell_states[0], loc="center", bbox=Bbox.from_bounds(0.0, 0.0, 1.0, 1.0))
+        table = ax.table(cellText=cell_states[0], loc="center", bbox=[0, 0, 1, 1])
 
         # Create a label
         label = ax.text(0.05, 0.9, "", transform=ax.transAxes)
@@ -794,6 +788,9 @@ class MatplotlibAnimator(Observer):
         self.mode = mode  # "bar" or "scatter" or "table"
         
         self.fig, self.ax = plt.subplots(1, 1, figsize=(7, 7))
+        self.scatter = None
+        self.bars = None
+        self.table = None
 
         self.cell_states = [individual.state for individual in self.subject.agent_list]
         self.cell_states_value = [state.value for state in self.cell_states]
@@ -814,6 +811,7 @@ class MatplotlibAnimator(Observer):
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
         self.ax.set_ylim(0, len(self.subject.agent_list) + 1)
+        self.bars = None
         self.setup_initial_bar_state()
 
     def setup_scatter_plot(self):
@@ -821,6 +819,7 @@ class MatplotlibAnimator(Observer):
         self.ax.set_title("Scatter Chart Animation")
         self.ax.set_xlim(-1, self.subject.school.school_size + 1)
         self.ax.set_ylim(-1, self.subject.school.school_size + 1)
+        self.scatter = None
         self.setup_initial_scatter_state()
 
     def setup_initial_bar_state(self):
@@ -834,11 +833,13 @@ class MatplotlibAnimator(Observer):
 
     def setup_initial_scatter_state(self):
         """Initialize the scatter plot with starting data."""
-        color_palette = sns.color_palette("deep", n_colors=len(State))
-        cmap=colors.ListedColormap(color_palette)
-        handles = [patches.Patch(color=color, label=state.name) for color, state in zip(color_palette, State)]
-        self.scatter = self.ax.scatter(self.cell_x_coords, self.cell_y_coords, c=self.cell_states_value, cmap=cmap)
-        self.ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=State.name_list())
+        cmap = colors.ListedColormap(sns.color_palette("deep", n_colors=len(State)))
+        min_state_val = min(state.value for state in State)
+        max_state_val = max(state.value for state in State)
+        norm = colors.Normalize(vmin=min_state_val, vmax=max_state_val)
+        handles = [patches.Patch(color=cmap(norm(state.value)), label=state.name) for state in State]
+        self.scatter = self.ax.scatter(self.cell_x_coords, self.cell_y_coords, c=self.cell_states_value, cmap=cmap, norm=norm)
+        self.ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.tight_layout()
         plt.draw()
         
@@ -847,6 +848,7 @@ class MatplotlibAnimator(Observer):
         self.ax.set_title("Table Animation")
         self.ax.set_xlim(-1, self.subject.school.school_size + 1)
         self.ax.set_ylim(-1, self.subject.school.school_size + 1)
+        self.table = None
         self.setup_initial_table_state()
         
     def setup_initial_table_state(self):
@@ -862,7 +864,7 @@ class MatplotlibAnimator(Observer):
             State.DEAD.name: "black",
         }
 
-        self.table = self.ax.table(cellText=cell_states, loc="center", bbox=Bbox.from_bounds(0.0, 0.0, 1.0, 1.0))
+        self.table = self.ax.table(cellText=cell_states, loc="center", bbox=[0, 0, 1, 1])
 
         for i in range(self.subject.school.school_size):
             for j in range(self.subject.school.school_size):
@@ -1104,10 +1106,10 @@ def main():
     school_sim = Population(school_size=10, population_size=10)
 
     # create Observer objects
-    population_observer = PopulationObserver(school_sim)
-    population_animator = PopulationAnimator(school_sim)
-    matplotlib_animator = MatplotlibAnimator(school_sim, mode="table") # "bar" or "scatter" or "table"
-    # tkinter_observer = TkinterObserver(school_sim)
+    # population_observer = PopulationObserver(school_sim)
+    # population_animator = PopulationAnimator(school_sim)
+    # matplotlib_animator = MatplotlibAnimator(school_sim, mode="table") # "bar" or "scatter" or "table"
+    tkinter_observer = TkinterObserver(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
@@ -1117,10 +1119,10 @@ def main():
     # print(population_animator.agent_history[-1])
 
     # observe the statistics of the population
-    population_observer.display_observation(format="grid") # "statistics" or "grid" or "chart" or "scatter"
-    population_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
-    matplotlib_animator.display_observation()
-    # tkinter_observer.display_observation()
+    # population_observer.display_observation(format="statistics") # "statistics" or "grid" or "chart" or "scatter"
+    # population_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
+    # matplotlib_animator.display_observation()
+    tkinter_observer.display_observation()
 
 
 if __name__ == "__main__":
