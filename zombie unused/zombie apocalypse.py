@@ -58,6 +58,10 @@ https://docs.scipy.org/doc/scipy/reference/spatial.distance.html
 use data structure in collections like deque, defaultdict, namedtuple, OrderedDict, Counter, ChainMap, UserDict, UserList, UserString
 Use decorator pattern to add additional functionality to a class without modifying the structure of the class itself
 https://github.com/lonelyenvoy/python-memoization
+single responsibility principle
+open closed principle
+dependency inversion principle
+interface segregation principle
 """
 
 import random
