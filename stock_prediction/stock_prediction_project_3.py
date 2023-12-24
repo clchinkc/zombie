@@ -43,6 +43,9 @@ macroeconomic indicators, news events, or social media sentiment
 https://streetfins.com/calculus-in-the-stock-market/
 
 (vector) error correction models
+
+https://python.plainenglish.io/fundamental-stock-analysis-using-python-apis-9988afdd4d24
+https://levelup.gitconnected.com/replicating-tradingview-chart-in-python-8bb6ff00bb4e
 """
 
 """

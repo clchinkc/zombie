@@ -208,6 +208,9 @@ https://zh.wikipedia.org/zh-tw/%E6%B4%B2%E9%9A%9B%E5%BD%88%E9%81%93%E9%A3%9B%E5%
 https://en.wikipedia.org/wiki/Ballistic_missile_flight_phases
 
 https://www.atlantis-press.com/article/25868869.pdf
+
+大型噴射無人僚機（忠誠僚機）
+小型無人機蜂群（Drone Swarm）
 """
 
 """

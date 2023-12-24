@@ -603,8 +603,9 @@ class PopulationObserver(Observer):
         
         # Normalize the cell_states_value to be in the range [0, 1] for colormap
         norm = colors.Normalize(vmin=min(cell_states_value), vmax=max(cell_states_value))
+        mapped_colors = [cmap(norm(value)) for value in cell_states_value]
         
-        sc = ax.scatter(x, y, c=cell_states_value, cmap=cmap, norm=norm)
+        ax.scatter(x, y, c=mapped_colors, cmap=cmap, norm=norm)
 
         # Set axis range
         ax.set_xlim(-1, self.subject.school.school_size + 1)
@@ -719,7 +720,7 @@ class PopulationAnimator(Observer):
         # Put a legend to the right of the current axis
         plt.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=State.name_list())
         # Save the animation
-        #anim.save("scatter_chart_animation.gif", writer="pillow", fps=3, dpi=10)
+        # anim.save("scatter_chart_animation.gif", writer="pillow", fps=3, dpi=10)
         # Show the plot
         plt.tight_layout()
         plt.show()
@@ -899,7 +900,13 @@ class MatplotlibAnimator(Observer):
     def update_scatter_plot(self):
         """Update and redraw the scatter plot with new data."""
         self.scatter.set_offsets(np.c_[self.cell_x_coords, self.cell_y_coords])
-        self.scatter.set_array(self.cell_states_value)
+        # Map cell_states_value to actual colors
+        norm = colors.Normalize(vmin=min(self.cell_states_value), vmax=max(self.cell_states_value))
+        color_palette = sns.color_palette("deep", n_colors=len(State))
+        cmap = colors.ListedColormap(color_palette)
+        mapped_colors = [cmap(norm(value)) for value in self.cell_states_value]
+        # Update the colors of the points
+        self.scatter.set_color(mapped_colors)
         plt.draw()
         plt.pause(1.5)
         
