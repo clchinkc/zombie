@@ -27,6 +27,8 @@ Capstone projects: high complexity (put everything together, >500 lines, use int
 Social media clones, like twitter, discord, reddit, etc.
 Ecommerce store and website
 
+Docker + Compose + Python
+web scrape + yfinance api + lstm model + plotly
 
 
 Project ideas
@@ -553,6 +555,11 @@ optimization
 https://github.com/srivatsankrishnan/oss-arch-gym
 https://scikit-opt.github.io/
 https://scikit-optimize.github.io/stable/
+模型能力指標
+https://zhuanlan.zhihu.com/p/392041753
+https://www.jianshu.com/p/1a98901e87ad
+https://github.com/wangqingbaidu/Dr.Sure/blob/master/Algorithm/%E4%BF%A1%E6%81%AF%E6%A3%80%E7%B4%A2%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87.md
+https://blog.csdn.net/weixin_41519463/article/details/100860181
 
 monte carlo alphazero
 https://web.engr.oregonstate.edu/~afern/classes/cs533/notes/mcp-trees.pdf
@@ -659,6 +666,7 @@ https://learning.oreilly.com/library/view/software-engineering-for/9781098136192
 smoking mode 冒煙模式：忽略 error 先把正常流程完成，可運作。
 big try-catch: 用一個 try-catch 包裹全部程式碼，防止 App 崩潰。
 error handlings: 具體分析該使用 try-catch 還是 Result type。
+https://www.cnblogs.com/zhanchenjin/p/16639067.html
 
 並行編程，約束編程，資料流編程，聲明性編程，分散式的編程，函式語言程式設計，泛型編程，指令式程式設計，邏輯編程，元程式設計，物件導向程式設計，文學程式設計
 
@@ -1343,14 +1351,20 @@ https://python.langchain.com/docs/integrations/chat/google_generative_ai
 https://twitter.com/LangChainAI/status/1734982565352845428?ref_src=twsrc%5Etfw%7Ctwcamp%5Etweetembed%7Ctwterm%5E1734982565352845428%7Ctwgr%5Eed12d765421df8d620af7916bb47d761ca52beab%7Ctwcon%5Es1_&ref_url=https%3A%2F%2Fanalyticsindiamag.com%2Flangchain-integrates-gemini-pro-api-enables-multimodal-capabilities%2F
 whisper
 https://www.kocpc.com.tw/archives/520051
-
+https://huggingface.co/FlagAlpha/Llama2-Chinese-7b-Chat
+https://catalog.ngc.nvidia.com/orgs/nvidia/teams/playground/models/codellama/overview
+https://github.com/msuliot/jupyter_fine_tuning/blob/main/open_ai_fine_tuning.ipynb
 
 bard api
 https://github.com/dsdanielpark/Bard-API
 https://blog.tensorflow.org/2023/06/augmenting-recommendation-systems-with.html
+https://cloud.google.com/vertex-ai?hl=zh_tw
+https://cloud.google.com/vertex-ai/docs/generative-ai/learn/models
+https://console.cloud.google.com/marketplace/product/colab-marketplace-image-public/colab?pli=1
 
 Huggingface api
 https://huggingface.co/docs/transformers/transformers_agents
+Huggingface free inference API
 
 Command line application
 https://github.com/lxgr-linux/pokete
@@ -1398,9 +1412,13 @@ https://github.com/chuanweihu/Douban-Scraping
 https://github.com/jctian96/douban-web-crawler
 https://cloud.tencent.com/developer/article/1745516
 https://largecats.github.io/blog/2019/06/18/scrape-movie-information/
+https://www.instantwatcher.com/iw/us/search
+https://unogs.com/
+https://flixpatrol.com/
 https://elasticsearch.cn/article/14863
 https://francis-press.com/papers/12298
 https://www.proquest.com/openview/76f584b3840e0bbfa0261544873e52e7/1?pq-origsite=gscholar&cbl=2046140
+autoscraper python
 
 search
 https://github.com/meilisearch/meilisearch
