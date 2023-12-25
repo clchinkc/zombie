@@ -62,6 +62,7 @@ single responsibility principle
 open closed principle
 dependency inversion principle
 interface segregation principle
+generator
 """
 
 import random

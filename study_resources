@@ -311,6 +311,7 @@ https://zhuanlan.zhihu.com/p/463629715
 https://zhuanlan.zhihu.com/p/441451881
 https://zhuanlan.zhihu.com/p/424195019
 TSMixer
+https://towardsdatascience.com/deepar-mastering-time-series-forecasting-with-deep-learning-bc717771ce85
 
 time series database
 InfluxDB 3.0
@@ -653,6 +654,11 @@ https://juejin.cn/post/6844904083665453063
 https://hackernoon.com/the-7-software-architecture-books-experienced-developers-need-to-read
 https://levelup.gitconnected.com/23-design-patterns-99-of-java-developers-should-learn-45573e076b69
 https://learning.oreilly.com/library/view/software-engineering-for/9781098136192/
+如果要在動手開發功能前就想明白有多少種 errors 需要處理，對我來說有點難。
+實際 coding 時，我的 workflow
+smoking mode 冒煙模式：忽略 error 先把正常流程完成，可運作。
+big try-catch: 用一個 try-catch 包裹全部程式碼，防止 App 崩潰。
+error handlings: 具體分析該使用 try-catch 還是 Result type。
 
 並行編程，約束編程，資料流編程，聲明性編程，分散式的編程，函式語言程式設計，泛型編程，指令式程式設計，邏輯編程，元程式設計，物件導向程式設計，文學程式設計
 

@@ -84,14 +84,12 @@ class StateMachine(ABC):
                 return True
         return False
 
-
 # can add methods that change behaviour based on the state
 
 class HealthyStateMachine(StateMachine):
     def update_state(self, individual: Individual, severity: float) -> None:
         if self.is_infected(individual, severity):
             individual.health_state = HealthState.INFECTED
-
 
 class InfectedStateMachine(StateMachine):
     def update_state(self, individual: Individual, severity: float) -> None:
@@ -101,11 +99,30 @@ class InfectedStateMachine(StateMachine):
         elif self.is_died(individual, severity):
             individual.health_state = HealthState.DEAD
 
-
 class ZombieStateMachine(StateMachine):
     def update_state(self, individual: Individual, severity: float) -> None:
         if self.is_died(individual, severity):
             individual.health_state = HealthState.DEAD
+
+class DeadStateMachine(StateMachine):
+    def update_state(self, individual: Individual, severity: float) -> None:
+        pass
+
+class StateMachineFactory:
+    @staticmethod
+    def get_instance():
+        return {
+            HealthState.HEALTHY: HealthyStateMachine(),
+            HealthState.INFECTED: InfectedStateMachine(),
+            HealthState.ZOMBIE: ZombieStateMachine(),
+            HealthState.DEAD: DeadStateMachine()
+        }
+
+    @staticmethod
+    def update_state(individual: Individual, severity: float) -> None:
+        state_machines = StateMachineFactory.get_instance()
+        state_machine = state_machines[individual.health_state]
+        state_machine.update_state(individual, severity)
 
 
 # Strategy pattern
@@ -284,14 +301,7 @@ class Individual:
         return movement_strategy.choose_direction()
 
     def update_state(self, severity: float) -> None:
-        if self.health_state == HealthState.HEALTHY:
-            HealthyStateMachine.get_instance().update_state(self, severity)
-        elif self.health_state == HealthState.INFECTED:
-            InfectedStateMachine.get_instance().update_state(self, severity)
-        elif self.health_state == HealthState.ZOMBIE:
-            ZombieStateMachine.get_instance().update_state(self, severity)
-        elif self.health_state == HealthState.DEAD:
-            pass  # No action for dead individuals
+        StateMachineFactory.update_state(self, severity)
 
     def get_info(self) -> str:
         return f"Individual {self.id} is {self.health_state.name} and is located at {self.location}, having connections with {self.connections}, infection severity {self.infection_severity}, interact range {self.interact_range}, and sight range {self.sight_range}."
@@ -336,34 +346,25 @@ class School:
             for cell in row:
                 if cell is None:
                     continue
-                neighbors = self.get_neighbors(
-                    (cell.location), cell.interact_range)
+                neighbors = self.get_neighbors((cell.location), cell.interact_range)
                 for neighbor in neighbors:
                     cell.add_connection(neighbor)
 
-    """
-        for i, row in enumerate(self.grid):
-            for j, cell in enumerate(row):
-                # cell = self.get_individual((i, j))
-                
-                neighbors = self.get_neighbors((i, j), cell.interact_range)
-    """
+    def update_individual_location(self, individual: Individual) -> None:
+        movement_strategy = self.strategy_factory.create_strategy(individual, self)
+        direction = individual.choose_direction(movement_strategy)
+        self.move_individual(individual, direction)
 
     # update the grid in the population based on their interactions with other people
     def update_grid(self, population: list[Individual], migration_probability: float, randomness=random.random()) -> None:
         for individuals in population:
-            i, j = individuals.location
-            cell = self.get_individual((i, j))
+            cell = self.get_individual(individuals.location)
 
             if cell is None or cell.health_state == HealthState.DEAD:
                 continue
 
             if randomness < migration_probability:
-                movement_strategy = self.strategy_factory.create_strategy(cell, self)
-                direction = cell.choose_direction(movement_strategy)
-                self.move_individual(cell, direction)
-            else:
-                continue
+                self.update_individual_location(cell)
 
                 # if right next to then don't move
                 # get neighbors with larger and larger range until there is a human
@@ -1037,11 +1038,11 @@ class Population:
             print("Time step: ", time + 1)
             self.severity = time / num_time_steps
             print("Severity: ", self.severity)
-            self.update_grid()
+            self.school.update_grid(self.agent_list, self.migration_probability)
             print("Updated Grid")
             self.school.update_connections()
             print("Updated Connections")
-            self.update_state()
+            self.update_individual_states()
             print("Updated State")
             self.update_population_metrics()
             print("Updated Population Metrics")
@@ -1055,22 +1056,25 @@ class Population:
             print("Notified Observers")
         self.clear_population()
 
-    def update_grid(self) -> None:
-        self.school.update_grid(self.agent_list, self.migration_probability)
-
-    def update_state(self) -> None:
+    def update_individual_states(self) -> None:
         for individual in self.agent_list:
             individual.update_state(self.severity)
             if individual.health_state == HealthState.DEAD:
                 self.school.remove_individual(individual.location)
 
     def update_population_metrics(self) -> None:
+        self.calculate_state_counts()
+        self.calculate_probabilities()
+
+    def calculate_state_counts(self) -> None:
         state_counts = Counter([individual.health_state for individual in self.agent_list])
         self.num_healthy = state_counts[HealthState.HEALTHY]
         self.num_infected = state_counts[HealthState.INFECTED]
         self.num_zombie = state_counts[HealthState.ZOMBIE]
         self.num_dead = state_counts[HealthState.DEAD]
         self.population_size = self.num_healthy + self.num_infected + self.num_zombie
+        
+    def calculate_probabilities(self) -> None:
         self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity))) # logistic function
         self.turning_probability = self.severity / (1 + self.severity) # softplus function
         self.death_probability = self.severity  # linear function
