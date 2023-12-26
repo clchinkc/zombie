@@ -515,14 +515,13 @@ class SimulationObserver(Observer):
         print(f"Turning Probability: {turning_probability:.2%} -> Turning Rate: {turning_rate:.2%}")
         print(f"Death Probability: {death_probability:.2%} -> Death Rate: {death_rate:.2%}")
         print(f"Migration Probability: {migration_probability:.2%}")
-        print()
         
         # The mean can be used to calculate the average number of zombies that appear in a specific area over time. This can be useful for predicting the rate of zombie infection and determining the necessary resources needed to survive.
         mean = np.mean([d["num_zombie"] for d in self.statistics])
         # The median can be used to determine the middle value in a set of data. In a zombie apocalypse simulation, the median can be used to determine the number of days it takes for a specific area to become overrun with zombies.
         median = np.median([d["num_zombie"] for d in self.statistics])
         # The mode can be used to determine the most common value in a set of data. In a zombie apocalypse simulation, the mode can be used to determine the most common type of zombie encountered or the most effective weapon to use against them.
-        mode = stats.mode([d["num_zombie"] for d in self.statistics])[0][0]
+        mode = stats.mode([d["num_zombie"] for d in self.statistics], keepdims=True)[0][0]
         # The standard deviation can be used to determine how spread out a set of data is. In a zombie apocalypse simulation, the standard deviation can be used to determine the level of unpredictability in zombie behavior or the effectiveness of certain survival strategies.
         std = np.std([d["num_zombie"] for d in self.statistics])
         print(f"Mean of Number of Zombie: {mean}")
@@ -600,11 +599,7 @@ class SimulationObserver(Observer):
         # create a list of legend labels and colors for each state in the State enum
         handles = [patches.Patch(color=color, label=state.name) for color, state in zip(color_palette, HealthState)]
         
-        # Normalize the cell_states_value to be in the range [0, 1] for colormap
-        norm = colors.Normalize(vmin=min(cell_states_value), vmax=max(cell_states_value))
-        mapped_colors = [cmap(norm(value)) for value in cell_states_value]
-        
-        ax.scatter(x, y, c=mapped_colors, cmap=cmap, norm=norm)
+        ax.scatter(x, y, c=cell_states_value, cmap=cmap)
 
         # Set axis range
         ax.set_xlim(-1, self.subject.school.size + 1)
@@ -899,16 +894,10 @@ class MatplotlibAnimator(Observer):
     def update_scatter_plot(self):
         """Update and redraw the scatter plot with new data."""
         self.scatter.set_offsets(np.c_[self.cell_x_coords, self.cell_y_coords])
-        # Map cell_states_value to actual colors
-        norm = colors.Normalize(vmin=min(self.cell_states_value), vmax=max(self.cell_states_value))
-        color_palette = sns.color_palette("deep", n_colors=len(HealthState))
-        cmap = colors.ListedColormap(color_palette)
-        mapped_colors = [cmap(norm(value)) for value in self.cell_states_value]
-        # Update the colors of the points
-        self.scatter.set_color(mapped_colors)
+        self.scatter.set_array(self.cell_states_value)
         plt.draw()
-        plt.pause(1.5)
-        
+        plt.pause(0.5)
+
     def update_table(self):
         """Update and redraw the table with new data."""
         cell_states = [["" for _ in range(self.subject.school.size)] for _ in range(self.subject.school.size)]
@@ -930,7 +919,7 @@ class MatplotlibAnimator(Observer):
                 self.table[i, j].get_text().set_text('')  # Clear the text
 
         plt.draw()
-        plt.pause(1.5)
+        plt.pause(0.5)
 
     def display_observation(self):
         """Display the final plot."""
@@ -1107,8 +1096,8 @@ def main():
 
     # create Observer objects
     population_observer = SimulationObserver(school_sim)
-    population_animator = SimulationAnimator(school_sim)
-    matplotlib_animator = MatplotlibAnimator(school_sim, mode="table") # "bar" or "scatter" or "table"
+    # population_animator = SimulationAnimator(school_sim)
+    # matplotlib_animator = MatplotlibAnimator(school_sim, mode="scatter") # "bar" or "scatter" or "table"
     # tkinter_observer = TkinterObserver(school_sim)
 
     # run the population for a given time period
@@ -1119,9 +1108,9 @@ def main():
     # print(population_animator.agent_history[-1])
 
     # observe the statistics of the population
-    population_observer.display_observation(format="grid") # "statistics" or "grid" or "chart" or "scatter"
-    population_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
-    matplotlib_animator.display_observation()
+    population_observer.display_observation(format="statistics") # "statistics" or "grid" or "chart" or "scatter"
+    # population_animator.display_observation(format="scatter") # "bar" or "scatter" or "table"
+    # matplotlib_animator.display_observation()
     # tkinter_observer.display_observation()
 
 

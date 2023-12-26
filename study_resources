@@ -2036,6 +2036,8 @@ camelot - extract tables from PDF
 livepython - track variables in runtime
 ftfy - fix text encoding
 icecream - debug print
+import pdb; pdb.set_trace() - debug
+breakpoint() - debug
 
 Job oriented courses
 https://careerhackers.io/chp-landing/

@@ -27,6 +27,22 @@ By implementing these suggestions, your simulation code will not only become mor
 """
 
 """
+Here are a few additional considerations that you may want to take into account when implementing the simulation:
+
+Validation: It's important to validate the accuracy of the simulation by comparing the results to real-world data or known facts about how zombie outbreaks spread. This can help ensure that the simulation is a realistic and accurate representation of the scenario it is modeling.
+
+Sensitivity analysis: It may be useful to perform sensitivity analysis to understand how the simulation results change as different parameters or assumptions are altered. For example, you could vary birth_probability, death_probability, infection_probability, turning_probability, death_probability, connection_probability, movement_probability, attack_probability and see how these changes affect the outcome of the simulation.
+
+Extension: You may want to consider extending the simulation to include additional factors or scenarios. For example, you could incorporate the behavior of external actors, such as emergency responders or military individualnel, or model the spread of the zombie virus to other locations outside the school.
+
+Additionally, the model could be expanded to include more detailed information about the layout of the school, such as the locations of classrooms, doors, and other features. This could allow for more accurate simulations of the movement and interactions of students, teachers, and zombies within the school environment.
+
+Integrate real-world data into the simulation: You can integrate real-world data such as population demographics, climate data, and disease transmission models into the simulation to provide more accurate predictions of zombie behavior. For example, you can use population demographics to predict the rate of zombie infection in a specific area or climate data to predict the spread of the zombie virus.
+
+Implement scenario analysis: You can implement scenario analysis to explore the impact of different variables on the outcome of the simulation. For example, you can explore the impact of different survival strategies on the rate of infection or the impact of different zombie types on the survival of the population.
+"""
+
+"""
 Code structure of a complete pygame implementation of a zombie apocalypse simulation
 
 What is the best code structure for a zombie apocalypse simulation? A simulation system with map and agents as dependencies?
@@ -37,29 +53,33 @@ Decoupled architectures, aka microservices
 
 To be honest, microservices architecture was not revolutionary when it appeared on the scene. It was more an evolution of architectural best practices that started in the 1970s with structured development, then object-oriented development, component-based development, use of services, and microservices. Each approach influences the following methods; hopefully, we improve things along the way.
 
-One of the things we were doing was cutting the cost and the size and the risk of change, and that sped everything up. Like I just said, I can push stuff to production, test in production completely safely. I can go faster. Chaos engineering, I'm being sure that this is going to work. I can go faster because of chaos engineering. This is the definition I had then of microservices, loosely coupled, service-oriented architecture with bounded context. If it isn't loosely coupled, then you can't independently deploy. If you don't have bounded context, then you have to know too much about what's around you.
+This is the definition I had then of microservices, loosely coupled, service-oriented architecture with bounded context. If it isn't loosely coupled, then you can't independently deploy. If you don't have bounded context, then you have to know too much about what's around you.
 
 If you're finding that you're overcoupled, it's because you didn't create those bounded contexts. We used inverted Conway's Law. We set up the architecture we wanted by creating groups that were that shape. We typically try to have a microservice do one thing, one verb, so that you could say, this service does 100-watts hits per second, or 1000-watts hits per second. It wasn't doing a bunch of different things. That makes it much easier to do capacity planning and testing. It's like, I've got a new version of the thing does more watts hits per second than the old one. That's it, much easier to test.
 
 Indicate in the plan: duty of different parts and the information communication between parts
 
-What api can i use in a zombie apocalypse simulation?
-
 Unit test, integration test
-
-Clear the population before showing in observers
-
-Option to show the process together with simulating
 
 API kind of way for observers
 
-Check whether i encapsulated move prediction inside a function that can be inserted on the fly
-
 Query system where movement of each agent is recorded and can be deal with all at the same time at each round
 
-The pygame observer need to take action every round as opposed to matplotlib observer
-
 group all agents that are linked, if all human or all zombie -> move as a group, otherwise -> fight
+"""
+
+"""
+What api can i use for a zombie apocalypse simulation?
+
+Here's a summary of the APIs and tools found across different categories for your zombie apocalypse simulation:
+
+Simulation and Modeling APIs: AnyLogic Cloud API, JSimpleSim, and Simmetrix Simulation Modeling Suite offer comprehensive features for creating detailed simulation models, including multi-agent simulations and geometry-based modeling.
+
+Artificial Intelligence APIs: AnyLogic provides an AI-enhanced general-purpose simulation platform. IBM Research offers AI-enriched simulation tools for complex scenarios. Ansys AI augments simulation capabilities across various industries with rapid prediction and AI add-ons.
+
+GIS APIs: Google Maps, OpenStreetMap, GRASS GIS, Cesium, Esri’s ArcGIS Maps SDK, and SAGA GIS offer advanced geospatial data processing, 3D visualization, and easy integration into game engines for realistic environmental modeling.
+
+Population Dynamics and Epidemiology Tools: BMC Medical Education provides resources for understanding epidemiological dynamics, crucial for simulating disease spread in populations, with a focus on mathematical and agent-based models.
 """
 
 """
@@ -70,7 +90,65 @@ indirect communication between agents to collaborate
 
 """
 https://developers.redhat.com/articles/2023/07/27/how-use-python-multiprocessing-module#what_is_a_python_multiprocessing_module_
-use of serialization in python
+"""
+
+"""
+Let's compare the pros and cons of the four serialization options - MessagePack, Protocol Buffers (Protobuf), FlatBuffers, and JSON with BSON or CBOR - particularly focusing on their efficiency, ability to access parts of the data, and cross-language compatibility.
+
+### 1. MessagePack
+
+**Pros**:
+- **Efficient**: More compact and faster than JSON, reducing data size and processing time.
+- **Easy to Use**: Similar to JSON in terms of usage, making it easy to adopt.
+- **Cross-Language Support**: Widely supported across many programming languages.
+- **Good for Network Communication**: Its compact size makes it suitable for server-client data exchange.
+
+**Cons**:
+- **Partial Access**: Does not inherently support partial deserialization.
+- **Not as Fast as Protobuf or FlatBuffers**: While faster than JSON, it's not as optimized as Protobuf or FlatBuffers for very large or complex datasets.
+
+### 2. Protocol Buffers (Protobuf)
+
+**Pros**:
+- **Highly Efficient**: Very fast serialization/deserialization and small message size.
+- **Partial Deserialization**: Supports accessing parts of the data without deserializing everything.
+- **Strongly Typed**: Requires predefined schema, leading to clearer contracts between server and client.
+- **Cross-Language**: Supports various programming languages.
+
+**Cons**:
+- **Schema Management**: Requires managing a schema, which might be complex for large systems.
+- **Less Human-Readable**: Binary format is not human-readable like JSON.
+
+### 3. FlatBuffers
+
+**Pros**:
+- **Zero-Copy**: Designed for maximum speed, allowing direct access to serialized data without a parsing step.
+- **Partial Deserialization**: Efficient in accessing only parts of the serialized data.
+- **Suitable for Complex Data**: Good for complex hierarchical data structures.
+- **Cross-Language Compatibility**: Supports multiple languages.
+
+**Cons**:
+- **Complexity**: More complex to use compared to JSON or MessagePack.
+- **Less Popular**: Smaller community and fewer resources compared to Protobuf or JSON.
+
+### 4. JSON with BSON or CBOR
+
+**Pros**:
+- **Human-Readable (JSON)**: Easy to read and write, good for debugging.
+- **More Efficient with Binary Formats (BSON, CBOR)**: Faster than standard JSON while maintaining a similar structure.
+- **Flexible**: No need for predefined schema.
+- **Wide Language Support**: Particularly for JSON, which is almost universally supported.
+
+**Cons**:
+- **Larger Size Than Protobuf or FlatBuffers**: Even with BSON or CBOR, it's not as compact.
+- **Slower**: Not as fast as Protobuf or FlatBuffers for serialization/deserialization.
+- **Partial Access**: Like MessagePack, JSON, BSON, and CBOR don’t inherently support efficient partial deserialization.
+
+### Conclusion
+
+- **For Maximum Efficiency and Partial Access**: Protobuf or FlatBuffers are the best choices, with FlatBuffers offering the fastest access to serialized data.
+- **For Balance Between Efficiency and Ease of Use**: MessagePack is a good middle ground.
+- **For Human-Readable Format and Simplicity**: JSON with BSON or CBOR offers a more familiar approach but with some performance improvements over standard JSON.
 """
 
 """
@@ -86,7 +164,6 @@ a: individual: zombie and survivor, cell: position, grid: zombie_positions and s
 
 
 Q learning as one strategy
-state machine should be a part of population and input individual as argument to process
 game world and q-table singleton
 
 class QLearningMovementStrategy(MovementStrategy):
@@ -136,31 +213,8 @@ save_data() save the necessary data in a save order
 load_data() load the necessary data in a load order
 refresh() refresh the data in the simulation according to time
 
-Here are a few additional considerations that you may want to take into account when implementing the simulation:
-
-Validation: It's important to validate the accuracy of the simulation by comparing the results to real-world data or known facts about how zombie outbreaks spread. This can help ensure that the simulation is a realistic and accurate representation of the scenario it is modeling.
-
-Sensitivity analysis: It may be useful to perform sensitivity analysis to understand how the simulation results change as different parameters or assumptions are altered. For example, you could vary birth_probability, death_probability, infection_probability, turning_probability, death_probability, connection_probability, movement_probability, attack_probability and see how these changes affect the outcome of the simulation.
-
-Extension: You may want to consider extending the simulation to include additional factors or scenarios. For example, you could incorporate the behavior of external actors, such as emergency responders or military individualnel, or model the spread of the zombie virus to other locations outside the school.
-
-Additionally, the model could be expanded to include more detailed information about the layout of the school, such as the locations of classrooms, doors, and other features. This could allow for more accurate simulations of the movement and interactions of students, teachers, and zombies within the school environment.
 """
 
-"""
-To provide analysis and prediction for the zombie apocalypse simulation, you can update the PopulationObserver class in the following ways:
-
-Implement methods for calculating statistical measures: You can implement methods for calculating statistical measures such as mean, median, mode, and standard deviation based on the data collected by the observer. These methods can be used to provide insights into the behavior of zombies and the survival strategies that are most effective.
-
-Use machine learning algorithms to predict zombie behavior: You can use machine learning algorithms such as decision trees, random forests, and neural networks to predict zombie behavior based on the data collected by the observer. For example, you can use these algorithms to predict the likelihood of a zombie outbreak occurring in a specific area or the rate of infection in a population.
-
-Integrate real-world data into the simulation: You can integrate real-world data such as population demographics, climate data, and disease transmission models into the simulation to provide more accurate predictions of zombie behavior. For example, you can use population demographics to predict the rate of zombie infection in a specific area or climate data to predict the spread of the zombie virus.
-
-Implement scenario analysis: You can implement scenario analysis to explore the impact of different variables on the outcome of the simulation. For example, you can explore the impact of different survival strategies on the rate of infection or the impact of different zombie types on the survival of the population.
-
-Overall, updating the PopulationObserver class to provide analysis and prediction for the zombie apocalypse simulation can provide valuable insights into the behavior of zombies and the most effective survival strategies.
-
-"""
 
 """
 use random walk algorithm to simulate movement based on probability adjusted by cell's infection status and location
