@@ -229,64 +229,6 @@ https://www.youtube.com/watch?v=4B24vYj_vaI
 Plugin Pattern
 """
 
-"""
-# Builder Pattern (should do in agent.py)
-
-class AgentBuilder:
-    def __init__(self):
-        self.agent = None
-
-    def create_agent(self):
-        self.agent = Agent()
-
-    def set_position(self, position):
-        self.agent.position = position
-
-    def set_health(self, health):
-        self.agent.health = health
-
-    def set_speed(self, speed):
-        self.agent.speed = speed
-
-    def set_strength(self, strength):
-        self.agent.strength = strength
-
-    def get_agent(self):
-        return self.agent
-        
-class AbstractAgentFactory(ABC):
-    @abstractmethod
-    def create_agent(self, builder: AgentBuilder, **kwargs) -> Agent:
-        raise NotImplementedError()
-
-class HumanFactory(AbstractAgentFactory):
-    def create_agent(self, builder: AgentBuilder, **kwargs) -> Agent:
-        builder.create_agent()
-        builder.set_position(kwargs.get("position"))
-        builder.set_health(kwargs.get("health"))
-        builder.set_speed(kwargs.get("speed"))
-        builder.set_strength(kwargs.get("strength"))
-        return builder.get_agent()
-
-class ZombieFactory(AbstractAgentFactory):
-    def create_agent(self, builder: AgentBuilder, **kwargs) -> Agent:
-        builder.create_agent()
-        builder.set_position(kwargs.get("position"))
-        builder.set_health(kwargs.get("health"))
-        builder.set_speed(kwargs.get("speed"))
-        builder.set_strength(kwargs.get("strength"))
-        return builder.get_agent()
-
-In the context of a zombie apocalypse simulation, the Builder Pattern can be used to create different types of zombie objects with various attributes and behaviors.
-Here are the steps to utilize the Builder Pattern in the simulation of a zombie apocalypse:
-Define a Zombie class: The Zombie class should have basic attributes like health, speed, and strength.
-Create an abstract ZombieBuilder class: The ZombieBuilder class should have methods for setting the various attributes of the Zombie object. These methods can include setHealth(), setSpeed(), and setStrength().
-Create concrete ZombieBuilder classes: Concrete ZombieBuilder classes should extend the ZombieBuilder class and provide implementations for the set methods. For example, a FastZombieBuilder could provide a high value for the speed attribute and a low value for the health attribute.
-Create a ZombieDirector class: The ZombieDirector class should have a method that takes a ZombieBuilder object as a parameter and uses it to build a Zombie object.
-Use the ZombieDirector to build different types of zombies: Using the ZombieDirector, you can create different types of zombies by using different ZombieBuilder objects. For example, you could create a SlowZombieBuilder and a StrongZombieBuilder to create different types of zombies.
-
-
-"""
 
 """
 Bridge Pattern

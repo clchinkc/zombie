@@ -5,7 +5,7 @@ import math
 import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Callable, NamedTuple, Protocol, Union
+from typing import Any, Callable, NamedTuple, Optional, Protocol, Union
 
 
 class Position(NamedTuple):
@@ -68,22 +68,18 @@ class Agent(ABC):
 
 class AgentManager(ABC):
     
-    @abstractmethod
     def __init__(self):
-        self.zombies = []
-    
-    @abstractmethod
+        self.agents = []
+
     def add_agent(self, agent: Agent) -> None:
-        pass
+        self.agents.append(agent)
     
-    @abstractmethod
     def remove_agent(self, agent: Agent) -> None:
-        pass
+        self.agents.remove(agent)
 
     def get_agents_in_range(self, agent: Agent, range: float):
-        # Get a list of distances and agents within a certain range of a given agent.
         agents_in_range = []
-        for other_agent in self.zombies:
+        for other_agent in self.agents:
             distance = agent.distance_to_agent(other_agent)
             if distance <= range:
                 agents_in_range.append((distance, other_agent))
@@ -103,7 +99,7 @@ class AgentManager(ABC):
 
 
 class Human(Agent):
-    def __init__(self, id, position: Position, health: int, strength: int, armour: int, speed: int, intelligence: int, weapon: Union[Weapon, None]=None):
+    def __init__(self, id: int, position: Position, health: int, strength: int, armour: int, speed: int, intelligence: int, weapon: Union[Weapon, None]=None):
         super().__init__(id, position, health, strength, armour, speed)
         self.intelligence = intelligence
         self.inventory = []
@@ -188,30 +184,30 @@ class Human(Agent):
 class HumanManager(AgentManager):
     
     def __init__(self):
-        # List of all humans in the apocalypse
+        super().__init__()
         self.humans = []
         
     def add_agent(self, human):
+        self.agents.append(human)
         self.humans.append(human)
         
     def remove_agent(self, human):
+        self.agents.remove(human)
         self.humans.remove(human)
         
     def get_agents_in_range(self, agent: Agent, range: float):
         return super().get_agents_in_range(agent, range)
 
-    def get_enemies_in_attack_range(self, agent):
-        attack_range = math.sqrt(2+ agent.weapon.range) if (isinstance(agent, Human) and agent.weapon is not None) else math.sqrt(2)
+    def get_enemies_in_attack_range(self, agent: Human):
+        attack_range = math.sqrt(2) + (agent.weapon.range if agent.weapon else 0)
         agents_in_range = super().get_agents_in_range(agent, attack_range)
         enemies_in_range = [(distance, enemy) for distance, enemy in agents_in_range if isinstance(enemy, Zombie)]
         return enemies_in_range
     
-    def get_closest_zombie(self, agent):
-        # Get the distance to each enemy
+    def get_closest_zombie(self, agent: Human):
         enemies = self.get_enemies_in_attack_range(agent)
         if len(enemies) == 0:
             return None
-        # Get the closest enemy
         closest_enemy = enemies[0]
         return closest_enemy
         
@@ -243,7 +239,7 @@ class HumanManager(AgentManager):
 
 class Zombie(Agent):
 
-    def __init__(self, id, position: Position, health: int, strength: int, armour: int, speed: int):
+    def __init__(self, id: int, position: Position, health: int, strength: int, armour: int, speed: int):
         super().__init__(id, position, health, strength, armour, speed)
         self.connections = []
 
@@ -295,28 +291,28 @@ class Zombie(Agent):
 class ZombieManager(AgentManager):
 
     def __init__(self):
-        # List of all zombies in the apocalypse
+        super().__init__()
         self.zombies = []
 
     def add_agent(self, zombie):
+        self.agents.append(zombie)
         self.zombies.append(zombie)
 
     def remove_agent(self, zombie):
+        self.agents.remove(zombie)
         self.zombies.remove(zombie)
 
-    def get_enemies_in_attack_range(self, agent):
-        attack_range = math.sqrt(2+ agent.weapon.range) if (isinstance(agent, Human) and agent.weapon is not None) else math.sqrt(2)
+    def get_enemies_in_attack_range(self, agent: Zombie):
+        attack_range = math.sqrt(2)  # Assuming zombies have a fixed attack range
         agents_in_range = super().get_agents_in_range(agent, attack_range)
         enemies_in_range = [(distance, enemy) for distance, enemy in agents_in_range if isinstance(enemy, Human)]
         return enemies_in_range
     
-    def get_closest_human(self, agent):
-        # Get the distance to each enemy
+    def get_closest_human(self, agent: Zombie):
         enemies = self.get_enemies_in_attack_range(agent)
         if len(enemies) == 0:
             return None
-        # Get the closest enemy
-        closest_enemy = enemies[0]
+        closest_enemy = enemies[0][1]  # Getting the human agent from the tuple
         return closest_enemy
     
     def print_zombie_info(self):
@@ -352,29 +348,90 @@ class PowerUp:
     def __str__(self):
         return f"PowerUp at {self.position}: health={self.health}, strength={self.strength}, armour={self.armour}, speed={self.speed}, intelligence={self.intelligence}"
 
-# Abstract Factory Pattern
+# Builder Class
+class AgentBuilder:
+    def __init__(self, agent_constructor):
+        self.agent_constructor = agent_constructor
+        self.params = {}
+
+    def set_id(self, id: int):
+        self.params['id'] = id
+        return self
+
+    def set_position(self, position: Position):
+        self.params['position'] = position
+        return self
+
+    def set_health(self, health: int):
+        self.params['health'] = health
+        return self
+
+    def set_strength(self, strength: int):
+        self.params['strength'] = strength
+        return self
+
+    def set_armour(self, armour: int):
+        self.params['armour'] = armour
+        return self
+
+    def set_speed(self, speed: int):
+        self.params['speed'] = speed
+        return self
+
+    def set_intelligence(self, intelligence: int):
+        self.params['intelligence'] = intelligence
+        return self
+
+    def set_weapon(self, weapon: Optional[Weapon]):
+        self.params['weapon'] = weapon
+        return self
+
+    def build(self):
+        agent = self.agent_constructor(**self.params)
+        self.params = {}
+        return agent
+
+
+# Abstract Factory Class using Builder
 class AbstractAgentFactory(ABC):
     @abstractmethod
-    def create_agent(**kwargs) -> Agent:
+    def create_agent(self, builder: AgentBuilder, **kwargs) -> Agent:
         raise NotImplementedError()
 
-# Builder Pattern
-class HumanFactory(AbstractAgentFactory):
-    def create_agent(**kwargs) -> Human:
-        health = kwargs.get("health", 100)
-        strength = kwargs.get("strength", 10)
-        armour = kwargs.get("armour", 5)
-        speed = kwargs.get("speed", 1)
-        intelligence = kwargs.get("intelligence", 10)
-        return Human(health=health, strength=strength, armour=armour, speed=speed, intelligence=intelligence, **kwargs)
 
+# Concrete Factory for Humans
+class HumanFactory(AbstractAgentFactory):
+    id_counter = 0
+
+    def create_agent(self, **kwargs) -> Human:
+        HumanFactory.id_counter += 1  # Increment the ID counter
+        builder = AgentBuilder(Human)
+        return builder.set_id(HumanFactory.id_counter) \
+                      .set_position(kwargs.get("position", Position(0, 0))) \
+                      .set_health(kwargs.get("health", 100)) \
+                      .set_strength(kwargs.get("strength", 10)) \
+                      .set_armour(kwargs.get("armour", 5)) \
+                      .set_speed(kwargs.get("speed", 1)) \
+                      .set_intelligence(kwargs.get("intelligence", 10)) \
+                      .set_weapon(kwargs.get("weapon", None)) \
+                      .build()
+
+# Concrete Factory for Zombies
 class ZombieFactory(AbstractAgentFactory):
-    def create_agent(**kwargs) -> Zombie:
-        health = kwargs.get("health", 100)
-        strength = kwargs.get("strength", 10)
-        armour = kwargs.get("armour", 5)
-        speed = kwargs.get("speed", 1)
-        return Zombie(health=health, strength=strength, armour=armour, speed=speed, **kwargs)
+    id_counter = 0
+
+    def create_agent(self, **kwargs) -> Zombie:
+        ZombieFactory.id_counter += 1  # Increment the ID counter
+        builder = AgentBuilder(Zombie)
+        return builder.set_id(ZombieFactory.id_counter) \
+                      .set_position(kwargs.get("position", Position(0, 0))) \
+                      .set_health(kwargs.get("health", 100)) \
+                      .set_strength(kwargs.get("strength", 10)) \
+                      .set_armour(kwargs.get("armour", 5)) \
+                      .set_speed(kwargs.get("speed", 1)) \
+                      .build()
+
+
 
 # Factory method Pattern
 class AgentFactory:
@@ -390,16 +447,13 @@ class AgentFactory:
         """Unregister a game character type."""
         self.character_creation_funcs.pop(character_type, None)
 
-    def produce(self, character_type: str, arguments: dict[str, Union[int, tuple]]) -> Agent:
+    def produce(self, character_type: str, arguments: dict[str, Any]) -> Agent:
         """Create a game character of a specific type."""
         try:
             creator_func = self.character_creation_funcs[character_type]
         except KeyError:
             raise ValueError(f"unknown character type {character_type!r}") from None
         return creator_func.create_agent(arguments)
-
-# store counter in factory
-# may use builder pattern if the product is composite or if there are more parameters
 
 class Grid:
     def __init__(self, width, height):
@@ -529,11 +583,9 @@ class ZombieApocalypse(Game):
         self.grid.print_map()
     
     # separate the creation and the use for humans and zombies
-    def create_agent(self, id: int, school_size: int, type: str) -> Agent:
+    def create_agent(self, school_size: int, type: str) -> Agent:
         arguments = {
-            "id": id,
-            "position": (random.randint(0, school_size-1),
-                        random.randint(0, school_size-1))
+            "position": Position(random.randint(0, school_size-1), random.randint(0, school_size-1))
         }
         return self.factory.produce(type, arguments)
         
@@ -548,9 +600,9 @@ class ZombieApocalypse(Game):
         self.factory.register_character("human", HumanFactory)
         self.factory.register_character("zombie", ZombieFactory)
         for i in range(num_humans):
-            self.human_manager.add_agent(self.create_agent(i, school_size, "human"))
+            self.human_manager.add_agent(self.create_agent(school_size, "human"))
         for i in range(num_zombies):
-            self.zombie_manager.add_agent(self.create_agent(i, school_size, "zombie"))
+            self.zombie_manager.add_agent(self.create_agent(school_size, "zombie"))
     
     # initialise weapon and map
     
