@@ -13,14 +13,6 @@ class Position(NamedTuple):
     y: int
 
 
-class HumanProtocol(Protocol):
-    def scavenge(self, possible_weapons):
-        pass
-    
-    def use_item(self, item):
-        pass
-
-
 class Agent(ABC):
     
     @abstractmethod
@@ -97,12 +89,42 @@ class AgentManager(ABC):
 
         # zombie may continue following a human even if other humans are closer
 
+# Define the HumanProtocol
+class HumanProtocol(Protocol):
+    intelligence: int
+    inventory: dict[str, Union['Weapon', 'PowerUp']]
+    weapon: Union['Weapon', None]
+    connections: list[Agent]
 
-class Human(Agent):
+    @abstractmethod
+    def scavenge(self, possible_weapons: list['Weapon']):
+        """Method for scavenging weapons or supplies."""
+        pass
+
+    @abstractmethod
+    def use_item(self, item: Union['Weapon', 'PowerUp']):
+        """Method for using an item from the inventory."""
+        pass
+
+    @abstractmethod
+    def attack(self, zombie: 'Zombie'):
+        """Method for attacking a zombie."""
+        pass
+
+# Define the ZombieProtocol
+class ZombieProtocol(Protocol):
+    connections: list[Agent]
+
+    @abstractmethod
+    def attack(self, human: 'Human'):
+        """Method for attacking a human."""
+        pass
+
+class Human(Agent, HumanProtocol):
     def __init__(self, id: int, position: Position, health: int, strength: int, armour: int, speed: int, intelligence: int, weapon: Union[Weapon, None]=None):
         super().__init__(id, position, health, strength, armour, speed)
         self.intelligence = intelligence
-        self.inventory = []
+        self.inventory = {}
         self.weapon = weapon
         self.connections = []
         
@@ -130,7 +152,7 @@ class Human(Agent):
         return super().distance_to_agent(other_agent)
 
     def take_damage(self, damage: Union[int, float]):
-        return super().take_damage(damage-self.defense)
+        return super().take_damage(max(0, damage - self.armour))
         
     def take_turn(self, possible_weapons, closest_enemy):
         if closest_enemy is not None:
@@ -143,9 +165,11 @@ class Human(Agent):
             self.random_move()
             
     def random_move(self):
-        dx = random.randint(-1, 1)
-        dy = random.randint(-1, 1)
-        self.move((dx, dy))
+        dx = random.choice([-1, 0, 1])
+        dy = random.choice([-1, 0, 1])
+        new_x = max(0, min(self.position.x + dx, apocalypse.grid.width - 1))
+        new_y = max(0, min(self.position.y + dy, apocalypse.grid.height - 1))
+        self.move((new_x, new_y))
         
     def attack(self, zombie):
         # Calculate the damage dealt to the zombie
@@ -159,7 +183,7 @@ class Human(Agent):
         if random.random() < 0.5:
             # Human has found some supplies
             supplies = PowerUp(self.position, 10, 0, 0, 0, 0)
-            self.inventory.append(supplies)
+            self.inventory['supplies'] = supplies
         # Roll a dice to determine if the human finds a new weapon
         if random.random() < 0.2:
             # Human has found a new weapon
@@ -168,16 +192,15 @@ class Human(Agent):
                 self.weapon = new_weapon
 
     def use_item(self, item):
-        if isinstance(item, Weapon):
-            self.weapon = item
-            self.inventory.remove(item)
-        elif isinstance(item, PowerUp):
+        if item in self.inventory and isinstance(item, PowerUp):
             self.health += item.health
             self.strength += item.strength
             self.armour += item.armour
             self.speed += item.speed
             self.intelligence += item.intelligence
-            self.inventory.remove(item)
+            self.inventory.pop(item)
+        else:
+            print(f"Item {item} not in inventory")
 
 
 # Manage all humans in the apocalypse
@@ -212,7 +235,7 @@ class HumanManager(AgentManager):
         return closest_enemy
         
     def trade_with(self, agent1, agent2):
-        if agent1.weapon is not None and agent2.weapon is not None:
+        if agent1.weapon and agent2.weapon:
             # agent with worse weapon give some health to agent with better weapon to trade
             if agent1.weapon < agent2.weapon and agent1.health > agent2.weapon.damage:
                 agent1.weapon, agent2.weapon = agent2.weapon, agent1.weapon
@@ -237,7 +260,7 @@ class HumanManager(AgentManager):
             print(f"Human {human.id}: health={human.health}, position={human.position}, weapon={human.weapon}")
 
 
-class Zombie(Agent):
+class Zombie(Agent, ZombieProtocol):
 
     def __init__(self, id: int, position: Position, health: int, strength: int, armour: int, speed: int):
         super().__init__(id, position, health, strength, armour, speed)
@@ -266,7 +289,7 @@ class Zombie(Agent):
         return super().distance_to_agent(other_agent)
         
     def take_damage(self, damage: Union[int, float]):
-        return super().take_damage(damage-self.defense)
+        return super().take_damage(max(0, damage - self.armour))
 
     def take_turn(self, closest_human):
         # If there are any humans in range, attack the closest one
@@ -277,10 +300,11 @@ class Zombie(Agent):
                 self.random_move()
     
     def random_move(self):
-        # Move the zombie to a random position
-        dx = random.randint(-1, 1)
-        dy = random.randint(-1, 1)
-        self.move((dx, dy))
+        dx = random.choice([-1, 0, 1])
+        dy = random.choice([-1, 0, 1])
+        new_x = max(0, min(self.position.x + dx, apocalypse.grid.width - 1))
+        new_y = max(0, min(self.position.y + dy, apocalypse.grid.height - 1))
+        self.move((new_x, new_y))
 
     def attack(self, human):
         damage = self.strength*random.uniform(0.5, 1.5)
@@ -455,50 +479,57 @@ class AgentFactory:
             raise ValueError(f"unknown character type {character_type!r}") from None
         return creator_func.create_agent(arguments)
 
+
+# Dataclass for Grid Cell
+@dataclass
+class Cell:
+    content: Union[Human, Zombie, Weapon, PowerUp, None]
+
 class Grid:
-    def __init__(self, width, height):
+    def __init__(self, width: int, height: int):
         self.width = width
         self.height = height
-        self.grid = [[None for _ in range(width)] for _ in range(height)]
-    
-    def __str__(self):
-        return "\n".join(["".join([str(cell) for cell in row]) for row in self.grid])
-    
-    def __getitem__(self, position):
-        return self.grid[position[0]][position[1]]
-    
-    def __setitem__(self, position, value):
-        self.grid[position[0]][position[1]] = value
-        
-    def get_human(self, position) -> Human:
-        if isinstance(self.grid[position], Human):
-            return self.grid[position]
-        else:
-            raise Exception('No human at this position')
-        
-    def get_zombie(self, position) -> Zombie:
-        if isinstance(self.grid[position], Zombie):
-            return self.grid[position]
-        else:
-            raise Exception('No zombie at this position')
-        
-    def get_item(self, position) -> Union[Weapon, PowerUp]:
-        if isinstance(self.grid[position], Weapon) or isinstance(self.grid[position], PowerUp):
-            return self.grid[position]
-        else:
-            raise Exception('No item at this position')
+        self.grid = [[Cell(None) for _ in range(width)] for _ in range(height)]
 
-    def print_map(self):
-        # Print the map in a readable format.
+    def __str__(self) -> str:
+        grid_representation = ""
         for row in self.grid:
             for cell in row:
-                if cell is None:
-                    print(" ", end=" ")
-                elif isinstance(cell, Human):
-                    print("H", end=" ")
-                elif isinstance(cell, Zombie):
-                    print("Z", end=" ")
-            print()
+                if cell.content is None:
+                    grid_representation += " . "
+                elif isinstance(cell.content, Human):
+                    grid_representation += " H "
+                elif isinstance(cell.content, Zombie):
+                    grid_representation += " Z "
+                else:
+                    grid_representation += " ? "
+            grid_representation += "\n"
+        return grid_representation
+
+    def get_human(self, position: Position) -> Union[Human, None]:
+        cell = self.grid[position.x][position.y]
+        return cell.content if isinstance(cell.content, Human) else None
+
+    def get_zombie(self, position: Position) -> Union[Zombie, None]:
+        cell = self.grid[position.x][position.y]
+        return cell.content if isinstance(cell.content, Zombie) else None
+
+    def get_item(self, position: Position) -> Union[Weapon, PowerUp, None]:
+        cell = self.grid[position.x][position.y]
+        return cell.content if isinstance(cell.content, (Weapon, PowerUp)) else None
+
+    def place_object(self, position: Position, obj: Union[Human, Zombie, Weapon, PowerUp, None]):
+        self.grid[position.x][position.y].content = obj
+
+    def remove_object(self, position: Position):
+        self.grid[position.x][position.y].content = None
+
+    def is_empty(self, position: Position) -> bool:
+        return self.grid[position.x][position.y].content is None
+
+    def print_map(self):
+        print(self.__str__())
+
 
 # Template method pattern
 class Game(ABC):
@@ -553,26 +584,26 @@ class ZombieApocalypse(Game):
         ]
     
     def add_human(self, human):
-        self.grid[human.position] = human
+        self.grid.place_object(human.position, human)
         self.human_manager.add_agent(human)
         
     def remove_human(self, agent):
-        self.grid[agent.position] = None
+        self.grid.remove_object(agent.position)
         self.human_manager.remove_agent(agent)
         
     def add_zombie(self, zombie):
-        self.grid[zombie.position] = zombie
+        self.grid.place_object(zombie.position, zombie)
         self.zombie_manager.add_agent(zombie)
         
     def remove_zombie(self, zombie):
-        self.grid[zombie.position] = None
+        self.grid.remove_object(zombie.position)
         self.zombie_manager.remove_agent(zombie)
         
     def add_item(self, item):
-        self.grid[item.position] = item
+        self.grid.place_object(item.position, item)
         
     def remove_item(self, item):
-        self.grid[item.position] = None
+        self.grid.remove_object(item.position)
     
     def simulate(self, num_zombies, num_humans, school_size, num_turns):
         # Simulates the game.
@@ -622,11 +653,11 @@ class ZombieApocalypse(Game):
             # End the turn by removing dead humans and zombies from the map.
             for human in self.human_manager.humans:
                 if human.health <= 0:
-                    self.grid[human.position.x][human.position.y] = None
+                    self.grid.remove_object(human.position)
                     self.human_manager.humans.remove(human)
             for zombie in self.zombie_manager.zombies:
                 if zombie.health <= 0:
-                    self.grid[zombie.position.x][zombie.position.y] = None
+                    self.grid.remove_object(zombie.position)
                     self.zombie_manager.zombies.remove(zombie)
             # End the game if there are no more humans or zombies.
             if self.end_condition():
@@ -642,7 +673,6 @@ class ZombieApocalypse(Game):
         return len(self.human_manager.humans) == 0 or len(self.zombie_manager.zombies) == 0
 
 
-
 apocalypse = ZombieApocalypse()
 apocalypse.simulate(num_zombies=10, 
                     num_humans=10, 
@@ -652,18 +682,11 @@ apocalypse.simulate(num_zombies=10,
 
 """
 take damage not working
-wrongly moving more than one space
-can use "in" to check if a variable is in a list and return a boolean
-use abstract class to define agent class
-use protocol to define human specific methods and zombie specific methods
-Dataclass for cell in grid
-Dict for inventory management
+wrongly moving more than one space in each round
+most initialized at 0, 0
 """
 
-"""
-This revised code separates the simulation and its agents into separate classes. The ZombieApocalypse class stores instances of the HumanManager and ZombieManager classes, and has methods to advance the simulation by a single time step, add or remove humans and zombies from the simulation, and print a representation of the simulation map. The Human and Zombie classes both inherit from the Agent class and have additional attributes and methods specific to their roles in the simulation. The HumanManager and ZombieManager classes have methods to add and remove humans and zombies, respectively.
-You can use this code to create and manipulate a simulation of a zombie apocalypse with humans and zombies. You can initialize the simulation with a certain number of humans and zombies using the ZombieApocalypse class, and advance the simulation by a single time step using its step method. You can add or remove humans and zombies from the simulation during runtime using the add_human and remove_human methods of the HumanManager class, and the add_zombie and remove_zombie methods of the ZombieManager class. You can also visualize the state of the simulation or retrieve information about the positions and attributes of the humans and zombies using the print_map method of the ZombieApocalypse class or the get_agents_within_range method of the Human or Zombie class.
-"""
+
 
 """
 Immediate improvements:
