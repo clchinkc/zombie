@@ -231,93 +231,6 @@ Plugin Pattern
 
 
 """
-Bridge Pattern
-1. Without Bridge
-class Car:
-    def drive(self):
-        print("Driving a car.")
-
-class SportsCar(Car):
-    def drive(self):
-        print("Driving a sports car at high speed!")
-
-car = SportsCar()
-car.drive() # "Driving a sports car at high speed!"
-
-The problem with this approach is that any changes made to the 'drive' method in the 'Car' class will also affect the 'SportsCar' class, as they share the same implementation. Additionally, if we want to add another type of car, we will have to create another subclass and repeat the same process, making the code more complex and less maintainable.
-
-Wthout using the Bridge pattern, we would likely have a single class that contains both the interface and the implementation, making the code tightly coupled and less maintainable. This would mean that any changes made to the implementation would directly affect any references or dependencies on the code.
-"""
-"""
-/* Implementor interface*/
-interface Gear{
-    void handleGear();
-}
-
-/* Concrete Implementor - 1 */
-class ManualGear implements Gear{
-    public void handleGear(){
-        System.out.println("Manual gear");
-    }
-}
-/* Concrete Implementor - 2 */
-class AutoGear implements Gear{
-    public void handleGear(){
-        System.out.println("Auto gear");
-    }
-}
-/* Abstraction (abstract class) */
-abstract class Vehicle {
-    Gear gear;
-    public Vehicle(Gear gear){
-        this.gear = gear;
-    }
-    abstract void addGear();
-}
-/* RefinedAbstraction - 1*/
-class Car extends Vehicle{
-    public Car(Gear gear){
-        super(gear);
-        // initialize various other Car components to make the car
-    }
-    public void addGear(){
-        System.out.print("Car handles ");
-        gear.handleGear();
-    }
-}
-/* RefinedAbstraction - 2 */
-class Truck extends Vehicle{
-    public Truck(Gear gear){
-        super(gear);
-        // initialize various other Truck components to make the car
-    }
-    public void addGear(){
-        System.out.print("Truck handles " );
-        gear.handleGear();
-    }
-}
-/* Client program */
-public class BridgeDemo {    
-    public static void main(String args[]){
-        Gear gear = new ManualGear();
-        Vehicle vehicle = new Car(gear);
-        vehicle.addGear();
-
-        gear = new AutoGear();
-        vehicle = new Car(gear);
-        vehicle.addGear();
-
-        gear = new ManualGear();
-        vehicle = new Truck(gear);
-        vehicle.addGear();
-
-        gear = new AutoGear();
-        vehicle = new Truck(gear);
-        vehicle.addGear();
-    }
-}
-"""
-"""
 2. With Bridge
 from abc import ABC, abstractmethod
 
@@ -384,15 +297,40 @@ car2.drive() # "Driving a sports car from manufacturer Y at high speed!"
 car3.drive() # "Driving a truck from manufacturer X at low speed."
 car4.drive() # "Driving a truck from manufacturer Y at low speed."
 
-The Bridge pattern is a way to separate an abstraction from its implementation, allowing for the two to vary independently. Using the example of a car, we can see how the Bridge pattern can be applied.
-We can start by creating a Car abstract class to represent the commonality between all cars. This abstract class would have methods and properties that all types of cars should have, such as a drive method. Then, we can create various subclasses for different types of cars, such as a SportsCar and a Truck class. This is a robust design, as it allows for many more types of cars to be added in the future.
-Now suppose that cars are provided by different manufacturers. We would have to create a hierarchy of car classes for manufacturer X and another for manufacturer Y. The problem now is that clients would need to know the difference between the manufacturers. And if we decide to support a third manufacturer, the codebase would become more complex.
-The solution is to provide the main abstraction hierarchy, i.e. the Car abstract class and subclasses such as SportsCar and Truck, and then provide the interface (Bridge) that will exist between the abstraction and the implementation. So there will be a CarInterface, SportsCarInterface, and TruckInterface, which dictate the interface that each concrete car class must provide. The abstraction (Car class) does not know about the implementation, rather it knows about the interface. Finally, we can create a concrete implementation for each manufacturer. That is, XCar, XSportsCar, and XTruck, YCar, YSportsCar and YTruck.
-Clients depend only on the abstraction but any implementation could be plugged in. So in this setup, the abstraction (Car class) could be changed without changing any of the concrete classes, and the implementation could be changed without worrying about the abstraction. This allows for a more flexible and maintainable codebase.
+#### Bridge Pattern in a Zombie Apocalypse Simulation
 
-It uses the Bridge pattern to separate the abstraction (the interface) from the implementation (the concrete classes). The CarInterface and Car classes define the interface for the car and the SportsCar and Truck classes are the abstraction classes that inherit the Car class. The SportsCarInterface, XTruck, YTruck, XSportsCar, and YSportsCar classes are the concrete classes that implement the drive method.
-By using this pattern, the implementation of the drive method is decoupled from the Car class and its subclasses. This means that the implementation can be easily swapped out without affecting any references or dependencies on the code. This makes the code more maintainable because changes to the implementation do not require changes to the abstraction or existing references to it.
-Additionally, the use of different classes for different manufacturers allows for easy swapping of implementations based on the manufacturer. For example, you could swap out the XTruck class for the YTruck class and the Car class would still work correctly because it is only dependent on the TruckInterface and not the concrete class. This makes the code more flexible and allows for easier updates and changes in the future.
+#### Implementor (Interface Layer)
+1. **CreatureBehaviorInterface**: This interface acts as a bridge between the abstraction (creature types) and their concrete implementations (specific behaviors). It ensures that all creature types adhere to a standard set of actions, such as `move`, `attack`, and `interact`.
+
+#### Abstraction (High-Level Layer)
+1. **Creature**: This abstract class represents the general concept of a creature in the simulation. It holds a reference to `CreatureBehaviorInterface` and uses it to delegate action implementation. This class provides the high-level interface for creature interactions.
+
+2. **Human, Zombie, Survivor, Soldier**: These classes are concrete abstractions extending `Creature`. They define the basic characteristics and behaviors of different creature types but delegate the specifics of these behaviors to the implementor layer.
+
+#### Additional Layers of Abstraction
+- **AdvancedCreatureInterface**: This layer offers an additional level of abstraction for more specialized creatures. It allows the simulation to introduce creatures with enhanced or unique capabilities beyond the basic creature types.
+
+#### Refined Abstraction
+- **FastZombie, StealthSurvivor, ArmoredSoldier**: These are examples of refined abstractions, each extending from basic creature types. They represent more specialized entities in the simulation, like zombies with increased speed or survivors with stealth abilities.
+
+#### Concrete Implementor
+1. **AggressiveZombieBehavior, DefensiveSurvivorBehavior, StrategicSoldierBehavior**: These classes provide concrete implementations of the `CreatureBehaviorInterface`. They define specific behaviors for different creature types, such as an aggressive attack pattern for zombies or strategic planning for soldiers.
+
+#### Implementation in the Simulation
+- Instances of creatures are created with specific behavior implementations, like `creature1 = Zombie(AggressiveZombieBehavior())`. The creature's actions, such as `creature1.attack()`, are then executed according to the behavior defined in its associated implementor class.
+
+##### Core Concept Summary
+- **Purpose**: The Bridge pattern in a zombie apocalypse simulation is instrumental for separating the 'type' of entities (like humans, zombies) from their 'behavior' or 'abilities'. This separation allows both aspects to evolve independently without interdependency, which is crucial for a dynamic and evolving game environment.
+
+##### Application in Zombie Apocalypse Simulation
+**Dynamic Behavior Modification**: The ability to change or replace behaviors of entities like zombies and humans independently of their types. This aspect is crucial for evolving game scenarios, such as introducing new zombie behaviors (e.g., stealth attacks) or adapting human strategies in response to changing game dynamics. This modularity also aids in maintaining and testing these behaviors separately, ensuring robust and less error-prone code.
+
+**Enhanced Flexibility and Adaptability**: The separation of 'type' and 'behavior' provides a high degree of flexibility. It allows the game mechanics to adapt to different scenarios and player actions dynamically. For instance, zombies can exhibit varied behaviors like increased aggression at night, while survivors might develop new survival tactics as the game progresses.
+
+**Ease of Expansion and Scalability**: The Bridge pattern simplifies the introduction of new entity types (such as different survivors or soldiers) and their corresponding behaviors. This modular approach to game design ensures that adding new features or updating existing ones does not require an overhaul of the existing system, making the game more scalable.
+
+##### Conclusion
+In summary, the use of the Bridge pattern in a zombie apocalypse simulation enhances the game's flexibility, maintainability, and scalability. It allows for a modular and adaptable design, facilitating ongoing development and expansion of the game. This pattern is particularly effective in scenarios where both the high-level logic (types of entities) and the underlying details (their behaviors) are subject to change, as is often the case in dynamic gaming environments.
 """
 """
 Switch as invoker, switchable object as receiver, joined by composition and the resulting object control the switch using a function and show the results using the switchable object

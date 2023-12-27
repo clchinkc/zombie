@@ -15,7 +15,7 @@ food and weapon and armour turn into resources that human can store
 function to control the spawn rate of food and weapon in different terrain to allow different playing experience
 use normal distribution or the Poisson distribution for human and zombie attribute
 what happens when the cloest human is right next to the agent
-map, filter, zip function
+map, filter, zip, reduce function
 zombie health == human health before infection
 getattr, setattr, hasattr can be used for handling attribute that is determined during runtime
 a escape mode that human can escape from zombie two block by paying health or double food
