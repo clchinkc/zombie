@@ -52,6 +52,7 @@ abstract class vs protocol vs data class
 - **Purpose**: Introduced in Python 3.7 to make classes primarily used for storing data more concise and readable, automatically generating special methods like `__init__`, `__repr__`, and `__eq__`.
 - **Use Case**: Useful when a class is needed primarily to store data with little to no custom behavior, akin to a record or a struct in other languages.
 Use them together for different purposes
+dataclass field default factory
 use lambda function for small function
 pass function as argument, return function as output, treat function as object, higher order function
 https://docs.scipy.org/doc/scipy/reference/spatial.distance.html

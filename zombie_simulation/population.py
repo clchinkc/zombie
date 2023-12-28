@@ -31,6 +31,9 @@ import seaborn as sns
 from matplotlib import animation, colors, patches
 from matplotlib.transforms import Bbox
 from scipy import stats
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
+from tensorflow.keras import layers, models
 
 
 class HealthState(Enum):
@@ -435,6 +438,107 @@ class School:
 
     def __repr__(self) -> str:
         return "%s(%d,%d)" % (self.__class__.__name__, self.size)
+
+
+class Population:
+    def __init__(self, school_size: int, population_size: int) -> None:
+        self.school: School = School(school_size)
+        self.agent_list: list[Individual] = []
+        self.severity: float = 0.0
+        self.init_population(school_size, population_size)
+        self.update_population_metrics()
+        self.observers = []
+
+    def add_individual(self, individual: Individual) -> None:
+        self.agent_list.append(individual)
+        self.school.add_individual(individual)
+
+    def remove_individual(self, individual: Individual) -> None:
+        self.agent_list.remove(individual)
+        self.school.remove_individual(individual.location)
+
+    def create_individual(self, id: int, school_size: int) -> Individual:
+        state = random.choices(list(HealthState), weights=[0.7, 0.1, 0.2, 0.0])[0]
+        available_locations = [(i, j) for i in range(school_size) for j in range(school_size) if self.school.legal_location((i, j))]
+        location = random.choice(available_locations)
+        return Individual(id, state, location)
+
+    def init_population(self, school_size: int, population_size: int) -> None:
+        for i in range(population_size):
+            individual = self.create_individual(i, school_size)
+            self.add_individual(individual)
+
+    def clear_population(self) -> None:
+        self.agent_list.clear()
+        self.school.grid = np.full((self.school.size, self.school.size), None, dtype=object)
+
+    # a method to init using a grid of "A", "I", "Z", "D"
+
+    def run_population(self, num_time_steps: int) -> None:
+        for time in range(num_time_steps):
+            print("Time step: ", time + 1)
+            self.severity = time / num_time_steps
+            print("Severity: ", self.severity)
+            self.school.update_grid(self.agent_list, self.migration_probability)
+            print("Updated Grid")
+            self.school.update_connections()
+            print("Updated Connections")
+            self.update_individual_states()
+            print("Updated State")
+            self.update_population_metrics()
+            print("Updated Population Metrics")
+            individual_info = self.get_all_individual_info()
+            print(individual_info)
+            print("Got Individual Info")
+            school_info = self.school.get_info()
+            print(school_info)
+            print("Got School Info")
+            self.notify_observers()
+            print("Notified Observers")
+        self.clear_population()
+
+    def update_individual_states(self) -> None:
+        for individual in self.agent_list:
+            individual.update_state(self.severity)
+            if individual.health_state == HealthState.DEAD:
+                self.school.remove_individual(individual.location)
+
+    def update_population_metrics(self) -> None:
+        self.calculate_state_counts()
+        self.calculate_probabilities()
+
+    def calculate_state_counts(self) -> None:
+        state_counts = Counter([individual.health_state for individual in self.agent_list])
+        self.num_healthy = state_counts[HealthState.HEALTHY]
+        self.num_infected = state_counts[HealthState.INFECTED]
+        self.num_zombie = state_counts[HealthState.ZOMBIE]
+        self.num_dead = state_counts[HealthState.DEAD]
+        self.population_size = self.num_healthy + self.num_infected + self.num_zombie
+        
+    def calculate_probabilities(self) -> None:
+        self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity))) # logistic function
+        self.turning_probability = self.severity / (1 + self.severity) # softplus function
+        self.death_probability = self.severity  # linear function
+        self.migration_probability = self.population_size / (self.population_size + 1)
+
+        # may use other metrics or functions to calculate the probability of infection, turning, death, migration
+
+    def get_all_individual_info(self) -> str:
+        return f"Population of size {self.population_size}\n" + \
+            "\n".join(individual.get_info() for individual in self.agent_list)
+
+    def attach_observer(self, observer: Observer) -> None:
+        self.observers.append(observer)
+
+    def notify_observers(self) -> None:
+        for observer in self.observers:
+            observer.update()
+
+    def __str__(self) -> str:
+        return f"Population with {self.num_healthy} healthy, {self.num_infected} infected, and {self.num_zombie} zombie individuals"
+
+    def __repr__(self) -> str:
+        return f"Population({self.school.size}, {self.population_size})"
 
 
 # Observer Pattern
@@ -988,105 +1092,73 @@ class TkinterObserver(Observer):
         self.root.mainloop()
 
 
-class Population:
-    def __init__(self, school_size: int, population_size: int) -> None:
-        self.school: School = School(school_size)
-        self.agent_list: list[Individual] = []
-        self.severity: float = 0.0
-        self.init_population(school_size, population_size)
-        self.update_population_metrics()
-        self.observers = []
+class PopulationObserver(Observer):
+    def __init__(self, population: Population) -> None:
+        self.subject = population
+        self.subject.attach_observer(self)
+        self.grid_history = []
+        self.model = None
 
-    def add_individual(self, individual: Individual) -> None:
-        self.agent_list.append(individual)
-        self.school.add_individual(individual)
+    def update(self) -> None:
+        current_grid_state = self.capture_grid_state()
+        self.grid_history.append(current_grid_state)
 
-    def remove_individual(self, individual: Individual) -> None:
-        self.agent_list.remove(individual)
-        self.school.remove_individual(individual.location)
+    def capture_grid_state(self):
+        grid_state = np.zeros((self.subject.school.size, self.subject.school.size))
+        for i in range(self.subject.school.size):
+            for j in range(self.subject.school.size):
+                individual = self.subject.school.get_individual((i, j))
+                grid_state[i, j] = individual.health_state.value if individual else 0
+        return grid_state
 
-    def create_individual(self, id: int, school_size: int) -> Individual:
-        state = random.choices(list(HealthState), weights=[0.7, 0.1, 0.2, 0.0])[0]
-        available_locations = [(i, j) for i in range(school_size) for j in range(school_size) if self.school.legal_location((i, j))]
-        location = random.choice(available_locations)
-        return Individual(id, state, location)
+    def prepare_data(self, N):
+        X, y = [], []
+        for i in range(N, len(self.grid_history)):
+            X.append(np.array(self.grid_history[i-N:i]))
+            y.append(np.array(self.grid_history[i]))
+        return np.array(X), np.array(y)
 
-    def init_population(self, school_size: int, population_size: int) -> None:
-        for i in range(population_size):
-            individual = self.create_individual(i, school_size)
-            self.add_individual(individual)
+    def train_model(self):
+        N = 5
+        X, y = self.prepare_data(N)
 
-    def clear_population(self) -> None:
-        self.agent_list.clear()
-        self.school.grid = np.full((self.school.size, self.school.size), None, dtype=object)
+        # Reshape for ConvLSTM input
+        X = X.reshape((-1, X.shape[1], X.shape[2], X.shape[3], 1))
+        y = y.reshape((-1, y.shape[1], y.shape[2], 1))
 
-    # a method to init using a grid of "A", "I", "Z", "D"
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
-    def run_population(self, num_time_steps: int) -> None:
-        for time in range(num_time_steps):
-            print("Time step: ", time + 1)
-            self.severity = time / num_time_steps
-            print("Severity: ", self.severity)
-            self.school.update_grid(self.agent_list, self.migration_probability)
-            print("Updated Grid")
-            self.school.update_connections()
-            print("Updated Connections")
-            self.update_individual_states()
-            print("Updated State")
-            self.update_population_metrics()
-            print("Updated Population Metrics")
-            individual_info = self.get_all_individual_info()
-            print(individual_info)
-            print("Got Individual Info")
-            school_info = self.school.get_info()
-            print(school_info)
-            print("Got School Info")
-            self.notify_observers()
-            print("Notified Observers")
-        self.clear_population()
+        # ConvLSTM model
+        model = models.Sequential([
+            layers.ConvLSTM2D(filters=16, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=True, input_shape=X_train.shape[1:]),
+            layers.Dropout(0.2),
+            layers.LayerNormalization(),
+            layers.ConvLSTM2D(filters=32, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=False),
+            layers.Dropout(0.2),
+            layers.LayerNormalization(),
+            layers.Conv2D(filters=1, kernel_size=(3, 3), activation='linear', padding='same')
+        ])
 
-    def update_individual_states(self) -> None:
-        for individual in self.agent_list:
-            individual.update_state(self.severity)
-            if individual.health_state == HealthState.DEAD:
-                self.school.remove_individual(individual.location)
+        model.compile(optimizer='adam', loss='mean_squared_error')
+        model.fit(X_train, y_train, epochs=20, validation_split=0.2)
 
-    def update_population_metrics(self) -> None:
-        self.calculate_state_counts()
-        self.calculate_probabilities()
+        self.model = model
 
-    def calculate_state_counts(self) -> None:
-        state_counts = Counter([individual.health_state for individual in self.agent_list])
-        self.num_healthy = state_counts[HealthState.HEALTHY]
-        self.num_infected = state_counts[HealthState.INFECTED]
-        self.num_zombie = state_counts[HealthState.ZOMBIE]
-        self.num_dead = state_counts[HealthState.DEAD]
-        self.population_size = self.num_healthy + self.num_infected + self.num_zombie
-        
-    def calculate_probabilities(self) -> None:
-        self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity))) # logistic function
-        self.turning_probability = self.severity / (1 + self.severity) # softplus function
-        self.death_probability = self.severity  # linear function
-        self.migration_probability = self.population_size / (self.population_size + 1)
+        # Evaluate the model
+        predictions = self.model.predict(X_test)
+        mse = mean_squared_error(y_test.reshape(y_test.shape[0], -1), predictions.reshape(predictions.shape[0], -1))
+        print(f"Model Mean Squared Error: {mse}")
 
-        # may use other metrics or functions to calculate the probability of infection, turning, death, migration
-
-    def get_all_individual_info(self) -> str:
-        return f"Population of size {self.population_size}\n" + \
-            "\n".join(individual.get_info() for individual in self.agent_list)
-
-    def attach_observer(self, observer: Observer) -> None:
-        self.observers.append(observer)
-
-    def notify_observers(self) -> None:
-        for observer in self.observers:
-            observer.update()
-
-    def __str__(self) -> str:
-        return f"Population with {self.num_healthy} healthy, {self.num_infected} infected, and {self.num_zombie} zombie individuals"
-
-    def __repr__(self) -> str:
-        return f"Population({self.school.size}, {self.population_size})"
+    def display_observation(self):
+        if not self.model:
+            self.train_model()
+        past_grid_state = self.grid_history[-5:]
+        print(self.grid_history[-1])
+        input_data = np.array(past_grid_state).reshape((1, -1, self.subject.school.size, self.subject.school.size, 1))
+        predicted_grid_state = self.model.predict(input_data)
+        reshaped_grid_state = predicted_grid_state.reshape((self.subject.school.size, self.subject.school.size))
+        reformatted_grid_state = np.round(reshaped_grid_state, 1)
+        print(reformatted_grid_state)
 
 
 def main():
@@ -1095,23 +1167,26 @@ def main():
     school_sim = Population(school_size=10, population_size=10)
 
     # create Observer objects
-    population_observer = SimulationObserver(school_sim)
-    # population_animator = SimulationAnimator(school_sim)
+    simulation_observer = SimulationObserver(school_sim)
+    # simulation_animator = SimulationAnimator(school_sim)
     # matplotlib_animator = MatplotlibAnimator(school_sim, mode="scatter") # "bar" or "scatter" or "table"
     # tkinter_observer = TkinterObserver(school_sim)
+    population_observer = PopulationObserver(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
     
     print("Observers:")
-    # print(population_observer.agent_list)
-    # print(population_animator.agent_history[-1])
+    # print(simulation_observer.agent_list)
+    # print(simulation_animator.agent_history[-1])
 
     # observe the statistics of the population
-    population_observer.display_observation(format="statistics") # "statistics" or "grid" or "chart" or "scatter"
-    # population_animator.display_observation(format="scatter") # "bar" or "scatter" or "table"
+    simulation_observer.display_observation(format="statistics") # "statistics" or "grid" or "chart" or "scatter"
+    # simulation_animator.display_observation(format="scatter") # "bar" or "scatter" or "table"
     # matplotlib_animator.display_observation()
     # tkinter_observer.display_observation()
+    population_observer.display_observation()
+
 
 
 if __name__ == "__main__":

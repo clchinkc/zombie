@@ -684,6 +684,7 @@ apocalypse.simulate(num_zombies=10,
 take damage not working
 wrongly moving more than one space in each round
 most initialized at 0, 0
+use defaultdict for inventory with default value of None
 """
 
 
