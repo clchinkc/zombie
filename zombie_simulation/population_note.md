@@ -93,6 +93,10 @@ https://developers.redhat.com/articles/2023/07/27/how-use-python-multiprocessing
 """
 
 """
+turn dataclass to json using asdict and send through server and client
+"""
+
+"""
 Let's compare the pros and cons of the four serialization options - MessagePack, Protocol Buffers (Protobuf), FlatBuffers, and JSON with BSON or CBOR - particularly focusing on their efficiency, ability to access parts of the data, and cross-language compatibility.
 
 ### 1. MessagePack
@@ -449,8 +453,10 @@ https://www.pygame.org/tags/zombie
 https://github.com/JarvistheJellyFish/AICivGame/blob/master/Villager.py
 https://github.com/najarvis/villager-sim
 civilization simulator python
-GOAP
+https://medium.com/@vedantchaudhari/goal-oriented-action-planning-34035ed40d0b
 https://zhuanlan.zhihu.com/p/138003795
+https://www.lfzxb.top/gdc-sharing-of-ai-system-based-on-goap-in-fear-simple-cn/
+https://gwb.tencent.com/community/detail/109338
 有限狀態機
 行為樹
 https://zhuanlan.zhihu.com/p/540191047
@@ -499,16 +505,24 @@ The choice of model structure depends on the research question and understanding
 Both IBM and PBM can be used to address questions at the population or metapopulation level. The Principle of Parsimony suggests using the simplest approach when two different model structures are equally appropriate.
 """
 
-"""
-The Pipes-and-Filters pattern is a way to process data by breaking it down into smaller parts called filters. Each filter takes in some data, works on it, and outputs new data, which is then used as input for the next filter. The connection between these filters is called a pipe. This pattern gives us different ways of controlling how the data flows between filters, like pushing data from one filter to the next, pulling data from the previous filter, or using a mix of both methods. There is also a way of using independent filters called Producer/Consumer.
-
-Universal interface in a Pipes-and-Filters architecture has pros and cons. Pros are that no intermediate buffering of data is needed, filters can be replaced or reordered easily, and work can be optimally distributed and run in a distributed architecture. Cons are possible inefficiencies due to communication, serialization, and synchronization overhead, the need for big queues, and the need for formatted data. Error handling is also complicated. When the architecture crashes, options include restarting the process with original data or using only fully processed data.
-"""
 
 """
 The Layers Pattern is an architectural pattern that splits a task into horizontal layers, allowing each layer to have a specific responsibility and provide a service to a higher layer. It structures large systems requiring disassembly, offering its services with the help of the layer below. Most layered architectures consist of three or four independent layers, where a layer can only access the one below it. The pattern often uses the Facade Pattern to provide a simplified interface to a complex system.
 
 Layered architecture offers modularization benefits such as testability and replacement of layers, but it has some downsides worth noting. Finding the appropriate granularity of layers can be difficult, and too many or too few layers can lead to issues in understanding and development. Additionally, the performance may be impacted by the sequence of calls triggered by client calls, especially if remote layers are involved.
+"""
+
+"""
+Layering Interfaces
+Application, Transport, Network, Datalink, and Physical
+Application, Transport is end to end
+Network, Datalink, and Physical has routers in between
+Each layer has a special function that is self contained and is a divide and conquer approach to the networking issue.
+Each layer in the sender adds its own header to the data packet from the upper layers with the information needed for the receiver to do its job.
+
+more intuitive conceptual model for modern GUI design: stage -> scene -> pane -> node
+
+message passing, dataflow, data parallelism
 """
 
 """
@@ -547,26 +561,6 @@ However, the layered pattern also has some drawbacks:
 Despite these drawbacks, the layered pattern remains popular in software development due to its simplicity, separation of concerns, and maintainability. It is a versatile pattern that can be applied to various types of applications, providing a clear structure for organizing the components of a software system.
 """
 
-"""
-In software design, the broker pattern is an architectural pattern that involves the use of an intermediary software entity called a "broker" to facilitate communication between two or more software components. The broker acts as a "middleman" between the components, allowing them to communicate without being directly aware of each other's existence. In the broker pattern, the broker is responsible for receiving messages from one component and forwarding them to the appropriate recipient. The components that communicate through the broker are known as servers or clients.
-
-The broker pattern can be used to decouple components in a distributed system. This can make the system more scalable and resilient, as well as easier to maintain and evolve. The broker pattern can also be used to implement a variety of other architectural patterns, such as the mediator pattern, the observer pattern, and the facade pattern.
-
-Here are some of the benefits of using the broker pattern:
-
-Decoupling: The broker pattern decouples components in a distributed system, making them more independent and easier to maintain.
-Scalability: The broker pattern can be used to scale a distributed system by adding or removing brokers as needed.
-Resilience: The broker pattern can make a distributed system more resilient to failures by routing requests around failed components.
-Maintainability: The broker pattern can make a distributed system easier to maintain by centralizing the logic for routing requests.
-Here are some of the drawbacks of using the broker pattern:
-
-Complexity: The broker pattern can add complexity to a distributed system.
-Performance: The broker pattern can add latency to requests that are routed through the broker.
-Centralization: The broker pattern can centralize control over a distributed system, making it a single point of failure.
-Overall, the broker pattern is a powerful architectural pattern that can be used to decouple components in a distributed system. However, it is important to weigh the benefits and drawbacks of the pattern before using it in a particular project.
-
-The broker pattern is a versatile architectural pattern that can be used in a variety of different contexts. If you are designing a distributed system, the broker pattern is a pattern worth considering.
-"""
 
 """
 The broker pattern is an architectural pattern used in software design to structure distributed systems with decoupled components that interact through remote procedure calls (RPCs). It involves the introduction of a broker component that is responsible for coordinating communication between the components of the system.
@@ -577,15 +571,13 @@ The responsibilities of the broker component include receiving requests from cli
 
 It's worth noting that the broker pattern can be applied in different contexts. For instance, in event-driven architecture (EDA), the broker pattern is used to decouple event publishers and subscribers by introducing a broker as an intermediary. The broker receives events from publishers and distributes them to the relevant subscribers based on their interests and subscriptions [4].
 
-The broker pattern is one of several software architecture patterns that provide ways to structure and organize software systems. Other patterns mentioned in the search results include layered architecture, pipe-filter pattern, blackboard pattern, and event-bus pattern, each serving different purposes in software design [5].
+The broker pattern is one of several software architecture patterns that provide ways to structure and organize software systems. Other patterns mentioned in the search results include blackboard pattern, and event-bus pattern, each serving different purposes in software design [5].
 
 In summary, the broker pattern is an architectural pattern used in software design to structure distributed systems with decoupled components. It introduces a broker component responsible for coordinating communication between the components, facilitating the exchange of messages or requests and managing the transmission of results and exceptions. It can be used in various contexts, including event-driven architecture, to achieve loose coupling and efficient communication between components.
 """
 
 """
 The broker pattern, also known as the mediator pattern, is a software design pattern that promotes loose coupling and centralizes communication between components of a system. It provides a mediator object that encapsulates the interaction and coordination between multiple objects, allowing them to communicate indirectly through the mediator instead of directly with each other.
-
-The broker pattern is commonly used in complex systems where the direct communication between components can become tangled and hard to manage. By introducing a central mediator, the pattern helps to reduce dependencies and simplifies the overall architecture.
 
 Here's how the broker pattern works:
 
@@ -598,193 +590,97 @@ Here's how the broker pattern works:
 4. Loose Coupling: By decoupling the components and promoting indirect communication, the broker pattern reduces dependencies between objects. Components only need to know about the mediator interface and not about the internal details of other components. This loose coupling enhances flexibility and maintainability.
 
 Benefits of using the broker pattern include improved modularity, easier extensibility, and better code organization. It centralizes communication logic, making it easier to add new components or modify existing ones without impacting the entire system.
-
-Overall, the broker pattern helps to simplify complex systems by introducing a mediator object that manages communication between components, promoting loose coupling and reducing dependencies.
 """
 
 """
-The Model-View-Controller architectural pattern divides user interface program logic into independent components: Model (data and business logic), View (output), and Controller (input).
+The Model-View-Controller (MVC) architectural pattern, widely used in software development, divides an application into three interconnected components: Model, View, and Controller, each with distinct roles and responsibilities:
 
-Model: The model deals with the important information and rules of the program. It stores and manages the data that is used by the application.
-View: The view is responsible for observing the Model and displaying the data to the user. It renders the data in a way that is easy for the user to understand and interact with.
-Controller: The controller is responsible for receiving user input and updating the model. It also receives data from the model and updates the view.
+1. **Model**: This component represents the data and the business logic of the application. It is responsible for managing the application's state and behavior, including data validation, storage, retrieval, and processing. The model encapsulates the data and provides methods for accessing and manipulating it, maintaining the important information and rules of the program.
 
-During initialization, the model initializes its data, and the view and controller get created and start observing the model. With user input, the controller accepts and handles input, triggering the model to change its internal data. The view and controller then update themselves to show the program's new outputs.
+2. **View**: The view is the presentation layer of the application, responsible for displaying data to the user. It renders the data visually, focusing on the display and presentation aspects. The view observes the model and reflects changes in the data, ensuring that the user interface is consistently updated and easy to interact with.
 
-The MVC pattern is a popular design pattern for developing web applications, desktop applications, and mobile applications.
+3. **Controller**: Acting as an intermediary between the model and the view, the controller is responsible for handling user input and updating the model accordingly. It translates user interactions into actions to be performed by the model, manages the flow of data between the model and the view, and ensures that the view reflects any changes in the model's state.
+
+The MVC pattern emphasizes the separation of concerns, dividing the program logic into independent components. This separation allows for modular and maintainable application development, as changes to one component typically don't require modifications in the others. The pattern facilitates independent development and modification of each component due to their decoupled nature.
+
+During initialization, the model sets up its data, and the view and controller are created and start observing the model. With user input, the controller processes this input, prompting changes in the model. Both the view and controller then update themselves to display the new outputs.
+
+MVC is a popular design pattern for web, desktop, and mobile applications, promoting a clear structure for development. In some variations, additional elements like data access objects (DAO) or services are included to handle data persistence or external services, but the core principles of separation and individual responsibility remain central to the design.
 """
 
 """
-The Model-View-Controller (MVC) architectural pattern is a widely used design pattern in software development that separates the components of an application into three interconnected parts: the model, the view, and the controller.
+Reactor pattern
 
-1. Model: The model represents the data and the business logic of the application. It encapsulates the data and provides methods to manipulate and access it. It is responsible for managing the state and behavior of the application, including data validation, storage, retrieval, and processing.
+**Definition and Use**: The reactor pattern is an event-driven architectural pattern predominantly used in software applications like GUIs, servers, and handling concurrent service requests. It excels in managing multiple events and requests delivered concurrently from various sources, offering a scalable and efficient solution for applications, especially those with high concurrency and I/O-bound operations.
 
-2. View: The view is responsible for the presentation layer of the application. It provides the user interface through which the users interact with the application. The view receives data from the model and renders it visually, focusing on the display and presentation aspects rather than the data itself.
+**Core Components and Functionality**:
+1. **Reactor (Central Event Dispatcher)**: Acts as the heart of the pattern, managing a single-threaded event loop. It is often implemented using a blocking I/O approach, where the service handler blocks until new events or requests become available. The reactor waits for events (like user interactions, network connections, or data on sockets) and dispatches them to appropriate handlers.
 
-3. Controller: The controller acts as an intermediary between the model and the view. It receives user input through the view and translates it into actions to be performed by the model. It updates the model based on user interactions and changes in the application's state. It also updates the view to reflect the changes made to the model. The controller handles user events, delegates the appropriate actions to the model and the view, and manages the flow of data between them.
+2. **Event Loop**: Implemented using various system calls (select(), poll(), epoll()), this loop continuously listens for and processes events. It can be designed using either blocking or non-blocking I/O approaches, depending on the application's requirements.
 
-The MVC pattern promotes the separation of concerns of data management, user interface, and user input handling, making the application more modular and maintainable. It allows for the independent development and modification of each component, as they are decoupled from each other. Changes made to one component do not require modifications in the others, as long as the interfaces between the components remain consistent.
+3. **Event Handlers**: Each event type has a dedicated event handler. Handlers register with the reactor to express interest in specific event types, enabling the reactor to dispatch incoming events to the right handler.
 
-In addition to the core components (model, view, and controller), some variations of MVC include additional elements, such as data access objects (DAO) or services, to handle data persistence or external services. However, the basic principles of separation and responsibility remain the same.
+4. **Event Demultiplexing and Dispatching**: The reactor receives events, demultiplexes (separates and categorizes) them, and synchronously dispatches them to their respective handlers. This process is critical for maintaining order and efficiency in handling events, ensuring that they are processed in a specific order specified by the handler.
+
+5. **Non-Blocking I/O Operations**: To ensure high performance and scalability, the reactor pattern often employs non-blocking I/O. This means handlers can initiate I/O operations without waiting for their completion, enabling the system to process other events concurrently.
+
+**Principles and Advantages**:
+1. **Hollywood Principle**: The pattern follows this principle, where control is inverted – instead of applications actively requesting services, the reactor waits for events and then acts upon them. This dynamic behavior allows the reactor to process events in a specific order provided by the event handler.
+
+2. **Modularity and Separation of Concerns**: It provides a clear separation between the framework (reactor and event handling) and application logic. This modularity facilitates easier development, maintenance, and scalability of the application.
+
+3. **Scalability and Efficiency**: By leveraging an event-driven architecture and reducing the overhead of multiple threads, the pattern enhances scalability and efficiency, making it suitable for handling a large number of concurrent connections.
+
+**Limitations**:
+1. **Event Demultiplexing System Call Dependency**: The pattern relies on a system call for event demultiplexing, which can impact the reactor's progress and overall performance.
+
+2. **Testing and Debugging Challenges**: The inversion of control can complicate the testing and debugging process, requiring specialized approaches.
+
+3. **Suitability**: Primarily effective for I/O-bound applications, the reactor pattern may not be the best choice for CPU-intensive tasks.
+
+In summary, the reactor pattern is a powerful and widely adopted design pattern in concurrent and network programming. It's instrumental in creating efficient, scalable, and responsive systems capable of handling multiple I/O operations and client requests concurrently. Despite its limitations, its benefits make it a popular choice in many software development scenarios.
 """
 
 """
-The reactor pattern is an event-driven architectural pattern used for GUIs, servers, and handling concurrent service requests in software applications. It provides a scalable and efficient solution for managing multiple events and requests delivered concurrently from various sources by utilizing a single-threaded event loop.
-
-In this pattern, the reactor acts as a central component that manages the event loop. It is often implemented using a blocking I/O approach. The service handler blocks until new events or requests become available from a set of observed resources. It receives and demultiplexes incoming events or requests, meaning it separates and categorizes the requests based on their respective sources. These events can include user interactions in a GUI, network connections, or open files. The reactor maps and dispatches each event synchronously to its corresponding concrete event handler, ensuring that they are processed in a specific order specified by the handler.
-
-The Hollywood principle of the reactor pattern inverts the flow of control. Instead of applications actively requesting services, the reactor waits for indication events and dispatches them to the appropriate event handlers. The dynamic behaviour allows the reactor to process events in a specific order provided by the event handler.
-
-The reactor pattern offers clear separation between the framework and application logic by employing modular event handlers. This separation allows for easier development and maintenance of the application. By using a single-threaded event loop, the reactor pattern provides benefits such as simplicity, scalability, and increased performance. It eliminates the overhead of creating and managing multiple threads, making it suitable for handling a large number of concurrent connections. However, it's important to note that the reactor pattern is best suited for I/O-bound applications rather than CPU-bound ones.
-
-However, the reactor pattern relies on an event demultiplexing system call that can halt the progress of the reactor, which may introduce performance considerations. Additionally, the inversion of control in this pattern can make testing and debugging more challenging.
-
-Overall, the reactor pattern is a powerful design pattern that enables efficient handling of multiple requests in an event-driven system. It provides benefits such as scalability, modularity, and improved performance, making it suitable for applications with high concurrency and I/O-bound operations.
+https://en.wikipedia.org/wiki/Proactor_pattern
 """
 
 """
-The reactor pattern is a software design pattern that is used for handling concurrent and asynchronous event-driven programming. It provides an approach for building scalable and efficient systems that can handle multiple I/O operations without blocking the execution of the program.
+https://github.com/scikit-fuzzy/scikit-fuzzy
 
-The core idea behind the reactor pattern is to have a central event dispatcher, often called the "reactor," which is responsible for receiving and dispatching events to appropriate event handlers. These events can be various I/O operations, such as receiving data from a network socket, writing data to a file, or handling user input.
+Certainly! Here's a comprehensive description of how fuzzy logic can be integrated into the `MovementStrategyFactory` class in a zombie apocalypse simulation, encompassing various aspects of decision-making:
 
-Here's a general overview of how the reactor pattern works:
+### Application of Fuzzy Logic in a Zombie Apocalypse Simulation:
 
-1. Event Loop: The reactor pattern typically employs an event loop, which is a continuous loop that waits for events to occur. It can be implemented using a variety of techniques, such as select(), poll(), or epoll(), depending on the underlying operating system and programming language.
+#### Overview
+Fuzzy logic is a mathematical framework that handles uncertainty and imprecision, making it ideal for simulating complex, real-world scenarios like a zombie apocalypse. This approach allows for more nuanced and adaptable behavior modeling compared to traditional binary logic.
 
-2. Event Handlers: Each type of event is associated with a corresponding event handler. An event handler is responsible for performing the necessary actions when a specific event occurs. For example, if a network socket receives data, the event handler for that socket will process the incoming data.
+#### Integration into MovementStrategyFactory
+Fuzzy logic can be incorporated into the decision-making processes of different strategies within the `MovementStrategyFactory` class. This would involve modifying each strategy to consider a range of behaviors based on various factors, rather than having fixed responses.
 
-3. Registration: Event handlers register their interest in specific types of events with the reactor. This allows the reactor to know which events should be dispatched to which handlers.
+#### Example Strategies Using Fuzzy Logic:
 
-4. Event Dispatching: When an event occurs, such as data being received on a network socket, the reactor receives the event and dispatches it to the appropriate event handler. The reactor uses the registration information to determine which handler should process the event.
+1. **FleeZombiesStrategy**:
+   - **Application**: The strategy would consider factors such as the individual's health, available resources, proximity to zombies, and the number of zombies.
+   - **Fuzzy Implementation**: The decision to flee or confront a zombie could be based on a fuzzy rule that weighs these factors, allowing for decisions like moving towards a zombie if it's blocking access to crucial resources.
 
-5. Non-Blocking I/O: To achieve high performance and scalability, the reactor pattern often utilizes non-blocking I/O operations. This means that when an event handler initiates an I/O operation, it doesn't wait for the operation to complete but rather continues processing other events. It can later receive a notification when the I/O operation is finished.
+2. **ChaseHumansStrategy**:
+   - **Application**: This strategy would factor in the group size, health status, and defenses of potential human targets.
+   - **Fuzzy Implementation**: A fuzzy rule could be used to decide whether chasing humans is advisable, considering factors like the attractiveness of a small, weakened group versus the risk of a large, well-equipped group.
 
-By using the reactor pattern, applications can efficiently handle multiple I/O operations concurrently without blocking the execution flow. This enables systems to be more scalable, responsive, and capable of handling a large number of clients or events.
+3. **RandomMovementStrategy and BrownianMovementStrategy**:
+   - **Application**: These strategies could be adapted to account for environmental conditions and the individual's internal state (e.g., health, hunger).
+   - **Fuzzy Implementation**: The wandering behavior could be biased towards certain directions, based on fuzzy logic that considers these factors, rather than being purely random.
 
-It's worth noting that there are other related patterns and frameworks based on the reactor pattern, such as the Proactor pattern and event-driven frameworks like Node.js, which build upon the concepts of the reactor pattern to provide powerful and efficient event-driven programming models.
-"""
+#### Technical Aspects of Fuzzy Logic Implementation:
+- **Fuzzification**: Inputs like health level, proximity, or resource availability are converted into fuzzy values using membership functions.
+- **Fuzzy Rules**: Rules are defined to capture the relationship between inputs and the desired outcome (e.g., "IF health is low AND zombies are close THEN flee").
+- **Defuzzification**: The output of the fuzzy inference system is translated back into a crisp value, dictating the specific action to take.
 
-"""
-The reactor pattern is an event-driven software design pattern that demultiplexes and dispatches service requests that are delivered to an application from one or more clients. It is one of the most popular and widely used patterns in concurrent and network programming.
+#### Conclusion
+By integrating fuzzy logic, the simulation's entities can exhibit more realistic and varied behaviors. This flexibility allows for a more immersive and dynamic simulation, reflecting the unpredictability and complexity of decision-making in a chaotic environment like a zombie apocalypse.
 
-The reactor pattern works by having a single thread that listens for events on a set of input sources. When an event occurs, the thread dispatches it to the appropriate handler. This allows the application to handle multiple concurrent requests without blocking any of them.
-
-The reactor pattern excels in handling a large number of concurrent requests, making it particularly suitable for web servers and database applications. By leveraging an event-driven architecture, the reactor pattern ensures scalability, allowing applications to effectively handle multiple requests. It also enhances efficiency by avoiding resource waste through non-blocking threads.
-"""
-
-"""
-Fuzzy logic can be used in a zombie apocalypse simulation to model and simulate the behavior and decision-making processes of various entities involved, such as the zombies, survivors, and any other relevant factors. Fuzzy logic is a mathematical framework that deals with uncertainty and imprecision, allowing for more flexible and nuanced modeling compared to traditional binary logic.
-
-Here are a few ways fuzzy logic can be applied in a zombie apocalypse simulation:
-
-1. Zombie Behavior: Fuzzy logic can be used to define the behavior patterns of zombies. For example, fuzzy rules can be created to govern the movement of zombies based on factors such as proximity to humans, noise levels, and visibility. The degree of "zombieness" can be quantified using fuzzy membership functions, allowing for gradual transitions between states of being fully human and fully zombified.
-
-2. Survivor Decision-Making: Fuzzy logic can be utilized to model the decision-making process of survivors. This can include factors such as risk assessment, resource allocation, and group dynamics. Fuzzy rules can be defined to capture the uncertainty and vagueness involved in decision-making during a chaotic and unpredictable zombie apocalypse.
-
-3. Environmental Factors: Fuzzy logic can help simulate environmental factors that affect the behavior of both zombies and survivors. For instance, weather conditions (e.g., visibility, temperature) and terrain types (e.g., open fields, buildings) can be modeled using fuzzy variables and rules, influencing the movement and interactions of entities in the simulation.
-
-4. Combat and Defense Strategies: Fuzzy logic can assist in modeling combat and defense strategies against zombies. Survivors can use fuzzy rules to determine the best course of action based on factors such as available weapons, ammunition, and the number and proximity of zombies. Fuzzy logic can also be applied to simulate the effectiveness of different defensive structures or tactics.
-
-By incorporating fuzzy logic into a zombie apocalypse simulation, you can introduce a level of uncertainty, adaptability, and realistic decision-making, making the simulation more immersive and reflective of real-world scenarios.
-"""
-"""
-Sure! We can incorporate fuzzy logic into the `MovementStrategyFactory` class to better model the uncertainty in decision-making processes. Let's modify the `create_strategy` method to include fuzzy logic for each decision-making scenario.
-
-Note: Below, I assume that we have a fuzzy logic module that includes methods for fuzzy inference. This is a pseudocode example and it may not be directly implementable.
-
-```python
-from FuzzyLogicModule import FuzzyInferenceSystem  # Assuming we have a fuzzy logic module
-
-class MovementStrategyFactory:
-    def create_strategy(self, individual, school):
-        # Instantiate fuzzy inference system
-        fuzzy_system = FuzzyInferenceSystem()
-        
-        # Get legal directions
-        legal_directions = school.get_legal_directions(individual)
-        # Get neighbors
-        neighbors = school.get_neighbors(individual.location, individual.sight_range)
-
-        # Calculate fuzzy rules based on factors such as number of zombies, number of survivors, and the individual's health state
-        for direction in legal_directions:
-            alive_neighbors = len([alive for alive in neighbors if alive.state == State.HEALTHY])
-            zombie_neighbors = len([zombies for zombies in neighbors if zombies.state == State.ZOMBIE])
-            fuzzy_system.add_rule(alive_neighbors, zombie_neighbors, individual.state)
-
-        # Determine the individual's movement strategy based on the output of the fuzzy inference system
-        strategy = fuzzy_system.infer_strategy()
-
-        # Based on the strategy inferred, return the corresponding Movement Strategy
-        if strategy == "NoMovement":
-            return NoMovementStrategy(individual, legal_directions, neighbors)
-        elif strategy == "RandomMovement":
-            return RandomMovementStrategy(individual, legal_directions, neighbors)
-        elif strategy == "FleeZombies":
-            return FleeZombiesStrategy(individual, legal_directions, neighbors)
-        elif strategy == "ChaseHumans":
-            return ChaseHumansStrategy(individual, legal_directions, neighbors)
-        elif strategy == "BrownianMovement":
-            return BrownianMovementStrategy(individual, legal_directions, neighbors)
-```
-
-In this modified method, the fuzzy inference system is used to model the uncertainty and imprecision in the decision-making processes. Each legal direction is associated with a fuzzy rule, which considers the number of alive neighbors, zombie neighbors, and the individual's health state. The fuzzy inference system then determines the most suitable strategy for the individual. 
-
-It's important to mention that the fuzzy rules, membership functions, and the inference system itself would need to be designed and implemented for this use-case. This would involve defining linguistic variables (like "few", "many"), membership functions (that map the input values to a membership value between 0 and 1), fuzzy rules (like "IF few humans AND many zombies THEN flee"), and the inference system (that evaluates the rules and determines the output).
-
-Note: Fuzzy Logic is a large field with several methods and techniques, this is just a simplified example that showcases how it can be applied. In reality, a lot of work would go into designing the fuzzy system itself, including defining the appropriate linguistic variables, membership functions, and fuzzy rules for the specific scenario, and validating the system through testing and optimization.
-"""
-"""
-To integrate fuzzy logic into the MovementStrategyFactory, you would need to modify each strategy to consider a range of possible behaviors, rather than definite ones. Here's how this might look:
-
-1. FleeZombiesStrategy: Rather than categorically fleeing from zombies, the strategy could consider factors like the individual's current health, available resources, proximity, and the number of zombies. Using fuzzy logic, the strategy might sometimes dictate that it is beneficial to move towards a solitary zombie if it's blocking the path to a vital resource.
-
-```python
-class FleeZombiesStrategy:
-    def __init__(self, individual, legal_directions, neighbors):
-        self.individual = individual
-        self.legal_directions = legal_directions
-        self.neighbors = neighbors
-
-    def get_movement(self):
-        # Apply fuzzy logic
-        closest_zombie_distance = min([self.individual.distance_to(zombie) for zombie in self.neighbors if zombie.state == State.ZOMBIE])
-        health = self.individual.health / 100.0
-        resource_availability = self.individual.resources / self.individual.max_resources
-        # Fuzzy rule
-        should_flee = fuzz.interp_membership([0, 0.5, 1], [closest_zombie_distance, health, resource_availability], 0.5)
-        if should_flee > 0.5:
-            return self._get_direction_away_from_closest_zombie()
-        else:
-            return self._get_direction_towards_closest_zombie()
-```
-
-2. ChaseHumansStrategy: This could factor in the group size, health status, and defenses of potential human targets, deciding whether or not chasing them is the best option. For example, a small, weakened group might be an attractive target, while a large, well-equipped group would not be.
-
-```python
-class ChaseHumansStrategy:
-    def __init__(self, individual, legal_directions, neighbors):
-        self.individual = individual
-        self.legal_directions = legal_directions
-        self.neighbors = neighbors
-
-    def get_movement(self):
-        # Apply fuzzy logic
-        closest_human_distance = min([self.individual.distance_to(human) for human in self.neighbors if human.state == State.HEALTHY])
-        human_health = min([human.health for human in self.neighbors if human.state == State.HEALTHY]) / 100.0
-        human_resources = min([human.resources for human in self.neighbors if human.state == State.HEALTHY]) / individual.max_resources
-        # Fuzzy rule
-        should_chase = fuzz.interp_membership([0, 0.5, 1], [closest_human_distance, human_health, human_resources], 0.5)
-        if should_chase > 0.5:
-            return self._get_direction_towards_closest_human()
-        else:
-            return self._get_direction_away_from_closest_human()
-```
-
-3. RandomMovementStrategy and BrownianMovementStrategy: These can take into account the environment and the individual's internal state (e.g., health, hunger) to determine a "wandering" behavior that isn't completely random, but rather biased towards certain directions depending on the circumstances.
-
-Remember that in these examples, we are using the `fuzz.interp_membership` function from the `scikit-fuzzy` library. This function computes the degree of membership of a given value within a fuzzy membership function defined by a set of points. The function takes three parameters: the x-axis array, the y-axis array, and the value to evaluate, and returns a float value between 0 and 1 representing the membership grade.
-
-You can use different membership functions and fuzzy rules depending on your needs. These examples use a simple linear membership function, but more complex situations might require non-linear functions or multiple rules that need to be aggregated using fuzzy logic operators.
+Note: Implementing fuzzy logic requires defining appropriate linguistic variables, membership functions, fuzzy rules, and validating the system through testing and optimization. This implementation is a high-level overview and would need detailed development to be functional in a real-world application.
 """
 
 
