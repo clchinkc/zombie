@@ -956,6 +956,9 @@ class MatplotlibAnimator(Observer):
 
         plt.draw()
 
+    def display_observation(self):
+        plt.show()
+
     def update(self) -> None:
         self.cell_states = [individual.health_state for individual in self.subject.agent_list]
         self.cell_states_value = [state.value for state in self.cell_states]
@@ -1004,9 +1007,6 @@ class MatplotlibAnimator(Observer):
 
         plt.draw()
         plt.pause(0.5)
-
-    def display_observation(self):
-        plt.show()
 
 
 class TkinterObserver(Observer):
