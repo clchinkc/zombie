@@ -592,6 +592,8 @@ class SimulationObserver(Observer):
             self.print_bar_graph()
         elif format == "scatter":
             self.print_scatter_graph()
+        elif format == "table":
+            self.print_table_graph()
 
     def print_statistics_text(self):
         population_size = self.statistics[-1]["population_size"]
@@ -714,6 +716,38 @@ class SimulationObserver(Observer):
         ax.scatter(x, y, c=cell_states_value, cmap=cmap)
 
         ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=HealthState.name_list())
+
+        plt.show()
+
+    def print_table_graph(self):
+        fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
+        ax.set_xlim(-1, len(self.grid)+1)
+        ax.set_ylim(-1, len(self.grid)+1)
+        ax.axis('off')
+
+        # Map state to colors
+        state_colors = {
+            HealthState.HEALTHY.name: "green",
+            HealthState.INFECTED.name: "orange",
+            HealthState.ZOMBIE.name: "red",
+            HealthState.DEAD.name: "black",
+            "": "white",
+        }
+
+        # Initialize table with the current grid state
+        cell_states = [["" for _ in range(len(self.grid[0]))] for _ in range(len(self.grid))]
+        for j, Individual in enumerate(self.agent_list):
+            cell_states[Individual.location[0]][Individual.location[1]] = Individual.health_state.name
+
+        table = ax.table(cellText=np.array(cell_states), loc="center", bbox=Bbox.from_bounds(0, 0, 1, 1))
+
+        # Adjust cell properties for centering text and updating color
+        for (i, j), cell in table.get_celld().items():
+                cell_state = cell_states[i][j]
+                cell.set_facecolor(state_colors.get(cell_state, "white"))
+                cell.get_text().set_text(cell_state)
+                cell.get_text().set_horizontalalignment('center')
+                cell.get_text().set_verticalalignment('center')
 
         plt.show()
 
@@ -1125,7 +1159,7 @@ def main():
     # print(simulation_animator.agent_history[-1])
 
     # observe the statistics of the population
-    simulation_observer.display_observation(format="grid") # "statistics" or "grid" or "bar" or "scatter"
+    simulation_observer.display_observation(format="table") # "statistics" or "grid" or "bar" or "scatter"
     # simulation_animator.display_observation(format="table") # "bar" or "scatter" or "table"
     # matplotlib_animator.display_observation()
     # tkinter_observer.display_observation()
