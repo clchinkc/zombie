@@ -291,7 +291,7 @@ class GUI:
 
     def setup_plot(self):
         # Adjust plot size and positioning
-        self.fig, ((self.ax1, self.ax2), (self.ax3, self.ax4)) = plt.subplots(2, 2, figsize=(10, 10), dpi=100)
+        self.fig, ((self.ax1, self.ax2), (self.ax3, self.ax4)) = plt.subplots(2, 2, figsize=(10, 10), dpi=100, constrained_layout=True)
         self.canvas_fig = FigureCanvasTkAgg(self.fig, master=self.root)
         self.canvas_fig_widget = self.canvas_fig.get_tk_widget()
         self.canvas_fig_widget.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
@@ -431,7 +431,6 @@ class GUI:
         self.update_speed_plot()
         self.update_distribution_plot()
         self.fig.canvas.draw()
-        plt.tight_layout()
 
     def update_performance_metrics(self):
         survival_time = self.simulation.steps * self.simulation.dt

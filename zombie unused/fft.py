@@ -49,10 +49,10 @@ dominant_freqs = frequencies[(np.abs(time_series_fft) > np.max(np.abs(time_serie
 dominant_freq_indices = np.argsort(-np.abs(time_series_fft))[:len(dominant_freqs)]
 
 # Spatial analysis at different stages
-stages = [10, 40, 90]  # Early, middle, and late stages of the simulation
+stages = [10, 30, 70]  # Early, middle, and late stages of the simulation
 
 # Visualization
-fig, axs = plt.subplots(len(stages) + 1, 2, figsize=(12, (len(stages) + 1) * 6))
+fig, axs = plt.subplots(len(stages) + 1, 2, figsize=(12, (len(stages) + 1) * 8), constrained_layout=True)
 
 # Plotting time-series data and its FFT
 axs[0, 0].plot(frequencies, np.abs(time_series_fft))
@@ -79,10 +79,9 @@ for i, stage in enumerate(stages):
     axs[i + 1, 0].set_ylabel("Y Coordinate")
 
     # FFT-transformed spatial data
-    axs[i + 1, 1].imshow(np.log(np.abs(spatial_fft_shifted)), cmap='hot')
+    axs[i + 1, 1].imshow(np.log(np.abs(spatial_fft_shifted) + 1e-10), cmap='hot')
     axs[i + 1, 1].set_title(f"FFT of Spatial Data at Time Step {stage} (Log Scale)")
     axs[i + 1, 1].set_xlabel("Frequency X")
     axs[i + 1, 1].set_ylabel("Frequency Y")
 
-plt.tight_layout()
 plt.show()

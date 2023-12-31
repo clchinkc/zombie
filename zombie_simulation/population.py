@@ -668,30 +668,31 @@ class SimulationObserver(Observer):
         print()
 
     def print_chart_graph(self):
-        # Analyze the results by observing the changes in the population over time
+        fig, ax = plt.subplots(1, 1, figsize=(7, 7),  constrained_layout=True)
+        ax.set_ylim(0, self.statistics[0]["population_size"] + 1)
+
+        # Get the counts of each state in the population
         cell_states = [individual.health_state for individual in self.agent_list]
         counts = {state: cell_states.count(state) for state in list(HealthState)}
-        # Add a bar chart to show the counts of each state in the population
-        plt.bar(
+
+        # Add a bar chart to show the counts of each state in the population using the axis 'ax'
+        ax.bar(
             np.asarray(HealthState.value_list()),
             list(counts.values()),
             tick_label=HealthState.name_list(),
             label=HealthState.name_list(),
             color=sns.color_palette("deep")
         )
-        # Set axis range as maximum count states
-        plt.ylim(0, self.statistics[0]["population_size"] + 1)
-        # Put a legend to the right of the current axis
-        plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
-        # Show the plot
-        plt.tight_layout()
+
+        ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+
         plt.show()
 
     def print_scatter_graph(self):
-        # Create a figure
-        fig, ax = plt.subplots(1, 1)
-        
-        # create a scatter plot of the population
+        fig, ax = plt.subplots(1, 1, figsize=(7, 7),  constrained_layout=True)
+        ax.set_xlim(-1, self.subject.school.size + 1)
+        ax.set_ylim(-1, self.subject.school.size + 1)
+
         x = np.array([individual.location[0] for individual in self.agent_list])
         y = np.array([individual.location[1] for individual in self.agent_list])
         cell_states_value = np.array([individual.health_state.value for individual in self.agent_list])
@@ -705,13 +706,7 @@ class SimulationObserver(Observer):
         
         ax.scatter(x, y, c=cell_states_value, cmap=cmap)
 
-        # Set axis range
-        ax.set_xlim(-1, self.subject.school.size + 1)
-        ax.set_ylim(-1, self.subject.school.size + 1)
-
-        # Put a legend to the right of the current axis
         ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=HealthState.name_list())
-        plt.tight_layout()
         plt.show()
 
 
@@ -740,20 +735,11 @@ class SimulationAnimator(Observer):
         self.bar_chart_animation(np.array(HealthState.value_list()), counts, HealthState.name_list())
 
     def bar_chart_animation(self, x, y, ticks):
-        # create a figure and axis
-        fig, ax = plt.subplots()
-
-        # set the title and labels
+        fig, ax = plt.subplots(1, 1, figsize=(7, 7),  constrained_layout=True)
         ax.set_title("Bar Chart Animation")
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        # Set axis range
         ax.set_ylim(0, len(self.agent_history[0]) + 1)
 
-        # create the bar chart
         bars = ax.bar(x, y[0], tick_label=ticks, label=HealthState.name_list(), color=sns.color_palette("deep"))
-
-        # create timestep labels
         text_box = ax.text(0.05, 0.9, "", transform=ax.transAxes)
 
         # function to update the chart
@@ -762,17 +748,9 @@ class SimulationAnimator(Observer):
                 bars[j].set_height(y[i][j])
             text_box.set_text(f"t = {i}")
 
-        # create the animation
         anim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000, repeat=False)
-        
-        # Put a legend to the right of the current axis
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5))
-
-        # save the animation
-        #anim.save("bar_chart_animation.gif", writer="pillow", fps=3, dpi=10)
-
-        # show the animation
-        plt.tight_layout()
+        #anim.save("bar_chart_animation.gif", writer="pillow", fps=3)
         plt.show()
 
     def print_scatter_animation(self):
@@ -784,11 +762,10 @@ class SimulationAnimator(Observer):
         self.scatter_chart_animation(x, y, cell_states_value)
 
     def scatter_chart_animation(self, x, y, cell_states_value):
-        # Create a figure
-        fig, ax = plt.subplots(1, 1)
+        fig, ax = plt.subplots(1, 1, figsize=(7, 7),  constrained_layout=True)
         ax.set_xlim(-1, self.subject.school.size + 1)
         ax.set_ylim(-1, self.subject.school.size + 1)
-        
+
         # Create an animation function
         def animate(i, sc, label):
             # Update the scatter plot
@@ -806,21 +783,11 @@ class SimulationAnimator(Observer):
         # create a list of legend labels and colors for each state in the State enum
         handles = [patches.Patch(color=color, label=state.name) for color, state in zip(color_palette, HealthState)]
 
-        # Create a scatter plot
         sc = ax.scatter(x[0], y[0], c=cell_states_value[0], cmap=cmap)
-        # Create a label
         label = ax.text(0.05, 0.9, "", transform=ax.transAxes)
-        # Set axis range
-        ax.set_xlim(0, self.subject.school.size)
-        ax.set_ylim(0, self.subject.school.size)
-        # Create the animation object
         anim = animation.FuncAnimation(fig, animate, frames=len(x), interval=1000, repeat=False, blit=True, fargs=(sc, label))
-        # Put a legend to the right of the current axis
         plt.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=HealthState.name_list())
-        # Save the animation
-        # anim.save("scatter_chart_animation.gif", writer="pillow", fps=3, dpi=10)
-        # Show the plot
-        plt.tight_layout()
+        # anim.save("scatter_chart_animation.gif", writer="pillow", fps=3)
         plt.show()
         
     def print_table_animation(self):
@@ -838,11 +805,10 @@ class SimulationAnimator(Observer):
         self.table_animation(cell_states)
 
     def table_animation(self, cell_states):
-        # Create a figure
-        fig, ax = plt.subplots(1, 1, figsize=(7, 7))
-        # Set axis range
+        fig, ax = plt.subplots(1, 1, figsize=(7, 7),  constrained_layout=True)
         ax.set_xlim(-1, len(cell_states[0])+1)
         ax.set_ylim(-1, len(cell_states[0])+1)
+        ax.axis('off')
 
         # Create a dictionary to map state to colors
         state_colors = {
@@ -866,23 +832,11 @@ class SimulationAnimator(Observer):
             # Return the artists set
             return table, label
 
-        # Create a table
         table = ax.table(cellText=cell_states[0], loc="center", bbox=Bbox.from_bounds(0.0, 0.0, 1.0, 1.0))
-
-        # Create a label
         label = ax.text(0.05, 0.9, "", transform=ax.transAxes)
-
-        # Create the animation object
-        anim = animation.FuncAnimation(fig, animate, frames=len(cell_states), interval=1000, repeat=False, blit=True, fargs=(table, label))
-
-        # Hide the axes
-        ax.axis('off')
-
-        # Show the plot
-        plt.tight_layout()
+        anim =  animation.FuncAnimation(fig, animate, frames=len(cell_states), interval=1000, repeat=False, blit=True, fargs=(table, label))
+        #anim.save("table_animation.gif", writer="pillow", fps=3)
         plt.show()
-        
-
 
 
 class MatplotlibAnimator(Observer):
@@ -892,7 +846,7 @@ class MatplotlibAnimator(Observer):
         self.subject.attach_observer(self)
         self.mode = mode  # "bar" or "scatter" or "table"
         
-        self.fig, self.ax = plt.subplots(1, 1, figsize=(7, 7))
+        self.fig, self.ax = plt.subplots(1, 1, figsize=(7, 7),  constrained_layout=True)
 
         self.cell_states = [individual.health_state for individual in self.subject.agent_list]
         self.cell_states_value = [state.value for state in self.cell_states]
@@ -906,9 +860,7 @@ class MatplotlibAnimator(Observer):
         elif self.mode == "table":
             self.setup_table()
 
-
     def setup_bar_chart(self):
-        """Set up the initial state of the bar chart."""
         self.ax.set_title("Bar Chart Animation")
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
@@ -916,40 +868,33 @@ class MatplotlibAnimator(Observer):
         self.setup_initial_bar_state()
 
     def setup_scatter_plot(self):
-        """Set up the initial state of the scatter plot."""
         self.ax.set_title("Scatter Chart Animation")
         self.ax.set_xlim(-1, self.subject.school.size + 1)
         self.ax.set_ylim(-1, self.subject.school.size + 1)
         self.setup_initial_scatter_state()
 
     def setup_initial_bar_state(self):
-        """Initialize the bars with starting data."""
         counts = [self.cell_states.count(state) for state in list(HealthState)]
         self.bars = self.ax.bar(np.array(HealthState.value_list()), counts, tick_label=HealthState.name_list(), 
                                 label=HealthState.name_list(), color=sns.color_palette("deep"))
         self.ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.tight_layout()
         plt.draw()
 
     def setup_initial_scatter_state(self):
-        """Initialize the scatter plot with starting data."""
         color_palette = sns.color_palette("deep", n_colors=len(HealthState))
         cmap=colors.ListedColormap(color_palette)
         handles = [patches.Patch(color=color, label=state.name) for color, state in zip(color_palette, HealthState)]
         self.scatter = self.ax.scatter(self.cell_x_coords, self.cell_y_coords, c=self.cell_states_value, cmap=cmap)
         self.ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=HealthState.name_list())
-        plt.tight_layout()
         plt.draw()
         
     def setup_table(self):
-        """Set up the initial state of the table."""
         self.ax.set_title("Table Animation")
         self.ax.set_xlim(-1, self.subject.school.size + 1)
         self.ax.set_ylim(-1, self.subject.school.size + 1)
         self.setup_initial_table_state()
         
     def setup_initial_table_state(self):
-        """Initialize the table with starting data."""
         cell_states = [["" for _ in range(self.subject.school.size)] for _ in range(self.subject.school.size)]
         for j in range(self.subject.school.size):
             cell_states[self.cell_x_coords[j]][self.cell_y_coords[j]] = self.cell_states[j].name
@@ -970,11 +915,9 @@ class MatplotlibAnimator(Observer):
                 self.table[i, j].set_facecolor(color)
                 self.table[i, j].get_text().set_text('')  # Clear the text
 
-        plt.tight_layout()
         plt.draw()
 
     def update(self) -> None:
-        """Update the plot based on the mode."""
         self.cell_states = [individual.health_state for individual in self.subject.agent_list]
         self.cell_states_value = [state.value for state in self.cell_states]
         self.cell_x_coords = [individual.location[0] for individual in self.subject.agent_list]
@@ -988,7 +931,6 @@ class MatplotlibAnimator(Observer):
             self.update_table()
 
     def update_bar_chart(self):
-        """Update and redraw the bar chart with new data."""
         counts = [self.cell_states.count(state) for state in list(HealthState)]
         for bar, count in zip(self.bars, counts):
             bar.set_height(count)
@@ -996,14 +938,12 @@ class MatplotlibAnimator(Observer):
         plt.pause(0.5)
 
     def update_scatter_plot(self):
-        """Update and redraw the scatter plot with new data."""
         self.scatter.set_offsets(np.c_[self.cell_x_coords, self.cell_y_coords])
         self.scatter.set_array(self.cell_states_value)
         plt.draw()
         plt.pause(0.5)
 
     def update_table(self):
-        """Update and redraw the table with new data."""
         cell_states = [["" for _ in range(self.subject.school.size)] for _ in range(self.subject.school.size)]
         for j in range(self.subject.school.size):
             cell_states[self.cell_x_coords[j]][self.cell_y_coords[j]] = self.cell_states[j].name
@@ -1026,7 +966,6 @@ class MatplotlibAnimator(Observer):
         plt.pause(0.5)
 
     def display_observation(self):
-        """Display the final plot."""
         plt.show()
 
 
@@ -1167,11 +1106,11 @@ def main():
     school_sim = Population(school_size=10, population_size=10)
 
     # create Observer objects
-    simulation_observer = SimulationObserver(school_sim)
+    # simulation_observer = SimulationObserver(school_sim)
     # simulation_animator = SimulationAnimator(school_sim)
-    # matplotlib_animator = MatplotlibAnimator(school_sim, mode="scatter") # "bar" or "scatter" or "table"
+    matplotlib_animator = MatplotlibAnimator(school_sim, mode="table") # "bar" or "scatter" or "table"
     # tkinter_observer = TkinterObserver(school_sim)
-    population_observer = PopulationObserver(school_sim)
+    # population_observer = PopulationObserver(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
@@ -1181,11 +1120,11 @@ def main():
     # print(simulation_animator.agent_history[-1])
 
     # observe the statistics of the population
-    simulation_observer.display_observation(format="statistics") # "statistics" or "grid" or "chart" or "scatter"
-    # simulation_animator.display_observation(format="scatter") # "bar" or "scatter" or "table"
-    # matplotlib_animator.display_observation()
+    # simulation_observer.display_observation(format="chart") # "statistics" or "grid" or "chart" or "scatter"
+    # simulation_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
+    matplotlib_animator.display_observation()
     # tkinter_observer.display_observation()
-    population_observer.display_observation()
+    # population_observer.display_observation()
 
 
 
