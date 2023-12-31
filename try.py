@@ -33,7 +33,7 @@ from matplotlib.transforms import Bbox
 from scipy import stats
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
-from tensorflow.keras import layers, models
+from keras import layers, models
 
 
 class HealthState(Enum):
@@ -668,28 +668,34 @@ class SimulationObserver(Observer):
         print()
 
     def print_chart_graph(self):
-        fig, ax = plt.subplots(1, 1, figsize=(7, 7),  constrained_layout=True)
+        fig, ax = plt.subplots(1, 1, figsize=(7, 7), constrained_layout=True)
         ax.set_ylim(0, self.statistics[0]["population_size"] + 1)
 
         # Get the counts of each state in the population
         cell_states = [individual.health_state for individual in self.agent_list]
         counts = {state: cell_states.count(state) for state in list(HealthState)}
 
-        # Add a bar chart to show the counts of each state in the population using the axis 'ax'
+        # create a colormap from the seaborn palette and the number of colors equal to the number of members in the State enum
+        color_palette = sns.color_palette("deep", n_colors=len(HealthState))
+        cmap = colors.ListedColormap(color_palette)
+
+        # create a list of legend labels and colors for each state in the State enum
+        handles = [patches.Patch(color=color, label=state.name) for color, state in zip(color_palette, HealthState)]
+
         ax.bar(
             np.asarray(HealthState.value_list()),
             list(counts.values()),
             tick_label=HealthState.name_list(),
             label=HealthState.name_list(),
-            color=sns.color_palette("deep")
+            color=color_palette,
         )
 
-        ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+        ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=HealthState.name_list())
 
         plt.show()
 
     def print_scatter_graph(self):
-        fig, ax = plt.subplots(1, 1, figsize=(7, 7),  constrained_layout=True)
+        fig, ax = plt.subplots(1, 1, figsize=(7, 7), constrained_layout=True)
         ax.set_xlim(-1, self.subject.school.size + 1)
         ax.set_ylim(-1, self.subject.school.size + 1)
 
@@ -707,6 +713,7 @@ class SimulationObserver(Observer):
         ax.scatter(x, y, c=cell_states_value, cmap=cmap)
 
         ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=HealthState.name_list())
+
         plt.show()
 
 
@@ -906,7 +913,7 @@ class MatplotlibAnimator(Observer):
             HealthState.DEAD.name: "black",
         }
 
-        self.table = self.ax.table(cellText=cell_states, loc="center", bbox=Bbox.from_bounds(0.0, 0.0, 1.0, 1.0))
+        self.table = self.ax.table(cellText=np.array(cell_states), loc="center", bbox=Bbox.from_bounds(0.0, 0.0, 1.0, 1.0))
 
         for i in range(self.subject.school.size):
             for j in range(self.subject.school.size):
@@ -939,7 +946,7 @@ class MatplotlibAnimator(Observer):
 
     def update_scatter_plot(self):
         self.scatter.set_offsets(np.c_[self.cell_x_coords, self.cell_y_coords])
-        self.scatter.set_array(self.cell_states_value)
+        self.scatter.set_array(np.array(self.cell_states_value))
         plt.draw()
         plt.pause(0.5)
 
@@ -1036,7 +1043,6 @@ class PopulationObserver(Observer):
         self.subject = population
         self.subject.attach_observer(self)
         self.grid_history = []
-        self.model = None
 
     def update(self) -> None:
         current_grid_state = self.capture_grid_state()
@@ -1089,7 +1095,7 @@ class PopulationObserver(Observer):
         print(f"Model Mean Squared Error: {mse}")
 
     def display_observation(self):
-        if not self.model:
+        if getattr(self, "model", None) is None:
             self.train_model()
         past_grid_state = self.grid_history[-5:]
         print(self.grid_history[-1])
@@ -1108,9 +1114,9 @@ def main():
     # create Observer objects
     # simulation_observer = SimulationObserver(school_sim)
     # simulation_animator = SimulationAnimator(school_sim)
-    matplotlib_animator = MatplotlibAnimator(school_sim, mode="table") # "bar" or "scatter" or "table"
+    # matplotlib_animator = MatplotlibAnimator(school_sim, mode="table") # "bar" or "scatter" or "table"
     # tkinter_observer = TkinterObserver(school_sim)
-    # population_observer = PopulationObserver(school_sim)
+    population_observer = PopulationObserver(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
@@ -1122,9 +1128,9 @@ def main():
     # observe the statistics of the population
     # simulation_observer.display_observation(format="chart") # "statistics" or "grid" or "chart" or "scatter"
     # simulation_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
-    matplotlib_animator.display_observation()
+    # matplotlib_animator.display_observation()
     # tkinter_observer.display_observation()
-    # population_observer.display_observation()
+    population_observer.display_observation()
 
 
 
