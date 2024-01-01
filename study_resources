@@ -2033,11 +2033,23 @@ https://startupclass.samaltman.com/
 Useful python libraries
 PDFMiner - extract text from PDF
 camelot - extract tables from PDF
+pypdf - pdf
 livepython - track variables in runtime
 ftfy - fix text encoding
-icecream - debug print
+rich - text with color and style, codeblock and table
+icecream - debug logging also print class and variable
+loguru - logging simple
 import pdb; pdb.set_trace() - debug
 breakpoint() - debug
+Pendulum - dates and times
+argparse - build command line interface
+tqdm - show progress bar
+xarray - dealing with multi-dimensional arrays
+pydantic - data validation and like dataclass
+fastapi - web framework, better than flask
+sqlmodel - connect fastapi app with database like sqlite, mysql
+httpx - http client
+python-dotenv - load environment variables
 
 Job oriented courses
 https://careerhackers.io/chp-landing/

@@ -1139,10 +1139,10 @@ def main():
     school_sim = Population(school_size=10, population_size=10)
 
     # create Observer objects
-    simulation_observer = SimulationObserver(school_sim)
-    simulation_animator = SimulationAnimator(school_sim)
-    matplotlib_animator = MatplotlibAnimator(school_sim, mode="bar") # "bar" or "scatter" or "table"
-    # tkinter_observer = TkinterObserver(school_sim)
+    # simulation_observer = SimulationObserver(school_sim)
+    # simulation_animator = SimulationAnimator(school_sim)
+    # matplotlib_animator = MatplotlibAnimator(school_sim, mode="bar") # "bar" or "scatter" or "table"
+    tkinter_observer = TkinterObserver(school_sim)
     # population_observer = PopulationObserver(school_sim)
 
     # run the population for a given time period
@@ -1153,10 +1153,10 @@ def main():
     # print(simulation_animator.agent_history[-1])
 
     # observe the statistics of the population
-    simulation_observer.display_observation(format="bar") # "statistics" or "grid" or "bar" or "scatter" or "table"
-    simulation_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
-    matplotlib_animator.display_observation()
-    # tkinter_observer.display_observation()
+    # simulation_observer.display_observation(format="bar") # "statistics" or "grid" or "bar" or "scatter" or "table"
+    # simulation_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
+    # matplotlib_animator.display_observation()
+    tkinter_observer.display_observation()
     # population_observer.display_observation()
 
 
