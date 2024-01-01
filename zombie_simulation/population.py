@@ -26,15 +26,15 @@ from itertools import product
 from typing import Any, Optional
 
 import matplotlib.pyplot as plt
-from matplotlib.table import Table
 import numpy as np
 import seaborn as sns
+from keras import layers, models
 from matplotlib import animation, colors, patches
+from matplotlib.table import Table
 from matplotlib.transforms import Bbox
 from scipy import stats
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
-from keras import layers, models
 
 
 class HealthState(Enum):
@@ -731,7 +731,6 @@ class SimulationObserver(Observer):
             HealthState.INFECTED.name: "orange",
             HealthState.ZOMBIE.name: "red",
             HealthState.DEAD.name: "black",
-            "": "white",
         }
 
         # Initialize table with the current grid state
@@ -906,18 +905,18 @@ class MatplotlibAnimator(Observer):
         self.ax.set_ylim(0, len(self.subject.agent_list) + 1)
         self.setup_initial_bar_state()
 
-    def setup_scatter_plot(self):
-        self.ax.set_title("Scatter Chart Animation")
-        self.ax.set_xlim(-1, self.subject.school.size + 1)
-        self.ax.set_ylim(-1, self.subject.school.size + 1)
-        self.setup_initial_scatter_state()
-
     def setup_initial_bar_state(self):
         counts = [self.cell_states.count(state) for state in list(HealthState)]
         self.bars = self.ax.bar(np.array(HealthState.value_list()), counts, tick_label=HealthState.name_list(), 
                                 label=HealthState.name_list(), color=sns.color_palette("deep"))
         self.ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         plt.draw()
+
+    def setup_scatter_plot(self):
+        self.ax.set_title("Scatter Chart Animation")
+        self.ax.set_xlim(-1, self.subject.school.size + 1)
+        self.ax.set_ylim(-1, self.subject.school.size + 1)
+        self.setup_initial_scatter_state()
 
     def setup_initial_scatter_state(self):
         color_palette = sns.color_palette("deep", n_colors=len(HealthState))
@@ -931,6 +930,7 @@ class MatplotlibAnimator(Observer):
         self.ax.set_title("Table Animation")
         self.ax.set_xlim(-1, self.subject.school.size + 1)
         self.ax.set_ylim(-1, self.subject.school.size + 1)
+        self.ax.axis('off')
         self.setup_initial_table_state()
         
     def setup_initial_table_state(self):
@@ -952,9 +952,12 @@ class MatplotlibAnimator(Observer):
                 cell_state = cell_states[i][j]
                 color = state_colors.get(cell_state, "white")  # Default to white if state is unknown
                 self.table[i, j].set_facecolor(color)
-                self.table[i, j].get_text().set_text('')  # Clear the text
+                self.table[i, j].get_text().set_text(cell_state)
 
         plt.draw()
+
+    def display_observation(self):
+        plt.show()
 
     def update(self) -> None:
         self.cell_states = [individual.health_state for individual in self.subject.agent_list]
@@ -1004,9 +1007,6 @@ class MatplotlibAnimator(Observer):
 
         plt.draw()
         plt.pause(0.5)
-
-    def display_observation(self):
-        plt.show()
 
 
 class TkinterObserver(Observer):
@@ -1146,8 +1146,8 @@ def main():
 
     # create Observer objects
     simulation_observer = SimulationObserver(school_sim)
-    # simulation_animator = SimulationAnimator(school_sim)
-    # matplotlib_animator = MatplotlibAnimator(school_sim, mode="table") # "bar" or "scatter" or "table"
+    simulation_animator = SimulationAnimator(school_sim)
+    matplotlib_animator = MatplotlibAnimator(school_sim, mode="scatter") # "bar" or "scatter" or "table"
     # tkinter_observer = TkinterObserver(school_sim)
     # population_observer = PopulationObserver(school_sim)
 
@@ -1159,9 +1159,9 @@ def main():
     # print(simulation_animator.agent_history[-1])
 
     # observe the statistics of the population
-    simulation_observer.display_observation(format="table") # "statistics" or "grid" or "bar" or "scatter"
-    # simulation_animator.display_observation(format="table") # "bar" or "scatter" or "table"
-    # matplotlib_animator.display_observation()
+    simulation_observer.display_observation(format="scatter") # "statistics" or "grid" or "bar" or "scatter" or "table"
+    simulation_animator.display_observation(format="scatter") # "bar" or "scatter" or "table"
+    matplotlib_animator.display_observation()
     # tkinter_observer.display_observation()
     # population_observer.display_observation()
 
