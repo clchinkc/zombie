@@ -682,6 +682,7 @@ class SimulationObserver(Observer):
 
     def print_bar_graph(self):
         fig, ax = plt.subplots(1, 1, figsize=(7, 7), constrained_layout=True)
+        ax.set_title("Bar Chart")
         ax.set_ylim(0, self.statistics[0]["population_size"] + 1)
 
         # Use common state_colors
@@ -700,6 +701,7 @@ class SimulationObserver(Observer):
 
     def print_scatter_graph(self):
         fig, ax = plt.subplots(1, 1, figsize=(7, 7), constrained_layout=True)
+        ax.set_title("Scatter Chart")
         ax.set_xlim(-1, self.subject.school.size + 1)
         ax.set_ylim(-1, self.subject.school.size + 1)
 
@@ -715,6 +717,7 @@ class SimulationObserver(Observer):
 
     def print_table_graph(self):
         fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
+        ax.set_title("Table Chart")
         ax.set_xlim(-1, len(self.grid)+1)
         ax.set_ylim(-1, len(self.grid)+1)
         ax.axis('off')
@@ -775,7 +778,7 @@ class SimulationAnimator(Observer):
 
     def bar_chart_animation(self, x, y, ticks):
         fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
-        ax.set_title("Population Health States Over Time")
+        ax.set_title("Bar Chart Animation")
         ax.set_ylim(0, max(map(max, y)) + 1)
 
         bars = ax.bar(x, y[0], tick_label=ticks, label=HealthState.name_list(), color=self.state_colors.values())
@@ -799,6 +802,7 @@ class SimulationAnimator(Observer):
 
     def scatter_chart_animation(self, x, y, cell_states_value):
         fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
+        ax.set_title("Scatter Chart Animation")
         ax.set_xlim(-1, self.subject.school.size + 1)
         ax.set_ylim(-1, self.subject.school.size + 1)
 
@@ -831,6 +835,7 @@ class SimulationAnimator(Observer):
 
     def table_animation(self, cell_states):
         fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
+        ax.set_title("Table Animation")
         ax.set_xlim(-1, len(cell_states[0])+1)
         ax.set_ylim(-1, len(cell_states[0])+1)
         ax.axis('off')
@@ -890,9 +895,7 @@ class MatplotlibAnimator(Observer):
             self.setup_table()
 
     def setup_bar_chart(self):
-        self.ax.set_title("Bar Chart Animation")
-        self.ax.set_xlabel("x")
-        self.ax.set_ylabel("y")
+        self.ax.set_title("Bar Chart Matplotlib Animation")
         self.ax.set_ylim(0, len(self.subject.agent_list) + 1)
         self.setup_initial_bar_state()
 
@@ -904,7 +907,7 @@ class MatplotlibAnimator(Observer):
         plt.draw()
 
     def setup_scatter_plot(self):
-        self.ax.set_title("Scatter Chart Animation")
+        self.ax.set_title("Scatter Chart Matplotlib Animation")
         self.ax.set_xlim(-1, self.subject.school.size + 1)
         self.ax.set_ylim(-1, self.subject.school.size + 1)
         self.setup_initial_scatter_state()
@@ -916,7 +919,7 @@ class MatplotlibAnimator(Observer):
         plt.draw()
         
     def setup_table(self):
-        self.ax.set_title("Table Animation")
+        self.ax.set_title("Table Matplotlib Animation")
         self.ax.set_xlim(-1, self.subject.school.size + 1)
         self.ax.set_ylim(-1, self.subject.school.size + 1)
         self.ax.axis('off')
