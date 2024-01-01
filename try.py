@@ -566,6 +566,15 @@ class SimulationObserver(Observer):
         self.grid = self.subject.school.grid
         self.agent_list = self.subject.agent_list
 
+        self.state_colors = {
+            HealthState.HEALTHY: "green",
+            HealthState.INFECTED: "orange",
+            HealthState.ZOMBIE: "red",
+            HealthState.DEAD: "black",
+        }
+        self.cmap = colors.ListedColormap(list(self.state_colors.values()))
+        self.state_handles = [patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()]
+
     def update(self) -> None:
         statistics =  {
             "num_healthy": self.subject.num_healthy,
@@ -670,31 +679,23 @@ class SimulationObserver(Observer):
             print()
         print()
 
+
     def print_bar_graph(self):
         fig, ax = plt.subplots(1, 1, figsize=(7, 7), constrained_layout=True)
         ax.set_ylim(0, self.statistics[0]["population_size"] + 1)
 
-        # Get the counts of each state in the population
+        # Use common state_colors
         cell_states = [individual.health_state for individual in self.agent_list]
-        counts = {state: cell_states.count(state) for state in list(HealthState)}
-
-        # create a colormap from the seaborn palette and the number of colors equal to the number of members in the State enum
-        color_palette = sns.color_palette("deep", n_colors=len(HealthState))
-        cmap = colors.ListedColormap(color_palette)
-
-        # create a list of legend labels and colors for each state in the State enum
-        handles = [patches.Patch(color=color, label=state.name) for color, state in zip(color_palette, HealthState)]
-
+        counts = {state: cell_states.count(state) for state in HealthState}
         ax.bar(
             np.asarray(HealthState.value_list()),
             list(counts.values()),
             tick_label=HealthState.name_list(),
             label=HealthState.name_list(),
-            color=color_palette,
+            color=[self.state_colors[state] for state in HealthState]
         )
 
-        ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=HealthState.name_list())
-
+        ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.show()
 
     def print_scatter_graph(self):
@@ -705,18 +706,11 @@ class SimulationObserver(Observer):
         x = np.array([individual.location[0] for individual in self.agent_list])
         y = np.array([individual.location[1] for individual in self.agent_list])
         cell_states_value = np.array([individual.health_state.value for individual in self.agent_list])
-        
-        # create a colormap from the seaborn palette and the number of colors equal to the number of members in the State enum
-        color_palette = sns.color_palette("deep", n_colors=len(HealthState))
-        cmap = colors.ListedColormap(color_palette)
-        
-        # create a list of legend labels and colors for each state in the State enum
-        handles = [patches.Patch(color=color, label=state.name) for color, state in zip(color_palette, HealthState)]
-        
-        ax.scatter(x, y, c=cell_states_value, cmap=cmap)
 
-        ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=HealthState.name_list())
+        # Use common cmap
+        ax.scatter(x, y, c=cell_states_value, cmap=self.cmap)
 
+        ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.show()
 
     def print_table_graph(self):
@@ -725,29 +719,22 @@ class SimulationObserver(Observer):
         ax.set_ylim(-1, len(self.grid)+1)
         ax.axis('off')
 
-        # Map state to colors
-        state_colors = {
-            HealthState.HEALTHY.name: "green",
-            HealthState.INFECTED.name: "orange",
-            HealthState.ZOMBIE.name: "red",
-            HealthState.DEAD.name: "black",
-        }
-
-        # Initialize table with the current grid state
+        # Initialize table with common state_colors
         cell_states = [["" for _ in range(len(self.grid[0]))] for _ in range(len(self.grid))]
-        for j, Individual in enumerate(self.agent_list):
-            cell_states[Individual.location[0]][Individual.location[1]] = Individual.health_state.name
+        for j, individual in enumerate(self.agent_list):
+            cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
 
         table = ax.table(cellText=np.array(cell_states), loc="center", bbox=Bbox.from_bounds(0, 0, 1, 1))
 
-        # Adjust cell properties for centering text and updating color
-        for (i, j), cell in table.get_celld().items():
-                cell_state = cell_states[i][j]
-                cell.set_facecolor(state_colors.get(cell_state, "white"))
-                cell.get_text().set_text(cell_state)
-                cell.get_text().set_horizontalalignment('center')
-                cell.get_text().set_verticalalignment('center')
-
+        # Adjust cell properties using common state_colors
+        for key, cell in table.get_celld().items():
+            cell_state = cell_states[key[0]][key[1]]
+            cell.set_facecolor(self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white")
+            cell.get_text().set_text(cell_state)
+            cell.set_height(1 / len(cell_states[0]))
+            cell.set_width(1 / len(cell_states[0]))
+            cell.get_text().set_horizontalalignment('center')
+            cell.get_text().set_verticalalignment('center')
         plt.show()
 
 
@@ -756,14 +743,16 @@ class SimulationAnimator(Observer):
         self.subject = population
         self.subject.attach_observer(self)
         self.agent_history = []
-        self.setup_animation()
 
-    def setup_animation(self):
-        # Shared setup for all animations
         sns.set_style("whitegrid")
-        self.state_colors = sns.color_palette("deep", n_colors=len(HealthState))
-        self.cmap = colors.ListedColormap(self.state_colors)
-        self.state_handles = [patches.Patch(color=color, label=state.name) for color, state in zip(self.state_colors, HealthState)]
+        self.state_colors = {
+            HealthState.HEALTHY: "green",
+            HealthState.INFECTED: "orange",
+            HealthState.ZOMBIE: "red",
+            HealthState.DEAD: "black",
+        }
+        self.cmap = colors.ListedColormap(list(self.state_colors.values()))
+        self.state_handles = [patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()]
 
     def update(self) -> None:
         self.agent_history.append(deepcopy(self.subject.agent_list))
@@ -789,8 +778,8 @@ class SimulationAnimator(Observer):
         ax.set_title("Population Health States Over Time")
         ax.set_ylim(0, max(map(max, y)) + 1)
 
-        bars = ax.bar(x, y[0], tick_label=ticks, label=HealthState.name_list(), color=self.state_colors)
-        text_box = ax.text(0.05, 0.9, "", transform=ax.transAxes)
+        bars = ax.bar(x, y[0], tick_label=ticks, label=HealthState.name_list(), color=self.state_colors.values())
+        text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
 
         def update(i):
             for j, bar in enumerate(bars):
@@ -814,7 +803,7 @@ class SimulationAnimator(Observer):
         ax.set_ylim(-1, self.subject.school.size + 1)
 
         sc = ax.scatter(x[0], y[0], c=cell_states_value[0], cmap=self.cmap)
-        label = ax.text(0.05, 0.9, "", transform=ax.transAxes)
+        label = ax.text(0.05, 0.95, "", transform=ax.transAxes)
 
         def animate(i):
             sc.set_offsets(np.c_[x[i], y[i]])
@@ -846,17 +835,9 @@ class SimulationAnimator(Observer):
         ax.set_ylim(-1, len(cell_states[0])+1)
         ax.axis('off')
 
-        # Map state to colors
-        state_colors = {
-            'HEALTHY': "green",
-            'INFECTED': "orange",
-            'ZOMBIE': "red",
-            'DEAD': "black",
-        }
-
         # Initialize table
         table = ax.table(cellText=cell_states[0], loc="center", bbox=Bbox.from_bounds(0, 0, 1, 1))
-        label = ax.text(0.05, 0.9, "", transform=ax.transAxes)
+        label = ax.text(0.05, 0.95, "", transform=ax.transAxes)
 
         # Adjust cell properties for centering text
         for key, cell in table.get_celld().items():
@@ -868,7 +849,7 @@ class SimulationAnimator(Observer):
         def animate(i):
             for row_num, row in enumerate(cell_states[i]):
                 for col_num, cell_value in enumerate(row):
-                    cell_color = state_colors.get(cell_value, "white")
+                    cell_color = self.state_colors.get(HealthState[cell_value], "white") if cell_value else "white"
                     table[row_num, col_num].set_facecolor(cell_color)
                     table[row_num, col_num].get_text().set_text(cell_value)
             label.set_text(f"Time Step: {i}")
@@ -891,6 +872,16 @@ class MatplotlibAnimator(Observer):
         self.cell_x_coords = [individual.location[0] for individual in self.subject.agent_list]
         self.cell_y_coords = [individual.location[1] for individual in self.subject.agent_list]
 
+        sns.set_style("whitegrid")
+        self.state_colors = {
+            HealthState.HEALTHY: "green",
+            HealthState.INFECTED: "orange",
+            HealthState.ZOMBIE: "red",
+            HealthState.DEAD: "black",
+        }
+        self.cmap = colors.ListedColormap(list(self.state_colors.values()))
+        self.state_handles = [patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()]
+
         if self.mode == "bar":
             self.setup_bar_chart()
         elif self.mode == "scatter":
@@ -908,8 +899,8 @@ class MatplotlibAnimator(Observer):
     def setup_initial_bar_state(self):
         counts = [self.cell_states.count(state) for state in list(HealthState)]
         self.bars = self.ax.bar(np.array(HealthState.value_list()), counts, tick_label=HealthState.name_list(), 
-                                label=HealthState.name_list(), color=sns.color_palette("deep"))
-        self.ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
+                                label=HealthState.name_list(), color=[self.state_colors[state] for state in HealthState])
+        self.ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.draw()
 
     def setup_scatter_plot(self):
@@ -919,11 +910,9 @@ class MatplotlibAnimator(Observer):
         self.setup_initial_scatter_state()
 
     def setup_initial_scatter_state(self):
-        color_palette = sns.color_palette("deep", n_colors=len(HealthState))
-        cmap=colors.ListedColormap(color_palette)
-        handles = [patches.Patch(color=color, label=state.name) for color, state in zip(color_palette, HealthState)]
-        self.scatter = self.ax.scatter(self.cell_x_coords, self.cell_y_coords, c=self.cell_states_value, cmap=cmap)
-        self.ax.legend(handles=handles, loc="center left", bbox_to_anchor=(1, 0.5), labels=HealthState.name_list())
+        self.scatter = self.ax.scatter(self.cell_x_coords, self.cell_y_coords, 
+                                    c=self.cell_states_value, cmap=self.cmap)
+        self.ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.draw()
         
     def setup_table(self):
@@ -932,28 +921,29 @@ class MatplotlibAnimator(Observer):
         self.ax.set_ylim(-1, self.subject.school.size + 1)
         self.ax.axis('off')
         self.setup_initial_table_state()
-        
+
     def setup_initial_table_state(self):
-        cell_states = [["" for _ in range(self.subject.school.size)] for _ in range(self.subject.school.size)]
-        for j in range(self.subject.school.size):
-            cell_states[self.cell_x_coords[j]][self.cell_y_coords[j]] = self.cell_states[j].name
+        cell_states = [["" for _ in range(self.subject.school.size)] 
+                    for _ in range(self.subject.school.size)]
+        for j, individual in enumerate(self.subject.agent_list):
+            cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
 
-        state_colors = {
-            HealthState.HEALTHY.name: "green",
-            HealthState.INFECTED.name: "orange",
-            HealthState.ZOMBIE.name: "red",
-            HealthState.DEAD.name: "black",
-        }
+        self.table = self.ax.table(cellText=np.array(cell_states), loc="center", 
+                                bbox=Bbox.from_bounds(0.0, 0.0, 1.0, 1.0))
 
-        self.table = self.ax.table(cellText=np.array(cell_states), loc="center", bbox=Bbox.from_bounds(0.0, 0.0, 1.0, 1.0))
+        # Adjust cell properties for centering text
+        for key, cell in self.table.get_celld().items():
+            cell.set_height(1 / len(cell_states[0]))
+            cell.set_width(1 / len(cell_states[0]))
+            cell.get_text().set_horizontalalignment('center')
+            cell.get_text().set_verticalalignment('center')
 
         for i in range(self.subject.school.size):
             for j in range(self.subject.school.size):
                 cell_state = cell_states[i][j]
-                color = state_colors.get(cell_state, "white")  # Default to white if state is unknown
+                color = self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white"
                 self.table[i, j].set_facecolor(color)
                 self.table[i, j].get_text().set_text(cell_state)
-
         plt.draw()
 
     def display_observation(self):
@@ -973,7 +963,7 @@ class MatplotlibAnimator(Observer):
             self.update_table()
 
     def update_bar_chart(self):
-        counts = [self.cell_states.count(state) for state in list(HealthState)]
+        counts = [self.cell_states.count(state) for state in HealthState]
         for bar, count in zip(self.bars, counts):
             bar.set_height(count)
         plt.draw()
@@ -986,25 +976,16 @@ class MatplotlibAnimator(Observer):
         plt.pause(0.5)
 
     def update_table(self):
-        cell_states = [["" for _ in range(self.subject.school.size)] for _ in range(self.subject.school.size)]
+        cell_states = [["" for _ in range(self.subject.school.size)] 
+                    for _ in range(self.subject.school.size)]
         for j, individual in enumerate(self.subject.agent_list):
             cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
 
-        state_colors = {
-            HealthState.HEALTHY.name: "green",
-            HealthState.INFECTED.name: "orange",
-            HealthState.ZOMBIE.name: "red",
-            HealthState.DEAD.name: "black",
-        }
-
         for (i, j), cell in np.ndenumerate(cell_states):
             cell_state = cell_states[i][j]
-            color = state_colors.get(cell_state, "white")  # Default to white if state is unknown
+            color = self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white"
             self.table[i, j].set_facecolor(color)
             self.table[i, j].get_text().set_text(cell_state)
-            self.table[i, j].get_text().set_horizontalalignment('center')
-            self.table[i, j].get_text().set_verticalalignment('center')
-
         plt.draw()
         plt.pause(0.5)
 
@@ -1147,7 +1128,7 @@ def main():
     # create Observer objects
     simulation_observer = SimulationObserver(school_sim)
     simulation_animator = SimulationAnimator(school_sim)
-    matplotlib_animator = MatplotlibAnimator(school_sim, mode="scatter") # "bar" or "scatter" or "table"
+    matplotlib_animator = MatplotlibAnimator(school_sim, mode="bar") # "bar" or "scatter" or "table"
     # tkinter_observer = TkinterObserver(school_sim)
     # population_observer = PopulationObserver(school_sim)
 
@@ -1159,8 +1140,8 @@ def main():
     # print(simulation_animator.agent_history[-1])
 
     # observe the statistics of the population
-    simulation_observer.display_observation(format="scatter") # "statistics" or "grid" or "bar" or "scatter" or "table"
-    simulation_animator.display_observation(format="scatter") # "bar" or "scatter" or "table"
+    simulation_observer.display_observation(format="bar") # "statistics" or "grid" or "bar" or "scatter" or "table"
+    simulation_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
     matplotlib_animator.display_observation()
     # tkinter_observer.display_observation()
     # population_observer.display_observation()
