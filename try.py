@@ -477,7 +477,8 @@ class Population:
 
     def run_population(self, num_time_steps: int) -> None:
         for time in range(num_time_steps):
-            print("Time step: ", time + 1)
+            self.timestep = time + 1
+            print("Time step: ", self.timestep)
             self.severity = time / num_time_steps
             print("Severity: ", self.severity)
             self.school.update_grid(self.agent_list, self.migration_probability)
@@ -566,11 +567,13 @@ class SimulationObserver(Observer):
         self.grid = self.subject.school.grid
         self.agent_list = self.subject.agent_list
 
+        sns.set_style("whitegrid")
+        deep_colors = sns.color_palette("deep")
         self.state_colors = {
-            HealthState.HEALTHY: "green",
-            HealthState.INFECTED: "orange",
-            HealthState.ZOMBIE: "red",
-            HealthState.DEAD: "black",
+            HealthState.HEALTHY: deep_colors[0],  # Adjusted to use seaborn deep color palette
+            HealthState.INFECTED: deep_colors[1],
+            HealthState.ZOMBIE: deep_colors[2],
+            HealthState.DEAD: deep_colors[3],
         }
         self.cmap = colors.ListedColormap(list(self.state_colors.values()))
         self.state_handles = [patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()]
@@ -748,11 +751,12 @@ class SimulationAnimator(Observer):
         self.agent_history = []
 
         sns.set_style("whitegrid")
+        deep_colors = sns.color_palette("deep")
         self.state_colors = {
-            HealthState.HEALTHY: "green",
-            HealthState.INFECTED: "orange",
-            HealthState.ZOMBIE: "red",
-            HealthState.DEAD: "black",
+            HealthState.HEALTHY: deep_colors[0],
+            HealthState.INFECTED: deep_colors[1],
+            HealthState.ZOMBIE: deep_colors[2],
+            HealthState.DEAD: deep_colors[3],
         }
         self.cmap = colors.ListedColormap(list(self.state_colors.values()))
         self.state_handles = [patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()]
@@ -787,7 +791,7 @@ class SimulationAnimator(Observer):
         def update(i):
             for j, bar in enumerate(bars):
                 bar.set_height(y[i][j])
-            text_box.set_text(f"Time Step: {i}")
+            text_box.set_text(f"Time Step: {i+1}")
 
         anim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000, repeat=False)
         plt.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
@@ -807,12 +811,12 @@ class SimulationAnimator(Observer):
         ax.set_ylim(-1, self.subject.school.size + 1)
 
         sc = ax.scatter(x[0], y[0], c=cell_states_value[0], cmap=self.cmap)
-        label = ax.text(0.05, 0.95, "", transform=ax.transAxes)
+        text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
 
         def animate(i):
             sc.set_offsets(np.c_[x[i], y[i]])
             sc.set_array(cell_states_value[i])
-            label.set_text(f"Time Step: {i}")
+            text_box.set_text(f"Time Step: {i+1}")
 
         anim = animation.FuncAnimation(fig, animate, frames=len(x), interval=1000, repeat=False)
         plt.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
@@ -842,7 +846,7 @@ class SimulationAnimator(Observer):
 
         # Initialize table
         table = ax.table(cellText=cell_states[0], loc="center", bbox=Bbox.from_bounds(0, 0, 1, 1))
-        label = ax.text(0.05, 0.95, "", transform=ax.transAxes)
+        text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
 
         # Adjust cell properties for centering text
         for key, cell in table.get_celld().items():
@@ -857,8 +861,8 @@ class SimulationAnimator(Observer):
                     cell_color = self.state_colors.get(HealthState[cell_value], "white") if cell_value else "white"
                     table[row_num, col_num].set_facecolor(cell_color)
                     table[row_num, col_num].get_text().set_text(cell_value)
-            label.set_text(f"Time Step: {i}")
-            return table, label
+            text_box.set_text(f"Time Step: {i+1}")
+            return table, text_box
 
         anim = animation.FuncAnimation(fig, animate, frames=len(cell_states), interval=1000, repeat=False, blit=True)
         plt.show()
@@ -878,11 +882,12 @@ class MatplotlibAnimator(Observer):
         self.cell_y_coords = [individual.location[1] for individual in self.subject.agent_list]
 
         sns.set_style("whitegrid")
+        deep_colors = sns.color_palette("deep")
         self.state_colors = {
-            HealthState.HEALTHY: "green",
-            HealthState.INFECTED: "orange",
-            HealthState.ZOMBIE: "red",
-            HealthState.DEAD: "black",
+            HealthState.HEALTHY: deep_colors[0],
+            HealthState.INFECTED: deep_colors[1],
+            HealthState.ZOMBIE: deep_colors[2],
+            HealthState.DEAD: deep_colors[3],
         }
         self.cmap = colors.ListedColormap(list(self.state_colors.values()))
         self.state_handles = [patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()]
@@ -903,6 +908,7 @@ class MatplotlibAnimator(Observer):
         counts = [self.cell_states.count(state) for state in list(HealthState)]
         self.bars = self.ax.bar(np.array(HealthState.value_list()), counts, tick_label=HealthState.name_list(), 
                                 label=HealthState.name_list(), color=[self.state_colors[state] for state in HealthState])
+        self.text_box = self.ax.text(0.05, 0.95, "", transform=self.ax.transAxes)
         self.ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.draw()
 
@@ -915,6 +921,7 @@ class MatplotlibAnimator(Observer):
     def setup_initial_scatter_state(self):
         self.scatter = self.ax.scatter(self.cell_x_coords, self.cell_y_coords, 
                                     c=self.cell_states_value, cmap=self.cmap)
+        self.text_box = self.ax.text(0.05, 0.95, "", transform=self.ax.transAxes)
         self.ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.draw()
         
@@ -931,8 +938,8 @@ class MatplotlibAnimator(Observer):
         for j, individual in enumerate(self.subject.agent_list):
             cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
 
-        self.table = self.ax.table(cellText=np.array(cell_states), loc="center", 
-                                bbox=Bbox.from_bounds(0.0, 0.0, 1.0, 1.0))
+        self.table = self.ax.table(cellText=np.array(cell_states), loc="center", bbox=Bbox.from_bounds(0.0, 0.0, 1.0, 1.0))
+        self.text_box = self.ax.text(0.05, 0.95, "", transform=self.ax.transAxes)
 
         # Adjust cell properties for centering text
         for key, cell in self.table.get_celld().items():
@@ -969,12 +976,14 @@ class MatplotlibAnimator(Observer):
         counts = [self.cell_states.count(state) for state in HealthState]
         for bar, count in zip(self.bars, counts):
             bar.set_height(count)
+        self.text_box.set_text(f"Time Step: {self.subject.timestep}")
         plt.draw()
         plt.pause(0.5)
 
     def update_scatter_plot(self):
         self.scatter.set_offsets(np.c_[self.cell_x_coords, self.cell_y_coords])
         self.scatter.set_array(np.array(self.cell_states_value))
+        self.text_box.set_text(f"Time Step: {self.subject.timestep}")
         plt.draw()
         plt.pause(0.5)
 
@@ -989,6 +998,7 @@ class MatplotlibAnimator(Observer):
             color = self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white"
             self.table[i, j].set_facecolor(color)
             self.table[i, j].get_text().set_text(cell_state)
+        self.text_box.set_text(f"Time Step: {self.subject.timestep}")
         plt.draw()
         plt.pause(0.5)
 
