@@ -14,7 +14,7 @@ Machine learning algorithms: You could use machine learning techniques such as r
 import heapq
 import math
 import random
-from collections import defaultdict
+from collections import defaultdict, deque
 from enum import Enum
 from queue import PriorityQueue
 
@@ -895,6 +895,58 @@ class DStarLite:
         return x, y
 
 
+class BeamSearch:
+    def __init__(self, goal_x, goal_y, beam_width=5):
+        self.goal_x = goal_x
+        self.goal_y = goal_y
+        self.beam_width = beam_width
+
+    def heuristic(self, x, y):
+        # Using Manhattan distance as heuristic
+        return abs(x - self.goal_x) + abs(y - self.goal_y)
+
+    def find_neighbors(self, grid, x, y):
+        directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        neighbors = []
+        for dx, dy in directions:
+            nx, ny = x + dx, y + dy
+            if grid.is_valid_move(nx, ny):
+                neighbors.append((nx, ny))
+        return neighbors
+
+    def find_path(self, start_pos, grid):
+        open_list = deque([start_pos])
+        visited = set([start_pos])
+        paths = {start_pos: [start_pos]}  # Initialize paths dictionary
+
+        while open_list:
+            # Expand the current level in the search tree
+            current_level = []
+            for _ in range(len(open_list)):
+                current = open_list.popleft()
+                for neighbor in self.find_neighbors(grid, *current):
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        current_path = paths[current] + [neighbor]
+                        paths[neighbor] = current_path  # Update paths dictionary
+                        current_level.append((self.heuristic(*neighbor), neighbor, current_path))
+                        if neighbor == (self.goal_x, self.goal_y):
+                            return current_path
+
+            # Keep only the top beam_width nodes for the next level
+            current_level.sort()
+            for _, node, _ in current_level[:self.beam_width]:
+                open_list.append(node)
+
+        return []  # Return an empty path if the goal is not reached
+
+    def move(self, x, y, grid):
+        path = self.find_path((x, y), grid)
+        if len(path) > 1:
+            return path[1]
+        return x, y
+
+
 class Particle:
     def __init__(self, x, y, grid):
         self.x = x
@@ -1090,12 +1142,13 @@ agents = [
     #Agent(start_x, start_y, JPS(goal_x, goal_y)),
     #Agent(start_x, start_y, DFS(goal_x, goal_y)),
     #Agent(start_x, start_y, DStarLite(goal_x, goal_y)),
+    Agent(start_x, start_y, BeamSearch(goal_x, goal_y)),
     #Agent(start_x, start_y, PSO(goal_x, goal_y)),
 ]
 
 # Run the simulation
-#simulation = Simulation(grid, agents, goal_x, goal_y)
-#simulation.run()
+simulation = Simulation(grid, agents, goal_x, goal_y)
+simulation.run()
 
 
 
@@ -1139,12 +1192,11 @@ def run_pathfinding_comparison(grid_size, algorithms, num_runs):
     return average_times
 
 # Example usage
-algorithms = [AStar, BidirectionalAStar, ThetaStar, MemoryEfficientAStar, JPS, DFS, DStarLite]
-grid_size = 99  # Size of the grid
-num_runs = 1  # Number of runs for each algorithm
-
-average_times = run_pathfinding_comparison(grid_size, algorithms, num_runs)
-print(average_times)
+# algorithms = [AStar, BidirectionalAStar, ThetaStar, MemoryEfficientAStar, JPS, DFS, DStarLite]
+# grid_size = 99  # Size of the grid
+# num_runs = 1  # Number of runs for each algorithm
+# average_times = run_pathfinding_comparison(grid_size, algorithms, num_runs)
+# print(average_times)
 
 """
 1 random grids of size 99
@@ -1458,4 +1510,33 @@ Hybrid A*
 CHOMP: Covariant Hamiltonian Optimization for Motion Planning
 TrajOpt: Motion Planning with Sequential ConvexOptimization and Convex Collision Checking
 Artificial Potential Field
+"""
+
+"""
+# Beam search, a heuristic search algorithm, offers robust applications in a zombie apocalypse simulation, enhancing the depth and complexity of the scenario. Here's an integrated and detailed look at how beam search can be employed across different aspects of such a simulation:
+# 1. **Pathfinding and Navigation**:
+#    - **For Survivors**: Beam search calculates the safest and most efficient paths for survivors to reach destinations like safe zones and resource caches. It evaluates multiple potential paths simultaneously, considering factors such as the shortest distance, zombie density, proximity to resources, and terrain challenges.
+#    - **For Zombies**: The algorithm simulates intelligent movement patterns for zombies, determining paths that maximize encounters with survivors and spread of infection. Factors like noise, light, and recent survivor activity are considered, enhancing the unpredictability and threat posed by zombies.
+# 2. **Resource Optimization**:
+#    - Beam search assists in making critical decisions regarding resource allocation and optimization. It explores different strategies for distributing scarce resources like food, water, weapons, and medical supplies among survivors. The algorithm weighs the urgency of needs, health status, and long-term sustainability, helping to choose the best locations for scavenging and the most efficient use of available resources.
+# 3. **Survivors' Group Formation**:
+#    - The algorithm aids in forming survivor groups by analyzing various factors such as skills, compatibility, trust, and survivability. It explores different combinations of individuals and their potential synergies, helping to create teams that maximize the chances of survival, success in scavenging missions, base building, or confrontations with zombies.
+# 4. **Decision-making and Strategy**:
+#    - Beam search plays a crucial role in evaluating different options and potential outcomes for critical decisions. This includes choosing the best locations for establishing safe zones, selecting optimal defense strategies, and planning rescue operations. It helps survivors make informed decisions that increase their survival chances, considering a range of possible choices and their consequences.
+# 5. **Zombie Movement and Spread Patterns**:
+#    - The algorithm can predict the spread of the zombie outbreak across the map by analyzing human movement patterns, geographical barriers, and environmental factors. This helps create dynamic scenarios where the level of threat changes over time, making the simulation more realistic and challenging.
+# 6. **Escape Route Optimization**:
+#    - In high-risk situations where quick evacuation is necessary, beam search evaluates multiple escape routes. It considers factors like safety, distance, and the probability of encountering zombies, aiding survivors trapped in dangerous areas to make swift and strategic escape decisions.
+# 7. **Long-Term Survival Planning**:
+#    - Beam search assists in planning for the sustainable growth and development of survivor communities. It explores scenarios for choosing settlement locations, resource cultivation strategies, and establishing defensive structures, considering long-term factors such as resource availability, potential threats, and population dynamics.
+# By integrating beam search in these detailed applications, a zombie apocalypse simulation becomes highly dynamic and realistically challenging. The algorithm's capability to quickly sift through numerous possibilities and identify promising options is particularly valuable in the unpredictable and high-stakes context of a zombie apocalypse. This approach not only enriches the gameplay or theoretical modeling experience but also provides deep insights into survival strategies and decision-making under extreme conditions.
+
+# Beam Stack Search: Beam stack search combines beam search with depth-first search (DFS). It maintains a stack of active search paths (beams) instead of a single beam. It starts by expanding the beam in a depth-first manner, while also keeping track of the best states found so far. This variant allows for deeper exploration of the search space while still benefiting from the pruning capabilities of beam search. It is an anytime algorithm that can find sub-optimal solutions quickly and gradually converge to an optimal solution. This allows for faster identification of good solutions compared to pure depth-first search, while also exploring a wider range of possibilities than beam search alone. Use beam stack search when you want to balance the benefits of depth-first search and beam search. It is useful when you need to explore the search space more deeply while still benefiting from the pruning capabilities of beam search. Beam stack search is an anytime algorithm that can quickly find sub-optimal solutions and gradually converge to an optimal solution.
+# Depth-First Beam Search: Depth-first beam search is another combination of beam search and depth-first search. It uses a stack to maintain a beam of active search paths, similar to beam stack search. However, instead of expanding all beams at each level simultaneously, it explores a single beam in a depth-first manner but limits the depth of the search to a specific number of steps. This approach allows for deeper exploration while retaining the memory efficiency of beam search. Choose depth-first beam search when you want to explore the search space more deeply than traditional beam search but still maintain memory efficiency. It is suitable when you have a specific limit on the depth of the search and want to prioritize depth-first exploration over breadth-first exploration.
+# Beam Search using Limited Discrepancy Backtracking (BULB): BULB is a variant of beam search that incorporates limited discrepancy search to guide the search. The limited discrepancy heuristic is a measure of how different a state is from the goal state. Limited discrepancy search tries to expand states that are close to the goal state, but also introduces controlled randomness during backtracking to explore different search paths. BULB combines beam search with limited discrepancy backtracking, allowing it to quickly find good sub-optimal solutions using beam search, and then continue searching for improved solutions until convergence to an optimal solution. BULB is suitable when you want to combine the benefits of beam search and limited discrepancy search. It is useful when you want to quickly find good sub-optimal solutions using beam search and then continue searching for improved solutions until convergence to an optimal solution. BULB is effective when you have a heuristic measure of discrepancy that can guide the search.
+# Local Beam Search: Local beam search is a variant of beam search that is often used in the context of local search algorithms. It begins by randomly generating a predetermined number of states and considers the same number of new states at each level of the search tree among all possible successors of the current states. This variant aims to reach a goal by exploring a limited number of promising states at each step. Use local beam search when you are applying beam search in the context of local search algorithms. It is useful when you want to explore a limited number of promising states at each step, potentially leading to a solution in scenarios where the search space is large.
+# Stochastic Beam Search: Stochastic beam search is a modification of local beam search that addresses the issue of getting stuck in local maxima. Instead of selecting the next beta states deterministically, stochastic beam search introduces randomness. The choice of the next beta states is made probabilistically, with the probability dependent on the heuristic evaluation of the states. This randomness allows for a more diverse exploration of the search space, potentially leading to better solutions by avoiding being trapped in local optima. Choose stochastic beam search when you want to address the issue of getting stuck in local optima. It is suitable when you want to introduce randomness to the selection of next states, allowing for more diverse exploration of the search space and potentially finding better solutions.
+# Flexible Beam Search: Flexible beam search allows the user to specify the number of states (beams) to expand at each level of the search tree. This variant is useful when the user possesses domain knowledge and wants to control the exploration of the search space accordingly. Use flexible beam search when you have domain knowledge and want to control the exploration of the search space by specifying the number of states (beams) to expand at each level. It allows for customization based on your specific requirements and understanding of the problem.
+# Recovery Beam Search: Recovery beam search enables the search algorithm to recover from errors or incorrect decisions. If the search makes a mistake, it can backtrack to a previous state and try a different path. Recovery beam search is beneficial in scenarios where the search space is vast and errors are likely to occur, allowing for more robust exploration of the search space. Choose recovery beam search when you want to build robustness into the search algorithm by allowing it to recover from errors or incorrect decisions. It is useful when the search space is vast and errors are likely to occur, enabling the algorithm to backtrack and explore alternative paths.
+# Consider the characteristics of your problem, such as the size of the search space, the trade-off between exploration and exploitation, and the availability of heuristic information. These factors will help you determine the most suitable variant of beam search for your specific application.
 """

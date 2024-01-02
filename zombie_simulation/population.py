@@ -1011,7 +1011,7 @@ class TkinterObserver(Observer):
         # Define the size of the grid and cells
         self.grid_size = grid_size
         self.cell_size = cell_size
-        self.num_cells = self.population.school.school_size
+        self.num_cells = self.population.school.size
 
         # Initialize Tkinter window
         self.root = tk.Tk()
@@ -1044,13 +1044,13 @@ class TkinterObserver(Observer):
 
             # Choose color based on the individual's state
             color = "white"
-            if individual.state == HealthState.HEALTHY:
+            if individual.health_state == HealthState.HEALTHY:
                 color = "green"
-            elif individual.state == HealthState.INFECTED:
+            elif individual.health_state == HealthState.INFECTED:
                 color = "yellow"
-            elif individual.state == HealthState.ZOMBIE:
+            elif individual.health_state == HealthState.ZOMBIE:
                 color = "red"
-            elif individual.state == HealthState.DEAD:
+            elif individual.health_state == HealthState.DEAD:
                 color = "gray"
 
             self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="black")
@@ -1065,7 +1065,7 @@ class TkinterObserver(Observer):
         self.root.mainloop()
 
 
-class PopulationObserver(Observer):
+class PredictionObserver(Observer):
     def __init__(self, population: Population) -> None:
         self.subject = population
         self.subject.attach_observer(self)
@@ -1143,7 +1143,7 @@ def main():
     # simulation_animator = SimulationAnimator(school_sim)
     # matplotlib_animator = MatplotlibAnimator(school_sim, mode="bar") # "bar" or "scatter" or "table"
     tkinter_observer = TkinterObserver(school_sim)
-    # population_observer = PopulationObserver(school_sim)
+    # prediction_observer = PredictionObserver(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
@@ -1157,7 +1157,7 @@ def main():
     # simulation_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
     # matplotlib_animator.display_observation()
     tkinter_observer.display_observation()
-    # population_observer.display_observation()
+    # prediction_observer.display_observation()
 
 
 

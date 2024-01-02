@@ -1,1168 +1,1009 @@
-"""
-To implement a simulation of a person's activity during a zombie apocalypse at school, we would need to define several classes and functions to represent the different elements of the simulation.
-
-First, we would need a Person class to represent each person in the simulation. This class would have attributes to track the person's location, state (alive, undead, or escaped), health, and any weapons or supplies they may have. It would also have methods to move the person on the grid and interact with other people and zombies.
-
-Next, we would need a Zombie class to represent each zombie in the simulation. This class would have similar attributes and methods as the Person class, but would also include additional attributes and methods to simulate the behavior of a zombie (such as attacking living people and spreading the infection).
-
-We would also need a School class to represent the layout of the school and track the locations of people and zombies on the grid. This class would have a two-dimensional array to represent the grid, with each cell containing a Person or Zombie object, or None if the cell is empty. The School class would also have methods to move people and zombies on the grid and update their states based on the rules of the simulation.
-
-Finally, we would need a main simulate function that would set up the initial conditions of the simulation (such as the layout of the school, the number and distribution of people and zombies, and any weapons or supplies), and then run the simulation for a specified number of steps. This function would use the School class to move people and zombies on the grid and update their states, and could also include additional code to track and display the progress of the simulation.
-"""
 
 from __future__ import annotations
 
 import math
 import random
-import time
-import tkinter as tk
 from abc import ABC, abstractmethod
-from collections import Counter
-from copy import deepcopy
-from dataclasses import dataclass
-from enum import Enum, auto
-from functools import cached_property
-from itertools import product
-from typing import Any, Optional
-
-import matplotlib.pyplot as plt
-import numpy as np
-import seaborn as sns
-from keras import layers, models
-from matplotlib import animation, colors, patches
-from matplotlib.table import Table
-from matplotlib.transforms import Bbox
-from scipy import stats
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
+from dataclasses import dataclass, field
+from typing import Any, Callable, NamedTuple, Optional, Protocol, Union
 
 
-class HealthState(Enum):
+class Position(NamedTuple):
+    x: int
+    y: int
 
-    HEALTHY = auto()
-    INFECTED = auto()
-    ZOMBIE = auto()
-    DEAD = auto()
+    def __add__(self, other: tuple[int, int]) -> 'Position':
+        return Position(self.x + other[0], self.y + other[1])
 
-    @classmethod
-    def name_list(cls) -> list[str]:
-        return [enm.name for enm in HealthState]
+    def __sub__(self, other: tuple[int, int]) -> 'Position':
+        return Position(self.x - other[0], self.y - other[1])
 
-    @classmethod
-    def value_list(cls) -> list[int]:
-        return [enm.value for enm in HealthState]
-
-
-# state pattern
-
-class StateMachine(ABC):
-    _instance = None
-
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
-
-    @abstractmethod
-    def update_state(self, individual: Individual, severity: float) -> None:
-        pass
-
-    def is_infected(self, individual: Individual, severity: float, randomness=random.random()) -> bool:
-        infection_probability = 1 / (1 + math.exp(-severity))
-        if any(other.health_state == HealthState.ZOMBIE for other in individual.connections):
-            if randomness < infection_probability:
-                return True
-        return False
-
-    def is_turned(self, individual: Individual, severity: float, randomness=random.random()) -> bool:
-        turning_probability = individual.infection_severity
-        if randomness < turning_probability:
-            return True
-        return False
-
-    def is_died(self, individual: Individual, severity: float, randomness=random.random()) -> bool:
-        death_probability = severity
-        if any(other.health_state == HealthState.HEALTHY or other.health_state == HealthState.INFECTED for other in individual.connections):
-            if randomness < death_probability:
-                return True
-        return False
-
-# can add methods that change behaviour based on the state
-
-class HealthyStateMachine(StateMachine):
-    def update_state(self, individual: Individual, severity: float) -> None:
-        if self.is_infected(individual, severity):
-            individual.health_state = HealthState.INFECTED
-
-class InfectedStateMachine(StateMachine):
-    def update_state(self, individual: Individual, severity: float) -> None:
-        individual.infection_severity = round(min(1, individual.infection_severity + 0.1), 1)
-        if self.is_turned(individual, severity):
-            individual.health_state = HealthState.ZOMBIE
-        elif self.is_died(individual, severity):
-            individual.health_state = HealthState.DEAD
-
-class ZombieStateMachine(StateMachine):
-    def update_state(self, individual: Individual, severity: float) -> None:
-        if self.is_died(individual, severity):
-            individual.health_state = HealthState.DEAD
-
-class DeadStateMachine(StateMachine):
-    def update_state(self, individual: Individual, severity: float) -> None:
-        pass
-
-class StateMachineFactory:
-    @staticmethod
-    def get_instance():
-        return {
-            HealthState.HEALTHY: HealthyStateMachine(),
-            HealthState.INFECTED: InfectedStateMachine(),
-            HealthState.ZOMBIE: ZombieStateMachine(),
-            HealthState.DEAD: DeadStateMachine()
-        }
-
-    @staticmethod
-    def update_state(individual: Individual, severity: float) -> None:
-        state_machines = StateMachineFactory.get_instance()
-        state_machine = state_machines[individual.health_state]
-        state_machine.update_state(individual, severity)
-
-
-# Strategy pattern
-
-
-class MovementStrategy(ABC):
-
-    individual: Any[Individual]
-    legal_directions: list[tuple[int, int]]
-    neighbors: list[Individual]
-
-    @abstractmethod
-    def choose_direction(self, individual, school):
-        raise NotImplementedError
-
-
-@dataclass
-# if no neighbors, choose random direction
-class RandomMovementStrategy(MovementStrategy):
-
-    individual: Any[Individual]
-    legal_directions: list[tuple[int, int]]
-    neighbors: list[Individual]
-
-    def choose_direction(self):
-        return random.choice(self.legal_directions)
+    def __radd__(self, other: tuple[int, int]) -> 'Position':
+        return Position(other[0] + self.x, other[1] + self.y)
     
-@dataclass
-# simulate Brownian motion
-class BrownianMovementStrategy(MovementStrategy):
+    def __rsub__(self, other: tuple[int, int]) -> 'Position':
+        return Position(other[0] - self.x, other[1] - self.y)
 
-    individual: Any[Individual]
-    legal_directions: list[tuple[int, int]]
-    neighbors: list[Individual]
+class Agent(ABC):
+    
+    @abstractmethod
+    def __init__(self, id: int, position: Position, health: int, strength: int, armour: int, speed: int):
+        self.id = id
+        self.position = position
+        self.health = health
+        self.strength = strength
+        self.armour = armour
+        self.speed = speed
+
+    def move(self, direction: tuple[int, int]):
+        self.position = Position(self.position.x+direction[0], 
+                                self.position.y+direction[1])
+    
+    def distance_to_agent(self, other_agent: Agent) -> int:
+        x1, y1 = self.position
+        x2, y2 = other_agent.position
+        distance = math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+        return int(distance)
+
+    def take_damage(self, damage: Union[int, float]):
+        self.health -= damage
+    
+    @abstractmethod
+    def take_turn(self, possible_weapons, closest_enemy):
+        pass
+    
+    @abstractmethod
+    def random_move(self):
+        pass
+    
+    @abstractmethod
+    def attack(self, enemy):
+        pass
+    
+    def __str__(self) -> str:
+        info = f"{self.__class__.__name__}\n"
+        for var in vars(self):
+            info += f"{var}: {getattr(self, var)}\n"
+        return info
+    
+    def __repr__(self) -> str:
+        return "{classname}({variables})".format(classname=self.__class__.__name__, variables=", ".join([str(getattr(self, var)) for var in vars(self)]))
+
+class AgentManager(ABC):
+    
+    def __init__(self):
+        self.agents = []
+
+    def add_agent(self, agent: Agent) -> None:
+        self.agents.append(agent)
+    
+    def remove_agent(self, agent: Agent) -> None:
+        self.agents.remove(agent)
+
+    def get_agents_in_range(self, agent: Agent, range: float):
+        agents_in_range = []
+        for other_agent in self.agents:
+            distance = agent.distance_to_agent(other_agent)
+            if distance <= range:
+                agents_in_range.append((distance, other_agent))
+        agents_in_range.sort(key=lambda x: x[0])
+        return agents_in_range
+
+    def connect_agents(self, agent: Any[Agent], all_agents: list[Agent]):
+        # Connect an agent to the list of agents.
+        agent.connections.extend(all_agents)
+
+    def add_connections_in_range(self, agent: Any[Agent], range: float) -> None:
+        # Add connections to all agents within a certain range of a given agent.
+        _, agents_in_range = self.get_agents_in_range(agent, range)
+        self.connect_agents(agent, agents_in_range)
+
+        # zombie may continue following a human even if other humans are closer
+
+# Define the HumanProtocol
+class HumanProtocol(Protocol):
+    intelligence: int
+    inventory: dict[str, Union['Weapon', 'PowerUp']]
+    weapon: Union['Weapon', None]
+    connections: list[Agent]
+
+    @abstractmethod
+    def scavenge(self, possible_weapons: list['Weapon']):
+        """Method for scavenging weapons or supplies."""
+        pass
+
+    @abstractmethod
+    def use_item(self, item: Union['Weapon', 'PowerUp']):
+        """Method for using an item from the inventory."""
+        pass
+
+    @abstractmethod
+    def attack(self, zombie: 'Zombie'):
+        """Method for attacking a zombie."""
+        pass
+
+# Define the ZombieProtocol
+class ZombieProtocol(Protocol):
+    connections: list[Agent]
+
+    @abstractmethod
+    def attack(self, human: 'Human'):
+        """Method for attacking a human."""
+        pass
+
+class Human(Agent, HumanProtocol):
+    def __init__(self, id: int, position: Position, health: int, strength: int, armour: int, speed: int, intelligence: int, weapon: Union[Weapon, None]=None):
+        super().__init__(id, position, health, strength, armour, speed)
+        self.intelligence = intelligence
+        self.inventory = {}
+        self.weapon = weapon
+        self.connections = []
+        
+    @property
+    def health(self):
+        return self._health
+    
+    @health.setter
+    def health(self, value):
+        self._health = value
+        if self._health <= 0:
+            print(f"Human {self.id} has died!")
+            apocalypse.human_manager.remove_agent(self)
+            zombie = Zombie(len(apocalypse.zombie_manager.zombies), Position(self.position.x, self.position.y), 100, 10, 0, 1)
+            apocalypse.zombie_manager.add_agent(zombie)
+            
+    @property
+    def defense(self):
+        return self.armour*random.uniform(0.5, 1.5)
+    
+    def move(self, direction):
+        return super().move(direction)
+        
+    def distance_to_agent(self, other_agent: Agent) -> int:
+        return super().distance_to_agent(other_agent)
+
+    def take_damage(self, damage: Union[int, float]):
+        return super().take_damage(max(0, damage - self.armour))
+        
+    def take_turn(self, possible_weapons, closest_enemy):
+        if closest_enemy is not None:
+            self.attack(closest_enemy)
+            # No zombies in range, so scavenge for supplies or move to a new position
+        elif self.health < 50 or self.weapon is None or \
+                any(weapon.damage > self.weapon.damage for weapon in possible_weapons):
+                self.scavenge(possible_weapons)
+        else:
+            self.random_move()
+            
+    def random_move(self):
+        dx = random.choice([-1, 0, 1])
+        dy = random.choice([-1, 0, 1])
+        new_position = self.position + (dx, dy)
+        new_x = max(0, min(new_position.x, apocalypse.grid.width - 1))
+        new_y = max(0, min(new_position.y, apocalypse.grid.height - 1))
+        self.move((new_x, new_y))
+
+    def attack(self, zombie):
+        # Calculate the damage dealt to the zombie
+        damage = self.strength*random.uniform(0.5, 1.5)
+        damage += self.weapon.damage if self.weapon is not None else 0
+        # Deal the damage to the zombie
+        zombie.take_damage(damage)
+
+    def scavenge(self, possible_weapons):
+        # Roll a dice to determine if the human finds any supplies
+        if random.random() < 0.5:
+            # Human has found some supplies
+            supplies = PowerUp(self.position, 10, 0, 0, 0, 0)
+            self.inventory['supplies'] = supplies
+        # Roll a dice to determine if the human finds a new weapon
+        if random.random() < 0.2:
+            # Human has found a new weapon
+            new_weapon = random.choice(possible_weapons)
+            if self.weapon is None or (new_weapon.damage * new_weapon.range > self.weapon.damage * self.weapon.range):
+                self.weapon = new_weapon
+
+    def use_item(self, item):
+        if item in self.inventory and isinstance(item, PowerUp):
+            self.health += item.health
+            self.strength += item.strength
+            self.armour += item.armour
+            self.speed += item.speed
+            self.intelligence += item.intelligence
+            self.inventory.pop(item)
+        else:
+            print(f"Item {item} not in inventory")
+
+
+# Manage all humans in the apocalypse
+class HumanManager(AgentManager):
+    
+    def __init__(self):
+        super().__init__()
+        self.humans = []
+        
+    def add_agent(self, human):
+        self.agents.append(human)
+        self.humans.append(human)
+        
+    def remove_agent(self, human):
+        self.agents.remove(human)
+        self.humans.remove(human)
+        
+    def get_agents_in_range(self, agent: Agent, range: float):
+        return super().get_agents_in_range(agent, range)
+
+    def get_enemies_in_attack_range(self, agent: Human):
+        attack_range = math.sqrt(2) + (agent.weapon.range if agent.weapon else 0)
+        agents_in_range = super().get_agents_in_range(agent, attack_range)
+        enemies_in_range = [(distance, enemy) for distance, enemy in agents_in_range if isinstance(enemy, Zombie)]
+        return enemies_in_range
+    
+    def get_closest_zombie(self, agent: Human):
+        enemies = self.get_enemies_in_attack_range(agent)
+        if len(enemies) == 0:
+            return None
+        closest_enemy = enemies[0]
+        return closest_enemy
+        
+    def trade_with(self, agent1, agent2):
+        if agent1.weapon and agent2.weapon:
+            # agent with worse weapon give some health to agent with better weapon to trade
+            if agent1.weapon < agent2.weapon and agent1.health > agent2.weapon.damage:
+                agent1.weapon, agent2.weapon = agent2.weapon, agent1.weapon
+                agent1.health -= agent1.weapon.damage
+                agent2.health += agent1.weapon.damage
+            elif agent1.weapon > agent2.weapon and agent1.health < agent2.weapon.damage:
+                agent1.weapon, agent2.weapon = agent2.weapon, agent1.weapon
+                agent2.health -= agent2.weapon.damage
+                agent1.health += agent2.weapon.damage
+            else:
+                # if the weapons are the same, trade health
+                if agent1.health > agent2.health:
+                    agent1.health -= agent2.health
+                    agent2.health += agent2.health
+                else:
+                    agent2.health -= agent1.health
+                    agent1.health += agent1.health
+
+    def print_human_info(self):
+        print("Humans:")
+        for human in self.humans:
+            print(f"Human {human.id}: health={human.health}, position={human.position}, weapon={human.weapon}")
+
+
+class Zombie(Agent, ZombieProtocol):
+
+    def __init__(self, id: int, position: Position, health: int, strength: int, armour: int, speed: int):
+        super().__init__(id, position, health, strength, armour, speed)
+        self.connections = []
+
+    @property
+    def health(self):
+        return self._health
+    
+    @health.setter
+    def health(self, value):
+        self._health = value
+        # Check if the zombie has been killed
+        if self.health <= 0:
+            # Remove the zombie from the list of zombies
+            apocalypse.zombie_manager.remove_agent(self)
+
+    @property
+    def defense(self):
+        return self.armour*random.uniform(0.5, 1.5)
+    
+    def move(self, direction):
+        return super().move(direction)
+        
+    def distance_to_agent(self, other_agent: Agent) -> int:
+        return super().distance_to_agent(other_agent)
+        
+    def take_damage(self, damage: Union[int, float]):
+        return super().take_damage(max(0, damage - self.armour))
+
+    def take_turn(self, closest_human):
+        # If there are any humans in range, attack the closest one
+        if closest_human is not None:
+            if random.random() < 0.5:
+                self.attack(closest_human)
+            else:
+                self.random_move()
+    
+    def random_move(self):
+        dx = random.choice([-1, 0, 1])
+        dy = random.choice([-1, 0, 1])
+        new_position = self.position + (dx, dy)
+        new_x = max(0, min(new_position.x, apocalypse.grid.width - 1))
+        new_y = max(0, min(new_position.y, apocalypse.grid.height - 1))
+        self.move((new_x, new_y))
+
+    def attack(self, human):
+        damage = self.strength*random.uniform(0.5, 1.5)
+        # Deal 10 damage to the human
+        human.take_damage(damage)
+
+# Manage all zombies in the apocalypse
+class ZombieManager(AgentManager):
+
+    def __init__(self):
+        super().__init__()
+        self.zombies = []
+
+    def add_agent(self, zombie):
+        self.agents.append(zombie)
+        self.zombies.append(zombie)
+
+    def remove_agent(self, zombie):
+        self.agents.remove(zombie)
+        self.zombies.remove(zombie)
+
+    def get_enemies_in_attack_range(self, agent: Zombie):
+        attack_range = math.sqrt(2)  # Assuming zombies have a fixed attack range
+        agents_in_range = super().get_agents_in_range(agent, attack_range)
+        enemies_in_range = [(distance, enemy) for distance, enemy in agents_in_range if isinstance(enemy, Human)]
+        return enemies_in_range
+    
+    def get_closest_human(self, agent: Zombie):
+        enemies = self.get_enemies_in_attack_range(agent)
+        if len(enemies) == 0:
+            return None
+        closest_enemy = enemies[0][1]  # Getting the human agent from the tuple
+        return closest_enemy
+    
+    def print_zombie_info(self):
+        print("Zombies:")
+        for zombie in self.zombies:
+            print(f"Zombie {zombie.id}: health={zombie.health}, position={zombie.position}")
+    
+# dataclass for weapon that can be used by a human
+@dataclass(order=True, frozen=True) # slots=True
+class Weapon:
+
+    trading_value: int = field(init=False, repr=False) # the value of the weapon in trading function
+    name: str
+    damage: int = 0
+    range: int = 0
     
     def __post_init__(self):
-        self.damping_coefficient = 0.5
-        self.std_dev = 1
-        self.scale_factor = math.sqrt(2 * self.damping_coefficient)*self.std_dev
+        object.__setattr__(self, "trading_value", self.damage * self.range)
+    
+    def __str__(self):
+        return f"Weapon {self.name}: {self.damage} damage, {self.range} range"
 
-    def choose_direction(self):
-        while True:
-            direction = np.rint(np.random.normal(loc=0, scale=self.scale_factor, size=2)).astype(int)
-            if tuple(direction) in self.legal_directions:
-                return direction
+@dataclass(order=True, frozen=True) # slots=True
+class PowerUp:
+    
+    position: tuple[int, int]
+    health: int
+    strength: int
+    armour: int
+    speed: int
+    intelligence: int
+    
+    def __str__(self):
+        return f"PowerUp at {self.position}: health={self.health}, strength={self.strength}, armour={self.armour}, speed={self.speed}, intelligence={self.intelligence}"
 
+# Builder Class
+class AgentBuilder:
+    def __init__(self, agent_constructor):
+        self.agent_constructor = agent_constructor
+        self.params = {}
+
+    def set_id(self, id: int):
+        self.params['id'] = id
+        return self
+
+    def set_position(self, position: Position):
+        self.params['position'] = position
+        return self
+
+    def set_health(self, health: int):
+        self.params['health'] = health
+        return self
+
+    def set_strength(self, strength: int):
+        self.params['strength'] = strength
+        return self
+
+    def set_armour(self, armour: int):
+        self.params['armour'] = armour
+        return self
+
+    def set_speed(self, speed: int):
+        self.params['speed'] = speed
+        return self
+
+    def set_intelligence(self, intelligence: int):
+        self.params['intelligence'] = intelligence
+        return self
+
+    def set_weapon(self, weapon: Optional[Weapon]):
+        self.params['weapon'] = weapon
+        return self
+
+    def build(self):
+        agent = self.agent_constructor(**self.params)
+        self.params = {}
+        return agent
+
+
+# Abstract Factory Class using Builder
+class AbstractAgentFactory(ABC):
+    @abstractmethod
+    def create_agent(self, builder: AgentBuilder, **kwargs) -> Agent:
+        raise NotImplementedError()
+
+
+# Concrete Factory for Humans
+class HumanFactory(AbstractAgentFactory):
+    id_counter = 0
+
+    def create_agent(self, **kwargs) -> Human:
+        HumanFactory.id_counter += 1  # Increment the ID counter
+        builder = AgentBuilder(Human)
+        return builder.set_id(HumanFactory.id_counter) \
+                      .set_position(kwargs.get("position", Position(0, 0))) \
+                      .set_health(kwargs.get("health", 100)) \
+                      .set_strength(kwargs.get("strength", 10)) \
+                      .set_armour(kwargs.get("armour", 5)) \
+                      .set_speed(kwargs.get("speed", 1)) \
+                      .set_intelligence(kwargs.get("intelligence", 10)) \
+                      .set_weapon(kwargs.get("weapon", None)) \
+                      .build()
+
+# Concrete Factory for Zombies
+class ZombieFactory(AbstractAgentFactory):
+    id_counter = 0
+
+    def create_agent(self, **kwargs) -> Zombie:
+        ZombieFactory.id_counter += 1  # Increment the ID counter
+        builder = AgentBuilder(Zombie)
+        return builder.set_id(ZombieFactory.id_counter) \
+                      .set_position(kwargs.get("position", Position(0, 0))) \
+                      .set_health(kwargs.get("health", 100)) \
+                      .set_strength(kwargs.get("strength", 10)) \
+                      .set_armour(kwargs.get("armour", 5)) \
+                      .set_speed(kwargs.get("speed", 1)) \
+                      .build()
+
+
+
+# Factory method Pattern
+class AgentFactory:
+    
+    def __init__(self):
+        self.character_creation_funcs: dict[str, Callable[..., AbstractAgentFactory]] = {}
+
+    def register_character(self, character_type: str, creator_fn: Callable[..., AbstractAgentFactory]) -> None:
+        """Register a new game character type."""
+        self.character_creation_funcs[character_type] = creator_fn
+
+    def unregister_character(self, character_type: str) -> None:
+        """Unregister a game character type."""
+        self.character_creation_funcs.pop(character_type, None)
+
+    def produce(self, character_type: str, arguments: dict[str, Any]) -> Agent:
+        """Create a game character of a specific type."""
+        try:
+            creator_func = self.character_creation_funcs[character_type]
+        except KeyError:
+            raise ValueError(f"unknown character type {character_type!r}") from None
+        return creator_func.create_agent(arguments)
+
+
+# Dataclass for Grid Cell
 @dataclass
-# if healthy or other having no alive neighbors
-class FleeZombiesStrategy(MovementStrategy):
+class Cell:
+    content: Union[Human, Zombie, Weapon, PowerUp, None]
 
-    individual: Any[Individual]
-    legal_directions: list[tuple[int, int]]
-    neighbors: list[Individual]
-
-    def choose_direction(self):
-        zombies_locations = [zombies.location for zombies in self.neighbors if zombies.health_state == HealthState.ZOMBIE]
-        return self.direction_against_closest(self.individual, self.legal_directions, zombies_locations)
-
-    # find the closest zombie and move away from it
-    def direction_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
-        distances = [np.linalg.norm(np.subtract(np.array(individual.location), np.array(target))) for target in target_locations]
-        closest_index = np.argmin(distances)
-        closest_target = target_locations[closest_index]
-        direction_distances = [np.linalg.norm(np.add(d, np.array(individual.location)) - closest_target) for d in np.array(legal_directions)]
-        max_distance = np.max(direction_distances)
-        farthest_directions = np.where(direction_distances == max_distance)[0]
-        return legal_directions[random.choice(farthest_directions)]
-
-@dataclass
-# if zombie or other having no zombie neighbors
-class ChaseHumansStrategy(MovementStrategy):
-
-    individual: Any[Individual]
-    legal_directions: list[tuple[int, int]]
-    neighbors: list[Individual]
-
-    def choose_direction(self):
-        alive_locations = [alive.location for alive in self.neighbors if alive.health_state == HealthState.HEALTHY]
-        return self.direction_towards_closest(self.individual, self.legal_directions, alive_locations)
-
-    # find the closest human and move towards it
-    def direction_towards_closest(self, individual: Individual,legal_directions: list[tuple[int, int]],target_locations: list[tuple[int, int]],) -> tuple[int, int]:
-        current_location = np.array(individual.location)
-        new_locations = current_location + np.array(legal_directions)
-        distance_matrix = np.linalg.norm(new_locations[:, np.newaxis, :] - np.array(target_locations)[np.newaxis, :, :], axis=2)
-        min_distance = np.min(distance_matrix[distance_matrix != 0])
-        min_directions = np.where(distance_matrix == min_distance)[0]
-        return legal_directions[random.choice(min_directions)]
-
-    # If the closest person is closer than the closest zombie, move towards the person, otherwise move away from the zombie
-    # or move away from zombie is the priority and move towards person is the secondary priority
-
-
-@dataclass
-class NoMovementStrategy(MovementStrategy):
-
-    individual: Any[Individual]
-    legal_directions: list[tuple[int, int]]
-    neighbors: list[Individual]
-
-    def choose_direction(self):
-        return (0, 0)
-
-
-# may use init to store individual and school
-# may use function, use closure to store individual and school
-
-
-class MovementStrategyFactory:
-    def create_strategy(self, individual, school):
-        # get legal directions
-        legal_directions = school.get_legal_directions(individual)
-        # early exit
-        if not legal_directions:
-            return NoMovementStrategy(individual, legal_directions, [])
-        # get neighbors
-        neighbors = school.get_neighbors(individual.location, individual.sight_range)
-        # early exit
-        # if no neighbors, random movement
-        if not neighbors:
-            return RandomMovementStrategy(individual, legal_directions, neighbors)
-        # get number of human and zombies neighbors
-        alive_number = len([alive for alive in neighbors if alive.health_state == HealthState.HEALTHY])
-        zombies_number = len([zombies for zombies in neighbors if zombies.health_state == HealthState.ZOMBIE])
-        # if no human neighbors, move away from the closest zombies
-        if alive_number == 0 and zombies_number > 0:
-            return FleeZombiesStrategy(individual, legal_directions, neighbors)
-        # if no zombies neighbors, move towards the closest human
-        elif zombies_number == 0 and alive_number > 0:
-            return ChaseHumansStrategy(individual, legal_directions, neighbors)
-        # if both human and zombies neighbors, zombies move towards the closest human and human move away from the closest zombies
-        else:
-            if individual.health_state == HealthState.ZOMBIE and alive_number > 0:
-                return ChaseHumansStrategy(individual, legal_directions, neighbors)
-            elif (individual.health_state == HealthState.HEALTHY or individual.health_state == HealthState.INFECTED) and zombies_number > 0:
-                return FleeZombiesStrategy(individual, legal_directions, neighbors)
-            elif individual.health_state == HealthState.DEAD:
-                return NoMovementStrategy(individual, legal_directions, neighbors)
-            else:
-                return BrownianMovementStrategy(individual, legal_directions, neighbors)
-
-    # may consider update the grid according to the individual's location
-    # after assigning all new locations to the individuals
-    # may add a extra attribute to store new location
-
-
-class Individual:
-
-    __slots__ = ("id","state","location","connections","infection_severity","interact_range","__dict__",)
-
-    def __init__(self,id: int, health_state: HealthState, location: tuple[int, int],) -> None:
-        self.id: int = id
-        self.health_state: HealthState = health_state
-        self.location: tuple[int, int] = location
-        self.connections: list[Individual] = []
-        self.infection_severity: float = 0.0
-        self.interact_range: int = 2
-
-        # different range for different states
-        # may use random distribution
-
-    @cached_property
-    def sight_range(self) -> int:
-        return self.interact_range + 3
-
-    # fluent interface
-    def add_connection(self, other: Individual) -> None:
-        self.connections.append(other)
-
-    def move(self, direction: tuple[int, int]) -> None:
-        dx, dy = direction
-        x, y = self.location
-        self.location = (x + dx, y + dy)
-
-    def choose_direction(self, movement_strategy) -> tuple[int, int]:
-        return movement_strategy.choose_direction()
-
-    def update_state(self, severity: float) -> None:
-        StateMachineFactory.update_state(self, severity)
-
-    def get_info(self) -> str:
-        return f"Individual {self.id} is {self.health_state.name} and is located at {self.location}, having connections with {self.connections}, infection severity {self.infection_severity}, interact range {self.interact_range}, and sight range {self.sight_range}."
+class Grid:
+    def __init__(self, width: int, height: int):
+        self.width = width
+        self.height = height
+        self.grid = [[Cell(None) for _ in range(width)] for _ in range(height)]
 
     def __str__(self) -> str:
-        return f"Individual {self.id}"
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.id}, {self.health_state.value}, {self.location})"
-
-
-# separate inheritance for human and zombie class
-
-
-class School:
-
-    __slots__ = ("size", "grid", "strategy_factory", "__dict__",)
-
-    def __init__(self, size: int) -> None:
-        self.size = size
-        # Create a 2D grid representing the school with each cell can contain a Individual object
-        self.grid: np.ndarray = np.full((size, size), None, dtype=object)
-        self.strategy_factory = MovementStrategyFactory()
-
-        # may turn to width and height
-        # may put Cell class in the grid where Cell class has individual attributes and rates
-
-    def add_individual(self, individual: Individual) -> None:
-        self.grid[int(individual.location[0])][int(
-            individual.location[1])] = individual
-
-    def get_individual(self, location: tuple[int, int]) -> Optional[Individual]:
-        return self.grid[location[0]][location[1]]
-
-    def remove_individual(self, location: tuple[int, int]) -> None:
-        self.grid[location[0]][location[1]] = None
-
-    # may change the add\remove function to accept individual class as well as location
-
-    def update_connections(self) -> None:
+        grid_representation = ""
         for row in self.grid:
             for cell in row:
-                if cell is None:
-                    continue
-                neighbors = self.get_neighbors((cell.location), cell.interact_range)
-                for neighbor in neighbors:
-                    cell.add_connection(neighbor)
+                if cell.content is None:
+                    grid_representation += " . "
+                elif isinstance(cell.content, Human):
+                    grid_representation += " H "
+                elif isinstance(cell.content, Zombie):
+                    grid_representation += " Z "
+                else:
+                    grid_representation += " ? "
+            grid_representation += "\n"
+        return grid_representation
 
-    def update_individual_location(self, individual: Individual) -> None:
-        movement_strategy = self.strategy_factory.create_strategy(individual, self)
-        direction = individual.choose_direction(movement_strategy)
-        self.move_individual(individual, direction)
+    def get_human(self, position: Position) -> Union[Human, None]:
+        cell = self.grid[position.x][position.y]
+        return cell.content if isinstance(cell.content, Human) else None
 
-    # update the grid in the population based on their interactions with other people
-    def update_grid(self, population: list[Individual], migration_probability: float, randomness=random.random()) -> None:
-        for individuals in population:
-            cell = self.get_individual(individuals.location)
+    def get_zombie(self, position: Position) -> Union[Zombie, None]:
+        cell = self.grid[position.x][position.y]
+        return cell.content if isinstance(cell.content, Zombie) else None
 
-            if cell is None or cell.health_state == HealthState.DEAD:
-                continue
+    def get_item(self, position: Position) -> Union[Weapon, PowerUp, None]:
+        cell = self.grid[position.x][position.y]
+        return cell.content if isinstance(cell.content, (Weapon, PowerUp)) else None
 
-            if randomness < migration_probability:
-                self.update_individual_location(cell)
+    def place_object(self, position: Position, obj: Union[Human, Zombie, Weapon, PowerUp, None]):
+        self.grid[position.x][position.y].content = obj
 
-                # if right next to then don't move
-                # get neighbors with larger and larger range until there is a human
-                # sight range is different from interact range
+    def remove_object(self, position: Position):
+        self.grid[position.x][position.y].content = None
 
-    def get_neighbors(self, location: tuple[int, int], interact_range: int = 2):
-        x, y = location
-        x_range = range(max(0, x - interact_range), min(self.size, x + interact_range + 1))
-        y_range = range(max(0, y - interact_range), min(self.size, y + interact_range + 1))
+    def is_empty(self, position: Position) -> bool:
+        return self.grid[position.x][position.y].content is None
+
+    def print_map(self):
+        print(self.__str__())
+
+
+# Template method pattern
+class Game(ABC):
+
+        # template method pattern
+        @abstractmethod
+        def __init__(self, grid, agentfactory):
+            self.grid = grid
+            self.agentfactory = agentfactory
+            self.agents = []
         
-        neighbors = filter(
-            lambda pos: (pos[0] != x or pos[1] != y) and self.within_distance(self.grid[x][y], self.grid[pos[0]][pos[1]], interact_range),
-            product(x_range, y_range)
-        )
+        @abstractmethod
+        def simulate(self, agent_count, num_turns):
+            self.initialize(agent_count)
+            self.run(num_turns)
+            self.grid.print_map()
+        
+        @abstractmethod
+        def create_agent(self, **kwargs):
+            return self.agentfactory.produce(**kwargs)
+        
+        @abstractmethod
+        def initialize(self, agent_count):
+            for _ in range(agent_count):
+                self.agents.append(self.create_agent())
+                self.grid.append(self.create_agent())
+        
+        @abstractmethod
+        def run(self, num_turns):
+            for _ in range(num_turns):
+                for agent in self.agents:
+                    agent.take_turn()
+                if self.end_condition():
+                    break
+        
+        @abstractmethod
+        def end_condition(self, **kwargs):
+            return len(self.agents) == 0
 
-        return [self.grid[i][j] for i, j in neighbors]
+# a zombie apocalypse and manages the humans and zombies
+class ZombieApocalypse(Game):
 
-    def within_distance(self, individual1: Optional[Individual], individual2: Optional[Individual], interact_range: int):
-        if individual1 is None or individual2 is None:
-            return False
-        # check if the two individuals are within a certain distance of each other
-        distance = self.distance(individual1.location, individual2.location)
-        return distance < interact_range
-
-    def distance(self, location1: tuple[int, int], location2: tuple[int, int]) -> float:
-        # get the distance between two individuals
-        distance = float(np.linalg.norm(np.subtract(location1, location2)))
-        return distance
-
-    def get_legal_directions(self, individual: Individual) -> list[tuple[int, int]]:
-        # get all possible legal moves for the individual
-        legal_directions = [
-            (i, j) for i in range(-1, 2) for j in range(-1, 2)
-            if (i == 0 and j == 0)
-            or self.legal_location((individual.location[0] + i, individual.location[1] + j))
+    def __init__(self):
+        self.human_manager = HumanManager() # the human manager instance to manage the humans
+        self.zombie_manager = ZombieManager() # the zombie manager instance to manage the zombies
+        self.factory = AgentFactory()
+        self.possible_weapons = [
+            Weapon("Baseball Bat", 20, 2),
+            Weapon("Pistol", 30, 5),
+            Weapon("Rifle", 40, 8),
+            Weapon("Molotov Cocktail", 50, 3),
         ]
-        return legal_directions
-
-    def legal_location(self, location: tuple[int, int]) -> bool:
-        return self.in_bounds(location) and self.not_occupied(location)
-
-    def in_bounds(self, location: tuple[int, int]) -> bool:
-        # check if the location is in the grid
-        return (0 <= location[0] < self.size and 0 <= location[1] < self.size)
-
-    def not_occupied(self, location: tuple[int, int]) -> bool:
-        # check if the location is empty
-        return self.grid[location[0]][location[1]] is None
-
-    # return any(agent.position == (x, y) for agent in self.agents)
-
-    def move_individual(self, individual: Individual, direction: tuple[int, int]) -> None:
-        old_location = individual.location
-        individual.move(direction)
-        self.remove_individual(old_location)
-        self.add_individual(individual)
-
-    def get_info(self) -> str:
-        return "\n".join(
-            " ".join(str(individual.health_state.value) if individual else " " for individual in column)
-            for column in self.grid
-            )
-
-    # return the count inside the grid
     
-    def __str__(self) -> str:
-        return f"School({self.size})"
-
-    def __repr__(self) -> str:
-        return "%s(%d,%d)" % (self.__class__.__name__, self.size)
-
-
-class Population:
-    def __init__(self, school_size: int, population_size: int) -> None:
-        self.school: School = School(school_size)
-        self.agent_list: list[Individual] = []
-        self.severity: float = 0.0
-        self.init_population(school_size, population_size)
-        self.update_population_metrics()
-        self.observers = []
-
-    def add_individual(self, individual: Individual) -> None:
-        self.agent_list.append(individual)
-        self.school.add_individual(individual)
-
-    def remove_individual(self, individual: Individual) -> None:
-        self.agent_list.remove(individual)
-        self.school.remove_individual(individual.location)
-
-    def create_individual(self, id: int, school_size: int) -> Individual:
-        state = random.choices(list(HealthState), weights=[0.7, 0.1, 0.2, 0.0])[0]
-        available_locations = [(i, j) for i in range(school_size) for j in range(school_size) if self.school.legal_location((i, j))]
-        location = random.choice(available_locations)
-        return Individual(id, state, location)
-
-    def init_population(self, school_size: int, population_size: int) -> None:
-        for i in range(population_size):
-            individual = self.create_individual(i, school_size)
-            self.add_individual(individual)
-
-    def clear_population(self) -> None:
-        self.agent_list.clear()
-        self.school.grid = np.full((self.school.size, self.school.size), None, dtype=object)
-
-    # a method to init using a grid of "A", "I", "Z", "D"
-
-    def run_population(self, num_time_steps: int) -> None:
-        for time in range(num_time_steps):
-            self.timestep = time + 1
-            print("Time step: ", self.timestep)
-            self.severity = time / num_time_steps
-            print("Severity: ", self.severity)
-            self.school.update_grid(self.agent_list, self.migration_probability)
-            print("Updated Grid")
-            self.school.update_connections()
-            print("Updated Connections")
-            self.update_individual_states()
-            print("Updated State")
-            self.update_population_metrics()
-            print("Updated Population Metrics")
-            individual_info = self.get_all_individual_info()
-            print(individual_info)
-            print("Got Individual Info")
-            school_info = self.school.get_info()
-            print(school_info)
-            print("Got School Info")
-            self.notify_observers()
-            print("Notified Observers")
-        self.clear_population()
-
-    def update_individual_states(self) -> None:
-        for individual in self.agent_list:
-            individual.update_state(self.severity)
-            if individual.health_state == HealthState.DEAD:
-                self.school.remove_individual(individual.location)
-
-    def update_population_metrics(self) -> None:
-        self.calculate_state_counts()
-        self.calculate_probabilities()
-
-    def calculate_state_counts(self) -> None:
-        state_counts = Counter([individual.health_state for individual in self.agent_list])
-        self.num_healthy = state_counts[HealthState.HEALTHY]
-        self.num_infected = state_counts[HealthState.INFECTED]
-        self.num_zombie = state_counts[HealthState.ZOMBIE]
-        self.num_dead = state_counts[HealthState.DEAD]
-        self.population_size = self.num_healthy + self.num_infected + self.num_zombie
+    def add_human(self, human):
+        self.grid.place_object(human.position, human)
+        self.human_manager.add_agent(human)
         
-    def calculate_probabilities(self) -> None:
-        self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity))) # logistic function
-        self.turning_probability = self.severity / (1 + self.severity) # softplus function
-        self.death_probability = self.severity  # linear function
-        self.migration_probability = self.population_size / (self.population_size + 1)
+    def remove_human(self, agent):
+        self.grid.remove_object(agent.position)
+        self.human_manager.remove_agent(agent)
+        
+    def add_zombie(self, zombie):
+        self.grid.place_object(zombie.position, zombie)
+        self.zombie_manager.add_agent(zombie)
+        
+    def remove_zombie(self, zombie):
+        self.grid.remove_object(zombie.position)
+        self.zombie_manager.remove_agent(zombie)
+        
+    def add_item(self, item):
+        self.grid.place_object(item.position, item)
+        
+    def remove_item(self, item):
+        self.grid.remove_object(item.position)
+    
+    def simulate(self, num_zombies, num_humans, school_size, num_turns):
+        # Simulates the game.
+        self.initialize(num_zombies, num_humans, school_size)
+        self.run(num_turns)
+        self.human_manager.print_human_info()
+        self.zombie_manager.print_zombie_info()
+        self.grid.print_map()
+    
+    # separate the creation and the use for humans and zombies
+    def create_agent(self, school_size: int, type: str) -> Agent:
+        arguments = {
+            "position": Position(random.randint(0, school_size-1), random.randint(0, school_size-1))
+        }
+        return self.factory.produce(type, arguments)
+        
+    # ensure legal position
+    # factory pattern for weapons
+    # factory pattern for map
+        
+    def initialize(self, num_zombies, num_humans, school_size):
+        # a 2D list representing the map, with None representing a empty cell and a human or zombie representing a cell occupied by human or zombie
+        self.grid = Grid(school_size, school_size)
+        # Initializes the humans and zombies in the map
+        self.factory.register_character("human", HumanFactory)
+        self.factory.register_character("zombie", ZombieFactory)
+        for i in range(num_humans):
+            self.human_manager.add_agent(self.create_agent(school_size, "human"))
+        for i in range(num_zombies):
+            self.zombie_manager.add_agent(self.create_agent(school_size, "zombie"))
+    
+    # initialise weapon and map
+    
+    def run(self, num_turns):
+        # while number of humans > 0 and number of zombies > 0
+        for i in range(num_turns):
+            print(f"Turn {i+1}")
+            # Simulates a turn in the zombie apocalypse
+            # Zombies take their turn
+            for zombie in self.zombie_manager.zombies:
+                closest_human = self.zombie_manager.get_closest_human(zombie)
+                zombie.take_turn(closest_human)
+            # Humans take their turn
+            for human in self.human_manager.humans:
+                closest_zombie = self.human_manager.get_closest_zombie(human)
+                human.take_turn(self.possible_weapons, closest_zombie)
+            # End the turn by removing dead humans and zombies from the map.
+            for human in self.human_manager.humans:
+                if human.health <= 0:
+                    self.grid.remove_object(human.position)
+                    self.human_manager.humans.remove(human)
+            for zombie in self.zombie_manager.zombies:
+                if zombie.health <= 0:
+                    self.grid.remove_object(zombie.position)
+                    self.zombie_manager.zombies.remove(zombie)
+            # End the game if there are no more humans or zombies.
+            if self.end_condition():
+                break
 
-        # may use other metrics or functions to calculate the probability of infection, turning, death, migration
-
-    def get_all_individual_info(self) -> str:
-        return f"Population of size {self.population_size}\n" + \
-            "\n".join(individual.get_info() for individual in self.agent_list)
-
-    def attach_observer(self, observer: Observer) -> None:
-        self.observers.append(observer)
-
-    def notify_observers(self) -> None:
-        for observer in self.observers:
-            observer.update()
-
-    def __str__(self) -> str:
-        return f"Population with {self.num_healthy} healthy, {self.num_infected} infected, and {self.num_zombie} zombie individuals"
-
-    def __repr__(self) -> str:
-        return f"Population({self.school.size}, {self.population_size})"
-
-
-# Observer Pattern
-
-class Observer(ABC):
-    @abstractmethod
-    def __init__(self) -> None:
+    # move agent to a new position only if the new position is empty
+    
+    def escape(self, agent):
+        # define a escape position for the humans to win
         pass
-
-    @abstractmethod
-    def update(self) -> None:
-        pass
-
-    @abstractmethod
-    def display_observation(self) -> None:
-        pass
-
-
-class SimulationObserver(Observer):
-    def __init__(self, population: Population) -> None:
-        self.subject = population
-        self.subject.attach_observer(self)
-        self.statistics = []
-        self.grid = self.subject.school.grid
-        self.agent_list = self.subject.agent_list
-
-        sns.set_style("whitegrid")
-        deep_colors = sns.color_palette("deep")
-        self.state_colors = {
-            HealthState.HEALTHY: deep_colors[0],  # Adjusted to use seaborn deep color palette
-            HealthState.INFECTED: deep_colors[1],
-            HealthState.ZOMBIE: deep_colors[2],
-            HealthState.DEAD: deep_colors[3],
-        }
-        self.cmap = colors.ListedColormap(list(self.state_colors.values()))
-        self.state_handles = [patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()]
-
-    def update(self) -> None:
-        statistics =  {
-            "num_healthy": self.subject.num_healthy,
-            "num_infected": self.subject.num_infected,
-            "num_zombie": self.subject.num_zombie,
-            "num_dead": self.subject.num_dead,
-            "population_size": self.subject.population_size,
-            "infection_probability": self.subject.infection_probability,
-            "turning_probability": self.subject.turning_probability,
-            "death_probability": self.subject.death_probability,
-            "migration_probability": self.subject.migration_probability,
-        }
-        self.statistics.append(deepcopy(statistics))
-        self.grid = deepcopy(self.subject.school.grid)
-        self.agent_list = deepcopy(self.subject.agent_list)
-        
-
-    def display_observation(self, format="statistics"):
-        if format == "statistics":
-            self.print_statistics_text()
-        elif format == "grid":
-            self.print_grid_text()
-        elif format == "bar":
-            self.print_bar_graph()
-        elif format == "scatter":
-            self.print_scatter_graph()
-        elif format == "table":
-            self.print_table_graph()
-
-    def print_statistics_text(self):
-        population_size = self.statistics[-1]["population_size"]
-        num_healthy = self.statistics[-1]["num_healthy"]
-        num_infected = self.statistics[-1]["num_infected"]
-        num_zombie = self.statistics[-1]["num_zombie"]
-        num_dead = self.statistics[-1]["num_dead"]
-        healthy_percentage = num_healthy / (population_size + 1e-10)
-        infected_percentage = num_infected / (population_size + 1e-10)
-        zombie_percentage = num_zombie / (population_size + 1e-10)
-        dead_percentage = num_dead / (population_size + 1e-10)
-        infected_rate = num_infected / (num_healthy + 1e-10)
-        turning_rate = num_zombie / (num_infected + 1e-10)
-        death_rate = num_dead / (num_zombie + 1e-10)
-        infection_probability = self.statistics[-1]["infection_probability"]
-        turning_probability = self.statistics[-1]["turning_probability"]
-        death_probability = self.statistics[-1]["death_probability"]
-        migration_probability = self.statistics[-1]["migration_probability"]
-        print("Population Statistics:")
-        print(f"Population Size: {population_size}")
-        print(f"Healthy: {num_healthy} ({healthy_percentage:.2%})")
-        print(f"Infected: {num_infected} ({infected_percentage:.2%})")
-        print(f"Zombie: {num_zombie} ({zombie_percentage:.2%})")
-        print(f"Dead: {num_dead} ({dead_percentage:.2%})")
-        print(f"Infection Probability: {infection_probability:.2%} -> Infected Rate: {infected_rate:.2%}")
-        print(f"Turning Probability: {turning_probability:.2%} -> Turning Rate: {turning_rate:.2%}")
-        print(f"Death Probability: {death_probability:.2%} -> Death Rate: {death_rate:.2%}")
-        print(f"Migration Probability: {migration_probability:.2%}")
-        
-        # The mean can be used to calculate the average number of zombies that appear in a specific area over time. This can be useful for predicting the rate of zombie infection and determining the necessary resources needed to survive.
-        mean = np.mean([d["num_zombie"] for d in self.statistics])
-        # The median can be used to determine the middle value in a set of data. In a zombie apocalypse simulation, the median can be used to determine the number of days it takes for a specific area to become overrun with zombies.
-        median = np.median([d["num_zombie"] for d in self.statistics])
-        # The mode can be used to determine the most common value in a set of data. In a zombie apocalypse simulation, the mode can be used to determine the most common type of zombie encountered or the most effective weapon to use against them.
-        mode = stats.mode([d["num_zombie"] for d in self.statistics], keepdims=True)[0][0]
-        # The standard deviation can be used to determine how spread out a set of data is. In a zombie apocalypse simulation, the standard deviation can be used to determine the level of unpredictability in zombie behavior or the effectiveness of certain survival strategies.
-        std = np.std([d["num_zombie"] for d in self.statistics])
-        print(f"Mean of Number of Zombie: {mean}")
-        print(f"Median of Number of Zombie: {median}")
-        print(f"Mode of Number of Zombie: {mode}")
-        print(f"Standard Deviation of Number of Zombie: {std}")
-        print()
-
-    """
-    # may format the output in the subject and print it directly here
     
-    def print_text_statistics(self):
-        print("Population Statistics:")
-        for key, value in self.statistics.items():
-            print(f"{key}: {value}")
-            
-    # subject notify method push info to update method of observer
-    # but the subject don't know what info observer want to display
-    # or let observer pull info from subject using get method of subject
-    # but observer need to get info from subject one by one
-    """
-    
-    def print_grid_text(self):
-        print("Print School:")
-        state_symbols = {
-            None: " ",
-            HealthState.HEALTHY: "H",
-            HealthState.INFECTED: "I",
-            HealthState.ZOMBIE: "Z",
-            HealthState.DEAD: "D",
-        }
-
-        for row in self.grid:
-            for cell in row:
-                try:
-                    print(state_symbols[cell.health_state], end=" ")
-                except AttributeError:
-                    print(state_symbols[cell], end=" ")
-            print()
-        print()
-
-
-    def print_bar_graph(self):
-        fig, ax = plt.subplots(1, 1, figsize=(7, 7), constrained_layout=True)
-        ax.set_title("Bar Chart")
-        ax.set_ylim(0, self.statistics[0]["population_size"] + 1)
-
-        # Use common state_colors
-        cell_states = [individual.health_state for individual in self.agent_list]
-        counts = {state: cell_states.count(state) for state in HealthState}
-        ax.bar(
-            np.asarray(HealthState.value_list()),
-            list(counts.values()),
-            tick_label=HealthState.name_list(),
-            label=HealthState.name_list(),
-            color=[self.state_colors[state] for state in HealthState]
-        )
-
-        ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.show()
-
-    def print_scatter_graph(self):
-        fig, ax = plt.subplots(1, 1, figsize=(7, 7), constrained_layout=True)
-        ax.set_title("Scatter Chart")
-        ax.set_xlim(-1, self.subject.school.size + 1)
-        ax.set_ylim(-1, self.subject.school.size + 1)
-
-        x = np.array([individual.location[0] for individual in self.agent_list])
-        y = np.array([individual.location[1] for individual in self.agent_list])
-        cell_states_value = np.array([individual.health_state.value for individual in self.agent_list])
-
-        # Use common cmap
-        ax.scatter(x, y, c=cell_states_value, cmap=self.cmap)
-
-        ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.show()
-
-    def print_table_graph(self):
-        fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
-        ax.set_title("Table Chart")
-        ax.set_xlim(-1, len(self.grid)+1)
-        ax.set_ylim(-1, len(self.grid)+1)
-        ax.axis('off')
-
-        # Initialize table with common state_colors
-        cell_states = [["" for _ in range(len(self.grid[0]))] for _ in range(len(self.grid))]
-        for j, individual in enumerate(self.agent_list):
-            cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
-
-        table = ax.table(cellText=np.array(cell_states), loc="center", bbox=Bbox.from_bounds(0, 0, 1, 1))
-
-        # Adjust cell properties using common state_colors
-        for key, cell in table.get_celld().items():
-            cell_state = cell_states[key[0]][key[1]]
-            cell.set_facecolor(self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white")
-            cell.get_text().set_text(cell_state)
-            cell.set_height(1 / len(cell_states[0]))
-            cell.set_width(1 / len(cell_states[0]))
-            cell.get_text().set_horizontalalignment('center')
-            cell.get_text().set_verticalalignment('center')
-        plt.show()
-
-
-class SimulationAnimator(Observer):
-    def __init__(self, population: Population) -> None:
-        self.subject = population
-        self.subject.attach_observer(self)
-        self.agent_history = []
-
-        sns.set_style("whitegrid")
-        deep_colors = sns.color_palette("deep")
-        self.state_colors = {
-            HealthState.HEALTHY: deep_colors[0],
-            HealthState.INFECTED: deep_colors[1],
-            HealthState.ZOMBIE: deep_colors[2],
-            HealthState.DEAD: deep_colors[3],
-        }
-        self.cmap = colors.ListedColormap(list(self.state_colors.values()))
-        self.state_handles = [patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()]
-
-    def update(self) -> None:
-        self.agent_history.append(deepcopy(self.subject.agent_list))
-
-    def display_observation(self, format="bar"):
-        if format == "bar":
-            self.print_bar_animation()
-        elif format == "scatter":
-            self.print_scatter_animation()
-        elif format == "table":
-            self.print_table_animation()
-
-    def print_bar_animation(self):
-        counts = []
-        for agent_list in self.agent_history:
-            cell_states = [individual.health_state for individual in agent_list]
-            counts.append([cell_states.count(state) for state in HealthState])
-
-        self.bar_chart_animation(np.array(HealthState.value_list()), np.array(counts), HealthState.name_list())
-
-    def bar_chart_animation(self, x, y, ticks):
-        fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
-        ax.set_title("Bar Chart Animation")
-        ax.set_ylim(0, max(map(max, y)) + 1)
-
-        bars = ax.bar(x, y[0], tick_label=ticks, label=HealthState.name_list(), color=self.state_colors.values())
-        text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
-
-        def update(i):
-            for j, bar in enumerate(bars):
-                bar.set_height(y[i][j])
-            text_box.set_text(f"Time Step: {i+1}")
-
-        anim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000, repeat=False)
-        plt.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.show()
-
-    def print_scatter_animation(self):
-        x = [[individual.location[0] for individual in agent_list] for agent_list in self.agent_history]
-        y = [[individual.location[1] for individual in agent_list] for agent_list in self.agent_history]
-        cell_states_value = [[individual.health_state.value for individual in agent_list] for agent_list in self.agent_history]
-
-        self.scatter_chart_animation(x, y, cell_states_value)
-
-    def scatter_chart_animation(self, x, y, cell_states_value):
-        fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
-        ax.set_title("Scatter Chart Animation")
-        ax.set_xlim(-1, self.subject.school.size + 1)
-        ax.set_ylim(-1, self.subject.school.size + 1)
-
-        sc = ax.scatter(x[0], y[0], c=cell_states_value[0], cmap=self.cmap)
-        text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
-
-        def animate(i):
-            sc.set_offsets(np.c_[x[i], y[i]])
-            sc.set_array(cell_states_value[i])
-            text_box.set_text(f"Time Step: {i+1}")
-
-        anim = animation.FuncAnimation(fig, animate, frames=len(x), interval=1000, repeat=False)
-        plt.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.show()
-
-    def print_table_animation(self):
-        cell_states_name = [[individual.health_state for individual in agent_list] for agent_list in self.agent_history]
-        x = [[individual.location[0] for individual in agent_list] for agent_list in self.agent_history]
-        y = [[individual.location[1] for individual in agent_list] for agent_list in self.agent_history]
-
-        # Build the grid
-        cell_states = []
-        for i in range(len(cell_states_name)):
-            grid = [["" for _ in range(self.subject.school.size)] for _ in range(self.subject.school.size)]
-            for j, individual in enumerate(cell_states_name[i]):
-                grid[x[i][j]][y[i][j]] = individual.name
-            cell_states.append(grid)
-
-        self.table_animation(cell_states)
-
-    def table_animation(self, cell_states):
-        fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
-        ax.set_title("Table Animation")
-        ax.set_xlim(-1, len(cell_states[0])+1)
-        ax.set_ylim(-1, len(cell_states[0])+1)
-        ax.axis('off')
-
-        # Initialize table
-        table = ax.table(cellText=cell_states[0], loc="center", bbox=Bbox.from_bounds(0, 0, 1, 1))
-        text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
-
-        # Adjust cell properties for centering text
-        for key, cell in table.get_celld().items():
-            cell.set_height(1 / len(cell_states[0]))
-            cell.set_width(1 / len(cell_states[0]))
-            cell.get_text().set_horizontalalignment('center')
-            cell.get_text().set_verticalalignment('center')
-
-        def animate(i):
-            for row_num, row in enumerate(cell_states[i]):
-                for col_num, cell_value in enumerate(row):
-                    cell_color = self.state_colors.get(HealthState[cell_value], "white") if cell_value else "white"
-                    table[row_num, col_num].set_facecolor(cell_color)
-                    table[row_num, col_num].get_text().set_text(cell_value)
-            text_box.set_text(f"Time Step: {i+1}")
-            return table, text_box
-
-        anim = animation.FuncAnimation(fig, animate, frames=len(cell_states), interval=1000, repeat=False, blit=True)
-        plt.show()
-
-class MatplotlibAnimator(Observer):
-    def __init__(self, population: Population, mode: str = "scatter"):
-        """Initialize the animator."""
-        self.subject = population
-        self.subject.attach_observer(self)
-        self.mode = mode  # "bar" or "scatter" or "table"
-        
-        self.fig, self.ax = plt.subplots(1, 1, figsize=(7, 7),  constrained_layout=True)
-
-        self.cell_states = [individual.health_state for individual in self.subject.agent_list]
-        self.cell_states_value = [state.value for state in self.cell_states]
-        self.cell_x_coords = [individual.location[0] for individual in self.subject.agent_list]
-        self.cell_y_coords = [individual.location[1] for individual in self.subject.agent_list]
-
-        sns.set_style("whitegrid")
-        deep_colors = sns.color_palette("deep")
-        self.state_colors = {
-            HealthState.HEALTHY: deep_colors[0],
-            HealthState.INFECTED: deep_colors[1],
-            HealthState.ZOMBIE: deep_colors[2],
-            HealthState.DEAD: deep_colors[3],
-        }
-        self.cmap = colors.ListedColormap(list(self.state_colors.values()))
-        self.state_handles = [patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()]
-
-        if self.mode == "bar":
-            self.setup_bar_chart()
-        elif self.mode == "scatter":
-            self.setup_scatter_plot()
-        elif self.mode == "table":
-            self.setup_table()
-
-    def setup_bar_chart(self):
-        self.ax.set_title("Bar Chart Matplotlib Animation")
-        self.ax.set_ylim(0, len(self.subject.agent_list) + 1)
-        self.setup_initial_bar_state()
-
-    def setup_initial_bar_state(self):
-        counts = [self.cell_states.count(state) for state in list(HealthState)]
-        self.bars = self.ax.bar(np.array(HealthState.value_list()), counts, tick_label=HealthState.name_list(), 
-                                label=HealthState.name_list(), color=[self.state_colors[state] for state in HealthState])
-        self.text_box = self.ax.text(0.05, 0.95, "", transform=self.ax.transAxes)
-        self.ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.draw()
-
-    def setup_scatter_plot(self):
-        self.ax.set_title("Scatter Chart Matplotlib Animation")
-        self.ax.set_xlim(-1, self.subject.school.size + 1)
-        self.ax.set_ylim(-1, self.subject.school.size + 1)
-        self.setup_initial_scatter_state()
-
-    def setup_initial_scatter_state(self):
-        self.scatter = self.ax.scatter(self.cell_x_coords, self.cell_y_coords, 
-                                    c=self.cell_states_value, cmap=self.cmap)
-        self.text_box = self.ax.text(0.05, 0.95, "", transform=self.ax.transAxes)
-        self.ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.draw()
-        
-    def setup_table(self):
-        self.ax.set_title("Table Matplotlib Animation")
-        self.ax.set_xlim(-1, self.subject.school.size + 1)
-        self.ax.set_ylim(-1, self.subject.school.size + 1)
-        self.ax.axis('off')
-        self.setup_initial_table_state()
-
-    def setup_initial_table_state(self):
-        cell_states = [["" for _ in range(self.subject.school.size)] 
-                    for _ in range(self.subject.school.size)]
-        for j, individual in enumerate(self.subject.agent_list):
-            cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
-
-        self.table = self.ax.table(cellText=np.array(cell_states), loc="center", bbox=Bbox.from_bounds(0.0, 0.0, 1.0, 1.0))
-        self.text_box = self.ax.text(0.05, 0.95, "", transform=self.ax.transAxes)
-
-        # Adjust cell properties for centering text
-        for key, cell in self.table.get_celld().items():
-            cell.set_height(1 / len(cell_states[0]))
-            cell.set_width(1 / len(cell_states[0]))
-            cell.get_text().set_horizontalalignment('center')
-            cell.get_text().set_verticalalignment('center')
-
-        for i in range(self.subject.school.size):
-            for j in range(self.subject.school.size):
-                cell_state = cell_states[i][j]
-                color = self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white"
-                self.table[i, j].set_facecolor(color)
-                self.table[i, j].get_text().set_text(cell_state)
-        plt.draw()
-
-    def display_observation(self):
-        plt.show()
-
-    def update(self) -> None:
-        self.cell_states = [individual.health_state for individual in self.subject.agent_list]
-        self.cell_states_value = [state.value for state in self.cell_states]
-        self.cell_x_coords = [individual.location[0] for individual in self.subject.agent_list]
-        self.cell_y_coords = [individual.location[1] for individual in self.subject.agent_list]
-        
-        if self.mode == "bar":
-            self.update_bar_chart()
-        elif self.mode == "scatter":
-            self.update_scatter_plot()
-        elif self.mode == "table":
-            self.update_table()
-
-    def update_bar_chart(self):
-        counts = [self.cell_states.count(state) for state in HealthState]
-        for bar, count in zip(self.bars, counts):
-            bar.set_height(count)
-        self.text_box.set_text(f"Time Step: {self.subject.timestep}")
-        plt.draw()
-        plt.pause(0.5)
-
-    def update_scatter_plot(self):
-        self.scatter.set_offsets(np.c_[self.cell_x_coords, self.cell_y_coords])
-        self.scatter.set_array(np.array(self.cell_states_value))
-        self.text_box.set_text(f"Time Step: {self.subject.timestep}")
-        plt.draw()
-        plt.pause(0.5)
-
-    def update_table(self):
-        cell_states = [["" for _ in range(self.subject.school.size)] 
-                    for _ in range(self.subject.school.size)]
-        for j, individual in enumerate(self.subject.agent_list):
-            cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
-
-        for (i, j), cell in np.ndenumerate(cell_states):
-            cell_state = cell_states[i][j]
-            color = self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white"
-            self.table[i, j].set_facecolor(color)
-            self.table[i, j].get_text().set_text(cell_state)
-        self.text_box.set_text(f"Time Step: {self.subject.timestep}")
-        plt.draw()
-        plt.pause(0.5)
-
-
-class TkinterObserver(Observer):
-    def __init__(self, population, grid_size=300, cell_size=30):
-        self.population = population
-        self.population.attach_observer(self)
-
-        # Define the size of the grid and cells
-        self.grid_size = grid_size
-        self.cell_size = cell_size
-        self.num_cells = self.population.school.size
-
-        # Initialize Tkinter window
-        self.root = tk.Tk()
-        self.root.title("Zombie Apocalypse Simulation")
-
-        # Create canvas for drawing the grid
-        self.canvas = tk.Canvas(self.root, width=self.grid_size, height=self.grid_size)
-        self.canvas.pack()
-
-        # Draw the initial state of the grid
-        self.update()
-
-    def update(self):
-        # Update the canvas with the new simulation state
-        self.draw_grid()
-        self.tkinter_mainloop()
-        time.sleep(0.5)
-
-    def draw_grid(self):
-        # Clear the canvas
-        self.canvas.delete("all")
-
-        # Draw the grid based on the current state of the simulation
-        for individual in self.population.agent_list:
-            x, y = individual.location
-            x1 = x * self.cell_size
-            y1 = y * self.cell_size
-            x2 = x1 + self.cell_size
-            y2 = y1 + self.cell_size
-
-            # Choose color based on the individual's state
-            color = "white"
-            if individual.health_state == HealthState.HEALTHY:
-                color = "green"
-            elif individual.health_state == HealthState.INFECTED:
-                color = "yellow"
-            elif individual.health_state == HealthState.ZOMBIE:
-                color = "red"
-            elif individual.health_state == HealthState.DEAD:
-                color = "gray"
-
-            self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="black")
-
-    def tkinter_mainloop(self):
-        """ Run a single iteration of the Tkinter main loop. """
-        self.root.update_idletasks()
-        self.root.update()
-
-    def display_observation(self):
-        """ Display the final plot. """
-        self.root.mainloop()
-
-
-class PopulationObserver(Observer):
-    def __init__(self, population: Population) -> None:
-        self.subject = population
-        self.subject.attach_observer(self)
-        self.grid_history = []
-
-    def update(self) -> None:
-        current_grid_state = self.capture_grid_state()
-        self.grid_history.append(current_grid_state)
-
-    def capture_grid_state(self):
-        grid_state = np.zeros((self.subject.school.size, self.subject.school.size))
-        for i in range(self.subject.school.size):
-            for j in range(self.subject.school.size):
-                individual = self.subject.school.get_individual((i, j))
-                grid_state[i, j] = individual.health_state.value if individual else 0
-        return grid_state
-
-    def prepare_data(self, N):
-        X, y = [], []
-        for i in range(N, len(self.grid_history)):
-            X.append(np.array(self.grid_history[i-N:i]))
-            y.append(np.array(self.grid_history[i]))
-        return np.array(X), np.array(y)
-
-    def train_model(self):
-        N = 5
-        X, y = self.prepare_data(N)
-
-        # Reshape for ConvLSTM input
-        X = X.reshape((-1, X.shape[1], X.shape[2], X.shape[3], 1))
-        y = y.reshape((-1, y.shape[1], y.shape[2], 1))
-
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-
-        # ConvLSTM model
-        model = models.Sequential([
-            layers.ConvLSTM2D(filters=16, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=True, input_shape=X_train.shape[1:]),
-            layers.Dropout(0.2),
-            layers.LayerNormalization(),
-            layers.ConvLSTM2D(filters=32, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=False),
-            layers.Dropout(0.2),
-            layers.LayerNormalization(),
-            layers.Conv2D(filters=1, kernel_size=(3, 3), activation='linear', padding='same')
-        ])
-
-        model.compile(optimizer='adam', loss='mean_squared_error')
-        model.fit(X_train, y_train, epochs=20, validation_split=0.2)
-
-        self.model = model
-
-        # Evaluate the model
-        predictions = self.model.predict(X_test)
-        mse = mean_squared_error(y_test.reshape(y_test.shape[0], -1), predictions.reshape(predictions.shape[0], -1))
-        print(f"Model Mean Squared Error: {mse}")
-
-    def display_observation(self):
-        if getattr(self, "model", None) is None:
-            self.train_model()
-        past_grid_state = self.grid_history[-5:]
-        print(self.grid_history[-1])
-        input_data = np.array(past_grid_state).reshape((1, -1, self.subject.school.size, self.subject.school.size, 1))
-        predicted_grid_state = self.model.predict(input_data)
-        reshaped_grid_state = predicted_grid_state.reshape((self.subject.school.size, self.subject.school.size))
-        reformatted_grid_state = np.round(reshaped_grid_state, 1)
-        print(reformatted_grid_state)
-
-
-def main():
-
-    # create a SchoolZombieApocalypse object
-    school_sim = Population(school_size=10, population_size=10)
-
-    # create Observer objects
-    # simulation_observer = SimulationObserver(school_sim)
-    # simulation_animator = SimulationAnimator(school_sim)
-    # matplotlib_animator = MatplotlibAnimator(school_sim, mode="bar") # "bar" or "scatter" or "table"
-    tkinter_observer = TkinterObserver(school_sim)
-    # population_observer = PopulationObserver(school_sim)
-
-    # run the population for a given time period
-    school_sim.run_population(num_time_steps=10)
-    
-    print("Observers:")
-    # print(simulation_observer.agent_list)
-    # print(simulation_animator.agent_history[-1])
-
-    # observe the statistics of the population
-    # simulation_observer.display_observation(format="bar") # "statistics" or "grid" or "bar" or "scatter" or "table"
-    # simulation_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
-    # matplotlib_animator.display_observation()
-    tkinter_observer.display_observation()
-    # population_observer.display_observation()
-
-
-
-if __name__ == "__main__":
-    main()
-
+    def end_condition(self):
+        return len(self.human_manager.humans) == 0 or len(self.zombie_manager.zombies) == 0
+
+
+apocalypse = ZombieApocalypse()
+apocalypse.simulate(num_zombies=10, 
+                    num_humans=10, 
+                    school_size=10, 
+                    num_turns=10)
+
+
+"""
+take damage not working
+wrongly moving more than one space in each round
+most initialized at 0, 0
+use defaultdict for inventory with default value of None
+"""
+
+
+
+"""
+Immediate improvements:
+
+agent class:
+# 0's and 1's to represent the agent's genome
+# the genome can be used to determine the agent's behavior
+# state, health and size can be used to determine the agent's fitness
+# position, direction, speed, energy, infection, infection time, death
+# can be used to determine the agent's state
+
+human class:
+@cached_property
+def closest_enemy(self):
+    return min(apocalypse.zombie_manager.zombies, key=lambda x: distance(self.position, x.position))
+def choose_action(self):
+    # choose between move, attack, pick up item, use item
+    # if low health, use item
+    # elif there is enemy nearby, attack
+    # elif there is item nearby, pick up
+    # elif there is human nearby, trade
+    # elif there is enough condition, craft item
+    # else move
+    pass
+def take_turn(self):
+    action = self.choose_action(human)
+    If the action is "attack":
+        Loop through the surrounding area of the human
+    If there is a zombie in the surrounding area:
+        The human attacks the zombie
+        If the zombie's health is less than or equal to zero:
+            Remove the zombie from the list of zombies
+    If the action is "pick up":
+        Loop through the surrounding area of the human
+        If there is an item in the surrounding area:
+            The human picks up the item
+            Remove the item from the list of items
+    If the action is "use":
+        If the human's inventory is not empty:
+            The human uses an item from the inventory
+    If the action is "move":
+        The human chooses a direction to move in
+        Remove the human from the current position
+        The human moves to the new position
+        Add the human to the new position in the list of humans.
+# choosing direction can go to a separate self.choose_direction(agent) method
+# attack can go to a separate self.attack_neighbors(agent) method
+# move, then interact, then next turn
+def attack(self, target):
+    # if the target is a zombie, fight
+        # if the human is faster than the zombie, they hit first
+            # the zombie's health is reduced by the human's strength
+            # if the zombie is still alive, attack back
+                # the human's health is reduced by the zombie's strength
+                # if the human is dead, turn to zombie
+            # if the zombie is dead, die
+        # if the zombie is faster than the human, they hit first
+            # the human's health is reduced by the zombie's strength
+            # if the human is still alive, attack back
+                # the zombie's health is reduced by the human's strength
+                # if the zombie is dead, die
+            # if the human is dead, turn to zombie
+def attack_neighbors(self, agent):
+    neighbors = self.get_neighbors(agent)
+    if isinstance(agent, Human):
+        for neighbor in neighbors:
+            if isinstance(neighbor, Zombie):
+                self.attack_agent(agent, neighbor)
+    elif isinstance(agent, Zombie):
+        for neighbor in neighbors:
+            if isinstance(neighbor, Human):
+                self.attack_agent(agent, neighbor)
+scavenge(self, possible_weapons):
+# PowerUp is created randomly and found
+# not created when found
+
+human manager class:
+trade_with(self, agent1, agent2):
+# may trade weapon and armour
+# more clever conditions, based on intelligence
+# trade different items, like specific amount of food for weapon
+# craft method that takes food and turns it into item
+
+zombie class:
+@cached_property
+def closest_enemy(self):
+    return min(apocalypse.zombie_manager.zombies, key=lambda x: distance(self.position, x.position))
+def choose_action(self):
+    # choose between move, attack
+    # if there is enemy nearby, attack
+    # else move
+    pass
+def take_turn(self):
+    action = self.choose_action(zombie)
+    If the action is "attack":
+        Loop through the surrounding area of the zombie
+        If there is a human in the surrounding area:
+            The zombie attacks the human
+            If the human's health is less than or equal to zero:
+                Remove the human from the list of humans
+                Create a new zombie at the human's position
+                Add the new zombie to the list of zombies
+    If the action is "move":
+        The zombie chooses a direction to move in
+        Remove the zombie from the current position
+        The zombie moves to the new position
+        Add the zombie to the new position in the list of zombies.
+random_move(self):
+# check legal move
+"""
+"""
+filter, zip
+functools, reduce
+iterator, itertools
+https://myapollo.com.tw/zh-tw/python-itertools-more-itertools/
+pprint
+https://www.youtube.com/watch?v=96mDQrlceEk&ab_channel=Indently
+metaprogramming (register lead classes, singleton)
+https://python-3-patterns-idioms-test.readthedocs.io/en/latest/Metaprogramming.html#the-metaclass-hook
+function factory python
+https://levelup.gitconnected.com/how-to-create-callable-objects-in-python-python-oop-complete-course-part-20-15fe46e3e2c3
+Techniques for advanced functional programming using lambda functions and partial function application.
+Concurrent programming methods to optimize how your code interacts with APIs.
+Advanced control logic using iterators and generators.
+statsmodels
+"""
+
+"""
+unittest
+https://github.com/Octavio-Velazquez/P0_Basic_Calculator/blob/main/test_operations.py
+doctest
+pytest
+sys exit
+debugging
+use logging module logging.debug()/logging.info()/logging.warning()/logging.error()/logging.critical()
+https://mp.weixin.qq.com/s?__biz=MzU4OTYzNjE2OQ==&mid=2247494272&idx=1&sn=adbc9770fc995785b061ace35f5a81c2&chksm=fdc8dda6cabf54b002dddd81c15a4eb45d5236561dfa823af0c33782a499449ea03cc72d07ac&scene=21#wechat_redirect
+https://github.com/nedbat/coveragepy
+https://ithelp.ithome.com.tw/articles/10078821
+https://about.codecov.io/blog/writing-better-tests-with-ai-and-github-copilot/
+Hypothesis
+runtime type checking
+typeguard
+a debug mode that print all variables in each steps and allow user control of the agents in the map
+https://pythonforundergradengineers.com/writing-tests-for-scientific-code.html
+Cython
+https://mp.weixin.qq.com/s/M7DdUWLzqOLVR7qJFmvZdA
+subprocessing
+https://www.digitalocean.com/community/tutorials/how-to-use-subprocess-to-run-external-programs-in-python-3
+https://codereview.stackexchange.com/questions/120790/distributed-system-simulator?rq=1
+python package the project
+dependency management
+Pipenv is a direct competitor to Poetry, but I like Poetry better. Poetry is a more active project and works with the relatively new pyproject.toml file. I’m also a bit of a rebel, so having a group of Python developers who call themselves the “Python Packaging Authority” tell me to use Pipenv is a turn-off.
+On the other hand, I have used pip-tools. If you aren’t ready to jump into a dependency manager like Poetry yet, but you would like to automate tracking transitive dependencies, pip-tools is a good start. The post RIP Pipenv has great arguments for using pip-tools. I would still use pip-tools, but I grew tired of writing pip-compile. Poetry makes everything easier.
+logger decorator to specify when the function starts and ends
+repeat decorator to repeat the function multiple times
+retry decorator to retry if encounter an exception
+countcall decorator to count the number of function calls
+atexit register decorator to do something when the script is terminated
+functools singledispatch decorator for function overloading
+sonarqube
+"""
+
+# Advanced
+
+# Here's an example of how you could design a Monte Carlo simulation of a zombie apocalypse:
+# Define the population and their initial state: Start by defining the total population and their initial state, such as their location, health status (healthy or infected), and other relevant attributes. You could represent each individual in the population as an object in your simulation with properties such as location, health status, and decision-making capabilities.
+# Model the spread of the zombie virus: Next, you'll need to model the spread of the zombie virus from infected individuals to healthy ones. This could be based on factors such as the proximity of healthy individuals to infected ones, the number of zombies in the area, and the likelihood of a healthy individual being bitten or coming into contact with infected fluids.
+# Model the decision-making of survivors: You'll also need to model the decision-making of survivors as they try to evade zombies and find safety. This could be based on factors such as the proximity of safe havens, the number of zombies in the area, and the supplies they have on hand. You could use random numbers to model the uncertainty and randomness inherent in these decisions.
+# Simulate the movement of the population: Next, you'll simulate the movement of the population over time. This could involve updating the location of each individual in the simulation based on their decisions and the factors affecting their movement, such as the presence of zombies and safe havens.
+# Keep track of the state of the population: Keep track of the state of the population, including the number of healthy individuals, the number of infected individuals, and the number of fatalities. You could also keep track of other relevant metrics, such as the number of safe havens, the amount of supplies, and the distribution of the population over the landscape.
+# Run the simulation multiple times: Finally, you'll want to run the simulation multiple times, perhaps hundreds or thousands of times, to generate a range of possible scenarios. This will provide valuable insights into the range of possible outcomes and help you prepare for a wide range of contingencies.
+# Analyze the results: Once you have run the simulation multiple times, you can analyze the results to get a better understanding of the dynamics of the zombie apocalypse. For example, you could calculate statistics such as the average number of fatalities, the average number of survivors, and the average time to reach a safe haven. You could also generate graphs and visualizations to help you understand the results and identify any patterns or trends.
+
+# powerup and other resources and weapon may use same probability pickup function
+
+# use one grid for item, one grid for weapon, one grid for other resources, one grid for human, one grid for zombie
+# so that we can use 1 and 0 to represent whether there is an item or not and use numpy to do matrix operation
+# control using underlying probabilistic model
+
+# human may attack human
+
+# cure to heal zombie to human or fight off infection else immediately turn into zombie
+
+# Cellular Automata
+# Conway's Game of Life
+# fewer than 2 neighbors or more than 3 neighbors, die
+# exactly neighbors, stay the same
+# exactly 3 neighbors, become alive
+# Predator-Prey
+# surrounded by zombies, alive turn into zombie
+# surrounded by humans, zombie dies
+
+# smart weapon selection
+# own a list of weapons with different damage and attack range
+# if zombie is close, use melee weapon
+# if zombie is far, use ranged weapon
+# if zombie is far and no ranged weapon, use melee weapon
+# if zombie is close and no melee weapon, use ranged weapon
+# choose weapon according to distance and then damage
+# each weapon has a different attack method (use strategy pattern)
+
+# may move towards weapon and item inside visual range
+
+# velocity and acceleration for human and zombie
+
+# static equilibrium
+# conservation of momentum
+
+# speed controls who attacks first, if dead can't attack back
+# or not in turn-based game, attack in interval of speed time after encountering (use threading)
+
+# fire that can spread on the grid with time passing
+# increment fire time by fire speed
+# fire can hurt both human and zombie
+# fire can be extinguished by water
+
+# layout that affects the game
+# add wall class, human and zombie can't move through wall, may place barrier to create complex grid
+# add door class, only human can move through door
+# add barricade class, human may place barricade which has health and can be destroyed by huamn and zombie
+
+# show time step and health bar for human and zombie
+# Hinton diagrams to visualize the health of the agent
+
+# agents form a group and move together and attack, defend together
+
+# https://replit.com/@ShiGame/TALKING-JOAQUIN#main.py
+# https://zhuanlan.zhihu.com/p/134692590
+# https://art-python.readthedocs.io/en/latest/
+
+# A multi-objective problem related to a zombie apocalypse simulation could involve optimizing the allocation of resources to achieve several conflicting objectives simultaneously. For example, one objective could be to minimize the number of human casualties, while another objective could be to minimize the use of resources such as food, ammunition, and medical supplies.
+# Another objective could be to maximize the number of survivors, while also minimizing the risk of infection and the spread of the zombie virus. A third objective could be to maximize the effectiveness of defense mechanisms, such as barricades and traps, while minimizing the time and effort required to maintain them.
+# In this scenario, the optimization problem would involve finding a balance between these conflicting objectives and determining the optimal allocation of resources to achieve the best possible outcome under the given constraints. This type of problem is known as a multi-objective optimization problem, and it requires the use of advanced mathematical modeling techniques to generate solutions that are both feasible and efficient.
+
+# Dynamic programming is an algorithmic approach that solves a problem by breaking it down into smaller subproblems and storing the solutions to those subproblems in a table. By building up solutions to increasingly larger subproblems, dynamic programming can efficiently solve problems that would otherwise require repeated computations. In the context of a zombie apocalypse simulation, dynamic programming could be used to optimize survival strategies by breaking down the problem into smaller subproblems and building up a solution based on the optimal solutions to those subproblems. For example, one subproblem might be how to efficiently gather resources like food, water, and medicine, while another might be how to avoid or eliminate zombie threats. By solving these subproblems and storing the solutions, the simulation could optimize survival strategies for longer-term survival.
+# Dynamic programming can be used for behaviour decision making, resources management, and pathfinding. It can include factors such as the risk of encountering zombies, the availability of resources, and the physical and mental state of the survivors.
+# Recursive programming, on the other hand, is an algorithmic approach that solves a problem by calling itself with smaller instances of the problem. Recursion is useful when a problem can be broken down into smaller instances of the same problem, and the base case can be easily identified. In the context of a zombie apocalypse simulation, recursive programming could be used to simulate the spread of the zombie virus or the movement of individual zombies. For example, a recursive function could be used to simulate the spread of the virus by calling itself with smaller instances of the infection until the entire population has been infected or the spread is contained.
+# Recursive programming can be used in a zombie apocalypse simulation to model the spread of the zombie virus through a population. The recursive function would take an infected individual and then recursively call itself for each uninfected individual within a certain range. The range would be determined by the likelihood of infection and the distance between individuals. The function would then mark each newly infected individual as infected and call itself again for that individual.
+# In summary, both dynamic programming and recursive programming could be useful in a zombie apocalypse simulation, but they would be applied in different ways. Dynamic programming would be useful for optimizing survival strategies over a longer time frame, while recursive programming would be useful for simulating the spread of the virus or the movement of individual zombies.
+
+# A hash map is a data structure that allows for efficient storage and retrieval of key-value pairs. You should use a hash map when you need to store data in a way that allows for fast lookup, insertion, and deletion of items based on a key.
+# Here are some common scenarios where using a hash map can be particularly beneficial:
+# When you have a large amount of data to store and quick lookups are necessary: Hash maps provide constant time complexity (O(1)) for lookups, which means that finding a value based on a key takes the same amount of time regardless of the size of the data set.
+# When you need to maintain a collection of unique keys: Hash maps use unique keys to store and retrieve values, which makes them useful for maintaining a collection of unique items.
+# When you need to associate one value with another: Hash maps store key-value pairs, which makes them a useful tool for associating one value with another.
+# When you need to frequently update or modify data: Hash maps provide efficient insertions and deletions, making them a good choice for situations where data is frequently updated.
+# When you need to perform operations that involve searching for specific values: Hash maps can be used to store and search for values based on specific criteria, such as finding all values that meet a certain condition.
+# Overall, hash maps are a powerful tool for storing and accessing data in a way that is both efficient and flexible.
+# In a zombie apocalypse simulation, you can use hash maps to store information about various entities in the game, such as:
+# Map grid: You can create a hash map to store information about different locations on the map grid, such as buildings, roads, and open spaces. Each location can be assigned a unique key, and the value can be an object that stores information about the location, such as its type, status (zombie-infested or not), and the number of resources it contains.
+# Zombies and humans: You can use a hash map to store information about the zombies and human characters in the game. Each character can be assigned a unique key, and the value can be an object that stores information about the character, such as its current location, health status, and inventory.
+# Weapons and resources: You can use a hash map to store information about the weapons and resources available in the game. Each weapon or resource can be assigned a unique key, and the value can be an object that stores information about the item, such as its type, damage, and availability.
+# Using hash maps in this way can make it easier and faster to perform certain operations in the simulation, such as searching for characters or items based on their unique key or updating the status of a location on the map grid. It can also help reduce the amount of memory and processing power required to store and manipulate large amounts of data in the simulation.
+
+# There are several data structures that you can use in a zombie apocalypse simulation, depending on the specific needs of your simulation. Here are a few examples:
+# Graphs: Graphs are useful for representing the connections between different locations in the simulation. You can use a graph to represent the layout of a city or town, with nodes representing buildings and edges representing roads or paths between them. You can use graph algorithms such as Dijkstra's algorithm or A* search to find the shortest path between two locations, which can be useful for simulating movement and travel.
+# Queues: Queues can be used to represent lines of people waiting for resources or services. For example, you can use a queue to simulate the line of people waiting to get into a safe zone or to receive medical attention. You can use queue algorithms such as first-in-first-out (FIFO) or priority queues to manage the order in which people are served.
+# Arrays: Arrays can be used to represent populations of people or zombies, with each element representing an individual. You can use arrays to keep track of a person's health status, location, and other attributes. You can use array algorithms such as sorting and searching to find specific individuals or groups within the population.
+# Trees: Trees can be used to represent the hierarchy of leadership or organization within a group of survivors. For example, you can use a tree to represent a chain of command within a military organization or a group of survivors. You can use tree algorithms such as depth-first search or breadth-first search to traverse the tree and access information about the different levels of leadership.
+# Stacks: Stacks can be used to represent resources that can be used up or consumed, such as food or ammunition. You can use a stack to keep track of the remaining resources and remove items as they are used up. You can use stack algorithms such as last-in-first-out (LIFO) to manage the order in which resources are consumed.
+
+# How can stochastic control theory be used in a zombie apocalypse simulation?
+# Stochastic control theory can be used in a zombie apocalypse simulation to design control strategies that optimize the behavior of the human survivors over time, taking into account the uncertainty and randomness of the zombie outbreak.
+# One way to use stochastic control theory in a zombie apocalypse simulation is to model the behavior of the zombies and the survivors as stochastic processes and to design a control policy that maximizes the survival rate of the human population or minimizes the risk of infection. This can be done by using tools such as dynamic programming or stochastic differential equations to model the behavior of the zombies and the survivors over time and to optimize the control policy.
+# For example, the control policy could involve decisions such as where to find food and water, how to avoid or confront zombies, and when to move to a new location. These decisions would be based on the current state of the environment, such as the location and density of zombies, the availability of resources, and the health and skills of the survivors.
+
+# Optimal control wiki
+# Automated planning and scheduling
+# Classical planning algorithms 
+# STRIPS (Stanford Research Institute Problem Solver) algorithm
+# ABSTRIPS (Abstraction-Based STRIPS)
+# Graphplan algorithm
+# General Game Playing
+# Partially observed planning / POMDP (Partially Observable Markov Decision Process) algorithm
+# Constraint satisfaction algorithm
+# Operations Research algorithm
+
+
+# Graph:
+# A graph is a data structure that consists of a set of vertices (or nodes) and a set of edges connecting these vertices. Graphs are frequently used in computer science and other fields to represent relationships between entities. For instance, a social network could be depicted as a graph, with each person being a node and the connections between them being edges.
+# In a zombie apocalypse simulation, a graph can be employed to represent the network of survivors, zombies, and resources. Each node in the graph could represent a location, such as a building, road, or other landmark, and each edge could represent a path or connection between locations. This graph can be used to model the movement of survivors, the spread of zombies, and the distribution of resources.
+
+# Connectivity Graph:
+# A connectivity graph is a graph that determines if every node is connected to every other node in the graph. This type of graph is useful for representing relationships between nodes and determining whether a node is connected to other nodes in the network.
+# In a zombie apocalypse simulation, a connectivity graph can be used to determine if there is a path for survivors to escape an area surrounded by zombies. The algorithm can help the survivors find a way out and avoid being trapped. A connectivity graph represents the relationships between different areas or nodes in the simulation. It can be used to determine the distance or shortest path between two nodes, but it does not provide information about the optimal route for survivor movement.
+
+# Dijkstra Algorithm:
+# Dijkstra's algorithm is a graph search algorithm that solves the shortest path problem between two nodes in a weighted graph. In a zombie apocalypse simulation, the Dijkstra algorithm can be employed to find the shortest path between two locations, such as a safe zone and a supply depot. The algorithm can assist survivors in planning their route and minimizing the risk of encountering zombies. The Dijkstra algorithm is a pathfinding algorithm that finds the shortest path between two nodes in a weighted graph, taking into account factors such as the presence of zombies, terrain, or other obstacles to provide the optimal route for survivor movement.
+
+# Minimum Spanning Tree:
+# A minimum spanning tree is a tree that connects all nodes in a graph with the minimum possible total edge weight. This algorithm is commonly used in network design to find the most cost-effective way to connect all nodes. A project using this algorithm might involve designing a cost-effective network or optimizing a supply chain.
+# In a zombie apocalypse simulation, the minimum spanning tree algorithm can be used to find the most economical way to connect all safe zones and supply depots. The algorithm can help survivors optimize their resource distribution and minimize the risk of depleting supplies. A minimum spanning tree is a subset of a connectivity graph that connects all nodes with the minimum total edge weight, which can be useful in determining the optimal route for survivor movement. However, it may not consider factors such as the presence of zombies, terrain, or other obstacles.
+
+# Inverted Index:
+# An inverted index is a data structure employed to create full-text search systems. Given a set of text documents, this algorithm generates an index that maps each word in the documents to the list of documents containing the word. This algorithm is used in search engines, document management systems, and other applications requiring efficient searching of large volumes of text. A project using this algorithm would typically involve building a search engine or a document management system.
+# In a zombie apocalypse simulation, an inverted index can be used to search for information about zombies, such as their location, behavior, and weaknesses. The index can aid survivors in strategizing and discovering ways to defeat the zombies.
+
+# Queues:
+# A queue data structure can be used to represent a message queue between agents. This can be useful for modeling asynchronous communication between agents, where messages are sent and received in a first-in, first-out (FIFO) order.
+# In a zombie apocalypse simulation, a queue can be used to model the communication between survivors and to represent the order in which messages are sent and received. For example, a survivor may send a message requesting assistance, and the message would be placed at the end of the queue. Another survivor may receive the message and respond, and their response would be placed at the end of the queue. The first survivor would then receive the response and act on it, and so on.
+
+# In summary, to simulate the movement of survivors in a zombie apocalypse, you could use Dijkstra's algorithm to determine the shortest path between two locations while accounting for the potential danger posed by zombies. Additionally, you could use a connectivity graph to represent the relationships between different locations and to determine which locations are connected and accessible.
+# By combining these techniques, you can create a more comprehensive and effective zombie apocalypse simulation. For instance, using the Dijkstra algorithm can help survivors navigate the terrain efficiently while avoiding high-risk areas. Meanwhile, a connectivity graph can give an overview of the entire network of locations, enabling strategic planning and escape route identification. Finally, incorporating a minimum spanning tree can help optimize resource distribution and survivor movement, while an inverted index can provide valuable information to devise strategies against zombies.
+# In conclusion, integrating these algorithms and data structures can significantly enhance the realism and effectiveness of a zombie apocalypse simulation, making it a valuable tool for understanding and preparing for potential threats.
 
 
