@@ -576,6 +576,8 @@ for line, score in results:
 
 # siamese network text similarity
 
+# Boyer-Moore String Search Algorithm
+
 # Spelling correction using nltk / character n-gram / fuzzy
 # http://norvig.com/spell-correct.html
 
