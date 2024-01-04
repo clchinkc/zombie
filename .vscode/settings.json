@@ -1,6 +1,5 @@
 {
 	"editor.formatOnSave": false,
-	"editor.defaultFormatter": "ms-python.autopep8",
 	"editor.formatOnSaveMode": "modificationsIfAvailable",
 	"editor.autoIndent": "keep",
 	"editor.detectIndentation": true,
@@ -18,6 +17,7 @@
     "editor.codeActionsOnSave": {
 		"source.organizeImports": "explicit"
 	},
+	"editor.defaultFormatter": "ms-python.autopep8",
   },
 "isort.args": [
 	"--profile",
