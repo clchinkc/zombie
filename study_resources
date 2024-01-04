@@ -414,6 +414,8 @@ https://redis.io/
 Market Wizards
 https://github.com/google/tf-quant-finance
 https://zhuanlan.zhihu.com/p/456528701
+https://kernc.github.io/backtesting.py/
+Write a stock strategy backtest environment.
 
 Data Science
 The tutorial will cover the following topics:
@@ -1113,7 +1115,6 @@ https://coolshell.cn/articles/18024.html
 https://towardsdatascience.com/fastapi-and-streamlit-the-python-duo-you-must-know-about-72825def1243
 
 Chatbot
-eliza
 https://replit.com/@HyperHacker/Chatbot
 https://github.com/nat/natbot
 https://github.com/jaspreetsidhu3/voice_assistant
@@ -1126,6 +1127,7 @@ https://github.com/hwchase17/chat-your-data
 https://github.com/hwchase17/langchain-streamlit-template
 https://langchain.readthedocs.io/en/latest/getting_started/getting_started.html
 https://github.com/gkamradt/langchain-tutorials
+https://blog.langchain.dev/the-new-langchain-architecture-langchain-core-v0-1-langchain-community-and-a-path-to-langchain-v0-1/
 https://www.youtube.com/watch?v=J_0qvRt4LNk
 https://www.youtube.com/watch?v=Ea9jgBjQxEs
 https://github.com/togethercomputer/OpenChatKit

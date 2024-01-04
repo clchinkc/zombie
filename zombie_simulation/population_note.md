@@ -3172,6 +3172,8 @@ https://indsr.org.tw/respublicationcon?uid=12&resid=705&pid=2588&typeid=3
 https://academic-accelerator.com/encyclopedia/zh/list-of-military-tactics
 https://zh.wikipedia.org/zh-hant/%E5%86%9B%E4%BA%8B%E6%88%98%E6%9C%AF%E5%88%97%E8%A1%A8
 https://www.hk01.com/%E5%8D%B3%E6%99%82%E5%9C%8B%E9%9A%9B/958285/%E7%A7%91%E5%AD%B8%E5%AE%B6-%E9%BB%91%E7%8C%A9%E7%8C%A9%E7%82%BA%E7%88%AD%E5%A5%AA%E5%9C%B0%E7%9B%A4-%E9%81%8B%E7%94%A8%E8%BB%8D%E4%BA%8B%E5%81%B5%E5%AF%9F%E6%88%B0%E8%A1%93
+https://www.4gamers.com.tw/news/detail/61620/ready-or-not-ver-1-update-with-smarter-ai
+https://technews.tw/2023/12/14/learning-few-shot-imitation-as-cultural-transmission/
 """
 
 """
