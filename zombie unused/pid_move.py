@@ -478,6 +478,10 @@ if __name__ == "__main__":
 """
 When I press pause button, it skipped one step and directly show the second step.
 
+the health plot step becomes faster when the health drop
+
+still move after dead
+
 change canvas to pygame
 
 

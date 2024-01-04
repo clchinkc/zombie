@@ -40,6 +40,11 @@ macroeconomic indicators, news events, or social media sentiment
 """
 
 """
+https://github.com/AdamGetbags/secAPI/tree/main
+https://github.com/AdamGetbags/polygonData
+"""
+
+"""
 https://streetfins.com/calculus-in-the-stock-market/
 
 (vector) error correction models
