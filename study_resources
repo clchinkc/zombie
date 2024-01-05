@@ -226,6 +226,9 @@ github python/flask codespace
 https://juejin.cn/post/7102620860720087053
 https://juejin.cn/post/7259372449833828409
 
+colab github
+https://github.com/googlecolab/colabtools/blob/main/notebooks/colab-github-demo.ipynb
+
 Chart animation
 https://github.com/dexplo/bar_chart_race
 https://www.dunderdata.com/blog/create-a-bar-chart-race-animation-in-python-with-matplotlib

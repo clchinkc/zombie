@@ -741,6 +741,8 @@ class SimulationObserver(Observer):
             cell.set_width(1 / len(cell_states[0]))
             cell.get_text().set_horizontalalignment('center')
             cell.get_text().set_verticalalignment('center')
+        
+        plt.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.show()
 
 
@@ -865,17 +867,33 @@ class SimulationAnimator(Observer):
             return table, text_box
 
         anim = animation.FuncAnimation(fig, animate, frames=len(cell_states), interval=1000, repeat=False, blit=True)
+        plt.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.show()
 
 class MatplotlibAnimator(Observer):
-    def __init__(self, population: Population, mode: str = "scatter"):
-        """Initialize the animator."""
+    def __init__(self, population: Population, plot_order=["bar", "scatter", "table"]):
+        """Initialize the animator with customizable plot order."""
         self.subject = population
         self.subject.attach_observer(self)
-        self.mode = mode  # "bar" or "scatter" or "table"
-        
-        self.fig, self.ax = plt.subplots(1, 1, figsize=(7, 7),  constrained_layout=True)
+        self.plot_order = plot_order
 
+        # Initialize matplotlib figure with three subplots
+        self.fig, self.axes = plt.subplots(1, 3, figsize=(21, 7), constrained_layout=True)
+
+        # Initialize common elements for the plots
+        self.init_common_elements()
+
+        # Setup each subplot based on the specified order
+        for i, plot_type in enumerate(self.plot_order):
+            if plot_type == "bar":
+                self.setup_bar_chart(self.axes[i])
+            elif plot_type == "scatter":
+                self.setup_scatter_plot(self.axes[i])
+            elif plot_type == "table":
+                self.setup_table(self.axes[i])
+
+    def init_common_elements(self):
+        # Common elements initialization
         self.cell_states = [individual.health_state for individual in self.subject.agent_list]
         self.cell_states_value = [state.value for state in self.cell_states]
         self.cell_x_coords = [individual.location[0] for individual in self.subject.agent_list]
@@ -892,54 +910,49 @@ class MatplotlibAnimator(Observer):
         self.cmap = colors.ListedColormap(list(self.state_colors.values()))
         self.state_handles = [patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()]
 
-        if self.mode == "bar":
-            self.setup_bar_chart()
-        elif self.mode == "scatter":
-            self.setup_scatter_plot()
-        elif self.mode == "table":
-            self.setup_table()
+    # Setup methods for each plot type
+    def setup_bar_chart(self, ax):
+        ax.set_title("Bar Chart")
+        ax.set_ylim(0, len(self.subject.agent_list) + 1)
+        self.setup_initial_bar_state(ax)
 
-    def setup_bar_chart(self):
-        self.ax.set_title("Bar Chart Matplotlib Animation")
-        self.ax.set_ylim(0, len(self.subject.agent_list) + 1)
-        self.setup_initial_bar_state()
+    def setup_scatter_plot(self, ax):
+        ax.set_title("Scatter Plot")
+        ax.set_xlim(-1, self.subject.school.size + 1)
+        ax.set_ylim(-1, self.subject.school.size + 1)
+        self.setup_initial_scatter_state(ax)
 
-    def setup_initial_bar_state(self):
+    def setup_table(self, ax):
+        ax.set_title("Table")
+        ax.set_xlim(-1, self.subject.school.size + 1)
+        ax.set_ylim(-1, self.subject.school.size + 1)
+        ax.axis('off')
+        self.setup_initial_table_state(ax)
+
+    # Methods for setting up initial states of each plot type
+    def setup_initial_bar_state(self, ax):
         counts = [self.cell_states.count(state) for state in list(HealthState)]
-        self.bars = self.ax.bar(np.array(HealthState.value_list()), counts, tick_label=HealthState.name_list(), 
+        self.bars = ax.bar(np.array(HealthState.value_list()), counts, tick_label=HealthState.name_list(), 
                                 label=HealthState.name_list(), color=[self.state_colors[state] for state in HealthState])
-        self.text_box = self.ax.text(0.05, 0.95, "", transform=self.ax.transAxes)
-        self.ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
+        self.bar_text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
+        ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.draw()
 
-    def setup_scatter_plot(self):
-        self.ax.set_title("Scatter Chart Matplotlib Animation")
-        self.ax.set_xlim(-1, self.subject.school.size + 1)
-        self.ax.set_ylim(-1, self.subject.school.size + 1)
-        self.setup_initial_scatter_state()
-
-    def setup_initial_scatter_state(self):
-        self.scatter = self.ax.scatter(self.cell_x_coords, self.cell_y_coords, 
-                                    c=self.cell_states_value, cmap=self.cmap)
-        self.text_box = self.ax.text(0.05, 0.95, "", transform=self.ax.transAxes)
-        self.ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
+    def setup_initial_scatter_state(self, ax):
+        self.scatter = ax.scatter(self.cell_x_coords, self.cell_y_coords, 
+                                  c=self.cell_states_value, cmap=self.cmap)
+        self.scatter_text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
+        ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.draw()
-        
-    def setup_table(self):
-        self.ax.set_title("Table Matplotlib Animation")
-        self.ax.set_xlim(-1, self.subject.school.size + 1)
-        self.ax.set_ylim(-1, self.subject.school.size + 1)
-        self.ax.axis('off')
-        self.setup_initial_table_state()
 
-    def setup_initial_table_state(self):
+    def setup_initial_table_state(self, ax):
         cell_states = [["" for _ in range(self.subject.school.size)] 
-                    for _ in range(self.subject.school.size)]
+                       for _ in range(self.subject.school.size)]
         for j, individual in enumerate(self.subject.agent_list):
             cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
 
-        self.table = self.ax.table(cellText=np.array(cell_states), loc="center", bbox=Bbox.from_bounds(0.0, 0.0, 1.0, 1.0))
-        self.text_box = self.ax.text(0.05, 0.95, "", transform=self.ax.transAxes)
+        self.table = ax.table(cellText=np.array(cell_states), loc="center", bbox=Bbox.from_bounds(0.0, 0.0, 1.0, 1.0))
+        self.table_text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
 
         # Adjust cell properties for centering text
         for key, cell in self.table.get_celld().items():
@@ -954,42 +967,50 @@ class MatplotlibAnimator(Observer):
                 color = self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white"
                 self.table[i, j].set_facecolor(color)
                 self.table[i, j].get_text().set_text(cell_state)
+        ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.draw()
 
     def display_observation(self):
         plt.show()
 
-    def update(self) -> None:
+    def update(self):
+        # Update the elements common to all plots
+        self.update_common_elements()
+
+        # Update each subplot based on its type
+        for i, plot_type in enumerate(self.plot_order):
+            if plot_type == "bar":
+                self.update_bar_chart(self.axes[i])
+            elif plot_type == "scatter":
+                self.update_scatter_plot(self.axes[i])
+            elif plot_type == "table":
+                self.update_table(self.axes[i])
+
+    def update_common_elements(self):
         self.cell_states = [individual.health_state for individual in self.subject.agent_list]
         self.cell_states_value = [state.value for state in self.cell_states]
         self.cell_x_coords = [individual.location[0] for individual in self.subject.agent_list]
         self.cell_y_coords = [individual.location[1] for individual in self.subject.agent_list]
-        
-        if self.mode == "bar":
-            self.update_bar_chart()
-        elif self.mode == "scatter":
-            self.update_scatter_plot()
-        elif self.mode == "table":
-            self.update_table()
 
-    def update_bar_chart(self):
+    # Update methods for each plot type
+    def update_bar_chart(self, ax):
         counts = [self.cell_states.count(state) for state in HealthState]
         for bar, count in zip(self.bars, counts):
             bar.set_height(count)
-        self.text_box.set_text(f"Time Step: {self.subject.timestep}")
+        self.bar_text_box.set_text(f"Time Step: {self.subject.timestep}")
         plt.draw()
         plt.pause(0.5)
 
-    def update_scatter_plot(self):
+    def update_scatter_plot(self, ax):
         self.scatter.set_offsets(np.c_[self.cell_x_coords, self.cell_y_coords])
         self.scatter.set_array(np.array(self.cell_states_value))
-        self.text_box.set_text(f"Time Step: {self.subject.timestep}")
+        self.scatter_text_box.set_text(f"Time Step: {self.subject.timestep}")
         plt.draw()
         plt.pause(0.5)
 
-    def update_table(self):
+    def update_table(self, ax):
         cell_states = [["" for _ in range(self.subject.school.size)] 
-                    for _ in range(self.subject.school.size)]
+                       for _ in range(self.subject.school.size)]
         for j, individual in enumerate(self.subject.agent_list):
             cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
 
@@ -998,7 +1019,7 @@ class MatplotlibAnimator(Observer):
             color = self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white"
             self.table[i, j].set_facecolor(color)
             self.table[i, j].get_text().set_text(cell_state)
-        self.text_box.set_text(f"Time Step: {self.subject.timestep}")
+        self.table_text_box.set_text(f"Time Step: {self.subject.timestep}")
         plt.draw()
         plt.pause(0.5)
 
@@ -1141,8 +1162,8 @@ def main():
     # create Observer objects
     # simulation_observer = SimulationObserver(school_sim)
     # simulation_animator = SimulationAnimator(school_sim)
-    # matplotlib_animator = MatplotlibAnimator(school_sim, mode="bar") # "bar" or "scatter" or "table"
-    tkinter_observer = TkinterObserver(school_sim)
+    matplotlib_animator = MatplotlibAnimator(school_sim) # "bar" or "scatter" or "table"
+    # tkinter_observer = TkinterObserver(school_sim)
     # prediction_observer = PredictionObserver(school_sim)
 
     # run the population for a given time period
@@ -1155,8 +1176,8 @@ def main():
     # observe the statistics of the population
     # simulation_observer.display_observation(format="bar") # "statistics" or "grid" or "bar" or "scatter" or "table"
     # simulation_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
-    # matplotlib_animator.display_observation()
-    tkinter_observer.display_observation()
+    matplotlib_animator.display_observation()
+    # tkinter_observer.display_observation()
     # prediction_observer.display_observation()
 
 
