@@ -801,7 +801,7 @@ class SimulationAnimator(Observer):
 
     def print_scatter_animation(self):
         x = [[individual.location[0] for individual in agent_list] for agent_list in self.agent_history]
-        y = [[individual.location[1] for individual in agent_list] for agent_list in self.agent_history]
+        y = [[self.subject.school.size - individual.location[0] - 1 for individual in agent_list] for agent_list in self.agent_history]
         cell_states_value = [[individual.health_state.value for individual in agent_list] for agent_list in self.agent_history]
 
         self.scatter_chart_animation(x, y, cell_states_value)
@@ -939,15 +939,18 @@ class MatplotlibAnimator(Observer):
         plt.draw()
 
     def setup_initial_scatter_state(self, ax):
-        self.scatter = ax.scatter(self.cell_x_coords, self.cell_y_coords, 
-                                  c=self.cell_states_value, cmap=self.cmap)
+        transformed_x_coords = [y for y in self.cell_y_coords]
+        transformed_y_coords = [self.subject.school.size - x - 1 for x in self.cell_x_coords]
+
+        self.scatter = ax.scatter(transformed_x_coords, transformed_y_coords, 
+                                c=self.cell_states_value, cmap=self.cmap)
         self.scatter_text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
         ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.draw()
 
     def setup_initial_table_state(self, ax):
         cell_states = [["" for _ in range(self.subject.school.size)] 
-                       for _ in range(self.subject.school.size)]
+                        for _ in range(self.subject.school.size)]
         for j, individual in enumerate(self.subject.agent_list):
             cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
 
@@ -1002,7 +1005,10 @@ class MatplotlibAnimator(Observer):
         plt.pause(0.5)
 
     def update_scatter_plot(self, ax):
-        self.scatter.set_offsets(np.c_[self.cell_x_coords, self.cell_y_coords])
+        transformed_x_coords = [self.cell_y_coords[i] for i in range(len(self.cell_x_coords))]
+        transformed_y_coords = [self.subject.school.size - self.cell_x_coords[i] - 1 for i in range(len(self.cell_y_coords))]
+
+        self.scatter.set_offsets(np.c_[transformed_x_coords, transformed_y_coords])
         self.scatter.set_array(np.array(self.cell_states_value))
         self.scatter_text_box.set_text(f"Time Step: {self.subject.timestep}")
         plt.draw()
@@ -1010,7 +1016,7 @@ class MatplotlibAnimator(Observer):
 
     def update_table(self, ax):
         cell_states = [["" for _ in range(self.subject.school.size)] 
-                       for _ in range(self.subject.school.size)]
+                        for _ in range(self.subject.school.size)]
         for j, individual in enumerate(self.subject.agent_list):
             cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
 
