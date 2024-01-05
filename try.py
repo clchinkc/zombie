@@ -568,6 +568,7 @@ class SimulationObserver(Observer):
         self.agent_list = self.subject.agent_list
 
         sns.set_style("whitegrid")
+        sns.set_context("paper")
         deep_colors = sns.color_palette("deep")
         self.state_colors = {
             HealthState.HEALTHY: deep_colors[0],  # Adjusted to use seaborn deep color palette
@@ -753,6 +754,7 @@ class SimulationAnimator(Observer):
         self.agent_history = []
 
         sns.set_style("whitegrid")
+        sns.set_context("paper")
         deep_colors = sns.color_palette("deep")
         self.state_colors = {
             HealthState.HEALTHY: deep_colors[0],
@@ -900,6 +902,7 @@ class MatplotlibAnimator(Observer):
         self.cell_y_coords = [individual.location[1] for individual in self.subject.agent_list]
 
         sns.set_style("whitegrid")
+        sns.set_context("paper")
         deep_colors = sns.color_palette("deep")
         self.state_colors = {
             HealthState.HEALTHY: deep_colors[0],
