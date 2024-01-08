@@ -1,13 +1,45 @@
 """
-To implement a simulation of a person's activity during a zombie apocalypse at school, we would need to define several classes and functions to represent the different elements of the simulation.
+The implementation of a zombie apocalypse simulation in a school environment requires the creation of several classes and functions to accurately represent the dynamics of such a scenario. Let's break down the implementation into key components and their respective functionalities:
 
-First, we would need a Person class to represent each person in the simulation. This class would have attributes to track the person's location, state (alive, undead, or escaped), health, and any weapons or supplies they may have. It would also have methods to move the person on the grid and interact with other people and zombies.
+### 1. Person Class
+- **Attributes:** Location, state (alive, undead, escaped), health, weapons, and supplies.
+- **Methods:** Movement across the grid, interactions with other entities (people, zombies).
 
-Next, we would need a Zombie class to represent each zombie in the simulation. This class would have similar attributes and methods as the Person class, but would also include additional attributes and methods to simulate the behavior of a zombie (such as attacking living people and spreading the infection).
+### 2. Zombie Class
+- **Attributes:** Similar to Person class, with additional zombie-specific behaviors (attacking, infecting).
+- **Methods:** Movement, attacking living people, spreading infection.
 
-We would also need a School class to represent the layout of the school and track the locations of people and zombies on the grid. This class would have a two-dimensional array to represent the grid, with each cell containing a Person or Zombie object, or None if the cell is empty. The School class would also have methods to move people and zombies on the grid and update their states based on the rules of the simulation.
+### 3. School Class
+- **Attributes:** Layout represented by a 2D grid, tracking of people and zombies.
+- **Methods:** Movement and state updates for people and zombies, interaction handling.
 
-Finally, we would need a main simulate function that would set up the initial conditions of the simulation (such as the layout of the school, the number and distribution of people and zombies, and any weapons or supplies), and then run the simulation for a specified number of steps. This function would use the School class to move people and zombies on the grid and update their states, and could also include additional code to track and display the progress of the simulation.
+### 4. Simulation Function
+- **Functionality:** Initializes simulation conditions (layout, entities, resources), runs the simulation for a specified number of steps, updates and tracks the simulation's progress.
+
+### 5. Additional Components
+- **State Machine Pattern:** For managing the state transitions of individuals (healthy, infected, zombie, dead).
+- **Movement Strategies:** Different strategies for movement (random, flee zombies, chase humans) depending on the state of the individual.
+- **Grid Management:** Functions to handle legal movements, neighbor detection, and interactions within the grid.
+- **Statistical Tracking:** To keep track of population metrics (counts of healthy, infected, zombies, dead).
+
+### 6. Visualization and Analysis
+- Enhance visualization for better insights. This could include detailed graphs, color-coding, and interactive elements for in-depth exploration.
+
+### Implementation Overview
+- **Language & Libraries:** Python with libraries like NumPy, Matplotlib, Seaborn, and Keras.
+- **UI Frameworks:** Tkinter for basic GUI elements.
+- **Machine Learning:** For predicting future states of the simulation.
+- **Observer Pattern:** To track and update simulation states and render visualizations.
+
+### Example Workflow
+1. **Initialize:** Set up the school grid and populate it with individuals.
+2. **Run Simulation:** Iterate over time steps, updating states and movements of individuals.
+3. **Apply Strategies:** Based on individual states, apply movement and interaction strategies.
+4. **State Management:** Update states (healthy, infected, zombie) using the state machine pattern.
+5. **Visualization:** Use graphical tools to visualize the simulation progress and outcomes.
+6. **Analysis:** Apply machine learning for predictive analysis and simulation insights.
+
+This structured approach allows for a comprehensive simulation of a zombie apocalypse in a school setting, with detailed tracking and analysis of the evolving scenario.
 """
 
 from __future__ import annotations
@@ -27,11 +59,15 @@ from typing import Any, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 import seaborn as sns
 from keras import layers, models
 from matplotlib import animation, colors, patches
 from matplotlib.table import Table
 from matplotlib.transforms import Bbox
+from plotly.subplots import make_subplots
 from scipy import stats
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
@@ -1033,6 +1069,65 @@ class MatplotlibAnimator(Observer):
         plt.pause(0.5)
 
 
+class PlotlyAnimator(Observer):
+    def __init__(self, population: Population):
+        self.population = population
+        self.population.attach_observer(self)
+        self.data_history = []
+
+    def update(self):
+        current_state = self.capture_current_state()
+        self.data_history.append(current_state)
+
+    def capture_current_state(self):
+        data = [{'x': ind.location[0], 'y': ind.location[1], 'z': 0, 'state': ind.health_state.name} for ind in self.population.agent_list]
+        return pd.DataFrame(data)
+
+    def display_observation(self):
+        fig = make_subplots(rows=2, cols=2, subplot_titles=("Scatter Plot", "Heatmap", "Time Series", "3D Scatter Plot"),
+                            specs=[[{"type": "scatter"}, {"type": "heatmap"}], [{"type": "scatter"}, {"type": "scatter3d"}]])
+
+        self.add_scatter_plot(fig, row=1, col=1)
+        self.add_heatmap(fig, row=1, col=2)
+        self.add_time_series(fig, row=2, col=1)
+        self.add_3d_scatter(fig, row=2, col=2)
+
+        fig.update_layout(height=800, width=1200, title_text="Zombie Apocalypse Simulation",
+                          legend_title="Health States", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+        fig.show()
+
+    def add_scatter_plot(self, fig, row, col):
+        scatter_data = self.data_history[-1]
+        scatter_plot = px.scatter(scatter_data, x="x", y="y", color="state")
+        for trace in scatter_plot.data:
+            fig.add_trace(trace, row=row, col=col)
+
+    def add_heatmap(self, fig, row, col):
+        heatmap_data = self.data_history[-1].pivot_table(index='y', columns='x', aggfunc='size', fill_value=0)
+        fig.add_trace(go.Heatmap(z=heatmap_data.values, x=heatmap_data.columns, y=heatmap_data.index, colorscale='Viridis'), row=row, col=col)
+
+    def add_time_series(self, fig, row, col):
+        time_series_data = self.prepare_time_series_data()
+        time_series_plot = px.line(time_series_data, x="time_step", y="counts", color='state')
+        for trace in time_series_plot.data:
+            fig.add_trace(trace, row=row, col=col)
+
+    def add_3d_scatter(self, fig, row, col):
+        scatter_data = self.data_history[-1]
+        scatter_3d = px.scatter_3d(scatter_data, x="x", y="y", z="z", color="state")
+        for trace in scatter_3d.data:
+            fig.add_trace(trace, row=row, col=col)
+
+    def prepare_time_series_data(self):
+        all_states = ['HEALTHY', 'INFECTED', 'ZOMBIE', 'DEAD']
+        all_combinations = pd.MultiIndex.from_product([range(len(self.data_history)), all_states], names=['time_step', 'state']).to_frame(index=False)
+
+        time_series_data = pd.concat([data['state'].value_counts().rename_axis('state').reset_index(name='counts').assign(time_step=index) for index, data in enumerate(self.data_history)], ignore_index=True)
+        
+        return pd.merge(all_combinations, time_series_data, on=['time_step', 'state'], how='left').fillna(0)
+
+
+
 class TkinterObserver(Observer):
     def __init__(self, population, grid_size=300, cell_size=30):
         self.population = population
@@ -1171,7 +1266,8 @@ def main():
     # create Observer objects
     # simulation_observer = SimulationObserver(school_sim)
     # simulation_animator = SimulationAnimator(school_sim)
-    matplotlib_animator = MatplotlibAnimator(school_sim) # "bar" or "scatter" or "table"
+    # matplotlib_animator = MatplotlibAnimator(school_sim)
+    plotly_animator = PlotlyAnimator(school_sim)
     # tkinter_observer = TkinterObserver(school_sim)
     # prediction_observer = PredictionObserver(school_sim)
 
@@ -1185,7 +1281,8 @@ def main():
     # observe the statistics of the population
     # simulation_observer.display_observation(format="bar") # "statistics" or "grid" or "bar" or "scatter" or "table"
     # simulation_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
-    matplotlib_animator.display_observation()
+    # matplotlib_animator.display_observation()
+    plotly_animator.display_observation()
     # tkinter_observer.display_observation()
     # prediction_observer.display_observation()
 
