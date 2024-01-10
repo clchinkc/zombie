@@ -57,6 +57,7 @@ from functools import cached_property
 from itertools import product
 from typing import Any, Optional
 
+import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -65,6 +66,8 @@ import plotly.graph_objects as go
 import seaborn as sns
 from keras import layers, models
 from matplotlib import animation, colors, patches
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
 from matplotlib.table import Table
 from matplotlib.transforms import Bbox
 from plotly.subplots import make_subplots
@@ -607,7 +610,7 @@ class SimulationObserver(Observer):
         sns.set_context("paper")
         deep_colors = sns.color_palette("deep")
         self.state_colors = {
-            HealthState.HEALTHY: deep_colors[0],  # Adjusted to use seaborn deep color palette
+            HealthState.HEALTHY: deep_colors[0],
             HealthState.INFECTED: deep_colors[1],
             HealthState.ZOMBIE: deep_colors[2],
             HealthState.DEAD: deep_colors[3],
@@ -742,8 +745,8 @@ class SimulationObserver(Observer):
     def print_scatter_graph(self):
         fig, ax = plt.subplots(1, 1, figsize=(7, 7), constrained_layout=True)
         ax.set_title("Scatter Chart")
-        ax.set_xlim(-1, self.subject.school.size + 1)
-        ax.set_ylim(-1, self.subject.school.size + 1)
+        ax.set_xlim(-1, self.subject.school.size)
+        ax.set_ylim(-1, self.subject.school.size)
 
         x = np.array([individual.location[0] for individual in self.agent_list])
         y = np.array([individual.location[1] for individual in self.agent_list])
@@ -758,8 +761,8 @@ class SimulationObserver(Observer):
     def print_table_graph(self):
         fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
         ax.set_title("Table Chart")
-        ax.set_xlim(-1, len(self.grid)+1)
-        ax.set_ylim(-1, len(self.grid)+1)
+        ax.set_xlim(-1, self.subject.school.size + 1)
+        ax.set_ylim(-1, self.subject.school.size + 1)
         ax.axis('off')
 
         # Initialize table with common state_colors
@@ -847,8 +850,8 @@ class SimulationAnimator(Observer):
     def scatter_chart_animation(self, x, y, cell_states_value):
         fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
         ax.set_title("Scatter Chart Animation")
-        ax.set_xlim(-1, self.subject.school.size + 1)
-        ax.set_ylim(-1, self.subject.school.size + 1)
+        ax.set_xlim(-1, self.subject.school.size)
+        ax.set_ylim(-1, self.subject.school.size)
 
         sc = ax.scatter(x[0], y[0], c=cell_states_value[0], cmap=self.cmap)
         text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
@@ -880,8 +883,8 @@ class SimulationAnimator(Observer):
     def table_animation(self, cell_states):
         fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
         ax.set_title("Table Animation")
-        ax.set_xlim(-1, len(cell_states[0])+1)
-        ax.set_ylim(-1, len(cell_states[0])+1)
+        ax.set_xlim(-1, self.subject.school.size + 1)
+        ax.set_ylim(-1, self.subject.school.size + 1)
         ax.axis('off')
 
         # Initialize table
@@ -907,6 +910,65 @@ class SimulationAnimator(Observer):
         anim = animation.FuncAnimation(fig, animate, frames=len(cell_states), interval=1000, repeat=False, blit=True)
         plt.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
         plt.show()
+
+
+class PlotlyAnimator(Observer):
+    def __init__(self, population: Population):
+        self.subject = population
+        self.subject.attach_observer(self)
+        self.data_history = []
+
+    def update(self):
+        current_state = self.capture_current_state()
+        self.data_history.append(current_state)
+
+    def capture_current_state(self):
+        data = [{'x': ind.location[0], 'y': ind.location[1], 'z': 0, 'state': ind.health_state.name} for ind in self.subject.agent_list]
+        return pd.DataFrame(data)
+
+    def display_observation(self):
+        fig = make_subplots(rows=2, cols=2, subplot_titles=("Scatter Plot", "Heatmap", "Time Series", "3D Scatter Plot"),
+                            specs=[[{"type": "scatter"}, {"type": "heatmap"}], [{"type": "scatter"}, {"type": "scatter3d"}]])
+
+        self.add_scatter_plot(fig, row=1, col=1)
+        self.add_heatmap(fig, row=1, col=2)
+        self.add_time_series(fig, row=2, col=1)
+        self.add_3d_scatter(fig, row=2, col=2)
+
+        fig.update_layout(height=800, width=1200, title_text="Zombie Apocalypse Simulation",
+                          legend_title="Health States", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
+        fig.show()
+
+    def add_scatter_plot(self, fig, row, col):
+        scatter_data = self.data_history[-1]
+        scatter_plot = px.scatter(scatter_data, x="x", y="y", color="state")
+        for trace in scatter_plot.data:
+            fig.add_trace(trace, row=row, col=col)
+
+    def add_heatmap(self, fig, row, col):
+        heatmap_data = self.data_history[-1].pivot_table(index='y', columns='x', aggfunc='size', fill_value=0)
+        fig.add_trace(go.Heatmap(z=heatmap_data.values, x=heatmap_data.columns, y=heatmap_data.index, colorscale='Viridis'), row=row, col=col)
+
+    def add_time_series(self, fig, row, col):
+        time_series_data = self.prepare_time_series_data()
+        time_series_plot = px.line(time_series_data, x="time_step", y="counts", color='state')
+        for trace in time_series_plot.data:
+            fig.add_trace(trace, row=row, col=col)
+
+    def add_3d_scatter(self, fig, row, col):
+        scatter_data = self.data_history[-1]
+        scatter_3d = px.scatter_3d(scatter_data, x="x", y="y", z="z", color="state")
+        for trace in scatter_3d.data:
+            fig.add_trace(trace, row=row, col=col)
+
+    def prepare_time_series_data(self):
+        all_states = ['HEALTHY', 'INFECTED', 'ZOMBIE', 'DEAD']
+        all_combinations = pd.MultiIndex.from_product([range(len(self.data_history)), all_states], names=['time_step', 'state']).to_frame(index=False)
+
+        time_series_data = pd.concat([data['state'].value_counts().rename_axis('state').reset_index(name='counts').assign(time_step=index) for index, data in enumerate(self.data_history)], ignore_index=True)
+        
+        return pd.merge(all_combinations, time_series_data, on=['time_step', 'state'], how='left').fillna(0)
+
 
 class MatplotlibAnimator(Observer):
     def __init__(self, population: Population, plot_order=["bar", "scatter", "table"]):
@@ -957,8 +1019,8 @@ class MatplotlibAnimator(Observer):
 
     def setup_scatter_plot(self, ax):
         ax.set_title("Scatter Plot")
-        ax.set_xlim(-1, self.subject.school.size + 1)
-        ax.set_ylim(-1, self.subject.school.size + 1)
+        ax.set_xlim(-1, self.subject.school.size)
+        ax.set_ylim(-1, self.subject.school.size)
         self.setup_initial_scatter_state(ax)
 
     def setup_table(self, ax):
@@ -1069,65 +1131,6 @@ class MatplotlibAnimator(Observer):
         plt.pause(0.5)
 
 
-class PlotlyAnimator(Observer):
-    def __init__(self, population: Population):
-        self.subject = population
-        self.subject.attach_observer(self)
-        self.data_history = []
-
-    def update(self):
-        current_state = self.capture_current_state()
-        self.data_history.append(current_state)
-
-    def capture_current_state(self):
-        data = [{'x': ind.location[0], 'y': ind.location[1], 'z': 0, 'state': ind.health_state.name} for ind in self.subject.agent_list]
-        return pd.DataFrame(data)
-
-    def display_observation(self):
-        fig = make_subplots(rows=2, cols=2, subplot_titles=("Scatter Plot", "Heatmap", "Time Series", "3D Scatter Plot"),
-                            specs=[[{"type": "scatter"}, {"type": "heatmap"}], [{"type": "scatter"}, {"type": "scatter3d"}]])
-
-        self.add_scatter_plot(fig, row=1, col=1)
-        self.add_heatmap(fig, row=1, col=2)
-        self.add_time_series(fig, row=2, col=1)
-        self.add_3d_scatter(fig, row=2, col=2)
-
-        fig.update_layout(height=800, width=1200, title_text="Zombie Apocalypse Simulation",
-                          legend_title="Health States", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-        fig.show()
-
-    def add_scatter_plot(self, fig, row, col):
-        scatter_data = self.data_history[-1]
-        scatter_plot = px.scatter(scatter_data, x="x", y="y", color="state")
-        for trace in scatter_plot.data:
-            fig.add_trace(trace, row=row, col=col)
-
-    def add_heatmap(self, fig, row, col):
-        heatmap_data = self.data_history[-1].pivot_table(index='y', columns='x', aggfunc='size', fill_value=0)
-        fig.add_trace(go.Heatmap(z=heatmap_data.values, x=heatmap_data.columns, y=heatmap_data.index, colorscale='Viridis'), row=row, col=col)
-
-    def add_time_series(self, fig, row, col):
-        time_series_data = self.prepare_time_series_data()
-        time_series_plot = px.line(time_series_data, x="time_step", y="counts", color='state')
-        for trace in time_series_plot.data:
-            fig.add_trace(trace, row=row, col=col)
-
-    def add_3d_scatter(self, fig, row, col):
-        scatter_data = self.data_history[-1]
-        scatter_3d = px.scatter_3d(scatter_data, x="x", y="y", z="z", color="state")
-        for trace in scatter_3d.data:
-            fig.add_trace(trace, row=row, col=col)
-
-    def prepare_time_series_data(self):
-        all_states = ['HEALTHY', 'INFECTED', 'ZOMBIE', 'DEAD']
-        all_combinations = pd.MultiIndex.from_product([range(len(self.data_history)), all_states], names=['time_step', 'state']).to_frame(index=False)
-
-        time_series_data = pd.concat([data['state'].value_counts().rename_axis('state').reset_index(name='counts').assign(time_step=index) for index, data in enumerate(self.data_history)], ignore_index=True)
-        
-        return pd.merge(all_combinations, time_series_data, on=['time_step', 'state'], how='left').fillna(0)
-
-
-
 class TkinterObserver(Observer):
     def __init__(self, population, grid_size=300, cell_size=30):
         self.subject = population
@@ -1142,52 +1145,145 @@ class TkinterObserver(Observer):
         self.root = tk.Tk()
         self.root.title("Zombie Apocalypse Simulation")
 
-        # Create canvas for the grid
-        self.canvas = tk.Canvas(self.root, width=self.grid_size, height=self.grid_size)
-        self.canvas.pack()
+        # Canvas for the simulation grid
+        self.grid_canvas = tk.Canvas(self.root, width=self.grid_size, height=self.grid_size)
+        self.grid_canvas.pack(side=tk.LEFT)
 
-        # Status label for real-time stats
-        self.status_label = tk.Label(self.root, text="")
-        self.status_label.pack()
+        # Frame for Matplotlib plots
+        self.plot_frame = tk.Frame(self.root)
+        self.plot_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
-        # Draw the initial state
-        self.update()
+        # Setup common elements and plots
+        self.init_common_elements()
+        self.setup_plots()
+
+        self.update()  # Initial update
+
+    def init_common_elements(self):
+        sns.set_style("whitegrid")
+        sns.set_context("paper")
+        deep_colors = sns.color_palette("deep")
+        self.state_colors = {
+            HealthState.HEALTHY: deep_colors[0],
+            HealthState.INFECTED: deep_colors[1],
+            HealthState.ZOMBIE: deep_colors[2],
+            HealthState.DEAD: deep_colors[3],
+        }
+        self.cmap = colors.ListedColormap(list(self.state_colors.values()))
+
+    def setup_plots(self):
+        self.figures = {
+            'bar': Figure(figsize=(7, 7), constrained_layout=True),
+            'scatter': Figure(figsize=(7, 7), constrained_layout=True),
+            'table': Figure(figsize=(7, 7), constrained_layout=True)
+        }
+
+        # Initial setup for each plot
+        self.setup_initial_bar_state(self.figures['bar'].add_subplot(111))
+        self.setup_initial_scatter_state(self.figures['scatter'].add_subplot(111))
+        self.setup_initial_table_state(self.figures['table'].add_subplot(111))
+
+        # Using grid layout manager instead of pack
+        self.plot_frame.grid_columnconfigure(0, weight=1)
+        self.plot_frame.grid_rowconfigure(0, weight=1)
+        self.plot_frame.grid_rowconfigure(1, weight=1)
+        self.plot_frame.grid_rowconfigure(2, weight=1)
+
+        self.canvases = {}
+        for i, (plot_type, fig) in enumerate(self.figures.items()):
+            canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
+            self.canvases[plot_type] = canvas
+            canvas_widget = canvas.get_tk_widget()
+            canvas_widget.grid(row=i, column=0, sticky="nsew")
+
+        # Ensure the grid_canvas is positioned correctly
+        self.grid_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
     def update(self):
         self.draw_grid()
-        self.update_status()
-        self.tkinter_mainloop()
+        self.update_plots()
+        self.root.update_idletasks()
+        self.root.update()
         time.sleep(0.5)
 
     def draw_grid(self):
-        self.canvas.delete("all")  # Clear the canvas
-
+        self.grid_canvas.delete("all")
         for individual in self.subject.agent_list:
             x, y = individual.location
-            x1 = x * self.cell_size
-            y1 = y * self.cell_size
-            x2 = x1 + self.cell_size
-            y2 = y1 + self.cell_size
-
+            canvas_x = y
+            canvas_y = x
+            x1, y1 = canvas_x * self.cell_size, canvas_y * self.cell_size
+            x2, y2 = x1 + self.cell_size, y1 + self.cell_size
             color = self.get_color(individual.health_state)
-            self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="black")
+            self.grid_canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="black")
+
+    def update_plots(self):
+        self.update_bar_chart()
+        self.update_scatter_plot()
+        self.update_table_plot()
+
+    # Bar chart setup and update
+    def setup_initial_bar_state(self, ax):
+        ax.set_title("Bar Chart")
+        ax.set_ylim(0, len(self.subject.agent_list) + 1)
+        ax.legend(handles=[patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()], 
+                    loc="center left", bbox_to_anchor=(1, 0.5))
+
+    def update_bar_chart(self):
+        ax = self.figures['bar'].gca()
+        ax.clear()
+        self.setup_initial_bar_state(ax)
+        cell_states = [individual.health_state for individual in self.subject.agent_list]
+        counts = {state: cell_states.count(state) for state in HealthState}
+        heights = np.array([counts.get(state, 0) for state in HealthState])
+        ax.bar(np.arange(len(HealthState)), heights, tick_label=[state.name for state in HealthState], color=[self.state_colors[state] for state in HealthState])
+        self.canvases['bar'].draw()
+
+    # Scatter plot setup and update
+    def setup_initial_scatter_state(self, ax):
+        ax.set_title("Scatter Plot")
+        ax.set_xlim(-1, self.subject.school.size)
+        ax.set_ylim(-1, self.subject.school.size)
+        ax.legend(handles=[patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()], 
+                    loc="center left", bbox_to_anchor=(1, 0.5))
+
+    def update_scatter_plot(self):
+        ax = self.figures['scatter'].gca()
+        ax.clear()
+        self.setup_initial_scatter_state(ax)
+        x = [individual.location[1] for individual in self.subject.agent_list]
+        y = [individual.location[0] for individual in self.subject.agent_list]
+        cell_states_value = [individual.health_state.value for individual in self.subject.agent_list]
+        ax.scatter(x, y, c=cell_states_value, cmap=self.cmap)
+        self.canvases['scatter'].draw()
+
+    # Table plot setup and update
+    def setup_initial_table_state(self, ax):
+        ax.set_title("Table")
+        ax.axis('tight')
+        ax.axis('off')
+        ax.set_xlim(-1, self.subject.school.size + 1)
+        ax.set_ylim(-1, self.subject.school.size + 1)
+        ax.legend(handles=[patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()], 
+                    loc="center left", bbox_to_anchor=(1, 0.5))
+
+    def update_table_plot(self):
+        ax = self.figures['table'].gca()
+        ax.clear()
+        self.setup_initial_table_state(ax)
+        cell_states = [["" for _ in range(self.subject.school.size)] for _ in range(self.subject.school.size)]
+        for individual in self.subject.agent_list:
+            cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
+        table = ax.table(cellText=cell_states, loc="center")
+        for key, cell in table.get_celld().items():
+            cell_state = cell_states[key[0]][key[1]]
+            cell.set_facecolor(self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white")
+            cell.get_text().set_text(cell_state)
+        self.canvases['table'].draw()
 
     def get_color(self, health_state):
-        color_map = {
-            HealthState.HEALTHY: "green",
-            HealthState.INFECTED: "yellow",
-            HealthState.ZOMBIE: "red",
-            HealthState.DEAD: "gray"
-        }
-        return color_map.get(health_state, "white")
-
-    def update_status(self):
-        stats = f"Healthy: {self.subject.num_healthy}, Infected: {self.subject.num_infected}, Zombies: {self.subject.num_zombie}, Dead: {self.subject.num_dead}"
-        self.status_label.config(text=stats)
-
-    def tkinter_mainloop(self):
-        self.root.update_idletasks()
-        self.root.update()
+        rgb_color = self.state_colors.get(health_state, (1, 1, 1))  # Default white
+        return f"#{int(rgb_color[0]*255):02x}{int(rgb_color[1]*255):02x}{int(rgb_color[2]*255):02x}"
 
     def display_observation(self):
         self.root.mainloop()
@@ -1269,8 +1365,8 @@ def main():
     # create Observer objects
     # simulation_observer = SimulationObserver(school_sim)
     # simulation_animator = SimulationAnimator(school_sim)
-    # matplotlib_animator = MatplotlibAnimator(school_sim)
     # plotly_animator = PlotlyAnimator(school_sim)
+    # matplotlib_animator = MatplotlibAnimator(school_sim)
     tkinter_observer = TkinterObserver(school_sim)
     # prediction_observer = PredictionObserver(school_sim)
 
@@ -1284,8 +1380,8 @@ def main():
     # observe the statistics of the population
     # simulation_observer.display_observation(format="bar") # "statistics" or "grid" or "bar" or "scatter" or "table"
     # simulation_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
-    # matplotlib_animator.display_observation()
     # plotly_animator.display_observation()
+    # matplotlib_animator.display_observation()
     tkinter_observer.display_observation()
     # prediction_observer.display_observation()
 
