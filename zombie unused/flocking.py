@@ -40,7 +40,6 @@ Implement in python.
 """
 
 import random
-import sys
 from abc import ABC, abstractmethod
 from collections import deque
 
@@ -285,7 +284,6 @@ class Simulation:
                 self.update_agents()
                 self.render_agents()
         pygame.quit()
-        # sys.exit()
 
     def handle_events(self):
         for event in pygame.event.get():

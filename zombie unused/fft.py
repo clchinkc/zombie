@@ -1,6 +1,7 @@
+import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.fft import fft, fft2, fftshift
+from scipy.fft import fft2, fftshift
 
 # Simulation parameters
 grid_size = 50  # Size of the grid
@@ -13,7 +14,7 @@ grid = np.zeros((grid_size, grid_size), dtype=int)
 infected_indices = np.random.choice(grid_size * grid_size, initial_infected, replace=False)
 grid[np.unravel_index(infected_indices, grid.shape)] = 1
 
-# Function to update the grid based on zombie spread dynamics
+# Function to update the grid based on infection spread dynamics
 def update_grid(grid):
     new_grid = grid.copy()
     for i in range(grid_size):
@@ -29,59 +30,43 @@ def update_grid(grid):
     return new_grid
 
 # Run the simulation
-time_series_data = []
 spatial_data = []
-
 for step in range(simulation_steps):
     grid = update_grid(grid)
-    time_series_data.append(np.sum(grid == 1))  # Count infected cells
     spatial_data.append(grid.copy())
 
 # Convert spatial data to array for easier processing
 spatial_data = np.array(spatial_data)
 
-# FFT analysis on time-series data
-time_series_fft = fft(time_series_data)
-frequencies = np.fft.fftfreq(len(time_series_data), d=1)
+# Function to compute FFT of the spatial data
+def compute_fft(data):
+    fft_data = fft2(data)
+    fft_shifted = fftshift(fft_data)
+    return np.log(np.abs(fft_shifted) + 1e-10)  # Log scale for better visualization
 
-# Identify and highlight dominant frequencies
-dominant_freqs = frequencies[(np.abs(time_series_fft) > np.max(np.abs(time_series_fft)) * 0.1) & (frequencies > 0)]
-dominant_freq_indices = np.argsort(-np.abs(time_series_fft))[:len(dominant_freqs)]
+# Creating animations
+def create_animation(data, cmap, title, xlabel, ylabel, fps=5, interval=200):
+    fig, ax = plt.subplots(figsize=(6, 6))
+    img = ax.imshow(data[0], cmap=cmap)
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes, color="white")
 
-# Spatial analysis at different stages
-stages = [10, 30, 70]  # Early, middle, and late stages of the simulation
+    def update(frame):
+        img.set_data(data[frame])
+        time_text.set_text(f"Time Step: {frame}")
+        return img, time_text
 
-# Visualization
-fig, axs = plt.subplots(len(stages) + 1, 2, figsize=(12, (len(stages) + 1) * 8), constrained_layout=True)
+    ani = animation.FuncAnimation(fig, update, frames=range(0, simulation_steps, 5), interval=interval, blit=True)
+    return ani
 
-# Plotting time-series data and its FFT
-axs[0, 0].plot(frequencies, np.abs(time_series_fft))
-axs[0, 0].scatter(frequencies[dominant_freq_indices], np.abs(time_series_fft)[dominant_freq_indices], color='red')
-axs[0, 0].set_title("FFT of Time-Series Data (Dominant Frequencies Highlighted)")
-axs[0, 0].set_xlabel("Frequency")
-axs[0, 0].set_ylabel("Amplitude")
+# Creating spatial data animation
+ani_spatial = create_animation(spatial_data, 'viridis', "Spatial Data Over Time", "X Coordinate", "Y Coordinate")
 
-axs[0, 1].plot(time_series_data)
-axs[0, 1].set_title("Time-Series Data")
-axs[0, 1].set_xlabel("Time Step")
-axs[0, 1].set_ylabel("Number of Infected Cells")
+# Creating FFT animation
+fft_data = [compute_fft(frame) for frame in spatial_data]
+ani_fft = create_animation(fft_data, 'hot', "FFT of Spatial Data Over Time", "Frequency X", "Frequency Y")
 
-# Plotting spatial data and its FFT at different stages
-for i, stage in enumerate(stages):
-    # FFT of spatial data at the selected stage
-    spatial_fft = fft2(spatial_data[stage])
-    spatial_fft_shifted = fftshift(spatial_fft)
-
-    # Original spatial data
-    axs[i + 1, 0].imshow(spatial_data[stage], cmap='viridis')
-    axs[i + 1, 0].set_title(f"Spatial Data at Time Step {stage}")
-    axs[i + 1, 0].set_xlabel("X Coordinate")
-    axs[i + 1, 0].set_ylabel("Y Coordinate")
-
-    # FFT-transformed spatial data
-    axs[i + 1, 1].imshow(np.log(np.abs(spatial_fft_shifted) + 1e-10), cmap='hot')
-    axs[i + 1, 1].set_title(f"FFT of Spatial Data at Time Step {stage} (Log Scale)")
-    axs[i + 1, 1].set_xlabel("Frequency X")
-    axs[i + 1, 1].set_ylabel("Frequency Y")
-
+# Display animations
 plt.show()

@@ -353,7 +353,7 @@ class Individual:
         return f"Individual {self.id}"
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.id}, {self.health_state.value}, {self.location})"
+        return f"{self.__class__.__name__}({self.id}, {self.health_state}, {self.location})"
 
 
 # separate inheritance for human and zombie class
