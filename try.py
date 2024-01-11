@@ -1,1394 +1,611 @@
-"""
-The implementation of a zombie apocalypse simulation in a school environment requires the creation of several classes and functions to accurately represent the dynamics of such a scenario. Let's break down the implementation into key components and their respective functionalities:
 
-### 1. Person Class
-- **Attributes:** Location, state (alive, undead, escaped), health, weapons, and supplies.
-- **Methods:** Movement across the grid, interactions with other entities (people, zombies).
-
-### 2. Zombie Class
-- **Attributes:** Similar to Person class, with additional zombie-specific behaviors (attacking, infecting).
-- **Methods:** Movement, attacking living people, spreading infection.
-
-### 3. School Class
-- **Attributes:** Layout represented by a 2D grid, tracking of people and zombies.
-- **Methods:** Movement and state updates for people and zombies, interaction handling.
-
-### 4. Simulation Function
-- **Functionality:** Initializes simulation conditions (layout, entities, resources), runs the simulation for a specified number of steps, updates and tracks the simulation's progress.
-
-### 5. Additional Components
-- **State Machine Pattern:** For managing the state transitions of individuals (healthy, infected, zombie, dead).
-- **Movement Strategies:** Different strategies for movement (random, flee zombies, chase humans) depending on the state of the individual.
-- **Grid Management:** Functions to handle legal movements, neighbor detection, and interactions within the grid.
-- **Statistical Tracking:** To keep track of population metrics (counts of healthy, infected, zombies, dead).
-
-### 6. Visualization and Analysis
-- Enhance visualization for better insights. This could include detailed graphs, color-coding, and interactive elements for in-depth exploration.
-
-### Implementation Overview
-- **Language & Libraries:** Python with libraries like NumPy, Matplotlib, Seaborn, and Keras.
-- **UI Frameworks:** Tkinter for basic GUI elements.
-- **Machine Learning:** For predicting future states of the simulation.
-- **Observer Pattern:** To track and update simulation states and render visualizations.
-
-### Example Workflow
-1. **Initialize:** Set up the school grid and populate it with individuals.
-2. **Run Simulation:** Iterate over time steps, updating states and movements of individuals.
-3. **Apply Strategies:** Based on individual states, apply movement and interaction strategies.
-4. **State Management:** Update states (healthy, infected, zombie) using the state machine pattern.
-5. **Visualization:** Use graphical tools to visualize the simulation progress and outcomes.
-6. **Analysis:** Apply machine learning for predictive analysis and simulation insights.
-
-This structured approach allows for a comprehensive simulation of a zombie apocalypse in a school setting, with detailed tracking and analysis of the evolving scenario.
-"""
-
-from __future__ import annotations
-
-import math
-import random
-import time
-import tkinter as tk
-from abc import ABC, abstractmethod
-from collections import Counter
-from copy import deepcopy
-from dataclasses import dataclass
-from enum import Enum, auto
-from functools import cached_property
-from itertools import product
-from typing import Any, Optional
-
-import matplotlib.patches as patches
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-import seaborn as sns
-from keras import layers, models
-from matplotlib import animation, colors, patches
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.figure import Figure
-from matplotlib.table import Table
-from matplotlib.transforms import Bbox
-from plotly.subplots import make_subplots
-from scipy import stats
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
+import pygame
+import tensorflow as tf
+import tensorflow_probability as tfp
+from matplotlib import pyplot as plt
+from tf_agents.agents import CategoricalDqnAgent, PPOKLPenaltyAgent, ReinforceAgent
+from tf_agents.agents.ddpg import critic_network
+from tf_agents.agents.dqn import dqn_agent
+from tf_agents.agents.dqn.dqn_agent import DdqnAgent
+from tf_agents.drivers import dynamic_episode_driver, dynamic_step_driver
+from tf_agents.environments import py_environment, tf_py_environment
+from tf_agents.eval import metric_utils
+from tf_agents.metrics import tf_metrics
+from tf_agents.networks import (
+    actor_distribution_network,
+    categorical_q_network,
+    q_network,
+    value_network,
+)
+from tf_agents.policies import random_tf_policy
+from tf_agents.replay_buffers import tf_uniform_replay_buffer
+from tf_agents.specs import array_spec
+from tf_agents.train.utils import strategy_utils, train_utils
+from tf_agents.trajectories import time_step as ts
+from tf_agents.trajectories import trajectory
+from tf_agents.utils import common
 
 
-class HealthState(Enum):
+class Runner:
+    def __init__(self, position, grid_size):
+        self.position = position
+        self._grid_size = grid_size
 
-    HEALTHY = auto()
-    INFECTED = auto()
-    ZOMBIE = auto()
-    DEAD = auto()
+    def move(self, direction, is_valid_move):
+        new_position = self.position.copy()
+        if direction == 0:   # up
+            new_position[0] -= 1
+        elif direction == 1: # right
+            new_position[1] += 1
+        elif direction == 2: # down
+            new_position[0] += 1
+        elif direction == 3: # left
+            new_position[1] -= 1
+        if is_valid_move(new_position) == True:
+            self.position = new_position
 
-    @classmethod
-    def name_list(cls) -> list[str]:
-        return [enm.name for enm in HealthState]
+class Chaser:
+    def __init__(self, position):
+        self.position = position
 
-    @classmethod
-    def value_list(cls) -> list[int]:
-        return [enm.value for enm in HealthState]
+    def move_towards_runner(self, runner_position, is_valid_move):
+        move_direction = np.argmax(np.abs(runner_position - self.position))
+        direction_sign = np.sign(runner_position[move_direction] - self.position[move_direction])
+        new_position = self.position.copy()
+        new_position[move_direction] += direction_sign
+        if is_valid_move(new_position) == True:
+            self.position = new_position
 
+class Obstacle:
+    def __init__(self, position):
+        self.position = position
 
-# state pattern
+class ChaseEnvironment(py_environment.PyEnvironment):
+    def __init__(self, grid_size, num_obstacles):
+        self._grid_size = grid_size
+        self._action_spec = array_spec.BoundedArraySpec(
+            shape=(), dtype=np.int32, minimum=0, maximum=3, name='action')
+        self._observation_spec = array_spec.BoundedArraySpec(
+            shape=(grid_size, grid_size, 3), dtype=np.float32, minimum=0., maximum=1., name='observation')
+        self._runner = Runner(self._init_position(), grid_size)
+        self._chaser = Chaser(self._init_position())
+        self._obstacles = [Obstacle(self._init_position()) for _ in range(num_obstacles)]
+        self._state = self._create_state()
 
-class StateMachine(ABC):
-    _instance = None
+        # Define the action distribution spec
+        self._action_distribution_spec = tfp.distributions.Categorical(logits=tf.zeros((self._action_spec.maximum + 1,)))
 
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = cls()
-        return cls._instance
+    def action_spec(self):
+        return self._action_spec
 
-    @abstractmethod
-    def update_state(self, individual: Individual, severity: float) -> None:
-        pass
+    def observation_spec(self):
+        return self._observation_spec
 
-    def is_infected(self, individual: Individual, severity: float, randomness=random.random()) -> bool:
-        infection_probability = 1 / (1 + math.exp(-severity))
-        if any(other.health_state == HealthState.ZOMBIE for other in individual.connections):
-            if randomness < infection_probability:
-                return True
-        return False
-
-    def is_turned(self, individual: Individual, severity: float, randomness=random.random()) -> bool:
-        turning_probability = individual.infection_severity
-        if randomness < turning_probability:
-            return True
-        return False
-
-    def is_died(self, individual: Individual, severity: float, randomness=random.random()) -> bool:
-        death_probability = severity
-        if any(other.health_state == HealthState.HEALTHY or other.health_state == HealthState.INFECTED for other in individual.connections):
-            if randomness < death_probability:
-                return True
-        return False
-
-# can add methods that change behaviour based on the state
-
-class HealthyStateMachine(StateMachine):
-    def update_state(self, individual: Individual, severity: float) -> None:
-        if self.is_infected(individual, severity):
-            individual.health_state = HealthState.INFECTED
-
-class InfectedStateMachine(StateMachine):
-    def update_state(self, individual: Individual, severity: float) -> None:
-        individual.infection_severity = round(min(1, individual.infection_severity + 0.1), 1)
-        if self.is_turned(individual, severity):
-            individual.health_state = HealthState.ZOMBIE
-        elif self.is_died(individual, severity):
-            individual.health_state = HealthState.DEAD
-
-class ZombieStateMachine(StateMachine):
-    def update_state(self, individual: Individual, severity: float) -> None:
-        if self.is_died(individual, severity):
-            individual.health_state = HealthState.DEAD
-
-class DeadStateMachine(StateMachine):
-    def update_state(self, individual: Individual, severity: float) -> None:
-        pass
-
-class StateMachineFactory:
-    @staticmethod
-    def get_instance():
-        return {
-            HealthState.HEALTHY: HealthyStateMachine(),
-            HealthState.INFECTED: InfectedStateMachine(),
-            HealthState.ZOMBIE: ZombieStateMachine(),
-            HealthState.DEAD: DeadStateMachine()
-        }
-
-    @staticmethod
-    def update_state(individual: Individual, severity: float) -> None:
-        state_machines = StateMachineFactory.get_instance()
-        state_machine = state_machines[individual.health_state]
-        state_machine.update_state(individual, severity)
-
-
-# Strategy pattern
-
-
-class MovementStrategy(ABC):
-
-    individual: Any[Individual]
-    legal_directions: list[tuple[int, int]]
-    neighbors: list[Individual]
-
-    @abstractmethod
-    def choose_direction(self, individual, school):
-        raise NotImplementedError
-
-
-@dataclass
-# if no neighbors, choose random direction
-class RandomMovementStrategy(MovementStrategy):
-
-    individual: Any[Individual]
-    legal_directions: list[tuple[int, int]]
-    neighbors: list[Individual]
-
-    def choose_direction(self):
-        return random.choice(self.legal_directions)
+    def _init_position(self):
+        return np.random.randint(0, self._grid_size, size=(2,))
     
-@dataclass
-# simulate Brownian motion
-class BrownianMovementStrategy(MovementStrategy):
-
-    individual: Any[Individual]
-    legal_directions: list[tuple[int, int]]
-    neighbors: list[Individual]
+    def _reset_position(self):
+        position = self._init_position()
+        while not self.is_valid_position(position):
+            position = self._init_position()
+        return position
     
-    def __post_init__(self):
-        self.damping_coefficient = 0.5
-        self.std_dev = 1
-        self.scale_factor = math.sqrt(2 * self.damping_coefficient)*self.std_dev
+    def is_valid_position(self, position):
+        is_inside_grid = 0 <= position[0] < self._grid_size and 0 <= position[1] < self._grid_size
+        not_occupied =  not any(np.array_equal(position, obs.position) for obs in self._obstacles)
+                        # not np.array_equal(position, self._runner.position) and \
+                        # not np.array_equal(position, self._chaser.position)
 
-    def choose_direction(self):
-        while True:
-            direction = np.rint(np.random.normal(loc=0, scale=self.scale_factor, size=2)).astype(int)
-            if tuple(direction) in self.legal_directions:
-                return direction
+        return is_inside_grid and not_occupied
 
-@dataclass
-# if healthy or other having no alive neighbors
-class FleeZombiesStrategy(MovementStrategy):
+    def _create_state(self):
+        state = np.zeros((self._grid_size, self._grid_size, 3), dtype=np.float32)
+        state[tuple(self._runner.position), 0] = 1.
+        state[tuple(self._chaser.position), 1] = 1.
+        for obs in self._obstacles:
+            state[tuple(obs.position), 2] = 1.
+        return state
 
-    individual: Any[Individual]
-    legal_directions: list[tuple[int, int]]
-    neighbors: list[Individual]
+    def _is_done(self):
+        return np.array_equal(self._runner.position, self._chaser.position)
 
-    def choose_direction(self):
-        zombies_locations = [zombies.location for zombies in self.neighbors if zombies.health_state == HealthState.ZOMBIE]
-        return self.direction_against_closest(self.individual, self.legal_directions, zombies_locations)
+    def _reward(self):
+        return np.linalg.norm(self._runner.position - self._chaser.position)
+        # return -np.linalg.norm(self._runner_position - self._chaser_position) for chaser
+        # return 1 / (1 + np.linalg.norm(self._runner_position - self._chaser_position)) for runner for smoothly approach
+        # return -1 / (1 + np.linalg.norm(self._runner_position - self._chaser_position)) for chaser for smoothly avoid
 
-    # find the closest zombie and move away from it
-    def direction_against_closest(self, individual: Individual, legal_directions: list[tuple[int, int]], target_locations: list[tuple[int, int]]) -> tuple[int, int]:
-        distances = [np.linalg.norm(np.subtract(np.array(individual.location), np.array(target))) for target in target_locations]
-        closest_index = np.argmin(distances)
-        closest_target = target_locations[closest_index]
-        direction_distances = [np.linalg.norm(np.add(d, np.array(individual.location)) - closest_target) for d in np.array(legal_directions)]
-        max_distance = np.max(direction_distances)
-        farthest_directions = np.where(direction_distances == max_distance)[0]
-        return legal_directions[random.choice(farthest_directions)]
+    def _reset(self):
+        self._runner.position = self._reset_position()
+        self._chaser.position = self._reset_position()
+        self._state = self._create_state()
+        return ts.restart(self._state)
 
-@dataclass
-# if zombie or other having no zombie neighbors
-class ChaseHumansStrategy(MovementStrategy):
+    def _step(self, action):
+        if self._is_done():
+            return self._reset()
 
-    individual: Any[Individual]
-    legal_directions: list[tuple[int, int]]
-    neighbors: list[Individual]
+        self._runner.move(action, self.is_valid_position)
+        self._chaser.move_towards_runner(self._runner.position, self.is_valid_position)
+        self._state = self._create_state()
 
-    def choose_direction(self):
-        alive_locations = [alive.location for alive in self.neighbors if alive.health_state == HealthState.HEALTHY]
-        return self.direction_towards_closest(self.individual, self.legal_directions, alive_locations)
-
-    # find the closest human and move towards it
-    def direction_towards_closest(self, individual: Individual,legal_directions: list[tuple[int, int]],target_locations: list[tuple[int, int]],) -> tuple[int, int]:
-        current_location = np.array(individual.location)
-        new_locations = current_location + np.array(legal_directions)
-        distance_matrix = np.linalg.norm(new_locations[:, np.newaxis, :] - np.array(target_locations)[np.newaxis, :, :], axis=2)
-        min_distance = np.min(distance_matrix[distance_matrix != 0])
-        min_directions = np.where(distance_matrix == min_distance)[0]
-        return legal_directions[random.choice(min_directions)]
-
-    # If the closest person is closer than the closest zombie, move towards the person, otherwise move away from the zombie
-    # or move away from zombie is the priority and move towards person is the secondary priority
-
-
-@dataclass
-class NoMovementStrategy(MovementStrategy):
-
-    individual: Any[Individual]
-    legal_directions: list[tuple[int, int]]
-    neighbors: list[Individual]
-
-    def choose_direction(self):
-        return (0, 0)
-
-
-# may use init to store individual and school
-# may use function, use closure to store individual and school
-
-
-class MovementStrategyFactory:
-    def create_strategy(self, individual, school):
-        # get legal directions
-        legal_directions = school.get_legal_directions(individual)
-        # early exit
-        if not legal_directions:
-            return NoMovementStrategy(individual, legal_directions, [])
-        # get neighbors
-        neighbors = school.get_neighbors(individual.location, individual.sight_range)
-        # early exit
-        # if no neighbors, random movement
-        if not neighbors:
-            return RandomMovementStrategy(individual, legal_directions, neighbors)
-        # get number of human and zombies neighbors
-        alive_number = len([alive for alive in neighbors if alive.health_state == HealthState.HEALTHY])
-        zombies_number = len([zombies for zombies in neighbors if zombies.health_state == HealthState.ZOMBIE])
-        # if no human neighbors, move away from the closest zombies
-        if alive_number == 0 and zombies_number > 0:
-            return FleeZombiesStrategy(individual, legal_directions, neighbors)
-        # if no zombies neighbors, move towards the closest human
-        elif zombies_number == 0 and alive_number > 0:
-            return ChaseHumansStrategy(individual, legal_directions, neighbors)
-        # if both human and zombies neighbors, zombies move towards the closest human and human move away from the closest zombies
+        if self._is_done():
+            return ts.termination(self._state, self._reward())
         else:
-            if individual.health_state == HealthState.ZOMBIE and alive_number > 0:
-                return ChaseHumansStrategy(individual, legal_directions, neighbors)
-            elif (individual.health_state == HealthState.HEALTHY or individual.health_state == HealthState.INFECTED) and zombies_number > 0:
-                return FleeZombiesStrategy(individual, legal_directions, neighbors)
-            elif individual.health_state == HealthState.DEAD:
-                return NoMovementStrategy(individual, legal_directions, neighbors)
-            else:
-                return BrownianMovementStrategy(individual, legal_directions, neighbors)
+            return ts.transition(self._state, reward=self._reward(), discount=0.999)
 
-    # may consider update the grid according to the individual's location
-    # after assigning all new locations to the individuals
-    # may add a extra attribute to store new location
+    def _render(self):
+        # if there is no screen, create one
+        if not hasattr(self, '_screen'):
+            # Create the display surface
+            cell_size = 50
+            width, height = self._grid_size * cell_size, self._grid_size * cell_size
+            self.screen = pygame.display.set_mode((width, height))
+            self.cell_size = cell_size
 
+            # Create the grid rects
+            self.grid_rects = [pygame.Rect(i, j, cell_size, cell_size) for j in range(0, height, cell_size) for i in range(0, width, cell_size)]
 
-class Individual:
-
-    __slots__ = ("id","state","location","connections","infection_severity","interact_range","__dict__",)
-
-    def __init__(self,id: int, health_state: HealthState, location: tuple[int, int],) -> None:
-        self.id: int = id
-        self.health_state: HealthState = health_state
-        self.location: tuple[int, int] = location
-        self.connections: list[Individual] = []
-        self.infection_severity: float = 0.0
-        self.interact_range: int = 2
-
-        # different range for different states
-        # may use random distribution
-
-    @cached_property
-    def sight_range(self) -> int:
-        return self.interact_range + 3
-
-    # fluent interface
-    def add_connection(self, other: Individual) -> None:
-        self.connections.append(other)
-
-    def move(self, direction: tuple[int, int]) -> None:
-        dx, dy = direction
-        x, y = self.location
-        self.location = (x + dx, y + dy)
-
-    def choose_direction(self, movement_strategy) -> tuple[int, int]:
-        return movement_strategy.choose_direction()
-
-    def update_state(self, severity: float) -> None:
-        StateMachineFactory.update_state(self, severity)
-
-    def get_info(self) -> str:
-        return f"Individual {self.id} is {self.health_state.name} and is located at {self.location}, having connections with {self.connections}, infection severity {self.infection_severity}, interact range {self.interact_range}, and sight range {self.sight_range}."
-
-    def __str__(self) -> str:
-        return f"Individual {self.id}"
-
-    def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.id}, {self.health_state.value}, {self.location})"
-
-
-# separate inheritance for human and zombie class
-
-
-class School:
-
-    __slots__ = ("size", "grid", "strategy_factory", "__dict__",)
-
-    def __init__(self, size: int) -> None:
-        self.size = size
-        # Create a 2D grid representing the school with each cell can contain a Individual object
-        self.grid: np.ndarray = np.full((size, size), None, dtype=object)
-        self.strategy_factory = MovementStrategyFactory()
-
-        # may turn to width and height
-        # may put Cell class in the grid where Cell class has individual attributes and rates
-
-    def add_individual(self, individual: Individual) -> None:
-        self.grid[int(individual.location[0])][int(
-            individual.location[1])] = individual
-
-    def get_individual(self, location: tuple[int, int]) -> Optional[Individual]:
-        return self.grid[location[0]][location[1]]
-
-    def remove_individual(self, location: tuple[int, int]) -> None:
-        self.grid[location[0]][location[1]] = None
-
-    # may change the add\remove function to accept individual class as well as location
-
-    def update_connections(self) -> None:
-        for row in self.grid:
-            for cell in row:
-                if cell is None:
-                    continue
-                neighbors = self.get_neighbors((cell.location), cell.interact_range)
-                for neighbor in neighbors:
-                    cell.add_connection(neighbor)
-
-    def update_individual_location(self, individual: Individual) -> None:
-        movement_strategy = self.strategy_factory.create_strategy(individual, self)
-        direction = individual.choose_direction(movement_strategy)
-        self.move_individual(individual, direction)
-
-    # update the grid in the population based on their interactions with other people
-    def update_grid(self, population: list[Individual], migration_probability: float, randomness=random.random()) -> None:
-        for individuals in population:
-            cell = self.get_individual(individuals.location)
-
-            if cell is None or cell.health_state == HealthState.DEAD:
-                continue
-
-            if randomness < migration_probability:
-                self.update_individual_location(cell)
-
-                # if right next to then don't move
-                # get neighbors with larger and larger range until there is a human
-                # sight range is different from interact range
-
-    def get_neighbors(self, location: tuple[int, int], interact_range: int = 2):
-        x, y = location
-        x_range = range(max(0, x - interact_range), min(self.size, x + interact_range + 1))
-        y_range = range(max(0, y - interact_range), min(self.size, y + interact_range + 1))
+            # Create runner, chaser, and obstacle rects
+            self.runner_rect = pygame.Rect(0, 0, cell_size, cell_size)
+            self.chaser_rect = pygame.Rect(0, 0, cell_size, cell_size)
+            self.obstacle_rects = [pygame.Rect(0, 0, cell_size, cell_size) for _ in range(num_obstacles)]
         
-        neighbors = filter(
-            lambda pos: (pos[0] != x or pos[1] != y) and self.within_distance(self.grid[x][y], self.grid[pos[0]][pos[1]], interact_range),
-            product(x_range, y_range)
+        self.screen.fill((0, 0, 0))
+
+        # Draw the grid
+        for rect in self.grid_rects:
+            pygame.draw.rect(self.screen, (255, 255, 255), rect, 1)
+
+        # Update and draw the runner (blue) and the chaser (red)
+        self.runner_rect.topleft = (self._runner.position[1] * self.cell_size, self._runner.position[0] * self.cell_size)
+        self.chaser_rect.topleft = (self._chaser.position[1] * self.cell_size, self._chaser.position[0] * self.cell_size)
+        pygame.draw.rect(self.screen, (0, 0, 255), self.runner_rect)
+        pygame.draw.rect(self.screen, (255, 0, 0), self.chaser_rect)
+
+        # Update and draw the obstacles (gray)
+        for i, obstacle in enumerate(self._obstacles):
+            self.obstacle_rects[i].topleft = (obstacle.position[1] * self.cell_size, obstacle.position[0] * self.cell_size)
+            pygame.draw.rect(self.screen, (128, 128, 128), self.obstacle_rects[i])
+
+        pygame.display.flip()
+
+num_iterations = 2000
+initial_collect_steps = 1000
+collect_steps_per_iteration = 2
+replay_buffer_max_length = 10000
+batch_size = 64
+log_interval = 100
+num_eval_episodes = 10
+eval_interval = 10000
+
+grid_size = 10
+num_obstacles = 3
+env = ChaseEnvironment(grid_size=grid_size, num_obstacles=num_obstacles)
+train_env = tf_py_environment.TFPyEnvironment(env)
+eval_env = tf_py_environment.TFPyEnvironment(env)
+
+initial_learning_rate = 0.001
+alpha = 0.5
+lr_schedule = tf.keras.optimizers.schedules.CosineDecay(
+    initial_learning_rate=initial_learning_rate,
+    decay_steps=num_iterations,
+    alpha=alpha
+)
+
+decay_epsilon_greedy = tf.keras.optimizers.schedules.PolynomialDecay(
+    initial_learning_rate=0.9,
+    decay_steps=num_iterations,
+    end_learning_rate=0.1
+)
+
+num_steps_update = 5
+
+strategy = strategy_utils.get_strategy(tpu=False, use_gpu=True)
+
+def create_dqn_agent(lr_schedule, train_env, decay_epsilon_greedy=decay_epsilon_greedy, num_steps_update=num_steps_update):
+
+    q_net = q_network.QNetwork(
+        train_env.observation_spec(),
+        train_env.action_spec(),
+        conv_layer_params=((16, 3, 1), (32, 3, 1)),
+        fc_layer_params=(10,),
+        dropout_layer_params=(0.1,),
+        activation_fn=tf.keras.activations.elu,
         )
 
-        return [self.grid[i][j] for i, j in neighbors]
+    train_step_counter = train_utils.create_train_step()
 
-    def within_distance(self, individual1: Optional[Individual], individual2: Optional[Individual], interact_range: int):
-        if individual1 is None or individual2 is None:
-            return False
-        # check if the two individuals are within a certain distance of each other
-        distance = self.distance(individual1.location, individual2.location)
-        return distance < interact_range
+    tf_agent = dqn_agent.DdqnAgent(
+        train_env.time_step_spec(),
+        train_env.action_spec(),
+        q_network=q_net,
+        optimizer=tf.optimizers.Adam(learning_rate=lr_schedule(train_step_counter)),
+        epsilon_greedy=lambda: decay_epsilon_greedy(train_step_counter),
+        n_step_update=num_steps_update,
+        td_errors_loss_fn=common.element_wise_squared_loss, # tf.losses.Huber(reduction="none")
+        train_step_counter=train_step_counter)
 
-    def distance(self, location1: tuple[int, int], location2: tuple[int, int]) -> float:
-        # get the distance between two individuals
-        distance = float(np.linalg.norm(np.subtract(location1, location2)))
-        return distance
+    tf_agent.initialize()
+    return train_step_counter, tf_agent
 
-    def get_legal_directions(self, individual: Individual) -> list[tuple[int, int]]:
-        # get all possible legal moves for the individual
-        legal_directions = [
-            (i, j) for i in range(-1, 2) for j in range(-1, 2)
-            if (i == 0 and j == 0)
-            or self.legal_location((individual.location[0] + i, individual.location[1] + j))
-        ]
-        return legal_directions
-
-    def legal_location(self, location: tuple[int, int]) -> bool:
-        return self.in_bounds(location) and self.not_occupied(location)
-
-    def in_bounds(self, location: tuple[int, int]) -> bool:
-        # check if the location is in the grid
-        return (0 <= location[0] < self.size and 0 <= location[1] < self.size)
-
-    def not_occupied(self, location: tuple[int, int]) -> bool:
-        # check if the location is empty
-        return self.grid[location[0]][location[1]] is None
-
-    # return any(agent.position == (x, y) for agent in self.agents)
-
-    def move_individual(self, individual: Individual, direction: tuple[int, int]) -> None:
-        old_location = individual.location
-        individual.move(direction)
-        self.remove_individual(old_location)
-        self.add_individual(individual)
-
-    def get_info(self) -> str:
-        return "\n".join(
-            " ".join(str(individual.health_state.value) if individual else " " for individual in column)
-            for column in self.grid
-            )
-
-    # return the count inside the grid
+def create_ddpn_agent(learning_rate, train_env):
+    q_net = q_network.QNetwork(
+        train_env.observation_spec(),
+        train_env.action_spec(),
+        conv_layer_params=((16, 3, 1), (32, 3, 1)),
+        fc_layer_params=(10,),
+        dropout_layer_params=(0.1,),
+        activation_fn=tf.keras.activations.elu,
+        )
     
-    def __str__(self) -> str:
-        return f"School({self.size})"
-
-    def __repr__(self) -> str:
-        return "%s(%d,%d)" % (self.__class__.__name__, self.size)
-
-
-class Population:
-    def __init__(self, school_size: int, population_size: int) -> None:
-        self.school: School = School(school_size)
-        self.agent_list: list[Individual] = []
-        self.severity: float = 0.0
-        self.init_population(school_size, population_size)
-        self.update_population_metrics()
-        self.observers = []
-
-    def add_individual(self, individual: Individual) -> None:
-        self.agent_list.append(individual)
-        self.school.add_individual(individual)
-
-    def remove_individual(self, individual: Individual) -> None:
-        self.agent_list.remove(individual)
-        self.school.remove_individual(individual.location)
-
-    def create_individual(self, id: int, school_size: int) -> Individual:
-        state = random.choices(list(HealthState), weights=[0.7, 0.1, 0.2, 0.0])[0]
-        available_locations = [(i, j) for i in range(school_size) for j in range(school_size) if self.school.legal_location((i, j))]
-        location = random.choice(available_locations)
-        return Individual(id, state, location)
-
-    def init_population(self, school_size: int, population_size: int) -> None:
-        for i in range(population_size):
-            individual = self.create_individual(i, school_size)
-            self.add_individual(individual)
-
-    def clear_population(self) -> None:
-        self.agent_list.clear()
-        self.school.grid = np.full((self.school.size, self.school.size), None, dtype=object)
-
-    # a method to init using a grid of "A", "I", "Z", "D"
-
-    def run_population(self, num_time_steps: int) -> None:
-        for time in range(num_time_steps):
-            self.timestep = time + 1
-            print("Time step: ", self.timestep)
-            self.severity = time / num_time_steps
-            print("Severity: ", self.severity)
-            self.school.update_grid(self.agent_list, self.migration_probability)
-            print("Updated Grid")
-            self.school.update_connections()
-            print("Updated Connections")
-            self.update_individual_states()
-            print("Updated State")
-            self.update_population_metrics()
-            print("Updated Population Metrics")
-            individual_info = self.get_all_individual_info()
-            print(individual_info)
-            print("Got Individual Info")
-            school_info = self.school.get_info()
-            print(school_info)
-            print("Got School Info")
-            self.notify_observers()
-            print("Notified Observers")
-        self.clear_population()
-
-    def update_individual_states(self) -> None:
-        for individual in self.agent_list:
-            individual.update_state(self.severity)
-            if individual.health_state == HealthState.DEAD:
-                self.school.remove_individual(individual.location)
-
-    def update_population_metrics(self) -> None:
-        self.calculate_state_counts()
-        self.calculate_probabilities()
-
-    def calculate_state_counts(self) -> None:
-        state_counts = Counter([individual.health_state for individual in self.agent_list])
-        self.num_healthy = state_counts[HealthState.HEALTHY]
-        self.num_infected = state_counts[HealthState.INFECTED]
-        self.num_zombie = state_counts[HealthState.ZOMBIE]
-        self.num_dead = state_counts[HealthState.DEAD]
-        self.population_size = self.num_healthy + self.num_infected + self.num_zombie
-        
-    def calculate_probabilities(self) -> None:
-        self.infection_probability = 1 - (1 / (1 + math.exp(-self.severity))) # logistic function
-        self.turning_probability = self.severity / (1 + self.severity) # softplus function
-        self.death_probability = self.severity  # linear function
-        self.migration_probability = self.population_size / (self.population_size + 1)
-
-        # may use other metrics or functions to calculate the probability of infection, turning, death, migration
-
-    def get_all_individual_info(self) -> str:
-        return f"Population of size {self.population_size}\n" + \
-            "\n".join(individual.get_info() for individual in self.agent_list)
-
-    def attach_observer(self, observer: Observer) -> None:
-        self.observers.append(observer)
-
-    def notify_observers(self) -> None:
-        for observer in self.observers:
-            observer.update()
-
-    def __str__(self) -> str:
-        return f"Population with {self.num_healthy} healthy, {self.num_infected} infected, and {self.num_zombie} zombie individuals"
-
-    def __repr__(self) -> str:
-        return f"Population({self.school.size}, {self.population_size})"
-
-
-# Observer Pattern
-
-class Observer(ABC):
-    @abstractmethod
-    def __init__(self) -> None:
-        pass
-
-    @abstractmethod
-    def update(self) -> None:
-        pass
-
-    @abstractmethod
-    def display_observation(self) -> None:
-        pass
-
-
-class SimulationObserver(Observer):
-    def __init__(self, population: Population) -> None:
-        self.subject = population
-        self.subject.attach_observer(self)
-        self.statistics = []
-        self.grid = self.subject.school.grid
-        self.agent_list = self.subject.agent_list
-
-        sns.set_style("whitegrid")
-        sns.set_context("paper")
-        deep_colors = sns.color_palette("deep")
-        self.state_colors = {
-            HealthState.HEALTHY: deep_colors[0],
-            HealthState.INFECTED: deep_colors[1],
-            HealthState.ZOMBIE: deep_colors[2],
-            HealthState.DEAD: deep_colors[3],
-        }
-        self.cmap = colors.ListedColormap(list(self.state_colors.values()))
-        self.state_handles = [patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()]
-
-    def update(self) -> None:
-        statistics =  {
-            "num_healthy": self.subject.num_healthy,
-            "num_infected": self.subject.num_infected,
-            "num_zombie": self.subject.num_zombie,
-            "num_dead": self.subject.num_dead,
-            "population_size": self.subject.population_size,
-            "infection_probability": self.subject.infection_probability,
-            "turning_probability": self.subject.turning_probability,
-            "death_probability": self.subject.death_probability,
-            "migration_probability": self.subject.migration_probability,
-        }
-        self.statistics.append(deepcopy(statistics))
-        self.grid = deepcopy(self.subject.school.grid)
-        self.agent_list = deepcopy(self.subject.agent_list)
-        
-
-    def display_observation(self, format="statistics"):
-        if format == "statistics":
-            self.print_statistics_text()
-        elif format == "grid":
-            self.print_grid_text()
-        elif format == "bar":
-            self.print_bar_graph()
-        elif format == "scatter":
-            self.print_scatter_graph()
-        elif format == "table":
-            self.print_table_graph()
-
-    def print_statistics_text(self):
-        population_size = self.statistics[-1]["population_size"]
-        num_healthy = self.statistics[-1]["num_healthy"]
-        num_infected = self.statistics[-1]["num_infected"]
-        num_zombie = self.statistics[-1]["num_zombie"]
-        num_dead = self.statistics[-1]["num_dead"]
-        healthy_percentage = num_healthy / (population_size + 1e-10)
-        infected_percentage = num_infected / (population_size + 1e-10)
-        zombie_percentage = num_zombie / (population_size + 1e-10)
-        dead_percentage = num_dead / (population_size + 1e-10)
-        infected_rate = num_infected / (num_healthy + 1e-10)
-        turning_rate = num_zombie / (num_infected + 1e-10)
-        death_rate = num_dead / (num_zombie + 1e-10)
-        infection_probability = self.statistics[-1]["infection_probability"]
-        turning_probability = self.statistics[-1]["turning_probability"]
-        death_probability = self.statistics[-1]["death_probability"]
-        migration_probability = self.statistics[-1]["migration_probability"]
-        print("Population Statistics:")
-        print(f"Population Size: {population_size}")
-        print(f"Healthy: {num_healthy} ({healthy_percentage:.2%})")
-        print(f"Infected: {num_infected} ({infected_percentage:.2%})")
-        print(f"Zombie: {num_zombie} ({zombie_percentage:.2%})")
-        print(f"Dead: {num_dead} ({dead_percentage:.2%})")
-        print(f"Infection Probability: {infection_probability:.2%} -> Infected Rate: {infected_rate:.2%}")
-        print(f"Turning Probability: {turning_probability:.2%} -> Turning Rate: {turning_rate:.2%}")
-        print(f"Death Probability: {death_probability:.2%} -> Death Rate: {death_rate:.2%}")
-        print(f"Migration Probability: {migration_probability:.2%}")
-        
-        # The mean can be used to calculate the average number of zombies that appear in a specific area over time. This can be useful for predicting the rate of zombie infection and determining the necessary resources needed to survive.
-        mean = np.mean([d["num_zombie"] for d in self.statistics])
-        # The median can be used to determine the middle value in a set of data. In a zombie apocalypse simulation, the median can be used to determine the number of days it takes for a specific area to become overrun with zombies.
-        median = np.median([d["num_zombie"] for d in self.statistics])
-        # The mode can be used to determine the most common value in a set of data. In a zombie apocalypse simulation, the mode can be used to determine the most common type of zombie encountered or the most effective weapon to use against them.
-        mode = stats.mode([d["num_zombie"] for d in self.statistics], keepdims=True)[0][0]
-        # The standard deviation can be used to determine how spread out a set of data is. In a zombie apocalypse simulation, the standard deviation can be used to determine the level of unpredictability in zombie behavior or the effectiveness of certain survival strategies.
-        std = np.std([d["num_zombie"] for d in self.statistics])
-        print(f"Mean of Number of Zombie: {mean}")
-        print(f"Median of Number of Zombie: {median}")
-        print(f"Mode of Number of Zombie: {mode}")
-        print(f"Standard Deviation of Number of Zombie: {std}")
-        print()
-
-    """
-    # may format the output in the subject and print it directly here
+    train_step_counter = train_utils.create_train_step()
     
-    def print_text_statistics(self):
-        print("Population Statistics:")
-        for key, value in self.statistics.items():
-            print(f"{key}: {value}")
+    tf_agent = DdqnAgent(
+        train_env.time_step_spec(),
+        train_env.action_spec(),
+        q_network=q_net,
+        optimizer=tf.optimizers.Adam(learning_rate=lr_schedule(train_step_counter)),
+        epsilon_greedy=lambda: decay_epsilon_greedy(train_step_counter),
+        n_step_update=num_steps_update,
+        td_errors_loss_fn=common.element_wise_squared_loss, # tf.losses.Huber(reduction="none")
+        train_step_counter=train_step_counter)
+    
+    tf_agent.initialize()
+    
+    return train_step_counter, tf_agent
+
+def create_categorical_dqn_agent(learning_rate, train_env, decay_epsilon_greedy=decay_epsilon_greedy, num_steps_update=num_steps_update):
+
+    categorical_q_net = categorical_q_network.CategoricalQNetwork(
+        train_env.observation_spec(),
+        train_env.action_spec(),
+        num_atoms=51,
+        conv_layer_params=((16, 3, 1), (32, 3, 1)),
+        fc_layer_params=(10,),
+        activation_fn=tf.keras.activations.elu,
+        )
+
+    train_step_counter = train_utils.create_train_step()
+    
+    def categorical_huber_loss(target, pred):
+        # Use the huber loss to compute the element-wise loss for the target and pred tensors.
+        elementwise_loss = tf.losses.Huber(target, pred, reduction=tf.losses.Reduction.NONE)
+
+        # Compute the categorical loss by summing the element-wise loss over the atoms dimension
+        # and multiplying by the atom delta.
+        return tf.reduce_sum(elementwise_loss, axis=-1) * categorical_q_net.atom_delta
+
+    tf_agent = CategoricalDqnAgent(
+        train_env.time_step_spec(),
+        train_env.action_spec(),
+        categorical_q_network=categorical_q_net,
+        optimizer=tf.optimizers.Adam(learning_rate=lr_schedule(train_step_counter)),
+        epsilon_greedy=lambda: decay_epsilon_greedy(train_step_counter),
+        n_step_update=num_steps_update,
+        target_update_tau=0.05,
+        target_update_period=1,
+        td_errors_loss_fn=categorical_huber_loss,
+        train_step_counter=train_step_counter)
+
+    tf_agent.initialize()
+    return train_step_counter, tf_agent
+
+def create_reinforce_agent(learning_rate, train_env):
+    actor_net = actor_distribution_network.ActorDistributionNetwork(
+        train_env.observation_spec(),
+        train_env.action_spec(),
+        fc_layer_params=(100,),
+    )
+    
+    value_net = value_network.ValueNetwork(
+        train_env.observation_spec(),
+        fc_layer_params=(100,),
+    )
+
+    train_step_counter = train_utils.create_train_step()
+
+    tf_agent = ReinforceAgent(
+        train_env.time_step_spec(),
+        train_env.action_spec(),
+        actor_network=actor_net,
+        value_network=value_net,
+        optimizer=tf.optimizers.Adam(learning_rate=lr_schedule(train_step_counter)),
+        use_advantage_loss=True,
+        value_estimation_loss_coef=0.5,
+        gamma=0.99,
+        normalize_returns=True,
+        gradient_clipping=0.5,
+        entropy_regularization=0.2,
+        train_step_counter=train_step_counter,
+    )
+
+    tf_agent.initialize()
+
+    return train_step_counter, tf_agent
+
+def create_ppo_agent(learning_rate, train_env):
+    actor_net = actor_distribution_network.ActorDistributionNetwork(
+        train_env.observation_spec(),
+        train_env.action_spec(),
+        fc_layer_params=(100,),
+    )
+
+    value_net = value_network.ValueNetwork(
+        train_env.observation_spec(),
+        fc_layer_params=(100,),
+    )
+
+    train_step_counter = train_utils.create_train_step()
+
+    tf_agent = PPOKLPenaltyAgent(
+        time_step_spec=train_env.time_step_spec(),
+        action_spec=train_env.action_spec(),
+        actor_net=actor_net,
+        value_net=value_net,
+        optimizer=tf.optimizers.Adam(learning_rate=lr_schedule(train_step_counter)),
+        num_epochs=1,
+        initial_adaptive_kl_beta=1.0,
+        adaptive_kl_target=0.01,
+        adaptive_kl_tolerance=0.5,
+        kl_cutoff_coef=0.0,
+        kl_cutoff_factor=0.0,
+        use_gae=True,
+        normalize_rewards=True,
+        entropy_regularization=0.1,
+        train_step_counter=train_step_counter,
+    )
+
+    tf_agent.initialize()
+
+    return train_step_counter, tf_agent
+
+
+with strategy.scope():
+    # train_step_counter, tf_agent = create_dqn_agent(lr_schedule, train_env)
+    train_step_counter, tf_agent = create_ddpn_agent(lr_schedule, train_env)
+    # train_step_counter, tf_agent = create_categorical_dqn_agent(lr_schedule, train_env)
+    # train_step_counter, tf_agent = create_reinforce_agent(lr_schedule, train_env)
+    # train_step_counter, tf_agent = create_ppo_agent(lr_schedule, train_env)
+
+def create_replay_buffer(replay_buffer_max_length, train_env, tf_agent):
+    replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
+    data_spec=tf_agent.collect_data_spec,
+    batch_size=train_env.batch_size,
+    max_length=replay_buffer_max_length,
+    device='gpu:0'
+    )
+
+    return replay_buffer
+
+replay_buffer = create_replay_buffer(replay_buffer_max_length, train_env, tf_agent)
+
+def collect_data(env, policy, buffer, steps):
+    driver = dynamic_step_driver.DynamicStepDriver(
+        env,
+        policy,
+        observers=[buffer.add_batch],
+        num_steps=steps)
+    driver.run()
+
+random_policy = random_tf_policy.RandomTFPolicy(train_env.time_step_spec(), train_env.action_spec())
+
+# collect_data(train_env, random_policy, replay_buffer, steps=initial_collect_steps)
+collect_data(eval_env, tf_agent.collect_policy, replay_buffer, steps=initial_collect_steps)
+
+dataset = replay_buffer.as_dataset(
+    num_parallel_calls=4,
+    sample_batch_size=batch_size,
+    num_steps=num_steps_update + 1
+    ).prefetch(tf.data.experimental.AUTOTUNE)
+
+iterator = iter(dataset)
+
+tf_agent.train = common.function(tf_agent.train)
+
+train_checkpointer = common.Checkpointer(
+    ckpt_dir='checkpoint',
+    max_to_keep=1,
+    agent=tf_agent,
+    policy=tf_agent.policy,
+    replay_buffer=replay_buffer,
+    global_step=train_step_counter)
+
+train_checkpointer.initialize_or_restore()
+
+def collect_step(environment, policy, buffer):
+    time_step = environment.current_time_step()
+    action_step = policy.action(time_step)
+    next_time_step = environment.step(action_step.action)
+    traj = trajectory.from_transition(time_step, action_step, next_time_step)
+    buffer.add_batch(traj)
+
+# def eval_agent(environment, policy, num_episodes=num_eval_episodes):
+#     metrics = [
+#         tf_metrics.AverageReturnMetric(buffer_size=num_episodes),
+#         tf_metrics.AverageEpisodeLengthMetric(buffer_size=num_episodes)
+#     ]
+#     results = metric_utils.eager_compute(
+#         metrics=metrics,
+#         environment=environment,
+#         policy=policy,
+#         num_episodes=num_episodes
+#     )
+#     return results['AverageReturn'], results['AverageEpisodeLength']
+
+def eval_agent(environment, policy, num_episodes=num_eval_episodes):
+    average_return_metric = tf_metrics.AverageReturnMetric(buffer_size=num_episodes)
+    average_episode_length_metric = tf_metrics.AverageEpisodeLengthMetric(buffer_size=num_episodes)
+    driver = dynamic_episode_driver.DynamicEpisodeDriver(
+        environment,
+        policy,
+        observers=[average_return_metric, average_episode_length_metric],
+        num_episodes=num_episodes
+    )
+    driver.run(maximum_iterations=1000)
+    avg_return = average_return_metric.result().numpy()
+    avg_length = average_episode_length_metric.result().numpy()
+    return avg_return, avg_length
+
+def train_agent(num_iterations, collect_steps_per_iteration, log_interval, num_eval_episodes, eval_interval, train_env, eval_env, train_step_counter, tf_agent, replay_buffer, iterator, train_checkpointer, collect_step, compute_avg_return):
+    
+    returns = []
+    
+    for _ in range(num_iterations):
+        for _ in range(collect_steps_per_iteration):
+            collect_step(train_env, tf_agent.collect_policy, replay_buffer)
+
+        experience, _ = next(iterator)
+        train_loss = tf_agent.train(experience)
+
+        step = tf_agent.train_step_counter.numpy()
+
+        if step % log_interval == 0:
+            print('step = {0}: loss = {1}'.format(step, train_loss.loss))
+
+        if step % eval_interval == 0:
+            avg_return, avg_length = eval_agent(eval_env, tf_agent.policy, num_eval_episodes)
+            print('step = {0}: Average Return = {1}, Average Episode Length = {2}'.format(step, avg_return, avg_length))
+            train_checkpointer.save(train_step_counter.numpy())
+            print('Saved checkpoint for step {0}'.format(step))
+            returns.append(avg_return)
+
+    if returns:
+        # Plot the results
+        plt.plot(returns)
+        plt.xlabel('Step')
+        plt.ylabel('Average Return')
+        plt.title('Training Progress')
+        plt.show()
+
+def sim_agent(environment, policy, num_episodes=num_eval_episodes):
+    # Initialize Pygame
+    pygame.init()
+    pygame.display.set_caption("Chase Environment")
+    
+    for _ in range(num_episodes):
+        time_step = environment.reset()
+        environment.pyenv.envs[0]._render()  # Render the initial state
+
+        while not time_step.is_last():
+            pygame.time.wait(1000)
             
-    # subject notify method push info to update method of observer
-    # but the subject don't know what info observer want to display
-    # or let observer pull info from subject using get method of subject
-    # but observer need to get info from subject one by one
-    """
-    
-    def print_grid_text(self):
-        print("Print School:")
-        state_symbols = {
-            None: " ",
-            HealthState.HEALTHY: "H",
-            HealthState.INFECTED: "I",
-            HealthState.ZOMBIE: "Z",
-            HealthState.DEAD: "D",
-        }
-
-        for row in self.grid:
-            for cell in row:
-                try:
-                    print(state_symbols[cell.health_state], end=" ")
-                except AttributeError:
-                    print(state_symbols[cell], end=" ")
-            print()
-        print()
-
-
-    def print_bar_graph(self):
-        fig, ax = plt.subplots(1, 1, figsize=(7, 7), constrained_layout=True)
-        ax.set_title("Bar Chart")
-        ax.set_ylim(0, self.statistics[0]["population_size"] + 1)
-
-        # Use common state_colors
-        cell_states = [individual.health_state for individual in self.agent_list]
-        counts = {state: cell_states.count(state) for state in HealthState}
-        ax.bar(
-            np.asarray(HealthState.value_list()),
-            list(counts.values()),
-            tick_label=HealthState.name_list(),
-            label=HealthState.name_list(),
-            color=[self.state_colors[state] for state in HealthState]
-        )
-
-        ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.show()
-
-    def print_scatter_graph(self):
-        fig, ax = plt.subplots(1, 1, figsize=(7, 7), constrained_layout=True)
-        ax.set_title("Scatter Chart")
-        ax.set_xlim(-1, self.subject.school.size)
-        ax.set_ylim(-1, self.subject.school.size)
-
-        x = np.array([individual.location[0] for individual in self.agent_list])
-        y = np.array([individual.location[1] for individual in self.agent_list])
-        cell_states_value = np.array([individual.health_state.value for individual in self.agent_list])
-
-        # Use common cmap
-        ax.scatter(x, y, c=cell_states_value, cmap=self.cmap)
-
-        ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.show()
-
-    def print_table_graph(self):
-        fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
-        ax.set_title("Table Chart")
-        ax.set_xlim(-1, self.subject.school.size + 1)
-        ax.set_ylim(-1, self.subject.school.size + 1)
-        ax.axis('off')
-
-        # Initialize table with common state_colors
-        cell_states = [["" for _ in range(len(self.grid[0]))] for _ in range(len(self.grid))]
-        for j, individual in enumerate(self.agent_list):
-            cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
-
-        table = ax.table(cellText=np.array(cell_states), loc="center", bbox=Bbox.from_bounds(0, 0, 1, 1))
-
-        # Adjust cell properties using common state_colors
-        for key, cell in table.get_celld().items():
-            cell_state = cell_states[key[0]][key[1]]
-            cell.set_facecolor(self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white")
-            cell.get_text().set_text(cell_state)
-            cell.set_height(1 / len(cell_states[0]))
-            cell.set_width(1 / len(cell_states[0]))
-            cell.get_text().set_horizontalalignment('center')
-            cell.get_text().set_verticalalignment('center')
-        
-        plt.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.show()
-
-
-class SimulationAnimator(Observer):
-    def __init__(self, population: Population) -> None:
-        self.subject = population
-        self.subject.attach_observer(self)
-        self.agent_history = []
-
-        sns.set_style("whitegrid")
-        sns.set_context("paper")
-        deep_colors = sns.color_palette("deep")
-        self.state_colors = {
-            HealthState.HEALTHY: deep_colors[0],
-            HealthState.INFECTED: deep_colors[1],
-            HealthState.ZOMBIE: deep_colors[2],
-            HealthState.DEAD: deep_colors[3],
-        }
-        self.cmap = colors.ListedColormap(list(self.state_colors.values()))
-        self.state_handles = [patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()]
-
-    def update(self) -> None:
-        self.agent_history.append(deepcopy(self.subject.agent_list))
-
-    def display_observation(self, format="bar"):
-        if format == "bar":
-            self.print_bar_animation()
-        elif format == "scatter":
-            self.print_scatter_animation()
-        elif format == "table":
-            self.print_table_animation()
-
-    def print_bar_animation(self):
-        counts = []
-        for agent_list in self.agent_history:
-            cell_states = [individual.health_state for individual in agent_list]
-            counts.append([cell_states.count(state) for state in HealthState])
-
-        self.bar_chart_animation(np.array(HealthState.value_list()), np.array(counts), HealthState.name_list())
-
-    def bar_chart_animation(self, x, y, ticks):
-        fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
-        ax.set_title("Bar Chart Animation")
-        ax.set_ylim(0, max(map(max, y)) + 1)
-
-        bars = ax.bar(x, y[0], tick_label=ticks, label=HealthState.name_list(), color=self.state_colors.values())
-        text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
-
-        def update(i):
-            for j, bar in enumerate(bars):
-                bar.set_height(y[i][j])
-            text_box.set_text(f"Time Step: {i+1}")
-
-        anim = animation.FuncAnimation(fig, update, frames=len(y), interval=1000, repeat=False)
-        plt.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.show()
-
-    def print_scatter_animation(self):
-        x = [[individual.location[0] for individual in agent_list] for agent_list in self.agent_history]
-        y = [[self.subject.school.size - individual.location[0] - 1 for individual in agent_list] for agent_list in self.agent_history]
-        cell_states_value = [[individual.health_state.value for individual in agent_list] for agent_list in self.agent_history]
-
-        self.scatter_chart_animation(x, y, cell_states_value)
-
-    def scatter_chart_animation(self, x, y, cell_states_value):
-        fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
-        ax.set_title("Scatter Chart Animation")
-        ax.set_xlim(-1, self.subject.school.size)
-        ax.set_ylim(-1, self.subject.school.size)
-
-        sc = ax.scatter(x[0], y[0], c=cell_states_value[0], cmap=self.cmap)
-        text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
-
-        def animate(i):
-            sc.set_offsets(np.c_[x[i], y[i]])
-            sc.set_array(cell_states_value[i])
-            text_box.set_text(f"Time Step: {i+1}")
-
-        anim = animation.FuncAnimation(fig, animate, frames=len(x), interval=1000, repeat=False)
-        plt.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.show()
-
-    def print_table_animation(self):
-        cell_states_name = [[individual.health_state for individual in agent_list] for agent_list in self.agent_history]
-        x = [[individual.location[0] for individual in agent_list] for agent_list in self.agent_history]
-        y = [[individual.location[1] for individual in agent_list] for agent_list in self.agent_history]
-
-        # Build the grid
-        cell_states = []
-        for i in range(len(cell_states_name)):
-            grid = [["" for _ in range(self.subject.school.size)] for _ in range(self.subject.school.size)]
-            for j, individual in enumerate(cell_states_name[i]):
-                grid[x[i][j]][y[i][j]] = individual.name
-            cell_states.append(grid)
-
-        self.table_animation(cell_states)
-
-    def table_animation(self, cell_states):
-        fig, ax = plt.subplots(figsize=(7, 7), constrained_layout=True)
-        ax.set_title("Table Animation")
-        ax.set_xlim(-1, self.subject.school.size + 1)
-        ax.set_ylim(-1, self.subject.school.size + 1)
-        ax.axis('off')
-
-        # Initialize table
-        table = ax.table(cellText=cell_states[0], loc="center", bbox=Bbox.from_bounds(0, 0, 1, 1))
-        text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
-
-        # Adjust cell properties for centering text
-        for key, cell in table.get_celld().items():
-            cell.set_height(1 / len(cell_states[0]))
-            cell.set_width(1 / len(cell_states[0]))
-            cell.get_text().set_horizontalalignment('center')
-            cell.get_text().set_verticalalignment('center')
-
-        def animate(i):
-            for row_num, row in enumerate(cell_states[i]):
-                for col_num, cell_value in enumerate(row):
-                    cell_color = self.state_colors.get(HealthState[cell_value], "white") if cell_value else "white"
-                    table[row_num, col_num].set_facecolor(cell_color)
-                    table[row_num, col_num].get_text().set_text(cell_value)
-            text_box.set_text(f"Time Step: {i+1}")
-            return table, text_box
-
-        anim = animation.FuncAnimation(fig, animate, frames=len(cell_states), interval=1000, repeat=False, blit=True)
-        plt.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.show()
-
-
-class PlotlyAnimator(Observer):
-    def __init__(self, population: Population):
-        self.subject = population
-        self.subject.attach_observer(self)
-        self.data_history = []
-
-    def update(self):
-        current_state = self.capture_current_state()
-        self.data_history.append(current_state)
-
-    def capture_current_state(self):
-        data = [{'x': ind.location[0], 'y': ind.location[1], 'z': 0, 'state': ind.health_state.name} for ind in self.subject.agent_list]
-        return pd.DataFrame(data)
-
-    def display_observation(self):
-        fig = make_subplots(rows=2, cols=2, subplot_titles=("Scatter Plot", "Heatmap", "Time Series", "3D Scatter Plot"),
-                            specs=[[{"type": "scatter"}, {"type": "heatmap"}], [{"type": "scatter"}, {"type": "scatter3d"}]])
-
-        self.add_scatter_plot(fig, row=1, col=1)
-        self.add_heatmap(fig, row=1, col=2)
-        self.add_time_series(fig, row=2, col=1)
-        self.add_3d_scatter(fig, row=2, col=2)
-
-        fig.update_layout(height=800, width=1200, title_text="Zombie Apocalypse Simulation",
-                          legend_title="Health States", legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-        fig.show()
-
-    def add_scatter_plot(self, fig, row, col):
-        scatter_data = self.data_history[-1]
-        scatter_plot = px.scatter(scatter_data, x="x", y="y", color="state")
-        for trace in scatter_plot.data:
-            fig.add_trace(trace, row=row, col=col)
-
-    def add_heatmap(self, fig, row, col):
-        heatmap_data = self.data_history[-1].pivot_table(index='y', columns='x', aggfunc='size', fill_value=0)
-        fig.add_trace(go.Heatmap(z=heatmap_data.values, x=heatmap_data.columns, y=heatmap_data.index, colorscale='Viridis'), row=row, col=col)
-
-    def add_time_series(self, fig, row, col):
-        time_series_data = self.prepare_time_series_data()
-        time_series_plot = px.line(time_series_data, x="time_step", y="counts", color='state')
-        for trace in time_series_plot.data:
-            fig.add_trace(trace, row=row, col=col)
-
-    def add_3d_scatter(self, fig, row, col):
-        scatter_data = self.data_history[-1]
-        scatter_3d = px.scatter_3d(scatter_data, x="x", y="y", z="z", color="state")
-        for trace in scatter_3d.data:
-            fig.add_trace(trace, row=row, col=col)
-
-    def prepare_time_series_data(self):
-        all_states = ['HEALTHY', 'INFECTED', 'ZOMBIE', 'DEAD']
-        all_combinations = pd.MultiIndex.from_product([range(len(self.data_history)), all_states], names=['time_step', 'state']).to_frame(index=False)
-
-        time_series_data = pd.concat([data['state'].value_counts().rename_axis('state').reset_index(name='counts').assign(time_step=index) for index, data in enumerate(self.data_history)], ignore_index=True)
-        
-        return pd.merge(all_combinations, time_series_data, on=['time_step', 'state'], how='left').fillna(0)
-
-
-class MatplotlibAnimator(Observer):
-    def __init__(self, population: Population, plot_order=["bar", "scatter", "table"]):
-        """Initialize the animator with customizable plot order."""
-        self.subject = population
-        self.subject.attach_observer(self)
-        self.plot_order = plot_order
-
-        # Initialize matplotlib figure with three subplots
-        self.fig, self.axes = plt.subplots(1, 3, figsize=(21, 7), constrained_layout=True)
-
-        # Initialize common elements for the plots
-        self.init_common_elements()
-
-        # Setup each subplot based on the specified order
-        for i, plot_type in enumerate(self.plot_order):
-            if plot_type == "bar":
-                self.setup_bar_chart(self.axes[i])
-            elif plot_type == "scatter":
-                self.setup_scatter_plot(self.axes[i])
-            elif plot_type == "table":
-                self.setup_table(self.axes[i])
-
-    def init_common_elements(self):
-        # Common elements initialization
-        self.cell_states = [individual.health_state for individual in self.subject.agent_list]
-        self.cell_states_value = [state.value for state in self.cell_states]
-        self.cell_x_coords = [individual.location[0] for individual in self.subject.agent_list]
-        self.cell_y_coords = [individual.location[1] for individual in self.subject.agent_list]
-
-        sns.set_style("whitegrid")
-        sns.set_context("paper")
-        deep_colors = sns.color_palette("deep")
-        self.state_colors = {
-            HealthState.HEALTHY: deep_colors[0],
-            HealthState.INFECTED: deep_colors[1],
-            HealthState.ZOMBIE: deep_colors[2],
-            HealthState.DEAD: deep_colors[3],
-        }
-        self.cmap = colors.ListedColormap(list(self.state_colors.values()))
-        self.state_handles = [patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()]
-
-    # Setup methods for each plot type
-    def setup_bar_chart(self, ax):
-        ax.set_title("Bar Chart")
-        ax.set_ylim(0, len(self.subject.agent_list) + 1)
-        self.setup_initial_bar_state(ax)
-
-    def setup_scatter_plot(self, ax):
-        ax.set_title("Scatter Plot")
-        ax.set_xlim(-1, self.subject.school.size)
-        ax.set_ylim(-1, self.subject.school.size)
-        self.setup_initial_scatter_state(ax)
-
-    def setup_table(self, ax):
-        ax.set_title("Table")
-        ax.set_xlim(-1, self.subject.school.size + 1)
-        ax.set_ylim(-1, self.subject.school.size + 1)
-        ax.axis('off')
-        self.setup_initial_table_state(ax)
-
-    # Methods for setting up initial states of each plot type
-    def setup_initial_bar_state(self, ax):
-        counts = [self.cell_states.count(state) for state in list(HealthState)]
-        self.bars = ax.bar(np.array(HealthState.value_list()), counts, tick_label=HealthState.name_list(), 
-                                label=HealthState.name_list(), color=[self.state_colors[state] for state in HealthState])
-        self.bar_text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
-        ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.draw()
-
-    def setup_initial_scatter_state(self, ax):
-        transformed_x_coords = [y for y in self.cell_y_coords]
-        transformed_y_coords = [self.subject.school.size - x - 1 for x in self.cell_x_coords]
-
-        self.scatter = ax.scatter(transformed_x_coords, transformed_y_coords, 
-                                c=self.cell_states_value, cmap=self.cmap)
-        self.scatter_text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
-        ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.draw()
-
-    def setup_initial_table_state(self, ax):
-        cell_states = [["" for _ in range(self.subject.school.size)] 
-                        for _ in range(self.subject.school.size)]
-        for j, individual in enumerate(self.subject.agent_list):
-            cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
-
-        self.table = ax.table(cellText=np.array(cell_states), loc="center", bbox=Bbox.from_bounds(0.0, 0.0, 1.0, 1.0))
-        self.table_text_box = ax.text(0.05, 0.95, "", transform=ax.transAxes)
-
-        # Adjust cell properties for centering text
-        for key, cell in self.table.get_celld().items():
-            cell.set_height(1 / len(cell_states[0]))
-            cell.set_width(1 / len(cell_states[0]))
-            cell.get_text().set_horizontalalignment('center')
-            cell.get_text().set_verticalalignment('center')
-
-        for i in range(self.subject.school.size):
-            for j in range(self.subject.school.size):
-                cell_state = cell_states[i][j]
-                color = self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white"
-                self.table[i, j].set_facecolor(color)
-                self.table[i, j].get_text().set_text(cell_state)
-        ax.legend(handles=self.state_handles, loc="center left", bbox_to_anchor=(1, 0.5))
-        plt.draw()
-
-    def display_observation(self):
-        plt.show()
-
-    def update(self):
-        # Update the elements common to all plots
-        self.update_common_elements()
-
-        # Update each subplot based on its type
-        for i, plot_type in enumerate(self.plot_order):
-            if plot_type == "bar":
-                self.update_bar_chart(self.axes[i])
-            elif plot_type == "scatter":
-                self.update_scatter_plot(self.axes[i])
-            elif plot_type == "table":
-                self.update_table(self.axes[i])
-
-    def update_common_elements(self):
-        self.cell_states = [individual.health_state for individual in self.subject.agent_list]
-        self.cell_states_value = [state.value for state in self.cell_states]
-        self.cell_x_coords = [individual.location[0] for individual in self.subject.agent_list]
-        self.cell_y_coords = [individual.location[1] for individual in self.subject.agent_list]
-
-    # Update methods for each plot type
-    def update_bar_chart(self, ax):
-        counts = [self.cell_states.count(state) for state in HealthState]
-        for bar, count in zip(self.bars, counts):
-            bar.set_height(count)
-        self.bar_text_box.set_text(f"Time Step: {self.subject.timestep}")
-        plt.draw()
-        plt.pause(0.5)
-
-    def update_scatter_plot(self, ax):
-        transformed_x_coords = [self.cell_y_coords[i] for i in range(len(self.cell_x_coords))]
-        transformed_y_coords = [self.subject.school.size - self.cell_x_coords[i] - 1 for i in range(len(self.cell_y_coords))]
-
-        self.scatter.set_offsets(np.c_[transformed_x_coords, transformed_y_coords])
-        self.scatter.set_array(np.array(self.cell_states_value))
-        self.scatter_text_box.set_text(f"Time Step: {self.subject.timestep}")
-        plt.draw()
-        plt.pause(0.5)
-
-    def update_table(self, ax):
-        cell_states = [["" for _ in range(self.subject.school.size)] 
-                        for _ in range(self.subject.school.size)]
-        for j, individual in enumerate(self.subject.agent_list):
-            cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
-
-        for (i, j), cell in np.ndenumerate(cell_states):
-            cell_state = cell_states[i][j]
-            color = self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white"
-            self.table[i, j].set_facecolor(color)
-            self.table[i, j].get_text().set_text(cell_state)
-        self.table_text_box.set_text(f"Time Step: {self.subject.timestep}")
-        plt.draw()
-        plt.pause(0.5)
-
-
-class TkinterObserver(Observer):
-    def __init__(self, population, grid_size=300, cell_size=30):
-        self.subject = population
-        self.subject.attach_observer(self)
-
-        # Define grid and cell sizes
-        self.grid_size = grid_size
-        self.cell_size = cell_size
-        self.num_cells = self.subject.school.size
-
-        # Initialize Tkinter window
-        self.root = tk.Tk()
-        self.root.title("Zombie Apocalypse Simulation")
-
-        # Canvas for the simulation grid
-        self.grid_canvas = tk.Canvas(self.root, width=self.grid_size, height=self.grid_size)
-        self.grid_canvas.pack(side=tk.LEFT)
-
-        # Frame for Matplotlib plots
-        self.plot_frame = tk.Frame(self.root)
-        self.plot_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-
-        # Setup common elements and plots
-        self.init_common_elements()
-        self.setup_plots()
-
-        self.update()  # Initial update
-
-    def init_common_elements(self):
-        sns.set_style("whitegrid")
-        sns.set_context("paper")
-        deep_colors = sns.color_palette("deep")
-        self.state_colors = {
-            HealthState.HEALTHY: deep_colors[0],
-            HealthState.INFECTED: deep_colors[1],
-            HealthState.ZOMBIE: deep_colors[2],
-            HealthState.DEAD: deep_colors[3],
-        }
-        self.cmap = colors.ListedColormap(list(self.state_colors.values()))
-
-    def setup_plots(self):
-        self.figures = {
-            'bar': Figure(figsize=(7, 7), constrained_layout=True),
-            'scatter': Figure(figsize=(7, 7), constrained_layout=True),
-            'table': Figure(figsize=(7, 7), constrained_layout=True)
-        }
-
-        # Initial setup for each plot
-        self.setup_initial_bar_state(self.figures['bar'].add_subplot(111))
-        self.setup_initial_scatter_state(self.figures['scatter'].add_subplot(111))
-        self.setup_initial_table_state(self.figures['table'].add_subplot(111))
-
-        # Using grid layout manager instead of pack
-        self.plot_frame.grid_columnconfigure(0, weight=1)
-        self.plot_frame.grid_rowconfigure(0, weight=1)
-        self.plot_frame.grid_rowconfigure(1, weight=1)
-        self.plot_frame.grid_rowconfigure(2, weight=1)
-
-        self.canvases = {}
-        for i, (plot_type, fig) in enumerate(self.figures.items()):
-            canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
-            self.canvases[plot_type] = canvas
-            canvas_widget = canvas.get_tk_widget()
-            canvas_widget.grid(row=i, column=0, sticky="nsew")
-
-        # Ensure the grid_canvas is positioned correctly
-        self.grid_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-    def update(self):
-        self.draw_grid()
-        self.update_plots()
-        self.root.update_idletasks()
-        self.root.update()
-        time.sleep(0.5)
-
-    def draw_grid(self):
-        self.grid_canvas.delete("all")
-        for individual in self.subject.agent_list:
-            x, y = individual.location
-            canvas_x = y
-            canvas_y = x
-            x1, y1 = canvas_x * self.cell_size, canvas_y * self.cell_size
-            x2, y2 = x1 + self.cell_size, y1 + self.cell_size
-            color = self.get_color(individual.health_state)
-            self.grid_canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="black")
-
-    def update_plots(self):
-        self.update_bar_chart()
-        self.update_scatter_plot()
-        self.update_table_plot()
-
-    # Bar chart setup and update
-    def setup_initial_bar_state(self, ax):
-        ax.set_title("Bar Chart")
-        ax.set_ylim(0, len(self.subject.agent_list) + 1)
-        ax.legend(handles=[patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()], 
-                    loc="center left", bbox_to_anchor=(1, 0.5))
-
-    def update_bar_chart(self):
-        ax = self.figures['bar'].gca()
-        ax.clear()
-        self.setup_initial_bar_state(ax)
-        cell_states = [individual.health_state for individual in self.subject.agent_list]
-        counts = {state: cell_states.count(state) for state in HealthState}
-        heights = np.array([counts.get(state, 0) for state in HealthState])
-        ax.bar(np.arange(len(HealthState)), heights, tick_label=[state.name for state in HealthState], color=[self.state_colors[state] for state in HealthState])
-        self.canvases['bar'].draw()
-
-    # Scatter plot setup and update
-    def setup_initial_scatter_state(self, ax):
-        ax.set_title("Scatter Plot")
-        ax.set_xlim(-1, self.subject.school.size)
-        ax.set_ylim(-1, self.subject.school.size)
-        ax.legend(handles=[patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()], 
-                    loc="center left", bbox_to_anchor=(1, 0.5))
-
-    def update_scatter_plot(self):
-        ax = self.figures['scatter'].gca()
-        ax.clear()
-        self.setup_initial_scatter_state(ax)
-        x = [individual.location[1] for individual in self.subject.agent_list]
-        y = [individual.location[0] for individual in self.subject.agent_list]
-        cell_states_value = [individual.health_state.value for individual in self.subject.agent_list]
-        ax.scatter(x, y, c=cell_states_value, cmap=self.cmap)
-        self.canvases['scatter'].draw()
-
-    # Table plot setup and update
-    def setup_initial_table_state(self, ax):
-        ax.set_title("Table")
-        ax.axis('tight')
-        ax.axis('off')
-        ax.set_xlim(-1, self.subject.school.size + 1)
-        ax.set_ylim(-1, self.subject.school.size + 1)
-        ax.legend(handles=[patches.Patch(color=color, label=state.name) for state, color in self.state_colors.items()], 
-                    loc="center left", bbox_to_anchor=(1, 0.5))
-
-    def update_table_plot(self):
-        ax = self.figures['table'].gca()
-        ax.clear()
-        self.setup_initial_table_state(ax)
-        cell_states = [["" for _ in range(self.subject.school.size)] for _ in range(self.subject.school.size)]
-        for individual in self.subject.agent_list:
-            cell_states[individual.location[0]][individual.location[1]] = individual.health_state.name
-        table = ax.table(cellText=cell_states, loc="center")
-        for key, cell in table.get_celld().items():
-            cell_state = cell_states[key[0]][key[1]]
-            cell.set_facecolor(self.state_colors.get(HealthState[cell_state], "white") if cell_state else "white")
-            cell.get_text().set_text(cell_state)
-        self.canvases['table'].draw()
-
-    def get_color(self, health_state):
-        rgb_color = self.state_colors.get(health_state, (1, 1, 1))  # Default white
-        return f"#{int(rgb_color[0]*255):02x}{int(rgb_color[1]*255):02x}{int(rgb_color[2]*255):02x}"
-
-    def display_observation(self):
-        self.root.mainloop()
-
-
-class PredictionObserver(Observer):
-    def __init__(self, population: Population) -> None:
-        self.subject = population
-        self.subject.attach_observer(self)
-        self.grid_history = []
-
-    def update(self) -> None:
-        current_grid_state = self.capture_grid_state()
-        self.grid_history.append(current_grid_state)
-
-    def capture_grid_state(self):
-        grid_state = np.zeros((self.subject.school.size, self.subject.school.size))
-        for i in range(self.subject.school.size):
-            for j in range(self.subject.school.size):
-                individual = self.subject.school.get_individual((i, j))
-                grid_state[i, j] = individual.health_state.value if individual else 0
-        return grid_state
-
-    def prepare_data(self, N):
-        X, y = [], []
-        for i in range(N, len(self.grid_history)):
-            X.append(np.array(self.grid_history[i-N:i]))
-            y.append(np.array(self.grid_history[i]))
-        return np.array(X), np.array(y)
-
-    def train_model(self):
-        N = 5
-        X, y = self.prepare_data(N)
-
-        # Reshape for ConvLSTM input
-        X = X.reshape((-1, X.shape[1], X.shape[2], X.shape[3], 1))
-        y = y.reshape((-1, y.shape[1], y.shape[2], 1))
-
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-
-        # ConvLSTM model
-        model = models.Sequential([
-            layers.ConvLSTM2D(filters=16, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=True, input_shape=X_train.shape[1:]),
-            layers.Dropout(0.2),
-            layers.LayerNormalization(),
-            layers.ConvLSTM2D(filters=32, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=False),
-            layers.Dropout(0.2),
-            layers.LayerNormalization(),
-            layers.Conv2D(filters=1, kernel_size=(3, 3), activation='linear', padding='same')
-        ])
-
-        model.compile(optimizer='adam', loss='mean_squared_error')
-        model.fit(X_train, y_train, epochs=20, validation_split=0.2)
-
-        self.model = model
-
-        # Evaluate the model
-        predictions = self.model.predict(X_test)
-        mse = mean_squared_error(y_test.reshape(y_test.shape[0], -1), predictions.reshape(predictions.shape[0], -1))
-        print(f"Model Mean Squared Error: {mse}")
-
-    def display_observation(self):
-        if getattr(self, "model", None) is None:
-            self.train_model()
-        past_grid_state = self.grid_history[-5:]
-        print(self.grid_history[-1])
-        input_data = np.array(past_grid_state).reshape((1, -1, self.subject.school.size, self.subject.school.size, 1))
-        predicted_grid_state = self.model.predict(input_data)
-        reshaped_grid_state = predicted_grid_state.reshape((self.subject.school.size, self.subject.school.size))
-        reformatted_grid_state = np.round(reshaped_grid_state, 1)
-        print(reformatted_grid_state)
-
-
-def main():
-
-    # create a SchoolZombieApocalypse object
-    school_sim = Population(school_size=10, population_size=10)
-
-    # create Observer objects
-    # simulation_observer = SimulationObserver(school_sim)
-    # simulation_animator = SimulationAnimator(school_sim)
-    # plotly_animator = PlotlyAnimator(school_sim)
-    # matplotlib_animator = MatplotlibAnimator(school_sim)
-    tkinter_observer = TkinterObserver(school_sim)
-    # prediction_observer = PredictionObserver(school_sim)
-
-    # run the population for a given time period
-    school_sim.run_population(num_time_steps=10)
-    
-    print("Observers:")
-    # print(simulation_observer.agent_list)
-    # print(simulation_animator.agent_history[-1])
-
-    # observe the statistics of the population
-    # simulation_observer.display_observation(format="bar") # "statistics" or "grid" or "bar" or "scatter" or "table"
-    # simulation_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
-    # plotly_animator.display_observation()
-    # matplotlib_animator.display_observation()
-    tkinter_observer.display_observation()
-    # prediction_observer.display_observation()
-
-
-
-if __name__ == "__main__":
-    main()
-
-
-
+            action_step = policy.action(time_step)
+            time_step = environment.step(action_step.action)
+            
+            # Render the environment after taking a step
+            environment.pyenv.envs[0]._render()
+            
+    # Quit Pygame after the evaluation is done
+    pygame.time.wait(1000)
+    pygame.quit()
+
+if __name__ == '__main__':
+    train_agent(num_iterations, collect_steps_per_iteration, log_interval, num_eval_episodes, eval_interval, train_env, eval_env, train_step_counter, tf_agent, replay_buffer, iterator, train_checkpointer, collect_step, eval_agent)
+    num_test_episodes = 10
+    avg_return, avg_length = eval_agent(eval_env, tf_agent.policy, num_test_episodes)
+    print('Average Return = {0}, Average Episode Length = {1}'.format(avg_return, avg_length))
+    # sim_agent(eval_env, tf_agent.policy, num_test_episodes)
+    # print('Simulation done!')
+
+
+# https://github.com/tensorflow/agents/blob/master/tf_agents/agents/dqn/examples/v2/train_eval.py
+# Reward = overall enemy casualties
+# https://github.com/christianhidber/easyagents api across libraries
+# each object has a draw method, call all draw method in the environment
+# update update part of the environment and flip update the whole screen
+# Dueling dqn (there is an unmerged pull request in the tf_agents repo)
+# Prioritized experience replay (https://kenneth-schroeder-dev.medium.com/prioritized-experience-replay-with-tf-agents-3fa2498f411a, https://gist.github.com/Kenneth-Schroeder/6dbdd4e165331164e0d9dcc2355698e2)
+# Soft actor critic in tf_agents
+# TD3 in tf_agents
+# Rainbow DQN
+# Independent Q-Learning
+# Multi-Agent Deep Q-Network
+# Q-learning with social learning
+# n-step value estimates may use rnns.
+# AlphaGo Zero: adding a policy head rather than having policy and value in separate nets led to a huge gain, combining l2 and cross entropy loss
+
+# https://github.com/Lostefra/ReinforcementLearningToy/tree/main format
+# https://github.com/telkhir/Deep-RL format
+# https://github.com/priontu/Atari_DemonAttack_Gameplay_with_Reinforcement_Learning_using_TF_Agents format
+# https://github.com/marvinschmitt/DeepLearning-Bomberman MCTS + DQN
+# https://github.com/marload/DeepRL-TensorFlow2 tensorflow from scratch
+# https://towardsdatascience.com/dueling-double-deep-q-learning-using-tensorflow-2-x-7bbbcec06a2a tensorflow from scratch
+# https://github.com/nslyubaykin/relax pytorch
+# https://github.com/nslyubaykin/rainbow_for_2048 pytorch
+# https://github.com/nslyubaykin/relax_rainbow_dqn_example pytorch
+# https://github.com/cyoon1729/RLcycle pytorch
+# https://github.com/davide97l/Rainbow pytorch rainbow
+# https://github.com/Curt-Park/rainbow-is-all-you-need pytorch
+# https://github.com/deepmind/dqn_zoo jax
+# https://zhuanlan.zhihu.com/p/220510418
+# https://github.com/willi-menapace/atari_reinforcement_learning pytorch rainbow
+# https://github.com/chucnorrisful/dqn keras-rl
+# https://towardsdatascience.com/rainbow-dqn-the-best-reinforcement-learning-has-to-offer-166cb8ed2f86 rainbow
+# https://zhuanlan.zhihu.com/p/261322143 rainbow dqn
+# 以下是每個擴展方法如何提高數據效率和最終性能的詳細解釋：
+# 1. Double Q-learning：傳統的Q-learning算法容易高估某些動作的值，進而導致學習到低質量的策略。Double Q-learning通過使用兩個獨立的Q-networks來解決這個問題，從而減少了高估值的影響。這種方法提高了算法學習到高質量策略的速度和效率。
+# 2. Prioritized Experience Replay：傳統的經驗回放方法是按照時間順序隨機選取存儲在緩存中的經驗來進行訓練。但是，某些重要的經驗可能對算法性能有更大的貢獻。Prioritized Experience Replay通過根據其對算法性能貢獻大小來選擇重要性較高的經驗，從而提高了數據效率和最終性能。
+# 3. Dueling Network Architectures：Dueling Network Architectures將Q-networks分成兩部分：一部分用於估計動作價值，另一部分用於估計基本價值。這種方法使算法能夠更好地學習到不同動作之間的差異，從而提高了最終性能。
+# 4. Multi-step Learning：傳統的Q-learning算法僅考慮當前狀態和下一個狀態之間的轉移。Multi-step Learning通過考慮多個連續狀態之間的轉移，從而使算法能夠更好地利用長期的時間關聯性，從而提高了數據效率和最終性能。
+# 5. Distributional RL：傳統的Q-learning算法僅考慮每個動作的期望回報值。Distributional RL通過估計每個動作的回報分佈，從而提高了算法對不同回報值之間差異的感知能力。這種方法使算法能夠更好地學習到不同動作之間的差異，從而提高了最終性能。
+# 6. Noisy Nets：Noisy Nets通過向神經網絡中添加隨機噪聲，從而使得神經網絡更容易探索新的策略。這種方法提高了算法學習到高質量策略的速度和效率。
+# https://www.tensorflow.org/agents/api_docs/python/tf_agents/bandits
+# https://www.tensorflow.org/decision_forests/tutorials/automatic_tuning_colab
+# https://www.tensorflow.org/decision_forests/tutorials/model_composition_colab
+# https://www.tensorflow.org/decision_forests/tutorials/advanced_colab
+# https://www.tensorflow.org/probability/examples/Probabilistic_Layers_Regression
+# https://worldmodels.github.io/
+# https://github.com/ctallec/world-models
+# https://blog.otoro.net/2018/06/09/world-models-experiments/
+# https://github.com/hardmaru/WorldModelsExperiments
+# https://github.com/topics/world-models
+# https://telefonicatech.com/en/blog/realistic-worlds-procedural-generation-artificial-intelligence-video-games
+# https://arxiv.org/abs/2209.00588
+# https://people.idsia.ch/~juergen/FKI-126-90_(revised)bw_ocr.pdf
+# https://arxiv.org/pdf/1511.09249.pdf
+# https://github.com/zhongwen/predictron
+
+# Universal Value Function Approximators (UVFAs)
+# https://proceedings.mlr.press/v37/schaul15.pdf
+# https://github.com/rllabmcgill/rlcourse-march-17-hugobb
+
+# intrinsic motivation, curiosity-driven exploration, count-based exploration
+
+# VIME (Houthooft et al., 2016)
+# count-based exploration (Ostrovski et al., 2017)
+# bootstrapped DQN (Osband et al., 2016)
+
+# https://en.m.wikipedia.org/wiki/Multi-armed_bandit
+
+# 添加更多學習信號
+# Hindsight Experience Replay
+# https://arxiv.org/abs/1707.01495
+# Auxiliary Tasks
+# https://arxiv.org/abs/1611.05397
+
+# 基於模型的學習
+# https://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=711FEF6BA26BBF98C28BC111B26F8761?doi=10.1.1.48.6005&rep=rep1&type=pdf
+# https://zhuanlan.zhihu.com/p/524200581
+# https://zhuanlan.zhihu.com/p/524200581
+
+# Difficulties in Deep Reinforcement Learning
+# https://arxiv.org/abs/1709.06560
+# https://openai.com/research/faulty-reward-functions
+
+# Monte Carlo Tree Search for Atari
+# https://papers.nips.cc/paper_files/paper/2014/hash/8bb88f80d334b1869781beb89f7b73be-Abstract.html
+
+# 逆向強化學習和模仿學習
+# https://ai.stanford.edu/~ang/papers/icml00-irl.pdf
+# http://ai.stanford.edu/~ang/papers/icml04-apprentice.pdf
+# https://arxiv.org/pdf/1603.00448.pdf
+# https://papers.nips.cc/paper_files/paper/2017/hash/d5e2c0adad503c91f91df240d0cd4e49-Abstract.html
+# https://arxiv.org/abs/1711.02827
+# http://proceedings.mlr.press/v78/bajcsy17a/bajcsy17a.pdf
+
+# https://towardsdatascience.com/hyperbolic-deep-reinforcement-learning-b2de787cf2f7
+
+# Multi-Agent PPO
+# https://github.com/marlbenchmark/on-policy

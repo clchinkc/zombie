@@ -1,12 +1,13 @@
 
-
 import numpy as np
 import pygame
 import tensorflow as tf
 import tensorflow_probability as tfp
 from matplotlib import pyplot as plt
 from tf_agents.agents import CategoricalDqnAgent, PPOKLPenaltyAgent, ReinforceAgent
+from tf_agents.agents.ddpg import critic_network
 from tf_agents.agents.dqn import dqn_agent
+from tf_agents.agents.dqn.dqn_agent import DdqnAgent
 from tf_agents.drivers import dynamic_episode_driver, dynamic_step_driver
 from tf_agents.environments import py_environment, tf_py_environment
 from tf_agents.eval import metric_utils
@@ -20,6 +21,7 @@ from tf_agents.networks import (
 from tf_agents.policies import random_tf_policy
 from tf_agents.replay_buffers import tf_uniform_replay_buffer
 from tf_agents.specs import array_spec
+from tf_agents.train.utils import strategy_utils, train_utils
 from tf_agents.trajectories import time_step as ts
 from tf_agents.trajectories import trajectory
 from tf_agents.utils import common
@@ -200,6 +202,8 @@ decay_epsilon_greedy = tf.keras.optimizers.schedules.PolynomialDecay(
 
 num_steps_update = 5
 
+strategy = strategy_utils.get_strategy(tpu=False, use_gpu=True)
+
 def create_dqn_agent(lr_schedule, train_env, decay_epsilon_greedy=decay_epsilon_greedy, num_steps_update=num_steps_update):
 
     q_net = q_network.QNetwork(
@@ -211,7 +215,7 @@ def create_dqn_agent(lr_schedule, train_env, decay_epsilon_greedy=decay_epsilon_
         activation_fn=tf.keras.activations.elu,
         )
 
-    train_step_counter = tf.Variable(0)
+    train_step_counter = train_utils.create_train_step()
 
     tf_agent = dqn_agent.DdqnAgent(
         train_env.time_step_spec(),
@@ -226,6 +230,32 @@ def create_dqn_agent(lr_schedule, train_env, decay_epsilon_greedy=decay_epsilon_
     tf_agent.initialize()
     return train_step_counter, tf_agent
 
+def create_ddpn_agent(learning_rate, train_env):
+    q_net = q_network.QNetwork(
+        train_env.observation_spec(),
+        train_env.action_spec(),
+        conv_layer_params=((16, 3, 1), (32, 3, 1)),
+        fc_layer_params=(10,),
+        dropout_layer_params=(0.1,),
+        activation_fn=tf.keras.activations.elu,
+        )
+    
+    train_step_counter = train_utils.create_train_step()
+    
+    tf_agent = DdqnAgent(
+        train_env.time_step_spec(),
+        train_env.action_spec(),
+        q_network=q_net,
+        optimizer=tf.optimizers.Adam(learning_rate=lr_schedule(train_step_counter)),
+        epsilon_greedy=lambda: decay_epsilon_greedy(train_step_counter),
+        n_step_update=num_steps_update,
+        td_errors_loss_fn=common.element_wise_squared_loss, # tf.losses.Huber(reduction="none")
+        train_step_counter=train_step_counter)
+    
+    tf_agent.initialize()
+    
+    return train_step_counter, tf_agent
+
 def create_categorical_dqn_agent(learning_rate, train_env, decay_epsilon_greedy=decay_epsilon_greedy, num_steps_update=num_steps_update):
 
     categorical_q_net = categorical_q_network.CategoricalQNetwork(
@@ -237,7 +267,7 @@ def create_categorical_dqn_agent(learning_rate, train_env, decay_epsilon_greedy=
         activation_fn=tf.keras.activations.elu,
         )
 
-    train_step_counter = tf.Variable(0)
+    train_step_counter = train_utils.create_train_step()
     
     def categorical_huber_loss(target, pred):
         # Use the huber loss to compute the element-wise loss for the target and pred tensors.
@@ -274,7 +304,7 @@ def create_reinforce_agent(learning_rate, train_env):
         fc_layer_params=(100,),
     )
 
-    train_step_counter = tf.Variable(0)
+    train_step_counter = train_utils.create_train_step()
 
     tf_agent = ReinforceAgent(
         train_env.time_step_spec(),
@@ -307,7 +337,7 @@ def create_ppo_agent(learning_rate, train_env):
         fc_layer_params=(100,),
     )
 
-    train_step_counter = tf.Variable(0)
+    train_step_counter = train_utils.create_train_step()
 
     tf_agent = PPOKLPenaltyAgent(
         time_step_spec=train_env.time_step_spec(),
@@ -320,13 +350,10 @@ def create_ppo_agent(learning_rate, train_env):
         adaptive_kl_target=0.01,
         adaptive_kl_tolerance=0.5,
         kl_cutoff_coef=0.0,
-        kl_cutoff_factor=1.0,
+        kl_cutoff_factor=0.0,
         use_gae=True,
         normalize_rewards=True,
-        reward_norm_clipping=10.0,
-        gradient_clipping=0.5,
-        entropy_regularization=0.2,
-        value_pred_loss_coef=0.5,
+        entropy_regularization=0.1,
         train_step_counter=train_step_counter,
     )
 
@@ -335,10 +362,12 @@ def create_ppo_agent(learning_rate, train_env):
     return train_step_counter, tf_agent
 
 
-train_step_counter, tf_agent = create_dqn_agent(lr_schedule, train_env)
-# train_step_counter, tf_agent = create_categorical_dqn_agent(lr_schedule, train_env)
-# train_step_counter, tf_agent = create_reinforce_agent(lr_schedule, train_env)
-# train_step_counter, tf_agent = create_ppo_agent(lr_schedule, train_env)
+with strategy.scope():
+    # train_step_counter, tf_agent = create_dqn_agent(lr_schedule, train_env)
+    train_step_counter, tf_agent = create_ddpn_agent(lr_schedule, train_env)
+    # train_step_counter, tf_agent = create_categorical_dqn_agent(lr_schedule, train_env)
+    # train_step_counter, tf_agent = create_reinforce_agent(lr_schedule, train_env)
+    # train_step_counter, tf_agent = create_ppo_agent(lr_schedule, train_env)
 
 def create_replay_buffer(replay_buffer_max_length, train_env, tf_agent):
     replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
@@ -366,7 +395,7 @@ random_policy = random_tf_policy.RandomTFPolicy(train_env.time_step_spec(), trai
 collect_data(eval_env, tf_agent.collect_policy, replay_buffer, steps=initial_collect_steps)
 
 dataset = replay_buffer.as_dataset(
-    num_parallel_calls=2,
+    num_parallel_calls=4,
     sample_batch_size=batch_size,
     num_steps=num_steps_update + 1
     ).prefetch(tf.data.experimental.AUTOTUNE)
@@ -481,20 +510,20 @@ if __name__ == '__main__':
     # print('Simulation done!')
 
 
+# https://github.com/tensorflow/agents/blob/master/tf_agents/agents/dqn/examples/v2/train_eval.py
 # Reward = overall enemy casualties
 # https://github.com/christianhidber/easyagents api across libraries
 # each object has a draw method, call all draw method in the environment
 # update update part of the environment and flip update the whole screen
 # Dueling dqn (there is an unmerged pull request in the tf_agents repo)
 # Prioritized experience replay (https://kenneth-schroeder-dev.medium.com/prioritized-experience-replay-with-tf-agents-3fa2498f411a, https://gist.github.com/Kenneth-Schroeder/6dbdd4e165331164e0d9dcc2355698e2)
-# SARSA (State-Action-Reward-State-Action)
+# Soft actor critic in tf_agents
+# TD3 in tf_agents
 # Rainbow DQN
-# IQN
 # Independent Q-Learning
 # Multi-Agent Deep Q-Network
 # Q-learning with social learning
 # n-step value estimates may use rnns.
-# Q-learning is off-policy, which is known to cause instability when combined with function approximation generally.
 # AlphaGo Zero: adding a policy head rather than having policy and value in separate nets led to a huge gain, combining l2 and cross entropy loss
 
 # https://github.com/Lostefra/ReinforcementLearningToy/tree/main format
