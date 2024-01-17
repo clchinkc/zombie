@@ -1470,49 +1470,35 @@ class FFTAnalysisObserver(Observer):
         ax.legend(loc='upper right')
         plt.show()
 
-    def create_static_plots(self):
-        plt.figure(figsize=(16, 16), constrained_layout=True)
+    def plot_final_spatial_data(self, ax):
+        ax.imshow(self.spatial_data[-1], cmap='viridis')
+        ax.set_title("Final Spatial Data")
+        ax.figure.colorbar(ax.images[0], ax=ax, orientation='vertical')
 
-        # Final Spatial Data
-        plt.subplot(2, 2, 1)
-        plt.imshow(self.spatial_data[-1], cmap='viridis')
-        plt.title("Final Spatial Data")
-        plt.colorbar(label='State Value')
+    def plot_fft_final_spatial_data(self, ax):
+        ax.imshow(np.log(np.abs(self.spatial_fft[-1]) + 1e-10), cmap='hot')
+        ax.set_title("FFT of Final Spatial Data")
+        ax.figure.colorbar(ax.images[0], ax=ax, orientation='vertical')
 
-        # FFT of Final Spatial Data
-        plt.subplot(2, 2, 2)
-        plt.imshow(np.log(np.abs(self.spatial_fft[-1]) + 1e-10), cmap='hot')
-        plt.title("FFT of Final Spatial Data")
-        plt.colorbar(label='Log Magnitude')
-
-        # Time Series Data
-        plt.subplot(2, 2, 3)
-        plt.plot(self.time_series_data)
-        plotted_periods = set()
+    def plot_time_series_data(self, ax):
+        ax.plot(self.time_series_data)
         for period in self.dominant_periods:
-            if period != float('inf') and period not in plotted_periods and period > 0:
-                plt.axvline(x=period, color='r', linestyle='--', label=f'Period: {period:.2f} steps')
-                plotted_periods.add(period)
-        plt.title("Time Series Data")
-        plt.xlabel("Time Step")
-        plt.ylabel("Number of Zombies")
-        plt.xlim(-1, len(self.time_series_data) + 1)
-        plt.ylim(-1, max(self.time_series_data) + 1)
-        plt.legend()
+            if period != float('inf') and period > 0:
+                ax.axvline(x=period, color='r', linestyle='--', label=f'Period: {period:.2f} steps')
+        ax.set_title("Time Series Data")
+        ax.set_xlabel("Time Step")
+        ax.set_ylabel("Number of Zombies")
+        ax.legend()
 
-        # FFT of Time Series Data
-        plt.subplot(2, 2, 4)
-        plt.plot(self.frequencies, np.abs(self.time_series_fft), label='FFT')
-        plotted_frequencies = set()
+    def plot_fft_time_series_data(self, ax):
+        ax.plot(self.frequencies, np.abs(self.time_series_fft))
         for freq in self.dominant_frequencies:
-            if freq not in plotted_frequencies:
-                plt.axvline(x=freq, color='r', linestyle='--', label=f'Frequency: {freq:.2f}')
-        plt.title("FFT of Time Series Data")
-        plt.xlabel("Frequency")
-        plt.ylabel("Amplitude")
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+            ax.axvline(x=freq, color='r', linestyle='--', label=f'Frequency: {freq:.2f}')
+        ax.set_title("FFT of Time Series Data")
+        ax.set_xlabel("Frequency")
+        ax.set_ylabel("Amplitude")
+        ax.legend()
+        ax.grid(True)
 
     def display_observation(self, mode='static'):
         if not self.spatial_data or not self.time_series_data:
@@ -1527,8 +1513,14 @@ class FFTAnalysisObserver(Observer):
             self.create_time_series_animation()
             self.create_time_series_fft_animation()
         elif mode == 'static':
-            self.create_static_plots()
+            fig, axs = plt.subplots(2, 2, figsize=(16, 16), constrained_layout=True)
 
+            self.plot_final_spatial_data(axs[0, 0])
+            self.plot_fft_final_spatial_data(axs[0, 1])
+            self.plot_time_series_data(axs[1, 0])
+            self.plot_fft_time_series_data(axs[1, 1])
+
+            plt.show()
 
 
 def main():
