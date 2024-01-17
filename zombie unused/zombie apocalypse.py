@@ -65,6 +65,7 @@ dependency inversion principle
 interface segregation principle
 generator
 contextlib
+numpy.fromfunction
 """
 
 import random

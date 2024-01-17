@@ -57,6 +57,7 @@ from functools import cached_property
 from itertools import product
 from typing import Any, Optional
 
+import matplotlib.animation as animation
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
@@ -64,6 +65,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import seaborn as sns
+import tensorflow.python as tf
 from keras import layers, models
 from matplotlib import animation, colors, patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -72,6 +74,7 @@ from matplotlib.table import Table
 from matplotlib.transforms import Bbox
 from plotly.subplots import make_subplots
 from scipy import stats
+from scipy.fft import fft, fft2, fftshift
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 
@@ -1357,6 +1360,177 @@ class PredictionObserver(Observer):
         print(reformatted_grid_state)
 
 
+class FFTAnalysisObserver(Observer):
+    def __init__(self, population):
+        self.subject = population
+        self.subject.attach_observer(self)
+        self.spatial_data = []
+        self.time_series_data = []
+
+    def update(self):
+        if self.subject.timestep == 1:
+            print("Initializing FFT Analysis")
+            self.time_series_data.append(0)
+        current_grid_state = self.capture_grid_state()
+        self.spatial_data.append(current_grid_state)
+        self.time_series_data.append(np.sum(current_grid_state == HealthState.ZOMBIE.value))
+
+    def capture_grid_state(self):
+        grid_state = np.zeros((self.subject.school.size, self.subject.school.size))
+        for individual in self.subject.agent_list:
+            grid_state[individual.location] = individual.health_state.value
+        return grid_state
+
+    def perform_fft_analysis(self):
+        self.spatial_fft = [fftshift(fft2(frame)) for frame in self.spatial_data]
+        self.time_series_fft = fft(self.time_series_data)
+        self.frequencies = np.fft.fftfreq(len(self.time_series_data), d=1)
+
+        magnitudes = np.abs(self.time_series_fft)
+        sorted_indices = np.argsort(-magnitudes)[:5]
+        self.dominant_frequencies = self.frequencies[sorted_indices]
+        self.dominant_periods = [1 / freq if freq != 0 else float('inf') for freq in self.dominant_frequencies]
+
+    def create_spatial_animation(self):
+        fig, ax = plt.subplots()
+        ax.set_title("Spatial Data Over Time")
+        im = ax.imshow(self.spatial_data[0], cmap='viridis', animated=True)
+        plt.colorbar(im, ax=ax, orientation='vertical')
+        time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes, color="white")
+
+        def update(frame):
+            im.set_array(self.spatial_data[frame])
+            time_text.set_text(f"Time Step: {frame}")
+            return [im, time_text]
+
+        ani = animation.FuncAnimation(fig, update, frames=len(self.spatial_data), interval=50, blit=True)
+        plt.show()
+
+    def create_spatial_fft_animation(self):
+        fig, ax = plt.subplots()
+        ax.set_title("FFT of Spatial Data Over Time")
+        fft_data = np.log(np.abs(self.spatial_fft[0]) + 1e-10)
+        im = ax.imshow(fft_data, cmap='hot', animated=True)
+        plt.colorbar(im, ax=ax, orientation='vertical')
+        time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes, color="white")
+
+        def update(frame):
+            fft_data = np.log(np.abs(self.spatial_fft[frame]) + 1e-10)
+            im.set_array(fft_data)
+            time_text.set_text(f"Time Step: {frame}")
+            return [im, time_text]
+
+        ani = animation.FuncAnimation(fig, update, frames=len(self.spatial_data), interval=50, blit=True)
+        plt.show()
+
+    def create_time_series_animation(self):
+        fig, ax = plt.subplots()
+        ax.set_title("Time Series Data")
+        line, = ax.plot([], [], lw=2)
+        ax.set_xlim(-1, len(self.time_series_data) + 1)
+        ax.set_ylim(-1, max(self.time_series_data) + 1)
+
+        # Mark periods and dominant frequencies on the plot
+        plotted_periods = set()
+        for period in self.dominant_periods:
+            if period != float('inf') and period not in plotted_periods and period > 0:
+                ax.axvline(x=period, color='r', linestyle='--', label=f'Period: {period:.2f} steps')
+                plotted_periods.add(period)
+
+        def update(frame):
+            line.set_data(np.arange(frame), self.time_series_data[:frame])
+            return line,
+
+        ani = animation.FuncAnimation(fig, func=update, frames=len(self.time_series_data)+1, interval=50, blit=True)
+        ax.legend(loc='upper right')
+        plt.show()
+
+    def create_time_series_fft_animation(self):
+        fig, ax = plt.subplots()
+        ax.set_title("FFT of Time Series Data")
+        line, = ax.plot([], [], lw=2, label='FFT')
+        ax.set_xlim(min(self.frequencies), max(self.frequencies))
+        ax.set_ylim(-1, max(np.abs(self.time_series_fft)) + 1)
+
+        # Mark dominant frequencies on the plot
+        plotted_frequencies = set()
+        for freq in self.dominant_frequencies:
+            if freq not in plotted_frequencies:
+                ax.axvline(x=freq, color='r', linestyle='--', label=f'Frequency: {freq:.2f}')
+                plotted_frequencies.add(freq)
+
+        def update(frame):
+            frame_data = self.time_series_data[:frame + 1]
+            fft_frame = fft(frame_data)
+            freqs = np.fft.fftfreq(len(frame_data), d=1)
+            line.set_data(freqs, np.abs(fft_frame))
+            return line,
+
+        ani = animation.FuncAnimation(fig, func=update, frames=len(self.time_series_data)+1, interval=50, blit=True)
+        ax.legend(loc='upper right')
+        plt.show()
+
+    def create_static_plots(self):
+        plt.figure(figsize=(16, 16), constrained_layout=True)
+
+        # Final Spatial Data
+        plt.subplot(2, 2, 1)
+        plt.imshow(self.spatial_data[-1], cmap='viridis')
+        plt.title("Final Spatial Data")
+        plt.colorbar(label='State Value')
+
+        # FFT of Final Spatial Data
+        plt.subplot(2, 2, 2)
+        plt.imshow(np.log(np.abs(self.spatial_fft[-1]) + 1e-10), cmap='hot')
+        plt.title("FFT of Final Spatial Data")
+        plt.colorbar(label='Log Magnitude')
+
+        # Time Series Data
+        plt.subplot(2, 2, 3)
+        plt.plot(self.time_series_data)
+        plotted_periods = set()
+        for period in self.dominant_periods:
+            if period != float('inf') and period not in plotted_periods and period > 0:
+                plt.axvline(x=period, color='r', linestyle='--', label=f'Period: {period:.2f} steps')
+                plotted_periods.add(period)
+        plt.title("Time Series Data")
+        plt.xlabel("Time Step")
+        plt.ylabel("Number of Zombies")
+        plt.xlim(-1, len(self.time_series_data) + 1)
+        plt.ylim(-1, max(self.time_series_data) + 1)
+        plt.legend()
+
+        # FFT of Time Series Data
+        plt.subplot(2, 2, 4)
+        plt.plot(self.frequencies, np.abs(self.time_series_fft), label='FFT')
+        plotted_frequencies = set()
+        for freq in self.dominant_frequencies:
+            if freq not in plotted_frequencies:
+                plt.axvline(x=freq, color='r', linestyle='--', label=f'Frequency: {freq:.2f}')
+        plt.title("FFT of Time Series Data")
+        plt.xlabel("Frequency")
+        plt.ylabel("Amplitude")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+    def display_observation(self, mode='static'):
+        if not self.spatial_data or not self.time_series_data:
+            print("No data available for FFT analysis.")
+            return
+
+        self.perform_fft_analysis()
+
+        if mode == 'animation':
+            self.create_spatial_animation()
+            self.create_spatial_fft_animation()
+            self.create_time_series_animation()
+            self.create_time_series_fft_animation()
+        elif mode == 'static':
+            self.create_static_plots()
+
+
+
 def main():
 
     # create a SchoolZombieApocalypse object
@@ -1367,8 +1541,9 @@ def main():
     # simulation_animator = SimulationAnimator(school_sim)
     # plotly_animator = PlotlyAnimator(school_sim)
     # matplotlib_animator = MatplotlibAnimator(school_sim)
-    tkinter_observer = TkinterObserver(school_sim)
+    # tkinter_observer = TkinterObserver(school_sim)
     # prediction_observer = PredictionObserver(school_sim)
+    fft_observer = FFTAnalysisObserver(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
@@ -1382,8 +1557,9 @@ def main():
     # simulation_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
     # plotly_animator.display_observation()
     # matplotlib_animator.display_observation()
-    tkinter_observer.display_observation()
+    # tkinter_observer.display_observation()
     # prediction_observer.display_observation()
+    fft_observer.display_observation(mode='static') # "animation" or "static"
 
 
 
