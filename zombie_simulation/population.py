@@ -65,16 +65,15 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import seaborn as sns
-import tensorflow.python as tf
 from keras import layers, models
 from matplotlib import animation, colors, patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.table import Table
 from matplotlib.transforms import Bbox
+from numpy.fft import fft, fft2, fftshift
 from plotly.subplots import make_subplots
 from scipy import stats
-from scipy.fft import fft, fft2, fftshift
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 
@@ -1371,24 +1370,24 @@ class FFTAnalysisObserver(Observer):
         if self.subject.timestep == 1:
             print("Initializing FFT Analysis")
             self.time_series_data.append(0)
-        current_grid_state = self.capture_grid_state()
-        self.spatial_data.append(current_grid_state)
-        self.time_series_data.append(np.sum(current_grid_state == HealthState.ZOMBIE.value))
+        self.spatial_data.append(self.capture_grid_state())
+        self.time_series_data.append(self.count_zombies())
 
     def capture_grid_state(self):
         grid_state = np.zeros((self.subject.school.size, self.subject.school.size))
         for individual in self.subject.agent_list:
-            grid_state[individual.location] = individual.health_state.value
+            grid_state[individual.location] = individual.health_state.value if individual else 0
         return grid_state
+
+    def count_zombies(self):
+        return sum(ind.health_state == HealthState.ZOMBIE for ind in self.subject.agent_list)
 
     def perform_fft_analysis(self):
         self.spatial_fft = [fftshift(fft2(frame)) for frame in self.spatial_data]
         self.time_series_fft = fft(self.time_series_data)
-        self.frequencies = np.fft.fftfreq(len(self.time_series_data), d=1)
-
         magnitudes = np.abs(self.time_series_fft)
-        sorted_indices = np.argsort(-magnitudes)[:5]
-        self.dominant_frequencies = self.frequencies[sorted_indices]
+        self.frequencies = np.fft.fftfreq(len(self.time_series_data), d=1)
+        self.dominant_frequencies = self.frequencies[np.argsort(-magnitudes)[:5]]
         self.dominant_periods = [1 / freq if freq != 0 else float('inf') for freq in self.dominant_frequencies]
 
     def create_spatial_animation(self):
