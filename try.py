@@ -64,6 +64,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import pygame
 import seaborn as sns
 from keras import layers, models
 from matplotlib import animation, colors, patches
@@ -73,6 +74,7 @@ from matplotlib.table import Table
 from matplotlib.transforms import Bbox
 from numpy.fft import fft, fft2, fftshift
 from plotly.subplots import make_subplots
+from pygame.locals import K_SPACE, KEYDOWN, QUIT, K_r
 from scipy import stats
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
@@ -1521,6 +1523,109 @@ class FFTAnalysisObserver(Observer):
 
             plt.show()
 
+class PygameObserver(Observer):
+    def __init__(self, population, cell_size=30, fps=10, font_size=18):
+        self.subject = population
+        self.subject.attach_observer(self)
+
+        # Define the cell size, the frames per second, and font size
+        self.cell_size = cell_size
+        self.fps = fps
+        self.font_size = font_size
+        self.is_paused = False
+
+        # Colors
+        self.colors = {
+            HealthState.HEALTHY: (0, 255, 0),  # Green
+            HealthState.INFECTED: (255, 165, 0),  # Orange
+            HealthState.ZOMBIE: (255, 0, 0),  # Red
+            HealthState.DEAD: (128, 128, 128),  # Gray
+            'background': (255, 255, 255),  # White
+            'grid_line': (200, 200, 200),  # Light Gray
+            'text': (0, 0, 0)  # Black
+        }
+
+        # Initialize Pygame and the screen
+        pygame.init()
+        self.screen_size = self.subject.school.size * self.cell_size
+        self.screen = pygame.display.set_mode((self.screen_size, self.screen_size + 50))  # Additional space for stats
+        pygame.display.set_caption("Zombie Apocalypse Simulation")
+
+        # Clock for controlling the frame rate
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.SysFont(None, self.font_size)
+
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.handle_quit_event()
+            elif event.type == pygame.KEYDOWN:
+                self.handle_keydown_events(event)
+
+    def handle_quit_event(self):
+        pygame.quit()
+        exit()
+
+    def handle_keydown_events(self, event):
+        if event.key == pygame.K_SPACE:
+            self.toggle_pause()
+        elif event.key == pygame.K_r:
+            main()
+
+    def toggle_pause(self):
+        self.is_paused = not self.is_paused
+        if self.is_paused:
+            self.display_pause_message()
+
+    def update(self):
+        if self.is_paused:
+            while self.is_paused:
+                self.handle_events()  # Continue to handle events while paused to catch unpause event
+                pygame.time.wait(10)  # Wait for a short period to reduce CPU usage while paused
+        else:
+            self.handle_events()  # Handle events for unpausing or quitting
+            self.draw_grid()
+            self.display_stats()
+            pygame.display.flip()
+            self.clock.tick(self.fps)
+            time.sleep(0.5)
+
+    def draw_grid(self):
+        # If not paused, fill the background and draw individuals
+        if not self.is_paused:
+            self.screen.fill(self.colors['background'])
+            self.draw_individuals()
+
+    def draw_individuals(self):
+        for individual in self.subject.agent_list:
+            x, y = individual.location
+            rect = pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size)
+            pygame.draw.rect(self.screen, self.colors[individual.health_state], rect)
+            pygame.draw.rect(self.screen, self.colors['grid_line'], rect, 1)  # Draw grid line
+
+    def display_stats(self):
+        stats_text = f"Healthy: {self.subject.num_healthy}, Infected: {self.subject.num_infected}, Zombie: {self.subject.num_zombie}, Dead: {self.subject.num_dead}"
+        text_surface = self.font.render(stats_text, True, self.colors['text'])
+        self.screen.fill(self.colors['background'], (0, self.screen_size, self.screen_size, 50))  # Clear stats area
+        self.screen.blit(text_surface, (5, self.screen_size + 5))
+
+    def display_pause_message(self):
+        dark_surface = pygame.Surface((self.screen_size, self.screen_size))
+        dark_surface.set_alpha(128)
+        dark_surface.fill(self.colors['background'])
+        self.screen.blit(dark_surface, (0, 0))
+        pause_text = "Simulation Paused. Press 'Space' to resume."
+        text_surface = self.font.render(pause_text, True, self.colors['text'])
+        self.screen.blit(text_surface, (self.screen_size / 2 - text_surface.get_width() / 2, self.screen_size / 2 - text_surface.get_height() / 2))
+
+    def display_observation(self):
+        end_text = "Simulation Ended. Press 'R' to Restart."
+        text_surface = self.font.render(end_text, True, self.colors['text'])
+        self.screen.blit(text_surface, (self.screen_size / 2 - text_surface.get_width() / 2, self.screen_size / 2 - text_surface.get_height() / 2))
+        pygame.display.flip()
+        while True:
+            self.handle_events()
+
 
 def main():
 
@@ -1535,6 +1640,7 @@ def main():
     # tkinter_observer = TkinterObserver(school_sim)
     # prediction_observer = PredictionObserver(school_sim)
     # fft_observer = FFTAnalysisObserver(school_sim)
+    pygame_observer = PygameObserver(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
@@ -1551,7 +1657,7 @@ def main():
     # tkinter_observer.display_observation()
     # prediction_observer.display_observation()
     # fft_observer.display_observation(mode='static') # "animation" or "static"
-
+    pygame_observer.display_observation()
 
 
 if __name__ == "__main__":

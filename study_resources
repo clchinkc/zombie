@@ -151,6 +151,7 @@ https://www.interviewbit.com/blog/data-science-projects/
 https://github.com/kiteco/python-youtube-code
 https://www.programcreek.com/python/?action=search_project
 tk text editor add textblob and pyspellchecker spellcheck, add autocomplete, add nltk sentiment analysis
+https://github.com/b001io/wagner-fischer
 https://www.usandopy.com/en/artigo/how-to-build-a-pokedex-in-python-python-project-part-01/
 https://www.pycob.com/gallery?tag=Featured
 https://github.com/pycob/sample-apps
@@ -1440,6 +1441,8 @@ transformer.js
 https://github.com/xenova/transformers.js
 https://huggingface.co/docs/transformers/index
 
+ocr
+https://github.com/junhoyeo/BetterOCR
 
 microservices
 A microservice is a software architectural style in which a complex application is divided into smaller, independent services that are loosely coupled and communicate with each other over a network. Each microservice focuses on performing a specific business capability and can be developed, deployed, and scaled independently.
