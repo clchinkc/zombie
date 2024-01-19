@@ -57,6 +57,7 @@ from functools import cached_property
 from itertools import product
 from typing import Any, Optional
 
+import keras
 import matplotlib.animation as animation
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
@@ -77,7 +78,7 @@ from plotly.subplots import make_subplots
 from pygame.locals import K_SPACE, KEYDOWN, QUIT, K_r
 from scipy import stats
 from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold, train_test_split
 
 
 class HealthState(Enum):
@@ -1318,36 +1319,42 @@ class PredictionObserver(Observer):
             y.append(np.array(self.grid_history[i]))
         return np.array(X), np.array(y)
 
-    def train_model(self):
-        N = 5
+    def train_model(self, num_folds=5):
+        N = 5  # Number of previous steps to consider
         X, y = self.prepare_data(N)
 
         # Reshape for ConvLSTM input
         X = X.reshape((-1, X.shape[1], X.shape[2], X.shape[3], 1))
         y = y.reshape((-1, y.shape[1], y.shape[2], 1))
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+        kf = KFold(n_splits=num_folds, shuffle=True, random_state=42)
+        fold_rmse_scores = []
 
-        # ConvLSTM model
-        model = models.Sequential([
-            layers.ConvLSTM2D(filters=16, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=True, input_shape=X_train.shape[1:]),
-            layers.Dropout(0.2),
-            layers.LayerNormalization(),
-            layers.ConvLSTM2D(filters=32, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=False),
-            layers.Dropout(0.2),
-            layers.LayerNormalization(),
-            layers.Conv2D(filters=1, kernel_size=(3, 3), activation='linear', padding='same')
-        ])
+        for train_index, test_index in kf.split(X):
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
 
-        model.compile(optimizer='adam', loss='mean_squared_error')
-        model.fit(X_train, y_train, epochs=20, validation_split=0.2)
+            # Define the ConvLSTM model
+            model = models.Sequential([
+                layers.ConvLSTM2D(filters=16, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=True, input_shape=X_train.shape[1:]),
+                layers.Dropout(0.2),
+                layers.LayerNormalization(),
+                layers.ConvLSTM2D(filters=32, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=False),
+                layers.Dropout(0.2),
+                layers.LayerNormalization(),
+                layers.Conv2D(filters=1, kernel_size=(3, 3), activation='linear', padding='same')
+            ])
 
-        self.model = model
+            model.compile(optimizer='adam', loss='mean_squared_error', metrics=[keras.metrics.RootMeanSquaredError(name='rmse')])
+            history = model.fit(X_train, y_train, epochs=20, validation_data=(X_test, y_test), verbose="0")
+            
+            self.model = model
 
-        # Evaluate the model
-        predictions = self.model.predict(X_test)
-        mse = mean_squared_error(y_test.reshape(y_test.shape[0], -1), predictions.reshape(predictions.shape[0], -1))
-        print(f"Model Mean Squared Error: {mse}")
+            rmse = history.history['val_rmse'][-1]  # Get the last RMSE value for the validation set
+            fold_rmse_scores.append(rmse)
+
+        avg_rmse = np.mean(fold_rmse_scores)
+        print(f"Average RMSE across all folds: {avg_rmse}")
 
     def display_observation(self):
         if getattr(self, "model", None) is None:
@@ -1553,7 +1560,7 @@ class PygameObserver(Observer):
 
         # Clock for controlling the frame rate
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.SysFont(None, self.font_size)
+        self.font = pygame.font.SysFont("Arial", self.font_size)
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -1638,9 +1645,9 @@ def main():
     # plotly_animator = PlotlyAnimator(school_sim)
     # matplotlib_animator = MatplotlibAnimator(school_sim)
     # tkinter_observer = TkinterObserver(school_sim)
-    # prediction_observer = PredictionObserver(school_sim)
+    prediction_observer = PredictionObserver(school_sim)
     # fft_observer = FFTAnalysisObserver(school_sim)
-    pygame_observer = PygameObserver(school_sim)
+    # pygame_observer = PygameObserver(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
@@ -1655,9 +1662,9 @@ def main():
     # plotly_animator.display_observation()
     # matplotlib_animator.display_observation()
     # tkinter_observer.display_observation()
-    # prediction_observer.display_observation()
+    prediction_observer.display_observation()
     # fft_observer.display_observation(mode='static') # "animation" or "static"
-    pygame_observer.display_observation()
+    # pygame_observer.display_observation()
 
 
 if __name__ == "__main__":

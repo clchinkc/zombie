@@ -3337,6 +3337,10 @@ Conditional Random Fields (CRFs) are more advanced compared to Maximum Entropy M
 """
 
 """
+Serialization is a more primitive notion than persistence; although pickle reads and writes file objects, it does not handle the issue of naming persistent objects, nor the (even more complicated) issue of concurrent access to persistent objects. The pickle module can transform a complex object into a byte stream and it can transform the byte stream into an object with the same internal structure. Perhaps the most obvious thing to do with these byte streams is to write them onto a file, but it is also conceivable to send them across a network or store them in a database. The shelve module provides a simple interface to pickle and unpickle objects on DBM-style database files.
+"""
+
+"""
 https://www.youtube.com/watch?v=gxAaO2rsdIs
 https://github.com/3b1b/videos/blob/master/_2020/sir.py
 https://www.youtube.com/watch?v=D__UaR5MQao

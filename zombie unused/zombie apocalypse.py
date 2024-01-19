@@ -66,6 +66,7 @@ interface segregation principle
 generator
 contextlib
 numpy.fromfunction
+:= walrus operator
 """
 
 import random
