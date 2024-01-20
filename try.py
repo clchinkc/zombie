@@ -1328,7 +1328,8 @@ class PredictionObserver(Observer):
 
     def create_model(self, input_shape, filters, kernel_size, dropout_rate, learning_rate, l2_regularizer):
         model = models.Sequential([
-            layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='relu', padding='same', return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer), input_shape=input_shape),
+            layers.InputLayer(shape=input_shape),
+            layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='relu', padding='same', return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer)),
             layers.Dropout(dropout_rate),
             layers.LayerNormalization(),
             layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='relu', padding='same', return_sequences=False, kernel_regularizer=keras.regularizers.l2(l2_regularizer)),
@@ -1359,6 +1360,8 @@ class PredictionObserver(Observer):
                 fold_rmse_scores.append(rmse)
 
             avg_rmse = np.mean(fold_rmse_scores).item()
+            
+            print(f"Params: {params}, Avg RMSE: {avg_rmse}")
 
             if avg_rmse < best_rmse:
                 best_rmse = avg_rmse
