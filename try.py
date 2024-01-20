@@ -75,10 +75,9 @@ from matplotlib.table import Table
 from matplotlib.transforms import Bbox
 from numpy.fft import fft, fft2, fftshift
 from plotly.subplots import make_subplots
-from pygame.locals import K_SPACE, KEYDOWN, QUIT, K_r
 from scipy import stats
 from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import KFold, train_test_split
+from sklearn.model_selection import ParameterGrid, ShuffleSplit, train_test_split
 
 
 class HealthState(Enum):
@@ -1319,42 +1318,87 @@ class PredictionObserver(Observer):
             y.append(np.array(self.grid_history[i]))
         return np.array(X), np.array(y)
 
-    def train_model(self, num_folds=5):
-        N = 5  # Number of previous steps to consider
-        X, y = self.prepare_data(N)
+    def normalize_data(self, data, data_min, data_max):
+        data_normalized = (data - data_min) / (data_max - data_min)
+        return data_normalized
+
+    def denormalize_data(self, data_normalized, data_min, data_max):
+        data = data_normalized * (data_max - data_min) + data_min
+        return data
+
+    def create_model(self, input_shape, filters, kernel_size, dropout_rate, learning_rate, l2_regularizer):
+        model = models.Sequential([
+            layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='relu', padding='same', return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer), input_shape=input_shape),
+            layers.Dropout(dropout_rate),
+            layers.LayerNormalization(),
+            layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='relu', padding='same', return_sequences=False, kernel_regularizer=keras.regularizers.l2(l2_regularizer)),
+            layers.Dropout(dropout_rate),
+            layers.LayerNormalization(),
+            layers.Conv2D(filters=1, kernel_size=kernel_size, activation='linear', padding='same', kernel_regularizer=keras.regularizers.l2(l2_regularizer))
+        ])
+        optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
+        model.compile(optimizer=optimizer, loss='mean_squared_error', metrics=[keras.metrics.RootMeanSquaredError(name='rmse')])
+        return model
+
+    def tune_hyperparameters(self, X_train, y_train, num_folds, param_grid):
+        best_rmse = float('inf')
+        best_params = {}
+
+        for params in ParameterGrid(param_grid):
+            ss = ShuffleSplit(n_splits=num_folds, test_size=0.25, random_state=42)
+            fold_rmse_scores = []
+
+            for train_index, test_index in ss.split(X_train):
+                X_fold_train, X_fold_val = X_train[train_index], X_train[test_index]
+                y_fold_train, y_fold_val = y_train[train_index], y_train[test_index]
+
+                model = self.create_model(X_fold_train.shape[1:], **params)
+                history = model.fit(X_fold_train, y_fold_train, epochs=20, validation_data=(X_fold_val, y_fold_val), verbose=0)
+
+                rmse = history.history['val_rmse'][-1]  # Get the last RMSE value for the validation set
+                fold_rmse_scores.append(rmse)
+
+            avg_rmse = np.mean(fold_rmse_scores).item()
+
+            if avg_rmse < best_rmse:
+                best_rmse = avg_rmse
+                best_params = params
+
+        return best_params, best_rmse
+
+    def evaluate_model(self, model, X_test, y_test):
+        test_rmse = model.evaluate(X_test, y_test, verbose=0)[1]
+        return test_rmse
+
+    def train_model(self, num_folds=5, num_steps=5):
+        X, y = self.prepare_data(num_steps)
+        self.X_max, self.X_min = X.max(), X.min()
+        self.y_max, self.y_min = y.max(), y.min()
+        X = self.normalize_data(X, self.X_min, self.X_max)
+        y = self.normalize_data(y, self.y_min, self.y_max)
 
         # Reshape for ConvLSTM input
         X = X.reshape((-1, X.shape[1], X.shape[2], X.shape[3], 1))
         y = y.reshape((-1, y.shape[1], y.shape[2], 1))
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-        kf = KFold(n_splits=num_folds, shuffle=True, random_state=42)
-        fold_rmse_scores = []
+        # Define hyperparameter search space
+        param_grid = {
+            'filters': [32],
+            'kernel_size': [(3, 3), (5, 5)],
+            'dropout_rate': [0.1, 0.2],
+            'learning_rate': [0.001],
+            'l2_regularizer': [0.001]
+        }
 
-        for train_index, test_index in kf.split(X):
-            X_train, X_test = X[train_index], X[test_index]
-            y_train, y_test = y[train_index], y[test_index]
+        best_params, best_rmse = self.tune_hyperparameters(X_train, y_train, num_folds, param_grid)
+        print(f"Best Params: {best_params}, Best RMSE: {best_rmse}")
 
-            # Define the ConvLSTM model
-            model = models.Sequential([
-                layers.ConvLSTM2D(filters=16, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=True, input_shape=X_train.shape[1:]),
-                layers.Dropout(0.2),
-                layers.LayerNormalization(),
-                layers.ConvLSTM2D(filters=32, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=False),
-                layers.Dropout(0.2),
-                layers.LayerNormalization(),
-                layers.Conv2D(filters=1, kernel_size=(3, 3), activation='linear', padding='same')
-            ])
-
-            model.compile(optimizer='adam', loss='mean_squared_error', metrics=[keras.metrics.RootMeanSquaredError(name='rmse')])
-            history = model.fit(X_train, y_train, epochs=20, validation_data=(X_test, y_test), verbose="0")
-            
-            self.model = model
-
-            rmse = history.history['val_rmse'][-1]  # Get the last RMSE value for the validation set
-            fold_rmse_scores.append(rmse)
-
-        avg_rmse = np.mean(fold_rmse_scores)
-        print(f"Average RMSE across all folds: {avg_rmse}")
+        final_model = self.create_model(X_train.shape[1:], **best_params)
+        final_model.fit(X_train, y_train, epochs=20, verbose=0)
+        test_rmse = self.evaluate_model(final_model, X_test, y_test)
+        print(f"RMSE on the test set: {test_rmse}")
+        self.model = final_model
 
     def display_observation(self):
         if getattr(self, "model", None) is None:
@@ -1362,8 +1406,10 @@ class PredictionObserver(Observer):
         past_grid_state = self.grid_history[-5:]
         print(self.grid_history[-1])
         input_data = np.array(past_grid_state).reshape((1, -1, self.subject.school.size, self.subject.school.size, 1))
+        input_data = self.normalize_data(input_data, self.X_min, self.X_max)
         predicted_grid_state = self.model.predict(input_data)
         reshaped_grid_state = predicted_grid_state.reshape((self.subject.school.size, self.subject.school.size))
+        reshaped_grid_state = self.denormalize_data(reshaped_grid_state, self.y_min, self.y_max)
         reformatted_grid_state = np.round(reshaped_grid_state, 1)
         print(reformatted_grid_state)
 
