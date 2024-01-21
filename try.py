@@ -66,6 +66,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import pygame
+import scipy
 import seaborn as sns
 from keras import layers, models
 from matplotlib import animation, colors, patches
@@ -1326,18 +1327,84 @@ class PredictionObserver(Observer):
         data = data_normalized * (data_max - data_min) + data_min
         return data
 
+    def augment_data(self, X, y):
+        augmented_X = []
+        augmented_y = []
+
+        # Phase 1: Augmentations that do not modify the data (flipping and rotation)
+        for i in range(len(X)):
+            # Original data
+            augmented_X.append(X[i])
+            augmented_y.append(y[i])
+
+            # Horizontal flip
+            X_hor_flip = np.flip(X[i], axis=1)
+            y_hor_flip = np.flip(y[i], axis=0)
+            augmented_X.append(X_hor_flip)
+            augmented_y.append(y_hor_flip)
+
+            # Vertical flip
+            X_ver_flip = np.flip(X[i], axis=2)
+            y_ver_flip = np.flip(y[i], axis=1)
+            augmented_X.append(X_ver_flip)
+            augmented_y.append(y_ver_flip)
+
+            # Rotations 90, 180, 270 degrees
+            for angle in [90, 180, 270]:
+                X_rotated = scipy.ndimage.rotate(X[i], angle, axes=(1, 2), reshape=False)
+                y_rotated = scipy.ndimage.rotate(y[i], angle, axes=(0, 1), reshape=False)
+                augmented_X.append(X_rotated)
+                augmented_y.append(y_rotated)
+
+        # Convert to numpy arrays for subsequent operations
+        augmented_X = np.array(augmented_X)
+        augmented_y = np.array(augmented_y)
+
+        # Phase 2: Augmentations that modify the data (cell type modification, noise injection, time-distortion)
+        modified_X = []
+        modified_y = []
+        for i in range(len(augmented_X)):
+            # Cell Type Modification Augmentation
+            X_cell_mod = np.copy(augmented_X[i])
+            num_modifications = int(0.01 * X_cell_mod.size)  # modification_rate of 1%
+            indices = np.random.choice(X_cell_mod.size, num_modifications, replace=False)
+            new_values = np.random.choice(np.array([0, 1, 2, 3]), num_modifications)
+            np.put(X_cell_mod, indices, new_values)
+            modified_X.append(X_cell_mod)
+            modified_y.append(augmented_y[i])
+
+            # Noise Injection Augmentation
+            noise = 0.01 * np.random.randn(*augmented_X[i].shape)  # noise_level of 1%
+            X_noise_inject = augmented_X[i] + noise
+            X_noise_inject = np.clip(X_noise_inject, 0, 3)  # Ensure the noisy data is within valid range
+            modified_X.append(X_noise_inject)
+            modified_y.append(augmented_y[i])
+
+            # Time-Distortion Augmentation
+            X_time_distort = np.copy(augmented_X[i])
+            for t in range(2, augmented_X[i].shape[0]):
+                X_time_distort[t] = (0.7 * X_time_distort[t]) + (0.2 * X_time_distort[t - 1]) + (0.1 * X_time_distort[t - 2])
+            modified_X.append(X_time_distort)
+            modified_y.append(augmented_y[i])
+
+        # Combine original augmented data with modified data
+        combined_X = np.concatenate((augmented_X, np.array(modified_X)), axis=0)
+        combined_y = np.concatenate((augmented_y, np.array(modified_y)), axis=0)
+
+        return combined_X, combined_y
+
     def create_model(self, input_shape, filters, kernel_size, dropout_rate, learning_rate, l2_regularizer):
         model = models.Sequential([
             layers.InputLayer(shape=input_shape),
-            layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='relu', padding='same', return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer)),
+            layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='elu', padding='same', return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer)),
             layers.Dropout(dropout_rate),
             layers.LayerNormalization(),
-            layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='relu', padding='same', return_sequences=False, kernel_regularizer=keras.regularizers.l2(l2_regularizer)),
+            layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='elu', padding='same', return_sequences=False, kernel_regularizer=keras.regularizers.l2(l2_regularizer)),
             layers.Dropout(dropout_rate),
             layers.LayerNormalization(),
             layers.Conv2D(filters=1, kernel_size=kernel_size, activation='linear', padding='same', kernel_regularizer=keras.regularizers.l2(l2_regularizer))
         ])
-        optimizer = keras.optimizers.Adam(learning_rate=learning_rate)
+        optimizer = keras.optimizers.Nadam(learning_rate=learning_rate)
         model.compile(optimizer=optimizer, loss='mean_squared_error', metrics=[keras.metrics.RootMeanSquaredError(name='rmse')])
         return model
 
@@ -1373,15 +1440,32 @@ class PredictionObserver(Observer):
         test_rmse = model.evaluate(X_test, y_test, verbose=0)[1]
         return test_rmse
 
+    def cosine_annealing_scheduler(self, max_update, base_lr=0.01, final_lr=0., warmup_steps=0, warmup_begin_lr=0.):
+        max_steps = max_update - warmup_steps
+        
+        def schedule(epoch):
+            if epoch < warmup_steps:
+                increase = (base_lr - warmup_begin_lr) * float(epoch) / float(warmup_steps)
+                lr = warmup_begin_lr + increase
+            elif epoch <= max_update:
+                lr = final_lr + (base_lr - final_lr) * (1 + math.cos(math.pi * (epoch - warmup_steps) / max_steps)) / 2
+            else:
+                lr = final_lr
+            return lr
+        
+        return schedule
+
     def train_model(self, num_folds=5, num_steps=5):
         X, y = self.prepare_data(num_steps)
+        X, y = self.augment_data(X, y)
         self.X_max, self.X_min = X.max(), X.min()
         self.y_max, self.y_min = y.max(), y.min()
         X = self.normalize_data(X, self.X_min, self.X_max)
         y = self.normalize_data(y, self.y_min, self.y_max)
 
-        # Reshape for ConvLSTM input
+        # X should have shape (samples, timesteps, width, height, channels)
         X = X.reshape((-1, X.shape[1], X.shape[2], X.shape[3], 1))
+        # y should have shape (samples, width, height, channels)
         y = y.reshape((-1, y.shape[1], y.shape[2], 1))
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -1389,7 +1473,7 @@ class PredictionObserver(Observer):
         param_grid = {
             'filters': [32],
             'kernel_size': [(3, 3), (5, 5)],
-            'dropout_rate': [0.1, 0.2],
+            'dropout_rate': [0.2, 0.3],
             'learning_rate': [0.001],
             'l2_regularizer': [0.001]
         }
@@ -1398,10 +1482,32 @@ class PredictionObserver(Observer):
         print(f"Best Params: {best_params}, Best RMSE: {best_rmse}")
 
         final_model = self.create_model(X_train.shape[1:], **best_params)
-        final_model.fit(X_train, y_train, epochs=20, verbose=0)
+        early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, verbose=0)
+        lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler(max_update=10, base_lr=0.01, final_lr=0.001, warmup_steps=5, warmup_begin_lr=0.0001))
+        final_model.fit(X_train, y_train, epochs=20, verbose=0, )
         test_rmse = self.evaluate_model(final_model, X_test, y_test)
         print(f"RMSE on the test set: {test_rmse}")
         self.model = final_model
+
+    def monte_carlo_prediction(self, model, input_data, n_predictions=100):
+        # List to hold predictions
+        predictions = []
+
+        # Perform n_predictions forward passes with dropout enabled
+        for _ in range(n_predictions):
+            # Enable training mode temporarily to activate dropout layers
+            model._training = True
+            prediction = model.predict(input_data, verbose=0)
+            predictions.append(prediction)
+
+            # Reset training mode
+            model._training = False
+
+        # Compute mean and variance of the predictions
+        prediction_mean = np.mean(predictions, axis=0)
+        prediction_variance = np.var(predictions, axis=0)
+
+        return prediction_mean, prediction_variance
 
     def display_observation(self):
         if getattr(self, "model", None) is None:
@@ -1410,11 +1516,22 @@ class PredictionObserver(Observer):
         print(self.grid_history[-1])
         input_data = np.array(past_grid_state).reshape((1, -1, self.subject.school.size, self.subject.school.size, 1))
         input_data = self.normalize_data(input_data, self.X_min, self.X_max)
-        predicted_grid_state = self.model.predict(input_data)
+        predicted_grid_state = self.model.predict(input_data, verbose=0)
         reshaped_grid_state = predicted_grid_state.reshape((self.subject.school.size, self.subject.school.size))
         reshaped_grid_state = self.denormalize_data(reshaped_grid_state, self.y_min, self.y_max)
         reformatted_grid_state = np.round(reshaped_grid_state, 1)
         print(reformatted_grid_state)
+        prediction_mean, prediction_variance = self.monte_carlo_prediction(self.model, input_data, n_predictions=100)
+        reshaped_prediction_mean = prediction_mean.reshape((self.subject.school.size, self.subject.school.size))
+        reshaped_prediction_mean = self.denormalize_data(reshaped_prediction_mean, self.y_min, self.y_max)
+        reformatted_prediction_mean = np.round(reshaped_prediction_mean, 1)
+        reshaped_prediction_variance = prediction_variance.reshape((self.subject.school.size, self.subject.school.size))
+        reshaped_prediction_variance = self.denormalize_data(reshaped_prediction_variance, self.y_min, self.y_max)
+        reformatted_prediction_variance = np.array2string(reshaped_prediction_variance, formatter={'float_kind':lambda x: "{:+.0e}".format(x)})
+        print("Prediction Mean:")
+        print(reformatted_prediction_mean)
+        print("Prediction Variance (Uncertainty):")
+        print(reformatted_prediction_variance)
 
 
 class FFTAnalysisObserver(Observer):
