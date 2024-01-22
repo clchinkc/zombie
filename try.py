@@ -1317,23 +1317,19 @@ class PredictionObserver(Observer):
     def prepare_data(self, N):
         X, y = [], []
         for i in range(N, len(self.grid_history)):
-            X.append(np.array(self.grid_history[i-N:i]))
-            y.append(np.array(self.grid_history[i]))
+            X.append(np.array([keras.utils.to_categorical(frame, num_classes=4) for frame in self.grid_history[i - N:i]]))
+            y.append(np.array(keras.utils.to_categorical(self.grid_history[i], num_classes=4)))
         return np.array(X), np.array(y)
 
-    def normalize_data(self, data, data_min, data_max):
-        data_normalized = (data - data_min) / (data_max - data_min)
-        return data_normalized
-
-    def denormalize_data(self, data_normalized, data_min, data_max):
-        data = data_normalized * (data_max - data_min) + data_min
-        return data
-
     def augment_data(self, X, y):
+        augmented_X, augmented_y = self.basic_augmentation(X, y)
+        combined_X, combined_y = self.advanced_augmentation(augmented_X, augmented_y)
+        return combined_X, combined_y
+
+    def basic_augmentation(self, X, y):
         augmented_X = []
         augmented_y = []
 
-        # Phase 1: Augmentations that do not modify the data (flipping and rotation)
         for i in range(len(X)):
             # Original data
             augmented_X.append(X[i])
@@ -1358,17 +1354,18 @@ class PredictionObserver(Observer):
                 augmented_X.append(X_rotated)
                 augmented_y.append(y_rotated)
 
-        # Convert to numpy arrays for subsequent operations
         augmented_X = np.array(augmented_X)
         augmented_y = np.array(augmented_y)
+        return augmented_X, augmented_y
 
-        # Phase 2: Augmentations that modify the data (cell type modification, noise injection, time-distortion)
+    def advanced_augmentation(self, augmented_X, augmented_y, modification_rate=0.01, noise_level=0.01, time_distortion_weights=(0.7, 0.2, 0.1)):
         modified_X = []
         modified_y = []
+
         for i in range(len(augmented_X)):
             # Cell Type Modification Augmentation
             X_cell_mod = np.copy(augmented_X[i])
-            num_modifications = int(0.01 * X_cell_mod.size)  # modification_rate of 1%
+            num_modifications = int(modification_rate * X_cell_mod.size)
             indices = np.random.choice(X_cell_mod.size, num_modifications, replace=False)
             new_values = np.random.choice(np.array([0, 1, 2, 3]), num_modifications)
             np.put(X_cell_mod, indices, new_values)
@@ -1376,7 +1373,7 @@ class PredictionObserver(Observer):
             modified_y.append(augmented_y[i])
 
             # Noise Injection Augmentation
-            noise = 0.01 * np.random.randn(*augmented_X[i].shape)  # noise_level of 1%
+            noise = noise_level * np.random.randn(*augmented_X[i].shape)
             X_noise_inject = augmented_X[i] + noise
             X_noise_inject = np.clip(X_noise_inject, 0, 3)  # Ensure the noisy data is within valid range
             modified_X.append(X_noise_inject)
@@ -1384,8 +1381,9 @@ class PredictionObserver(Observer):
 
             # Time-Distortion Augmentation
             X_time_distort = np.copy(augmented_X[i])
-            for t in range(2, augmented_X[i].shape[0]):
-                X_time_distort[t] = (0.7 * X_time_distort[t]) + (0.2 * X_time_distort[t - 1]) + (0.1 * X_time_distort[t - 2])
+            num_weights = len(time_distortion_weights)
+            for t in range(num_weights - 1, augmented_X[i].shape[0]):
+                X_time_distort[t] = sum(time_distortion_weights[j] * X_time_distort[t - j] for j in range(num_weights))
             modified_X.append(X_time_distort)
             modified_y.append(augmented_y[i])
 
@@ -1399,50 +1397,16 @@ class PredictionObserver(Observer):
         model = models.Sequential([
             layers.InputLayer(shape=input_shape),
             layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='elu', padding='same', return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer)),
-            layers.Dropout(dropout_rate),
             layers.LayerNormalization(),
+            layers.Dropout(dropout_rate),
             layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='elu', padding='same', return_sequences=False, kernel_regularizer=keras.regularizers.l2(l2_regularizer)),
-            layers.Dropout(dropout_rate),
             layers.LayerNormalization(),
-            layers.Conv2D(filters=1, kernel_size=kernel_size, activation='linear', padding='same', kernel_regularizer=keras.regularizers.l2(l2_regularizer))
+            layers.Dropout(dropout_rate),
+            layers.Conv2D(filters=4, kernel_size=kernel_size, activation='softmax', padding='same')
         ])
         optimizer = keras.optimizers.Nadam()
-        model.compile(optimizer=optimizer, loss='mean_squared_error', metrics=[keras.metrics.RootMeanSquaredError(name='rmse')])
+        model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
         return model
-
-    def tune_hyperparameters(self, X_train, y_train, num_folds, param_grid):
-        best_rmse = float('inf')
-        best_params = {}
-
-        for params in ParameterGrid(param_grid):
-            ss = ShuffleSplit(n_splits=num_folds, test_size=0.25, random_state=42)
-            fold_rmse_scores = []
-
-            for train_index, test_index in ss.split(X_train):
-                X_fold_train, X_fold_val = X_train[train_index], X_train[test_index]
-                y_fold_train, y_fold_val = y_train[train_index], y_train[test_index]
-
-                early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, verbose=0)
-                lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
-                model = self.create_model(X_fold_train.shape[1:], **params)
-                history = model.fit(X_fold_train, y_fold_train, epochs=20, validation_data=(X_fold_val, y_fold_val), verbose=0, callbacks=[early_stopping, lr_scheduler])
-
-                rmse = history.history['val_rmse'][-1]  # Get the last RMSE value for the validation set
-                fold_rmse_scores.append(rmse)
-
-            avg_rmse = np.mean(fold_rmse_scores).item()
-            
-            print(f"Params: {params}, Avg RMSE: {avg_rmse}")
-
-            if avg_rmse < best_rmse:
-                best_rmse = avg_rmse
-                best_params = params
-
-        return best_params, best_rmse
-
-    def evaluate_model(self, model, X_test, y_test):
-        test_rmse = model.evaluate(X_test, y_test, verbose=0)[1]
-        return test_rmse
 
     def cosine_annealing_scheduler(self, max_update=10, base_lr=0.001, final_lr=0.0001, warmup_steps=5, warmup_begin_lr=0.0001):
         max_steps = max_update - warmup_steps
@@ -1459,18 +1423,44 @@ class PredictionObserver(Observer):
         
         return schedule
 
+    def tune_hyperparameters(self, X_train, y_train, num_folds, param_grid):
+        best_loss = float('inf')
+        best_params = {}
+
+        for params in ParameterGrid(param_grid):
+            ss = ShuffleSplit(n_splits=num_folds, test_size=0.25, random_state=42)
+            fold_loss_scores = []
+
+            for train_index, test_index in ss.split(X_train):
+                X_fold_train, X_fold_val = X_train[train_index], X_train[test_index]
+                y_fold_train, y_fold_val = y_train[train_index], y_train[test_index]
+
+                early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
+                lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
+                model = self.create_model(X_fold_train.shape[1:], **params)
+                history = model.fit(X_fold_train, y_fold_train, epochs=20, validation_data=(X_fold_val, y_fold_val), verbose=0, callbacks=[early_stopping, lr_scheduler])
+
+                loss = history.history['val_loss'][-1]
+                fold_loss_scores.append(loss)
+
+            avg_loss = np.mean(fold_loss_scores).item()
+            
+            print(f"Params: {params}, Avg Loss: {avg_loss}")
+
+            if avg_loss < best_loss:
+                best_loss = avg_loss
+                best_params = params
+
+        return best_params, best_loss
+
     def train_model(self, num_folds=5, num_steps=5):
         X, y = self.prepare_data(num_steps)
         X, y = self.augment_data(X, y)
-        self.X_max, self.X_min = X.max(), X.min()
-        self.y_max, self.y_min = y.max(), y.min()
-        X = self.normalize_data(X, self.X_min, self.X_max)
-        y = self.normalize_data(y, self.y_min, self.y_max)
 
         # X should have shape (samples, timesteps, width, height, channels)
-        X = X.reshape((-1, X.shape[1], X.shape[2], X.shape[3], 1))
+        X = X.reshape((-1, X.shape[1], X.shape[2], X.shape[3], 4))
         # y should have shape (samples, width, height, channels)
-        y = y.reshape((-1, y.shape[1], y.shape[2], 1))
+        y = y.reshape((-1, y.shape[1], y.shape[2], 4))
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
         # Define hyperparameter search space
@@ -1481,16 +1471,20 @@ class PredictionObserver(Observer):
             'l2_regularizer': [0.001]
         }
 
-        best_params, best_rmse = self.tune_hyperparameters(X_train, y_train, num_folds, param_grid)
-        print(f"Best Params: {best_params}, Best RMSE: {best_rmse}")
+        best_params, best_loss = self.tune_hyperparameters(X_train, y_train, num_folds, param_grid)
+        print(f"Best Params: {best_params}, Best Loss: {best_loss}")
 
         final_model = self.create_model(X_train.shape[1:], **best_params)
-        early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, verbose=0)
+        early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
         lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
         final_model.fit(X_train, y_train, epochs=20, verbose=0, callbacks=[early_stopping, lr_scheduler], validation_split=0.2)
-        test_rmse = self.evaluate_model(final_model, X_test, y_test)
-        print(f"RMSE on the test set: {test_rmse}")
+        test_loss = self.evaluate_model(final_model, X_test, y_test)
+        print(f"Loss on the test set: {test_loss}")
         self.model = final_model
+
+    def evaluate_model(self, model, X_test, y_test):
+        test_loss = model.evaluate(X_test, y_test, verbose=0)[1]
+        return test_loss
 
     def monte_carlo_prediction(self, model, input_data, n_predictions=100):
         # List to hold predictions
@@ -1506,35 +1500,28 @@ class PredictionObserver(Observer):
             # Reset training mode
             model._training = False
 
-        # Compute mean and variance of the predictions
-        prediction_mean = np.mean(predictions, axis=0)
+        # Compute variance of the predictions
         prediction_variance = np.var(predictions, axis=0)
 
-        return prediction_mean, prediction_variance
+        return prediction_variance
 
     def display_observation(self):
         if getattr(self, "model", None) is None:
             self.train_model()
         past_grid_state = self.grid_history[-5:]
-        print(self.grid_history[-1])
-        input_data = np.array(past_grid_state).reshape((1, -1, self.subject.school.size, self.subject.school.size, 1))
-        input_data = self.normalize_data(input_data, self.X_min, self.X_max)
+        argmax_past_grid_state = keras.utils.to_categorical(past_grid_state, num_classes=4)
+        print(self.grid_history[-1].astype(int))
+        input_data = np.array(argmax_past_grid_state).reshape((1, -1, self.subject.school.size, self.subject.school.size, 4))
         predicted_grid_state = self.model.predict(input_data, verbose=0)
-        reshaped_grid_state = predicted_grid_state.reshape((self.subject.school.size, self.subject.school.size))
-        reshaped_grid_state = self.denormalize_data(reshaped_grid_state, self.y_min, self.y_max)
+        argmax_predicted_grid_state = np.argmax(predicted_grid_state, axis=-1)
+        reshaped_grid_state = argmax_predicted_grid_state.reshape((self.subject.school.size, self.subject.school.size))
         reformatted_grid_state = np.round(reshaped_grid_state, 1)
         print(reformatted_grid_state)
-        prediction_mean, prediction_variance = self.monte_carlo_prediction(self.model, input_data, n_predictions=100)
-        reshaped_prediction_mean = prediction_mean.reshape((self.subject.school.size, self.subject.school.size))
-        reshaped_prediction_mean = self.denormalize_data(reshaped_prediction_mean, self.y_min, self.y_max)
-        reformatted_prediction_mean = np.round(reshaped_prediction_mean, 1)
-        reshaped_prediction_variance = prediction_variance.reshape((self.subject.school.size, self.subject.school.size))
-        reshaped_prediction_variance = self.denormalize_data(reshaped_prediction_variance, self.y_min, self.y_max)
-        reformatted_prediction_variance = np.array2string(reshaped_prediction_variance, formatter={'float_kind':lambda x: "{:+.0e}".format(x)})
-        print("Prediction Mean:")
-        print(reformatted_prediction_mean)
-        print("Prediction Variance (Uncertainty):")
-        print(reformatted_prediction_variance)
+        prediction_variance = self.monte_carlo_prediction(self.model, input_data, n_predictions=100)
+        state_uncertainty = np.max(prediction_variance, axis=-1).reshape((self.subject.school.size, self.subject.school.size))
+        reformatted_state_uncertainty = np.array2string(state_uncertainty, formatter={'float_kind':lambda x: "{:.0e}".format(x)})
+        print("Uncertainty (Variance in Predicted Probabilities):")
+        print(reformatted_state_uncertainty)
 
 
 class FFTAnalysisObserver(Observer):
