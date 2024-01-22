@@ -1,3 +1,5 @@
+
+
 """
 The implementation of a zombie apocalypse simulation in a school environment requires the creation of several classes and functions to accurately represent the dynamics of such a scenario. Let's break down the implementation into key components and their respective functionalities:
 
@@ -1393,7 +1395,7 @@ class PredictionObserver(Observer):
 
         return combined_X, combined_y
 
-    def create_model(self, input_shape, filters, kernel_size, dropout_rate, learning_rate, l2_regularizer):
+    def create_model(self, input_shape, filters, kernel_size, dropout_rate, l2_regularizer):
         model = models.Sequential([
             layers.InputLayer(shape=input_shape),
             layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='elu', padding='same', return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer)),
@@ -1404,7 +1406,7 @@ class PredictionObserver(Observer):
             layers.LayerNormalization(),
             layers.Conv2D(filters=1, kernel_size=kernel_size, activation='linear', padding='same', kernel_regularizer=keras.regularizers.l2(l2_regularizer))
         ])
-        optimizer = keras.optimizers.Nadam(learning_rate=learning_rate)
+        optimizer = keras.optimizers.Nadam()
         model.compile(optimizer=optimizer, loss='mean_squared_error', metrics=[keras.metrics.RootMeanSquaredError(name='rmse')])
         return model
 
@@ -1420,8 +1422,10 @@ class PredictionObserver(Observer):
                 X_fold_train, X_fold_val = X_train[train_index], X_train[test_index]
                 y_fold_train, y_fold_val = y_train[train_index], y_train[test_index]
 
+                early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, verbose=0)
+                lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
                 model = self.create_model(X_fold_train.shape[1:], **params)
-                history = model.fit(X_fold_train, y_fold_train, epochs=20, validation_data=(X_fold_val, y_fold_val), verbose=0)
+                history = model.fit(X_fold_train, y_fold_train, epochs=20, validation_data=(X_fold_val, y_fold_val), verbose=0, callbacks=[early_stopping, lr_scheduler])
 
                 rmse = history.history['val_rmse'][-1]  # Get the last RMSE value for the validation set
                 fold_rmse_scores.append(rmse)
@@ -1440,7 +1444,7 @@ class PredictionObserver(Observer):
         test_rmse = model.evaluate(X_test, y_test, verbose=0)[1]
         return test_rmse
 
-    def cosine_annealing_scheduler(self, max_update, base_lr=0.01, final_lr=0., warmup_steps=0, warmup_begin_lr=0.):
+    def cosine_annealing_scheduler(self, max_update=10, base_lr=0.001, final_lr=0.0001, warmup_steps=5, warmup_begin_lr=0.0001):
         max_steps = max_update - warmup_steps
         
         def schedule(epoch):
@@ -1474,7 +1478,6 @@ class PredictionObserver(Observer):
             'filters': [32],
             'kernel_size': [(3, 3), (5, 5)],
             'dropout_rate': [0.2, 0.3],
-            'learning_rate': [0.001],
             'l2_regularizer': [0.001]
         }
 
@@ -1483,8 +1486,8 @@ class PredictionObserver(Observer):
 
         final_model = self.create_model(X_train.shape[1:], **best_params)
         early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, verbose=0)
-        lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler(max_update=10, base_lr=0.01, final_lr=0.001, warmup_steps=5, warmup_begin_lr=0.0001))
-        final_model.fit(X_train, y_train, epochs=20, verbose=0, )
+        lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
+        final_model.fit(X_train, y_train, epochs=20, verbose=0, callbacks=[early_stopping, lr_scheduler], validation_split=0.2)
         test_rmse = self.evaluate_model(final_model, X_test, y_test)
         print(f"RMSE on the test set: {test_rmse}")
         self.model = final_model
@@ -1835,6 +1838,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
