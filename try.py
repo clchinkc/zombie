@@ -1,5 +1,3 @@
-
-
 """
 The implementation of a zombie apocalypse simulation in a school environment requires the creation of several classes and functions to accurately represent the dynamics of such a scenario. Let's break down the implementation into key components and their respective functionalities:
 
@@ -79,6 +77,7 @@ from matplotlib.transforms import Bbox
 from numpy.fft import fft, fft2, fftshift
 from plotly.subplots import make_subplots
 from scipy import stats
+from scipy.interpolate import interp1d
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import ParameterGrid, ShuffleSplit, train_test_split
 
@@ -1358,7 +1357,7 @@ class PredictionObserver(Observer):
         augmented_y = np.array(augmented_y)
         return augmented_X, augmented_y
 
-    def advanced_augmentation(self, augmented_X, augmented_y, modification_rate=0.01, noise_level=0.01, time_distortion_weights=(0.7, 0.2, 0.1)):
+    def advanced_augmentation(self, augmented_X, augmented_y, modification_rate=0.01, noise_level=0.01, time_distortion_weights=(0.7, 0.2, 0.1), warping_strength=0.1):
         modified_X = []
         modified_y = []
 
@@ -1372,7 +1371,7 @@ class PredictionObserver(Observer):
             modified_X.append(X_cell_mod)
             modified_y.append(augmented_y[i])
 
-            # Noise Injection Augmentation
+            # Jittering Augmentation
             noise = noise_level * np.random.randn(*augmented_X[i].shape)
             X_noise_inject = augmented_X[i] + noise
             X_noise_inject = np.clip(X_noise_inject, 0, 3)  # Ensure the noisy data is within valid range
@@ -1385,6 +1384,24 @@ class PredictionObserver(Observer):
             for t in range(num_weights - 1, augmented_X[i].shape[0]):
                 X_time_distort[t] = sum(time_distortion_weights[j] * X_time_distort[t - j] for j in range(num_weights))
             modified_X.append(X_time_distort)
+            modified_y.append(augmented_y[i])
+            
+            # Time Warping Augmentation
+            num_knots = max(int(warping_strength * augmented_X[i].shape[1]), 2)
+            seq_length = augmented_X.shape[1]
+            original_indices = np.linspace(0, seq_length - 1, seq_length)
+            knot_positions = np.linspace(0, seq_length - 1, num=num_knots, dtype=int)
+            knot_offsets = warping_strength * np.random.randn(num_knots)
+            warp_indices = np.clip(knot_positions + knot_offsets, 0, seq_length - 1)
+            warp_function = interp1d(knot_positions, warp_indices, kind='linear', bounds_error=False)
+            new_indices = warp_function(original_indices)
+            new_indices = np.clip(new_indices, 0, seq_length - 1)
+            signal = augmented_X[i]
+            interp_function = interp1d(original_indices, signal, axis=0, kind='linear', bounds_error=False)
+            warped_signal = interp_function(new_indices)
+            warped_signal = np.clip(warped_signal, 0, 3)
+
+            modified_X.append(warped_signal)
             modified_y.append(augmented_y[i])
 
         # Combine original augmented data with modified data
@@ -1408,19 +1425,32 @@ class PredictionObserver(Observer):
         model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
         return model
 
-    def cosine_annealing_scheduler(self, max_update=10, base_lr=0.001, final_lr=0.0001, warmup_steps=5, warmup_begin_lr=0.0001):
+    def cosine_annealing_scheduler(self, max_update=20, base_lr=0.01, final_lr=0.001, warmup_steps=5, warmup_begin_lr=0.001, cycle_length=10, exp_decay_rate=0.5):
+        # Pre-compute constants for efficiency
+        warmup_slope = (base_lr - warmup_begin_lr) / warmup_steps
         max_steps = max_update - warmup_steps
-        
+
         def schedule(epoch):
             if epoch < warmup_steps:
-                increase = (base_lr - warmup_begin_lr) * float(epoch) / float(warmup_steps)
-                lr = warmup_begin_lr + increase
-            elif epoch <= max_update:
-                lr = final_lr + (base_lr - final_lr) * (1 + math.cos(math.pi * (epoch - warmup_steps) / max_steps)) / 2
+                # Warmup phase with a linear increase
+                return warmup_begin_lr + warmup_slope * epoch
+            elif epoch < max_update:
+                # Main learning phase with cosine annealing
+                return final_lr + (base_lr - final_lr) * (1 + math.cos(math.pi * (epoch - warmup_steps) / max_steps)) / 2
             else:
-                lr = final_lr
-            return lr
-        
+                # Post-max_update phase with warm restarts and cosine annealing
+                adjusted_epoch = epoch - max_update
+                cycles = math.floor(1 + (adjusted_epoch - 1) / cycle_length)
+                x = adjusted_epoch - (cycles * cycle_length)
+
+                # Apply exponential decay to base_lr only when a new cycle begins
+                decayed_lr = base_lr * (exp_decay_rate ** cycles)
+
+                # Apply cosine annealing within the cycle
+                cycle_base_lr = max(decayed_lr, final_lr)
+                lr = final_lr + (cycle_base_lr - final_lr) * (1 - math.cos(math.pi * x / cycle_length)) / 2
+                return max(lr, final_lr)  # Ensure lr does not go below final_lr
+
         return schedule
 
     def tune_hyperparameters(self, X_train, y_train, num_folds, param_grid):
@@ -1466,8 +1496,8 @@ class PredictionObserver(Observer):
         # Define hyperparameter search space
         param_grid = {
             'filters': [32],
-            'kernel_size': [(3, 3), (5, 5)],
-            'dropout_rate': [0.2, 0.3],
+            'kernel_size': [(3, 3)],
+            'dropout_rate': [0.1, 0.3, 0.5],
             'l2_regularizer': [0.001]
         }
 
@@ -1825,3 +1855,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+

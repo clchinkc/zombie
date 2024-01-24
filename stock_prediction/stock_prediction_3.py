@@ -668,6 +668,7 @@ To add volatility term, you can use the volatility of the stock price to adjust 
 
 Use a more sophisticated clustering algorithm:
 To use a more sophisticated clustering algorithm, you can try hierarchical clustering, density-based clustering, or model-based clustering algorithms and evaluate their performance.
+weighted knn
 
 Cluster based on the price change (returns):
 data['Return'] = np.log(data['Close'] / data['Close'].shift(1)).fillna(np.mean(np.log(data['Close'] / data['Close'].shift(1))))

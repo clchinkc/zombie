@@ -3341,6 +3341,46 @@ Serialization is a more primitive notion than persistence; although pickle reads
 """
 
 """
+### Exponential Learning Rate Schedule:
+- **Applicability to Simulation**: This method would apply a gradually decreasing learning rate, potentially smoothing out the learning process over time. It might be useful if the model's performance improves steadily over epochs.
+- **Implementation in Simulation**: You could use the exponential decay to adjust parameters like the infection rate or the individuals' movement probabilities, simulating a gradual change in the simulation dynamics.
+
+### Cosine Annealing Learning Rate Schedule:
+- **Applicability to Simulation**: This method reduces the learning rate according to a cosine function, allowing for a restart in the learning rate at specific points. This could be particularly useful in a simulation setting where the dynamics of the system may change periodically (e.g., introduction of a cure or new resources).
+- **Implementation in Simulation**: You might implement this by periodically adjusting the parameters of your simulation (e.g., how individuals interact or move) according to a cosine schedule, simulating external interventions or changes in the environment.
+
+### Stochastic Gradient Descent with Warm Restarts (SGDR):
+- **Applicability to Simulation**: This approach involves periodically resetting the learning rate to a higher value, which can help the model escape local minima. In a simulation context, this could represent sudden, drastic changes in the environment or in individual behavior.
+- **Implementation in Simulation**: You could introduce sudden changes in parameters (like infection rates or individual movement strategies) at specific intervals, simulating unexpected events in the school environment.
+"""
+
+"""
+**Machine learning in graphs**
+
+3. **Graph Embeddings**:
+   - Learning how to represent graphs using embeddings.
+   - Utilizing techniques like shallow encoding and random walks for graph embeddings.
+
+4. **Graph Neural Networks (GNNs)**:
+   - Briefly covering traditional neural network architectures like CNN, RNN, and LSTM.
+   - Focusing on GNNs, including message propagation and aggregation.
+   - Introducing Graph Convolutional Layers as a key component of GNNs.
+
+5. **Analysis of GNNs**:
+   - Evaluating the effectiveness of different aggregation methods in GNNs.
+   - Discussing techniques for encoding relations within graphs.
+   
+7. **Recommender Systems**:
+   - Utilizing statistical and graph representations for building recommender systems.
+
+8. **Self-Supervised Learning in Graphs**:
+   - Exploring self-supervised learning techniques specifically designed for graphs.
+
+9. **Generative Adversarial Networks (GANs)**:
+   - Briefly covering GANs in the context of graph data.
+"""
+
+"""
 https://www.youtube.com/watch?v=gxAaO2rsdIs
 https://github.com/3b1b/videos/blob/master/_2020/sir.py
 https://www.youtube.com/watch?v=D__UaR5MQao
