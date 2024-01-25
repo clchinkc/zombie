@@ -1410,6 +1410,17 @@ class PredictionObserver(Observer):
 
         return combined_X, combined_y
 
+    def bootstrap_samples(self, X, y, n_samples):
+        bootstrapped_X, bootstrapped_y = [], []
+        n_data = len(X)
+        for _ in range(n_samples):
+            sample_indices = np.random.choice(np.arange(n_data), size=n_data, replace=True)
+            sample_X = X[sample_indices]
+            sample_y = y[sample_indices]
+            bootstrapped_X.append(sample_X)
+            bootstrapped_y.append(sample_y)
+        return np.vstack(bootstrapped_X), np.vstack(bootstrapped_y)
+
     def create_model(self, input_shape, filters, kernel_size, dropout_rate, l2_regularizer):
         model = models.Sequential([
             layers.InputLayer(shape=input_shape),
@@ -1483,15 +1494,18 @@ class PredictionObserver(Observer):
 
         return best_params, best_loss
 
-    def train_model(self, num_folds=5, num_steps=5):
+    def train_model(self, num_folds=5, num_steps=5, num_bootstrap_samples=100):
         X, y = self.prepare_data(num_steps)
         X, y = self.augment_data(X, y)
 
+        # Bootstrapping the data
+        X_boot, y_boot = self.bootstrap_samples(X, y, num_bootstrap_samples)
+
         # X should have shape (samples, timesteps, width, height, channels)
-        X = X.reshape((-1, X.shape[1], X.shape[2], X.shape[3], 4))
+        X_boot = X_boot.reshape((-1, X_boot.shape[1], X_boot.shape[2], X_boot.shape[3], 4))
         # y should have shape (samples, width, height, channels)
-        y = y.reshape((-1, y.shape[1], y.shape[2], 4))
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        y_boot = y_boot.reshape((-1, y_boot.shape[1], y_boot.shape[2], 4))
+        X_train, X_test, y_train, y_test = train_test_split(X_boot, y_boot, test_size=0.2, random_state=42)
 
         # Define hyperparameter search space
         param_grid = {

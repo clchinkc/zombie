@@ -3381,6 +3381,49 @@ Serialization is a more primitive notion than persistence; although pickle reads
 """
 
 """
+Semi-Supervised Learning and Active Learning are indeed powerful strategies for situations where labeled data is scarce or labeling is expensive. Let's delve into how each can be integrated into your prediction observer in the context of your zombie apocalypse simulation:
+
+### Semi-Supervised Learning:
+Semi-Supervised Learning (SSL) is particularly beneficial when you have a large amount of unlabeled data and a relatively small set of labeled data. SSL algorithms attempt to understand the structure of the unlabeled data to improve the performance of the model on labeled data.
+
+#### How to integrate SSL:
+1. **Data Preparation**: You'll need to split your data into small labeled and large unlabeled datasets. In the context of your simulation, labeled data might consist of grids with known counts of zombies, humans, etc., at each time step, while unlabeled data might consist of just the grids without this information.
+
+2. **Model Selection**: Choose a semi-supervised model. Some popular choices are:
+   - **Pseudo-Labeling**: Where the model is initially trained on a small amount of labeled data, then used to predict labels for the unlabeled data. The most confident predictions are added to the training set.
+   - **Self-Training**: Similar to pseudo-labeling but incorporates a feedback loop, continually retraining the model on its own predictions.
+   - **Variational Autoencoders (VAEs)** or **Generative Adversarial Networks (GANs)** for data generation and feature extraction.
+
+3. **Training**: Train the model on your labeled data, then introduce the unlabeled data in a way that the model can leverage the underlying structure to improve its learning.
+
+4. **Evaluation**: Continually evaluate the model's performance on a validation set to ensure that the model is actually learning from the unlabeled data and not just memorizing the labeled data.
+
+### Active Learning:
+Active Learning is a special case of semi-supervised learning where the algorithm can query a user (or some other oracle) to label uncertain data points. It's beneficial when you can obtain labels but want to minimize the labeling cost by intelligently selecting the most informative data points.
+
+#### How to integrate Active Learning:
+1. **Initialization**: Start with a small set of labeled data and a large set of unlabeled data.
+
+2. **Model Training**: Train your model on the current set of labeled data.
+
+3. **Uncertainty Sampling**: Use the model to predict labels for the unlabeled data. Identify the data points where the model is least certain (e.g., where predictions are close to 0.5 in a binary classification).
+
+4. **Query for Labels**: The most uncertain data points are then presented to an oracle (in real-world scenarios, this could be a human expert) to be labeled.
+
+5. **Model Update**: Add the newly labeled data points to the labeled dataset and retrain or fine-tune the model.
+
+6. **Iteration**: Repeat steps 3-5 until you meet a stopping criterion (e.g., a certain level of performance, or a maximum number of queries).
+
+In your simulation, you can simulate the role of the oracle by having a function that provides the true counts or states of the grid when queried. The active learning loop can then be used to progressively improve your model by focusing labeling effort on the most informative time steps or grid states.
+
+Both strategies aim to optimize learning from limited labeled data. The choice between them (or a hybrid approach) would depend on the specifics of your scenario, the availability of an oracle for labeling in the case of Active Learning, and the computational resources at your disposal.
+"""
+
+"""
+A contour plot is a graphical technique for representing a 3-dimensional surface by plotting constant z slices, called contours, on a 2-dimensional format.
+"""
+
+"""
 https://www.youtube.com/watch?v=gxAaO2rsdIs
 https://github.com/3b1b/videos/blob/master/_2020/sir.py
 https://www.youtube.com/watch?v=D__UaR5MQao
