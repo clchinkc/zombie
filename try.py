@@ -68,6 +68,7 @@ import plotly.graph_objects as go
 import pygame
 import scipy
 import seaborn as sns
+import tensorflow as tf
 from keras import layers, models
 from matplotlib import animation, colors, patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -1316,7 +1317,7 @@ class PredictionObserver(Observer):
 
     def prepare_data(self, N):
         X, y = [], []
-        for i in range(N, len(self.grid_history)):
+        for i in range(N, len(self.grid_history[:-1])):
             X.append(np.array([keras.utils.to_categorical(frame, num_classes=4) for frame in self.grid_history[i - N:i]]))
             y.append(np.array(keras.utils.to_categorical(self.grid_history[i], num_classes=4)))
         return np.array(X), np.array(y)
@@ -1416,19 +1417,55 @@ class PredictionObserver(Observer):
         bootstrapped_X, bootstrapped_y = resample(X, y, n_samples=n_samples, replace=True)
         return np.array(bootstrapped_X), np.array(bootstrapped_y)
 
-    def create_model(self, input_shape, filters, kernel_size, dropout_rate, l2_regularizer):
-        model = models.Sequential([
-            layers.InputLayer(shape=input_shape),
-            layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='elu', padding='same', return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer)),
-            layers.LayerNormalization(),
-            layers.Dropout(dropout_rate),
-            layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='elu', padding='same', return_sequences=False, kernel_regularizer=keras.regularizers.l2(l2_regularizer)),
-            layers.LayerNormalization(),
-            layers.Dropout(dropout_rate),
-            layers.Conv2D(filters=4, kernel_size=kernel_size, activation='softmax', padding='same')
-        ])
+    def create_model(self, input_shape, filters, kernel_size, dropout_rate, l2_regularizer, use_attention=True):
+        # Input layer
+        inputs = layers.Input(shape=input_shape)
+        
+        # First ConvLSTM2D layer
+        x = layers.LayerNormalization()(inputs)
+        x = layers.Dropout(dropout_rate)(x)
+        convlstm1 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='elu', padding='same', 
+                                        return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer))(x)
+        
+        # LayerNormalization and Dropout after the first ConvLSTM2D
+        x = layers.LayerNormalization()(convlstm1)
+        x = layers.Dropout(dropout_rate)(x)
+        
+        # Second ConvLSTM2D layer
+        convlstm2 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='elu', padding='same', 
+                                        return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer))(x)
+        
+        # Adding residual connection
+        x = layers.Add()([convlstm1, convlstm2])
+        
+        # LayerNormalization and Dropout after combining with the residual connection
+        x = layers.LayerNormalization()(x)
+        x = layers.Dropout(dropout_rate)(x)
+        
+        if use_attention:
+            # Attention Mechanism
+            reshaped_x = layers.Reshape((-1, input_shape[1]*input_shape[2]*filters))(x)
+            attention_output = layers.Attention(use_scale=True)([reshaped_x, reshaped_x])
+            reshaped_attention_output = layers.Reshape((-1, input_shape[1], input_shape[2], filters))(attention_output)
+            
+            # Adding residual connection
+            x = layers.Add()([x, reshaped_attention_output])
+            
+            # LayerNormalization and Dropout after combining with the residual connection
+            x = layers.LayerNormalization()(x)
+            x = layers.Dropout(dropout_rate)(x)
+        
+        # Reducing over the time dimension
+        x = layers.Lambda(lambda x: tf.reduce_mean(x, axis=1), output_shape=lambda input_shape: (input_shape[0],) + input_shape[2:])(x)
+
+        # Output layer
+        outputs = layers.Conv2D(filters=4, kernel_size=(1, 1), activation='softmax', padding='same')(x)
+        
+        # Create and compile the model
+        model = models.Model(inputs=inputs, outputs=outputs)
         optimizer = keras.optimizers.Nadam()
         model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+        
         return model
 
     def cosine_annealing_scheduler(self, max_update=20, base_lr=0.01, final_lr=0.001, warmup_steps=5, warmup_begin_lr=0.001, cycle_length=10, exp_decay_rate=0.5):
@@ -1504,7 +1541,7 @@ class PredictionObserver(Observer):
 
         # Define hyperparameter search space
         param_grid = {
-            'filters': [32],
+            'filters': [16],
             'kernel_size': [(3, 3)],
             'dropout_rate': [0.1, 0.3, 0.5],
             'l2_regularizer': [0.001]
@@ -1514,10 +1551,11 @@ class PredictionObserver(Observer):
         print(f"Best Params: {best_params}, Best Loss: {best_loss}")
 
         final_model = self.create_model(X_train.shape[1:], **best_params)
+        final_model.summary()
         checkpoint = keras.callbacks.ModelCheckpoint("best_model.keras", monitor='val_loss', verbose=0, save_best_only=True, mode='min')
         early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
         lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
-        final_model.fit(X_train, y_train, epochs=20, verbose=0, callbacks=[early_stopping, lr_scheduler], validation_split=0.2)
+        final_model.fit(X_train, y_train, epochs=20, verbose=0, callbacks=[checkpoint, early_stopping, lr_scheduler], validation_split=0.2)
         test_loss = self.evaluate_model(final_model, X_test, y_test)
         print(f"Loss on the test set: {test_loss}")
         self.model = final_model
