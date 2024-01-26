@@ -1324,8 +1324,8 @@ class PredictionObserver(Observer):
 
     def augment_data(self, X, y):
         augmented_X, augmented_y = self.basic_augmentation(X, y)
-        combined_X, combined_y = self.advanced_augmentation(augmented_X, augmented_y)
-        return combined_X, combined_y
+        modified_X, modified_y = self.advanced_augmentation(augmented_X, augmented_y)
+        return augmented_X, augmented_y, modified_X, modified_y
 
     def basic_augmentation(self, X, y):
         augmented_X = []
@@ -1406,16 +1406,16 @@ class PredictionObserver(Observer):
             modified_X.append(warped_signal)
             modified_y.append(augmented_y[i])
 
-        # Combine original augmented data with modified data
-        combined_X = np.concatenate((augmented_X, np.array(modified_X)), axis=0)
-        combined_y = np.concatenate((augmented_y, np.array(modified_y)), axis=0)
+        return np.array(modified_X), np.array(modified_y)
 
-        return combined_X, combined_y
-
-    def bootstrap_samples(self, X, y, n_samples):
-        bootstrapped_X, bootstrapped_y = [], []
-        bootstrapped_X, bootstrapped_y = resample(X, y, n_samples=n_samples, replace=True)
-        return np.array(bootstrapped_X), np.array(bootstrapped_y)
+    def bootstrap_samples(self, basic_X, basic_y, advanced_X, advanced_y, n_basic_samples, n_advanced_samples):
+        bootstrapped_basic_X, bootstrapped_basic_y = resample(basic_X, basic_y, n_samples=n_basic_samples, replace=True)
+        bootstrapped_advanced_X, bootstrapped_advanced_y = resample(advanced_X, advanced_y, n_samples=n_advanced_samples, replace=True)
+        
+        bootstrapped_X = np.concatenate((bootstrapped_basic_X, bootstrapped_advanced_X), axis=0)
+        bootstrapped_y = np.concatenate((bootstrapped_basic_y, bootstrapped_advanced_y), axis=0)
+        
+        return bootstrapped_X, bootstrapped_y
 
     def create_model(self, input_shape, filters, kernel_size, dropout_rate, l2_regularizer, use_attention=True):
         # Input layer
@@ -1526,17 +1526,16 @@ class PredictionObserver(Observer):
 
         return best_params, best_loss
 
-    def train_model(self, num_folds=5, num_steps=5, num_bootstrap_samples=1000):
+    def train_model(self, num_folds=5, num_steps=5, n_basic_samples=100, n_advanced_samples=50):
         X, y = self.prepare_data(num_steps)
-        X, y = self.augment_data(X, y)
+        augmented_X, augmented_y, modified_X, modified_y = self.augment_data(X, y)
 
         # Bootstrapping the data
-        X_boot, y_boot = self.bootstrap_samples(X, y, num_bootstrap_samples)
+        X_boot, y_boot = self.bootstrap_samples(augmented_X, augmented_y, modified_X, modified_y, n_basic_samples, n_advanced_samples)
 
         # X should have shape (samples, timesteps, width, height, channels)
-        X_boot = X_boot.reshape((-1, X_boot.shape[1], X_boot.shape[2], X_boot.shape[3], 4))
         # y should have shape (samples, width, height, channels)
-        y_boot = y_boot.reshape((-1, y_boot.shape[1], y_boot.shape[2], 4))
+
         X_train, X_test, y_train, y_test = train_test_split(X_boot, y_boot, test_size=0.2, random_state=42)
 
         # Define hyperparameter search space
