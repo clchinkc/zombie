@@ -68,6 +68,7 @@ import plotly.graph_objects as go
 import pygame
 import scipy
 import seaborn as sns
+import shap
 import tensorflow as tf
 from keras import layers, models
 from matplotlib import animation, colors, patches
@@ -1577,19 +1578,36 @@ class PredictionObserver(Observer):
             # Reset training mode
             model._training = False
 
-        # Compute variance of the predictions
-        prediction_variance = np.var(predictions, axis=0)
+        # Compute standard deviation across predictions
+        prediction_std = np.std(predictions, axis=0)
 
-        return prediction_variance
+        return prediction_std
 
-    def display_prediction_heatmaps(self, actual, predicted, uncertainty, time_step):
-        fig, axs = plt.subplots(1, 3, figsize=(18, 6), constrained_layout=True)
-        sns.heatmap(actual, ax=axs[0], cmap="viridis", cbar=False, square=True)
-        axs[0].set_title(f"Actual State at Time {time_step}")
-        sns.heatmap(predicted, ax=axs[1], cmap="viridis", cbar=True, square=True)
-        axs[1].set_title(f"Predicted State at Time {time_step}")
-        sns.heatmap(uncertainty, ax=axs[2], cmap="hot", cbar=True, square=True)
-        axs[2].set_title(f"Uncertainty at Time {time_step}")
+    def plot_combined_heatmaps(self, past_grid_state, actual, predicted, uncertainty):
+        fig, axs = plt.subplots(2, 5, figsize=(20, 8), constrained_layout=True)
+
+        # Plot the input timesteps
+        for i in range(5):
+            sns.heatmap(past_grid_state[i], ax=axs[0, i], cmap='viridis', cbar=True, square=True, vmin=0, vmax=3)
+            axs[0, i].set_title(f"Input Time {i+1}")
+            axs[0, i].axis('off')
+
+        # Plot the actual, predicted, and uncertainty heatmaps
+        sns.heatmap(actual, ax=axs[1, 0], cmap='viridis', cbar=True, square=True, vmin=0, vmax=3)
+        axs[1, 0].set_title("Actual State")
+        axs[1, 0].axis('off')
+
+        sns.heatmap(predicted, ax=axs[1, 1], cmap='viridis', cbar=True, square=True, vmin=0, vmax=3)
+        axs[1, 1].set_title("Predicted State")
+        axs[1, 1].axis('off')
+
+        sns.heatmap(uncertainty, ax=axs[1, 2], cmap='hot', cbar=True, square=True)
+        axs[1, 2].set_title("Uncertainty")
+        axs[1, 2].axis('off')
+
+        for i in range(3, 5):
+            axs[1, i].axis('off')  # Hide unused subplots
+
         plt.show()
 
     def display_observation(self):
@@ -1603,17 +1621,17 @@ class PredictionObserver(Observer):
         argmax_predicted_grid_state = np.argmax(predicted_grid_state, axis=-1)
         reshaped_grid_state = argmax_predicted_grid_state.reshape((self.subject.school.size, self.subject.school.size))
         
-        prediction_variance = self.monte_carlo_prediction(self.model, input_data, n_predictions=100)
-        state_uncertainty = np.max(prediction_variance, axis=-1).reshape((self.subject.school.size, self.subject.school.size))
+        prediction_std = self.monte_carlo_prediction(self.model, input_data, n_predictions=100)
+        state_uncertainty = np.max(prediction_std, axis=-1).reshape((self.subject.school.size, self.subject.school.size))
         
-        self.display_prediction_heatmaps(self.grid_history[-1].astype(int), reshaped_grid_state, state_uncertainty, self.subject.timestep)
+        self.plot_combined_heatmaps(past_grid_state, self.grid_history[-1].astype(int), reshaped_grid_state, state_uncertainty)
         
         print("Actual State:")
         print(self.grid_history[-1].astype(int))
         print("Predicted State:")
         reformatted_grid_state = np.round(reshaped_grid_state, 1)
         print(reformatted_grid_state)
-        print("Uncertainty (Variance in Predicted Probabilities):")
+        print("Uncertainty (Std in Predicted Probabilities):")
         reformatted_state_uncertainty = np.array2string(state_uncertainty, formatter={'float_kind':lambda x: "{:.0e}".format(x)})
         print(reformatted_state_uncertainty)
 

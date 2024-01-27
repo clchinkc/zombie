@@ -1368,6 +1368,9 @@ https://catalog.ngc.nvidia.com/orgs/nvidia/teams/playground/models/codellama/ove
 https://github.com/msuliot/jupyter_fine_tuning/blob/main/open_ai_fine_tuning.ipynb
 https://www.ithome.com.tw/news/160695
 tinyllama
+CKIP-Llama-2-7b
+CKIP-Llama-2-7b-chat
+https://axk51013.medium.com/%E5%B0%88%E6%AC%84-ckip-llama-2%E7%9C%9F%E7%9A%84%E6%9C%89%E9%80%99%E9%BA%BC%E7%88%9B%E5%97%8E-%E6%B7%BA%E8%AB%87llms%E7%9A%84training%E8%88%87data%E7%9A%84%E9%97%9C%E4%BF%82-67a4eb4a5077
 
 bard api
 https://github.com/dsdanielpark/Bard-API
@@ -1675,6 +1678,7 @@ https://towardsdatascience.com/building-interactive-data-visualizations-with-pyt
 https://github.com/suvoooo/Machine_Learning/blob/master/SklearnV1d2/Scikit_Pandas_Output.ipynb
 https://towardsdatascience.com/fast-load-data-to-sql-from-python-2d67aea946c0
 https://github.com/The-Gupta/TED-Talks-Analysis/tree/main
+https://medium.com/the-modern-scientist/the-art-of-data-ingestion-powering-analytics-from-operational-sources-467552d6c9a2
 
 Data visualization
 https://github.com/tinahuangyt/Matplotlib_Pymaceuticals

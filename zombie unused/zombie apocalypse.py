@@ -67,6 +67,7 @@ generator
 contextlib
 numpy.fromfunction
 := walrus operator
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance_matrix.html#scipy.spatial.distance_matrix
 """
 
 import random
