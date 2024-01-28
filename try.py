@@ -45,6 +45,7 @@ This structured approach allows for a comprehensive simulation of a zombie apoca
 from __future__ import annotations
 
 import math
+import os
 import random
 import time
 import tkinter as tk
@@ -68,9 +69,8 @@ import plotly.graph_objects as go
 import pygame
 import scipy
 import seaborn as sns
-import shap
 import tensorflow as tf
-from keras import layers, models
+from keras import layers
 from matplotlib import animation, colors, patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -80,9 +80,17 @@ from numpy.fft import fft, fft2, fftshift
 from plotly.subplots import make_subplots
 from scipy import stats
 from scipy.interpolate import interp1d
+from skimage.metrics import structural_similarity as ssim
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import ParameterGrid, ShuffleSplit, train_test_split
 from sklearn.utils import resample
+
+
+def set_seed(seed):
+    tf.random.set_seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    random.seed(seed)
 
 
 class HealthState(Enum):
@@ -1360,7 +1368,7 @@ class PredictionObserver(Observer):
         augmented_y = np.array(augmented_y)
         return augmented_X, augmented_y
 
-    def advanced_augmentation(self, augmented_X, augmented_y, modification_rate=0.01, noise_level=0.01, time_distortion_weights=(0.7, 0.2, 0.1), warping_strength=0.1):
+    def advanced_augmentation(self, augmented_X, augmented_y, modification_rate=0.01, noise_level=0.01, time_distortion_weights=(0.7, 0.2, 0.1), warping_strength=0.1, num_agents_to_move=1):
         modified_X = []
         modified_y = []
 
@@ -1407,6 +1415,34 @@ class PredictionObserver(Observer):
             modified_X.append(warped_signal)
             modified_y.append(augmented_y[i])
 
+            # Move a specified number of agents augmentation
+            X_moved = np.copy(augmented_X[i])
+            y_moved = np.copy(augmented_y[i])
+            width, height = X_moved.shape[1], X_moved.shape[2]
+
+            # Identify agent positions in both X and y
+            agent_positions = np.argwhere(np.any(X_moved > 0, axis=-1) & np.any(y_moved > 0, axis=-1))
+            np.random.shuffle(agent_positions)
+
+            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                moved_agents = 0
+
+                for t, x, y in agent_positions:
+                    if moved_agents >= num_agents_to_move:
+                        break
+
+                    new_x, new_y = x + dx, y + dy
+                    if 0 <= new_x < width and 0 <= new_y < height:
+                        # Check the validity of the new position
+                        if not np.any(X_moved[:, max(0, new_x - 1):min(width, new_x + 2), max(0, new_y - 1):min(height, new_y + 2), :]) and not np.any(y_moved[new_x, new_y, :]):
+                            # Move the agent across all timesteps
+                            X_moved[:, x, y, :], X_moved[:, new_x, new_y, :] = X_moved[:, new_x, new_y, :], X_moved[:, x, y, :]
+                            y_moved[x, y, :], y_moved[new_x, new_y, :] = y_moved[new_x, new_y, :], y_moved[x, y, :]
+                            moved_agents += 1
+
+            modified_X.append(X_moved)
+            modified_y.append(y_moved)
+
         return np.array(modified_X), np.array(modified_y)
 
     def bootstrap_samples(self, basic_X, basic_y, advanced_X, advanced_y, n_basic_samples, n_advanced_samples):
@@ -1424,16 +1460,16 @@ class PredictionObserver(Observer):
         
         # First ConvLSTM2D layer
         x = layers.LayerNormalization()(inputs)
-        x = layers.Dropout(dropout_rate)(x)
-        convlstm1 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='elu', padding='same', 
+        x = layers.GaussianDropout(dropout_rate)(x)
+        convlstm1 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='gelu', padding='same', 
                                         return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer))(x)
         
         # LayerNormalization and Dropout after the first ConvLSTM2D
         x = layers.LayerNormalization()(convlstm1)
-        x = layers.Dropout(dropout_rate)(x)
+        x = layers.GaussianDropout(dropout_rate)(x)
         
         # Second ConvLSTM2D layer
-        convlstm2 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='elu', padding='same', 
+        convlstm2 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='gelu', padding='same', 
                                         return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer))(x)
         
         # Adding residual connection
@@ -1441,12 +1477,12 @@ class PredictionObserver(Observer):
         
         # LayerNormalization and Dropout after combining with the residual connection
         x = layers.LayerNormalization()(x)
-        x = layers.Dropout(dropout_rate)(x)
+        x = layers.GaussianDropout(dropout_rate)(x)
         
         if use_attention:
             # Attention Mechanism
             reshaped_x = layers.Reshape((-1, input_shape[1]*input_shape[2]*filters))(x)
-            attention_output = layers.Attention(use_scale=True)([reshaped_x, reshaped_x])
+            attention_output = layers.Attention(dropout=dropout_rate, use_scale=True)([reshaped_x, reshaped_x])
             reshaped_attention_output = layers.Reshape((-1, input_shape[1], input_shape[2], filters))(attention_output)
             
             # Adding residual connection
@@ -1454,7 +1490,7 @@ class PredictionObserver(Observer):
             
             # LayerNormalization and Dropout after combining with the residual connection
             x = layers.LayerNormalization()(x)
-            x = layers.Dropout(dropout_rate)(x)
+            x = layers.GaussianDropout(dropout_rate)(x)
         
         # Reducing over the time dimension
         x = layers.Lambda(lambda x: tf.reduce_mean(x, axis=1), output_shape=lambda input_shape: (input_shape[0],) + input_shape[2:])(x)
@@ -1463,7 +1499,7 @@ class PredictionObserver(Observer):
         outputs = layers.Conv2D(filters=4, kernel_size=(1, 1), activation='softmax', padding='same')(x)
         
         # Create and compile the model
-        model = models.Model(inputs=inputs, outputs=outputs)
+        model = keras.models.Model(inputs=inputs, outputs=outputs)
         optimizer = keras.optimizers.Nadam()
         model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
         
@@ -1610,6 +1646,26 @@ class PredictionObserver(Observer):
 
         plt.show()
 
+    def calculate_ssim(self, actual, predicted):
+        # Flatten the grid states to 2D arrays for SSIM calculation
+        actual_flat = actual.astype(float).reshape((self.subject.school.size, self.subject.school.size))
+        predicted_flat = predicted.astype(float).reshape((self.subject.school.size, self.subject.school.size))
+        return ssim(actual_flat, predicted_flat, data_range=3)
+
+    def calculate_nrmse(self, actual, predicted):
+        # Flatten the grid states to 2D arrays for NRMSE calculation
+        actual_flat = actual.reshape((self.subject.school.size, self.subject.school.size))
+        predicted_flat = predicted.reshape((self.subject.school.size, self.subject.school.size))
+
+        # Calculate RMSE
+        mse = np.mean((actual_flat - predicted_flat) ** 2)
+        rmse = np.sqrt(mse)
+
+        # Normalize RMSE
+        range_actual = actual_flat.max() - actual_flat.min()
+        nrmse = rmse / range_actual if range_actual != 0 else float('inf')
+        return nrmse
+
     def display_observation(self):
         if getattr(self, "model", None) is None:
             self.train_model()
@@ -1634,6 +1690,11 @@ class PredictionObserver(Observer):
         print("Uncertainty (Std in Predicted Probabilities):")
         reformatted_state_uncertainty = np.array2string(state_uncertainty, formatter={'float_kind':lambda x: "{:.0e}".format(x)})
         print(reformatted_state_uncertainty)
+        
+        ssim_value = self.calculate_ssim(self.grid_history[-1].astype(int), reshaped_grid_state)
+        print(f"SSIM: {ssim_value:.3f}")
+        nrmse_value = self.calculate_nrmse(self.grid_history[-1].astype(int), reshaped_grid_state)
+        print(f"NRMSE: {nrmse_value:.3f}")
 
 
 class FFTAnalysisObserver(Observer):
@@ -1903,6 +1964,7 @@ class PygameObserver(Observer):
 
 
 def main():
+    set_seed(0)
 
     # create a SchoolZombieApocalypse object
     school_sim = Population(school_size=10, population_size=10)

@@ -3463,6 +3463,58 @@ In conclusion, both maximizing likelihood models and energy-based models offer v
 """
 
 """
+Markov Chain Monte Carlo
+Gibbs Sampling
+"""
+
+"""
+Here's a comprehensive overview of the Sugeno and Choquet fuzzy integrals:
+
+### Sugeno Fuzzy Integral
+Developed by Michio Sugeno in 1974, the Sugeno fuzzy integral is a method used in fuzzy set theory and fuzzy logic for aggregating information under uncertainty. It is characterized by the following aspects:
+
+1. **Fuzzy Measure**: Initially, a fuzzy measure is defined on a set. This measure, not necessarily additive like probability measures, assigns values between 0 and 1 to subsets of a set, indicating how well they satisfy a criterion.
+
+2. **Integration Process**: The integral combines values of a function (such as sensor readings or expert evaluations) with the fuzzy measure. The calculation involves taking the supremum of the minimum of two quantities: the function's value and the fuzzy measure of a level set of the function.
+
+3. **Applications**: Useful in various fields like decision-making, information fusion, and system modeling, particularly where traditional integration fails due to uncertain or fuzzy data.
+
+4. **Characteristics**:
+    - Non-linear aggregation operator.
+    - Sensitive to extreme values due to the minimum operator usage.
+    - Relies on lambda-fuzzy measures.
+    - Computationally efficient and easier to implement.
+
+### Choquet Fuzzy Integral
+Introduced by Gustave Choquet in 1953, the Choquet fuzzy integral is another significant method in fuzzy set theory for aggregating information using a fuzzy measure, but with a different approach:
+
+1. **Fuzzy Measure**: Similar to the Sugeno integral, it requires defining a fuzzy measure on a set. This measure rates each subset of the set with a value between 0 and 1, reflecting the importance or satisfaction level of that subset.
+
+2. **Integration Process**: The Choquet integral aggregates values by computing the weighted sum of the function's values, with weights given by the differences in the fuzzy measure. It involves sorting the values in increasing order and then summing the product of each value with the measure's difference for associated sets.
+
+3. **Applications**: It finds use in decision-making, especially where criteria interactions are key. Fields like economics, engineering, and environmental sciences benefit from its application.
+
+4. **Characteristics**:
+    - General aggregation operator, more flexible than the Sugeno integral.
+    - Based on distribution functions (cumulative distribution functions) of the input values.
+    - Less sensitive to extreme values, considering the broader distribution of inputs.
+    - Utilizes capacity measures, offering more flexibility in source importance definition.
+    - More mathematically complex and computationally intensive.
+
+### Comparative Overview
+Both integrals serve to aggregate information from multiple sources under uncertain conditions but differ in their approaches:
+
+- **Sugeno Integral**: Highlights the most significant inputs using the minimum operation, ideal for situations where extreme values play a crucial role. It is noted for its computational simplicity and efficiency.
+
+- **Choquet Integral**: Offers a more nuanced, distribution-based aggregation. It's less prone to being influenced by extreme values and allows a broader perspective on input distribution, making it suitable for a range of applications where flexibility and a detailed view of source importance are needed.
+
+In conclusion, the Sugeno and Choquet fuzzy integrals are pivotal in fuzzy logic and decision-making processes, especially in environments with imprecise or uncertain data. The choice between them depends on the specific requirements of the application, such as data characteristics, computational resources, and desired input sensitivity.
+
+https://link.springer.com/chapter/10.1007/978-3-642-11960-6_24
+https://link.springer.com/chapter/10.1007/978-3-031-21686-2_15
+"""
+
+"""
 https://www.youtube.com/watch?v=gxAaO2rsdIs
 https://github.com/3b1b/videos/blob/master/_2020/sir.py
 https://www.youtube.com/watch?v=D__UaR5MQao
