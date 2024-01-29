@@ -580,6 +580,8 @@ for line, score in results:
 
 # https://medium.com/@ocaelen/exploring-the-novel-features-of-xgboost-2-0-1cf39919577f
 
+# skyline query (Multi-criteria Decision Making)
+
 # Spelling correction using nltk / character n-gram / fuzzy
 # http://norvig.com/spell-correct.html
 

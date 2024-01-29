@@ -1482,7 +1482,7 @@ class PredictionObserver(Observer):
         if use_attention:
             # Attention Mechanism
             reshaped_x = layers.Reshape((-1, input_shape[1]*input_shape[2]*filters))(x)
-            attention_output = layers.Attention(dropout=dropout_rate, use_scale=True)([reshaped_x, reshaped_x])
+            attention_output = layers.MultiHeadAttention(num_heads=4, key_dim=filters, dropout=dropout_rate)(reshaped_x, reshaped_x)
             reshaped_attention_output = layers.Reshape((-1, input_shape[1], input_shape[2], filters))(attention_output)
             
             # Adding residual connection

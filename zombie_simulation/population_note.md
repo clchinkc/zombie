@@ -3545,6 +3545,52 @@ https://github.com/openai/ebm_code_release
 """
 
 """
+We propose an evolutionary path for neural networks, leading an organism from reactive behavior to simple proactive behavior and from simple proactive behavior to induction-based behavior.
+"""
+
+"""
+https://www.cs.cmu.edu/afs/cs/usr/pstone/public/papers/97MAS-survey/node14.html
+Reactive vs. Deliberative agents
+When designing any agent-based system, it is important to determine how sophisticated the agents' reasoning will be. Reactive agents simply retrieve pre-set behaviors similar to reflexes without maintaining any internal state. On the other hand, deliberative agents behave more like they are thinking, by searching through a space of behaviors, maintaining internal state, and predicting the effects of actions. Although the line between reactive and deliberative agents can be somewhat blurry, an agent with no internal state is certainly reactive, and one which bases its actions on the predicted actions of other agents is deliberative. Here we describe one system at each extreme as well as two others that mix reactive and deliberative reasoning.
+
+Balch and Arkin use homogeneous, reactive, non-communicating agents to study formation maintenance in autonomous robots [7]. The robots' goal is to move together in a military formation such as a diamond, column, or wedge. They periodically come across obstacles which prevent one or more of the robots from moving in a straight line. After passing the obstacle, all robots must adjust in order to regain their formation. The agents reactively convert their sensory data (which includes the positions of the other robots) to motion vectors for avoiding obstacles, avoiding robots, moving to a goal location, and formation maintenance. The actual robot motion is a simple weighted sum of these vectors.
+
+At the other extreme is the pursuit domain work by Levy and Rosenschein that is mentioned above [48]. Their agents assume that each will act in service of its own goals. They use game theoretic techniques to find equilibrium points and thus to decide how to act [48]. These agents are clearly deliberative, as they search for actions rather than simply retrieving them.
+
+There are also several existing systems and techniques that mix reactive and deliberative behaviors. One example is Rao and Georgeff's OASIS system (see Section 6) which reasons about when to be reactive and when to follow goal-directed plans [63]. Another example is Sahota's reactive deliberation technique [69]. As the name implies it mixes reactive and deliberative behavior: an agent reasons about which reactive behavior to follow under the constraint that it must choose actions at a rate of 60 Hz. Reactive deliberation was not explicitly designed for MAS, but because it was designed for real-time control in dynamic environments, it is likely to be extendible to multiagent scenarios.
+https://www.cs.cmu.edu/afs/cs/usr/pstone/public/papers/97MAS-survey/node46.html#Balch95
+https://www.cs.cmu.edu/afs/cs/usr/pstone/public/papers/97MAS-survey/node46.html#Levy92
+https://www.cs.cmu.edu/afs/cs/usr/pstone/public/papers/97MAS-survey/node46.html#Rao95
+https://www.cs.cmu.edu/afs/cs/usr/pstone/public/papers/97MAS-survey/node46.html#Sah94
+
+
+
+
+
+https://www.cs.cmu.edu/afs/cs/usr/pstone/public/papers/97MAS-survey/node30.html#seccom
+"""
+
+"""
+https://www.restack.io/docs/flowise-ai-knowledge-types-of-ai-agents-flowise
+https://www.simplilearn.com/what-is-intelligent-agent-in-ai-types-function-article
+"""
+
+"""
+### Graph Neural Network
+Graph Neural Networks (GNNs) are a class of neural networks designed to work directly with graph-structured data.
+
+1. **MPNN (Message Passing Neural Network)**: This framework generalizes various GNN models. It works by passing messages between nodes and updating node states based on these messages.
+
+2. **GCN (Graph Convolutional Network)**: It extends the convolutional neural network concept to graph-structured data. It helps in learning a representation of the graph.
+
+3. **GAN (Graph Attention Network)**: It is similar to GCN but with attention mechanisms, allowing nodes to weigh their neighbors' influence dynamically.
+
+4. **GraphSAGE (Graph Sample and Aggregate)**: This approach generates node embeddings by sampling and aggregating features from a node's local neighborhood.
+
+5. **RecGNN (Recurrent Graph Neural Network)**: This model uses recurrent neural network approaches to process graph-structured data, allowing for capturing dynamic changes in the graph.
+"""
+
+"""
 https://www.youtube.com/watch?v=gxAaO2rsdIs
 https://github.com/3b1b/videos/blob/master/_2020/sir.py
 https://www.youtube.com/watch?v=D__UaR5MQao
