@@ -81,7 +81,7 @@ from plotly.subplots import make_subplots
 from scipy import stats
 from scipy.interpolate import interp1d
 from skimage.metrics import structural_similarity as ssim
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import f1_score, mean_squared_error
 from sklearn.model_selection import ParameterGrid, ShuffleSplit, train_test_split
 from sklearn.utils import resample
 
@@ -1492,8 +1492,10 @@ class PredictionObserver(Observer):
             x = layers.LayerNormalization()(x)
             x = layers.GaussianDropout(dropout_rate)(x)
         
-        # Reducing over the time dimension
-        x = layers.Lambda(lambda x: tf.reduce_mean(x, axis=1), output_shape=lambda input_shape: (input_shape[0],) + input_shape[2:])(x)
+        # Reducing over the time dimension using GlobalAveragePooling
+        x = layers.Reshape((-1, input_shape[1]*input_shape[2]*filters))(x)
+        x = layers.GlobalAveragePooling1D()(x)
+        x = layers.Reshape((input_shape[1], input_shape[2], filters))(x)
 
         # Output layer
         outputs = layers.Conv2D(filters=4, kernel_size=(1, 1), activation='softmax', padding='same')(x)
@@ -1588,17 +1590,24 @@ class PredictionObserver(Observer):
 
         final_model = self.create_model(X_train.shape[1:], **best_params)
         final_model.summary()
-        checkpoint = keras.callbacks.ModelCheckpoint("best_model.keras", monitor='val_loss', verbose=0, save_best_only=True, mode='min')
+        checkpoint = keras.callbacks.ModelCheckpoint("best_model.keras", monitor='val_accuracy', mode='max', verbose=0, save_best_only=True)
         early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
         lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
         final_model.fit(X_train, y_train, epochs=20, verbose=0, callbacks=[checkpoint, early_stopping, lr_scheduler], validation_split=0.2)
-        test_loss = self.evaluate_model(final_model, X_test, y_test)
+        test_loss, test_f1_score = self.evaluate_model(final_model, X_test, y_test)
         print(f"Loss on the test set: {test_loss}")
-        self.model = final_model
+        print(f"F1 Score on the test set: {test_f1_score}")
+        return final_model
 
     def evaluate_model(self, model, X_test, y_test):
-        test_loss = model.evaluate(X_test, y_test, verbose=0)[1]
-        return test_loss
+        test_loss = model.evaluate(X_test, y_test, verbose=0)[0]
+        
+        y_pred = model.predict(X_test, verbose=0)
+        y_test_flat = y_test.argmax(axis=-1).flatten()
+        y_pred_flat = y_pred.argmax(axis=-1).flatten()
+        test_f1_score = f1_score(y_test_flat, y_pred_flat, average='micro')
+
+        return test_loss, test_f1_score
 
     def monte_carlo_prediction(self, model, input_data, n_predictions=100):
         # List to hold predictions
@@ -1664,12 +1673,17 @@ class PredictionObserver(Observer):
         # Normalize RMSE
         range_actual = actual_flat.max() - actual_flat.min()
         nrmse = rmse / range_actual if range_actual != 0 else float('inf')
+        
         return nrmse
 
     def display_observation(self):
-        if getattr(self, "model", None) is None:
-            self.train_model()
-        
+        if not os.path.exists("best_model.keras"):
+            self.model = self.train_model()
+        elif getattr(self, "model", None) is None or self.model is None:
+            self.model = keras.saving.load_model("best_model.keras")
+        if not isinstance(self.model, keras.models.Model):
+            raise ValueError("Model is not properly instantiated.")
+
         past_grid_state = self.grid_history[-6:-1]
         argmax_past_grid_state = keras.utils.to_categorical(past_grid_state, num_classes=4)
         input_data = np.array(argmax_past_grid_state).reshape((1, -1, self.subject.school.size, self.subject.school.size, 4))

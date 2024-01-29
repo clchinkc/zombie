@@ -3515,6 +3515,36 @@ https://link.springer.com/chapter/10.1007/978-3-031-21686-2_15
 """
 
 """
+pushdown automata
+
+1. **Recursive Autoencoders (RAEs) and Recursive Auto-Associative Memories (RAAM)**:
+
+   - **Recursive Autoencoders (RAEs)**: RAEs are neural network architectures used for encoding and decoding hierarchical or structured data, such as parse trees in natural language processing. They operate recursively by encoding child nodes in the tree before encoding their parent nodes. This recursive process allows them to capture hierarchical representations of data efficiently. RAEs are primarily used for representation learning and structured data modeling.
+
+   - **Recursive Auto-Associative Memories (RAAM)**: RAAMs are an extension of RAEs that further enhance the ability to capture structured representations. RAAMs use a recursive process to map input data into a memory space, and then they can generate structured outputs from that memory. They are often used for tasks like syntactic parsing and structured data generation.
+
+2. **From RAAM to TRAAM (Transduction RAAM)**:
+
+   - **RAAM (Recursive Auto-Associative Memory)**: RAAM is a neural network architecture that specializes in capturing structured representations of data, often used for syntactic parsing and other structured data processing tasks.
+
+   - **TRAAM (Transduction RAAM)**: TRAAM is an extension or adaptation of RAAM for transduction tasks. Transduction tasks involve mapping input sequences to output sequences, such as machine translation. TRAAM is designed to handle such tasks by leveraging the structured representations learned by RAAM.
+
+energy-based, flow-based, and autoregressive models
+
+energy-based generative neural network
+
+Joint energy-based models
+
+Autoencoder
+
+Variational autoencoder
+
+structured prediction tasks
+
+https://github.com/openai/ebm_code_release
+"""
+
+"""
 https://www.youtube.com/watch?v=gxAaO2rsdIs
 https://github.com/3b1b/videos/blob/master/_2020/sir.py
 https://www.youtube.com/watch?v=D__UaR5MQao
