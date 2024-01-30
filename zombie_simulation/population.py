@@ -54,7 +54,7 @@ from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum, auto
-from functools import cached_property
+from functools import cached_property, partial
 from itertools import product
 from typing import Any, Optional
 
@@ -70,6 +70,7 @@ import pygame
 import scipy
 import seaborn as sns
 import tensorflow as tf
+from keras import backend as K
 from keras import layers
 from matplotlib import animation, colors, patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -84,6 +85,7 @@ from skimage.metrics import structural_similarity as ssim
 from sklearn.metrics import f1_score, mean_squared_error
 from sklearn.model_selection import ParameterGrid, ShuffleSplit, train_test_split
 from sklearn.utils import resample
+from sklearn.utils.class_weight import compute_class_weight
 
 
 def set_seed(seed):
@@ -1446,15 +1448,34 @@ class PredictionObserver(Observer):
         return np.array(modified_X), np.array(modified_y)
 
     def bootstrap_samples(self, basic_X, basic_y, advanced_X, advanced_y, n_basic_samples, n_advanced_samples):
-        bootstrapped_basic_X, bootstrapped_basic_y = resample(basic_X, basic_y, n_samples=n_basic_samples, replace=True)
-        bootstrapped_advanced_X, bootstrapped_advanced_y = resample(advanced_X, advanced_y, n_samples=n_advanced_samples, replace=True)
+        # Function to compute a representation score for each sample
+        def compute_representation_score(y):
+            # Assuming y is one-hot encoded, shape: (samples, width, height, classes)
+            # Sum over width and height dimensions for each class
+            state_presence = np.sum(y, axis=(1, 2))
+            # Ignore state 0 (majority state) and sum the presence of all other states
+            representation_score = np.sum(state_presence[:, 1:], axis=1)
+            return representation_score
+
+        # Compute representation scores for basic and advanced data
+        basic_y_scores = compute_representation_score(basic_y)
+        advanced_y_scores = compute_representation_score(advanced_y)
+
+        # Convert scores to categorical strata (e.g., 'low', 'medium', 'high')
+        # Adjust the quantile thresholds as per your specific data distribution
+        basic_y_strata = pd.qcut(pd.Series(basic_y_scores), q=[0, .33, .66, 1], labels=False, duplicates='drop').fillna(0)
+        advanced_y_strata = pd.qcut(pd.Series(advanced_y_scores), q=[0, .33, .66, 1], labels=False, duplicates='drop').fillna(0)
+
+        # Stratified resampling
+        bootstrapped_basic_X, bootstrapped_basic_y = resample(basic_X, basic_y, n_samples=n_basic_samples, replace=True, stratify=basic_y_strata)
+        bootstrapped_advanced_X, bootstrapped_advanced_y = resample(advanced_X, advanced_y, n_samples=n_advanced_samples, replace=True, stratify=advanced_y_strata)
         
         bootstrapped_X = np.concatenate((bootstrapped_basic_X, bootstrapped_advanced_X), axis=0)
         bootstrapped_y = np.concatenate((bootstrapped_basic_y, bootstrapped_advanced_y), axis=0)
         
         return bootstrapped_X, bootstrapped_y
 
-    def create_model(self, input_shape, filters, kernel_size, dropout_rate, l2_regularizer, use_attention=True):
+    def create_model(self, input_shape, filters, kernel_size, dropout_rate, l2_regularizer, class_weights, use_attention=True):
         # Input layer
         inputs = layers.Input(shape=input_shape)
         
@@ -1482,7 +1503,7 @@ class PredictionObserver(Observer):
         if use_attention:
             # Attention Mechanism
             reshaped_x = layers.Reshape((-1, input_shape[1]*input_shape[2]*filters))(x)
-            attention_output = layers.Attention(dropout=dropout_rate, use_scale=True)([reshaped_x, reshaped_x])
+            attention_output = layers.MultiHeadAttention(num_heads=4, key_dim=filters, dropout=dropout_rate)(reshaped_x, reshaped_x)
             reshaped_attention_output = layers.Reshape((-1, input_shape[1], input_shape[2], filters))(attention_output)
             
             # Adding residual connection
@@ -1502,10 +1523,52 @@ class PredictionObserver(Observer):
         
         # Create and compile the model
         model = keras.models.Model(inputs=inputs, outputs=outputs)
+        
         optimizer = keras.optimizers.Nadam()
-        model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+        
+        custom_loss = self.combined_loss_function
+        model.compile(optimizer=optimizer, loss=custom_loss, metrics=['accuracy'])
         
         return model
+
+    def compute_class_weights(self, y):
+        y_indices = np.argmax(y, axis=-1) # Assuming y is one-hot encoded, convert to class indices
+        class_weights = np.ones(4)
+        unique_classes = np.unique(y_indices)
+        weights = compute_class_weight('balanced', classes=unique_classes, y=y_indices.flatten())
+        class_weights[unique_classes] = weights
+
+        return class_weights
+
+    @staticmethod
+    @keras.utils.register_keras_serializable()
+    def combined_loss_function(y_true, y_pred, alpha=0.25, gamma=2.0, label_smoothing=0.1, focal_loss_weight=0.25, weighted_loss_weight=0.25, crossentropy_loss_weight=0.25, count_loss_weight=0.25):
+        weights = PredictionObserver.class_weights
+        focal_loss_fn = keras.losses.CategoricalFocalCrossentropy(alpha=alpha, gamma=gamma)
+        crossentropy_loss_fn = keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing)
+
+        def weighted_categorical_crossentropy(y_true, y_pred):
+            y_pred /= tf.reduce_sum(y_pred, axis=-1, keepdims=True)
+            y_pred = tf.clip_by_value(y_pred, keras.backend.epsilon(), 1 - keras.backend.epsilon())
+            loss = y_true * tf.math.log(y_pred) * weights
+            loss = -tf.reduce_sum(loss, -1)
+            return loss
+
+        def count_loss(y_true, y_pred):
+            true_count = tf.reduce_sum(y_true[..., 1], axis=[1, 2])
+            pred_count = tf.reduce_sum(y_pred[..., 1], axis=[1, 2])
+            return tf.reduce_mean(tf.square(true_count - pred_count))
+
+        focal_loss = focal_loss_fn(y_true, y_pred)
+        crossentropy_loss = crossentropy_loss_fn(y_true, y_pred)
+        weighted_loss = weighted_categorical_crossentropy(y_true, y_pred)
+        agent_count_loss = count_loss(y_true, y_pred)
+
+        combined_loss = (tf.math.multiply(focal_loss_weight, focal_loss) +
+                         tf.math.multiply(crossentropy_loss_weight, crossentropy_loss) +
+                         tf.math.multiply(weighted_loss_weight, weighted_loss) +
+                         tf.math.multiply(count_loss_weight, agent_count_loss))
+        return combined_loss
 
     def cosine_annealing_scheduler(self, max_update=20, base_lr=0.01, final_lr=0.001, warmup_steps=5, warmup_begin_lr=0.001, cycle_length=10, exp_decay_rate=0.5):
         # Pre-compute constants for efficiency
@@ -1535,7 +1598,7 @@ class PredictionObserver(Observer):
 
         return schedule
 
-    def tune_hyperparameters(self, X_train, y_train, num_folds, param_grid):
+    def tune_hyperparameters(self, X_train, y_train, num_folds, param_grid, class_weights):
         best_loss = float('inf')
         best_params = {}
 
@@ -1549,7 +1612,7 @@ class PredictionObserver(Observer):
 
                 early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
                 lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
-                model = self.create_model(X_fold_train.shape[1:], **params)
+                model = self.create_model(X_fold_train.shape[1:], **params, class_weights=class_weights)
                 history = model.fit(X_fold_train, y_fold_train, epochs=20, validation_data=(X_fold_val, y_fold_val), verbose=0, callbacks=[early_stopping, lr_scheduler])
 
                 loss = history.history['val_loss'][-1]
@@ -1576,19 +1639,22 @@ class PredictionObserver(Observer):
         # y should have shape (samples, width, height, channels)
 
         X_train, X_test, y_train, y_test = train_test_split(X_boot, y_boot, test_size=0.2, random_state=42)
+        
+        class_weights = self.compute_class_weights(y_train)
+        PredictionObserver.class_weights = tf.Variable(class_weights, dtype=tf.float32)
 
         # Define hyperparameter search space
         param_grid = {
             'filters': [16],
             'kernel_size': [(3, 3)],
-            'dropout_rate': [0.1, 0.3, 0.5],
+            'dropout_rate': [0.25, 0.5],
             'l2_regularizer': [0.001]
         }
 
-        best_params, best_loss = self.tune_hyperparameters(X_train, y_train, num_folds, param_grid)
+        best_params, best_loss = self.tune_hyperparameters(X_train, y_train, num_folds, param_grid, class_weights)
         print(f"Best Params: {best_params}, Best Loss: {best_loss}")
 
-        final_model = self.create_model(X_train.shape[1:], **best_params)
+        final_model = self.create_model(X_train.shape[1:], **best_params, class_weights=class_weights)
         final_model.summary()
         checkpoint = keras.callbacks.ModelCheckpoint("best_model.keras", monitor='val_accuracy', mode='max', verbose=0, save_best_only=True)
         early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
@@ -1680,7 +1746,7 @@ class PredictionObserver(Observer):
         if not os.path.exists("best_model.keras"):
             self.model = self.train_model()
         elif getattr(self, "model", None) is None or self.model is None:
-            self.model = keras.saving.load_model("best_model.keras")
+            self.model = keras.models.load_model("best_model.keras", custom_objects={'combined_loss_function': PredictionObserver.combined_loss_function})
         if not isinstance(self.model, keras.models.Model):
             raise ValueError("Model is not properly instantiated.")
 

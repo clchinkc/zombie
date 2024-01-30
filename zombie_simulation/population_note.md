@@ -1102,6 +1102,10 @@ Once you've designed the world model, you can use simulation techniques like age
 """
 
 """
+https://arxiv.org/abs/1911.12247
+"""
+
+"""
 Github agent based simulation
 Github agent based modelling
 Github multi agent simulation
@@ -3588,6 +3592,18 @@ Graph Neural Networks (GNNs) are a class of neural networks designed to work dir
 4. **GraphSAGE (Graph Sample and Aggregate)**: This approach generates node embeddings by sampling and aggregating features from a node's local neighborhood.
 
 5. **RecGNN (Recurrent Graph Neural Network)**: This model uses recurrent neural network approaches to process graph-structured data, allowing for capturing dynamic changes in the graph.
+"""
+
+"""
+https://ldzhangyx.github.io/2020/06/20/python-init/
+"""
+
+"""
+https://arxiv.org/abs/2107.01390
+"""
+
+"""
+Modular Reinforcement Learning
 """
 
 """
