@@ -3577,6 +3577,7 @@ https://www.cs.cmu.edu/afs/cs/usr/pstone/public/papers/97MAS-survey/node30.html#
 """
 https://www.restack.io/docs/flowise-ai-knowledge-types-of-ai-agents-flowise
 https://www.simplilearn.com/what-is-intelligent-agent-in-ai-types-function-article
+https://cloud.tencent.com/developer/article/2355811
 """
 
 """

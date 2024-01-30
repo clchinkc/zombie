@@ -304,3 +304,7 @@ if __name__ == "__main__":
 # https://github.com/timvvvht/AlphaZero-Connect4
 # https://github.com/topics/alphazero
 # https://github.com/deepmind/mctx
+# monte carlo tree search with reinforcement learning for motion planning
+# monte carlo tree search with iteratively refining state abstractions
+# monte carlo tree search with neural networks
+# monte carlo tree search with heuristic evaluations using implicit minimax backups

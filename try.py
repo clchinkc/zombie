@@ -1365,6 +1365,13 @@ class PredictionObserver(Observer):
                 y_rotated = scipy.ndimage.rotate(y[i], angle, axes=(0, 1), reshape=False)
                 augmented_X.append(X_rotated)
                 augmented_y.append(y_rotated)
+                
+            # Translations
+            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                X_translated = np.roll(X[i], (dx, dy), axis=(1, 2))
+                y_translated = np.roll(y[i], (dx, dy), axis=(0, 1))
+                augmented_X.append(X_translated)
+                augmented_y.append(y_translated)
 
         augmented_X = np.array(augmented_X)
         augmented_y = np.array(augmented_y)
@@ -1475,7 +1482,7 @@ class PredictionObserver(Observer):
         
         return bootstrapped_X, bootstrapped_y
 
-    def create_model(self, input_shape, filters, kernel_size, dropout_rate, l2_regularizer, class_weights, use_attention=True):
+    def create_model(self, input_shape, filters, kernel_size, dropout_rate, l2_regularizer, use_attention=True):
         # Input layer
         inputs = layers.Input(shape=input_shape)
         
@@ -1598,22 +1605,32 @@ class PredictionObserver(Observer):
 
         return schedule
 
-    def tune_hyperparameters(self, X_train, y_train, num_folds, param_grid, class_weights):
+    def tune_hyperparameters(self, train_dataset, num_folds, param_grid):
         best_loss = float('inf')
         best_params = {}
+        
+        dataset_size = len(list(train_dataset.as_numpy_iterator()))
+        fold_size = dataset_size // num_folds
 
         for params in ParameterGrid(param_grid):
-            ss = ShuffleSplit(n_splits=num_folds, test_size=0.25, random_state=42)
             fold_loss_scores = []
 
-            for train_index, test_index in ss.split(X_train):
-                X_fold_train, X_fold_val = X_train[train_index], X_train[test_index]
-                y_fold_train, y_fold_val = y_train[train_index], y_train[test_index]
+            for fold in range(num_folds):
+                # Calculate start and end indices for the current fold
+                start_idx, end_idx = fold * fold_size, (fold + 1) * fold_size
+
+                # Split the dataset into training and validation sets for the current fold
+                val_data_fold = train_dataset.skip(start_idx).take(fold_size)
+                train_data_fold = train_dataset.take(start_idx).concatenate(train_dataset.skip(end_idx))
+
+                # Preprocess the datasets: shuffle, batch, prefetch
+                train_data_fold = train_data_fold.shuffle(1024).batch(32).prefetch(tf.data.experimental.AUTOTUNE).cache()
+                val_data_fold = val_data_fold.batch(32).prefetch(tf.data.experimental.AUTOTUNE).cache()
 
                 early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
                 lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
-                model = self.create_model(X_fold_train.shape[1:], **params, class_weights=class_weights)
-                history = model.fit(X_fold_train, y_fold_train, epochs=20, validation_data=(X_fold_val, y_fold_val), verbose=0, callbacks=[early_stopping, lr_scheduler])
+                model = self.create_model(train_data_fold.element_spec[0].shape[2:], **params)
+                history = model.fit(train_data_fold, epochs=20, validation_data=val_data_fold, verbose=0, callbacks=[early_stopping, lr_scheduler])
 
                 loss = history.history['val_loss'][-1]
                 fold_loss_scores.append(loss)
@@ -1640,6 +1657,11 @@ class PredictionObserver(Observer):
 
         X_train, X_test, y_train, y_test = train_test_split(X_boot, y_boot, test_size=0.2, random_state=42)
         
+        train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+        train_dataset = train_dataset.shuffle(buffer_size=1024).batch(32).prefetch(tf.data.experimental.AUTOTUNE)
+        test_dataset = tf.data.Dataset.from_tensor_slices((X_test, y_test))
+        test_dataset = test_dataset.batch(32).prefetch(tf.data.experimental.AUTOTUNE)
+        
         class_weights = self.compute_class_weights(y_train)
         PredictionObserver.class_weights = tf.Variable(class_weights, dtype=tf.float32)
 
@@ -1651,15 +1673,15 @@ class PredictionObserver(Observer):
             'l2_regularizer': [0.001]
         }
 
-        best_params, best_loss = self.tune_hyperparameters(X_train, y_train, num_folds, param_grid, class_weights)
+        best_params, best_loss = self.tune_hyperparameters(train_dataset, num_folds, param_grid)
         print(f"Best Params: {best_params}, Best Loss: {best_loss}")
 
-        final_model = self.create_model(X_train.shape[1:], **best_params, class_weights=class_weights)
+        final_model = self.create_model(X_train.shape[1:], **best_params)
         final_model.summary()
         checkpoint = keras.callbacks.ModelCheckpoint("best_model.keras", monitor='val_accuracy', mode='max', verbose=0, save_best_only=True)
         early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
         lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
-        final_model.fit(X_train, y_train, epochs=20, verbose=0, callbacks=[checkpoint, early_stopping, lr_scheduler], validation_split=0.2)
+        final_model.fit(train_dataset, epochs=20, verbose=0, callbacks=[checkpoint, early_stopping, lr_scheduler], validation_data=test_dataset)
         test_loss, test_f1_score = self.evaluate_model(final_model, X_test, y_test)
         print(f"Loss on the test set: {test_loss}")
         print(f"F1 Score on the test set: {test_f1_score}")

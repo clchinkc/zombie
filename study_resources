@@ -505,6 +505,9 @@ https://github.com/PWhiddy/PokemonRedExperiments
 https://spinningup.openai.com/en/latest/
 https://spinningup.openai.com/en/latest/spinningup/keypapers.html
 https://github.com/openai/spinningup
+https://www.cs.cornell.edu/~helou/IMRL.pdf
+https://arxiv.org/abs/1812.07544
+https://arxiv.org/abs/1802.06070
 
 From this list, we can identify common properties that make learning easier. None of the properties below are required for learning, but satisfying more of them is definitively better.
 
@@ -677,6 +680,7 @@ smoking mode 冒煙模式：忽略 error 先把正常流程完成，可運作。
 big try-catch: 用一個 try-catch 包裹全部程式碼，防止 App 崩潰。
 error handlings: 具體分析該使用 try-catch 還是 Result type。
 https://www.cnblogs.com/zhanchenjin/p/16639067.html
+https://www.linkedin.com/advice/0/how-can-you-avoid-common-anti-patterns-when-designing
 
 並行編程，約束編程，資料流編程，聲明性編程，分散式的編程，函式語言程式設計，泛型編程，指令式程式設計，邏輯編程，元程式設計，物件導向程式設計，文學程式設計
 
@@ -1372,6 +1376,7 @@ tinyllama
 CKIP-Llama-2-7b
 CKIP-Llama-2-7b-chat
 https://axk51013.medium.com/%E5%B0%88%E6%AC%84-ckip-llama-2%E7%9C%9F%E7%9A%84%E6%9C%89%E9%80%99%E9%BA%BC%E7%88%9B%E5%97%8E-%E6%B7%BA%E8%AB%87llms%E7%9A%84training%E8%88%87data%E7%9A%84%E9%97%9C%E4%BF%82-67a4eb4a5077
+https://huggingface.co/docs/transformers/transformers_agents
 
 bard api
 https://github.com/dsdanielpark/Bard-API
