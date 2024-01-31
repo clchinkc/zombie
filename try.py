@@ -1540,7 +1540,7 @@ class PredictionObserver(Observer):
 
     def compute_class_weights(self, y):
         y_indices = np.argmax(y, axis=-1) # Assuming y is one-hot encoded, convert to class indices
-        class_weights = np.ones(4)
+        class_weights = np.zeros((4,))
         unique_classes = np.unique(y_indices)
         weights = compute_class_weight('balanced', classes=unique_classes, y=y_indices.flatten())
         class_weights[unique_classes] = weights
@@ -1605,7 +1605,7 @@ class PredictionObserver(Observer):
 
         return schedule
 
-    def tune_hyperparameters(self, train_dataset, num_folds, param_grid):
+    def tune_hyperparameters(self, train_dataset, batch_size, num_folds, param_grid):
         best_loss = float('inf')
         best_params = {}
         
@@ -1617,19 +1617,20 @@ class PredictionObserver(Observer):
 
             for fold in range(num_folds):
                 # Calculate start and end indices for the current fold
-                start_idx, end_idx = fold * fold_size, (fold + 1) * fold_size
+                start_idx = fold * fold_size
+                end_idx = (fold + 1) * fold_size if fold != num_folds - 1 else dataset_size
 
                 # Split the dataset into training and validation sets for the current fold
+                train_data_fold = train_dataset.skip(end_idx).take(dataset_size - end_idx).concatenate(train_dataset.take(start_idx))
                 val_data_fold = train_dataset.skip(start_idx).take(fold_size)
-                train_data_fold = train_dataset.take(start_idx).concatenate(train_dataset.skip(end_idx))
 
-                # Preprocess the datasets: shuffle, batch, prefetch
-                train_data_fold = train_data_fold.shuffle(1024).batch(32).prefetch(tf.data.experimental.AUTOTUNE).cache()
-                val_data_fold = val_data_fold.batch(32).prefetch(tf.data.experimental.AUTOTUNE).cache()
+                # Prepare the data folds
+                train_data_fold = train_data_fold.prefetch(tf.data.experimental.AUTOTUNE)
+                val_data_fold = val_data_fold.prefetch(tf.data.experimental.AUTOTUNE)
 
                 early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
                 lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
-                model = self.create_model(train_data_fold.element_spec[0].shape[2:], **params)
+                model = self.create_model(train_data_fold.element_spec[0].shape[1:], **params)
                 history = model.fit(train_data_fold, epochs=20, validation_data=val_data_fold, verbose=0, callbacks=[early_stopping, lr_scheduler])
 
                 loss = history.history['val_loss'][-1]
@@ -1645,7 +1646,7 @@ class PredictionObserver(Observer):
 
         return best_params, best_loss
 
-    def train_model(self, num_folds=5, num_steps=5, n_basic_samples=100, n_advanced_samples=50):
+    def train_model(self, num_steps=5, num_folds=5, batch_size=16, n_basic_samples=100, n_advanced_samples=50):
         X, y = self.prepare_data(num_steps)
         augmented_X, augmented_y, modified_X, modified_y = self.augment_data(X, y)
 
@@ -1658,9 +1659,9 @@ class PredictionObserver(Observer):
         X_train, X_test, y_train, y_test = train_test_split(X_boot, y_boot, test_size=0.2, random_state=42)
         
         train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
-        train_dataset = train_dataset.shuffle(buffer_size=1024).batch(32).prefetch(tf.data.experimental.AUTOTUNE)
+        train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
         test_dataset = tf.data.Dataset.from_tensor_slices((X_test, y_test))
-        test_dataset = test_dataset.batch(32).prefetch(tf.data.experimental.AUTOTUNE)
+        test_dataset = test_dataset.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
         
         class_weights = self.compute_class_weights(y_train)
         PredictionObserver.class_weights = tf.Variable(class_weights, dtype=tf.float32)
@@ -1673,10 +1674,10 @@ class PredictionObserver(Observer):
             'l2_regularizer': [0.001]
         }
 
-        best_params, best_loss = self.tune_hyperparameters(train_dataset, num_folds, param_grid)
+        best_params, best_loss = self.tune_hyperparameters(train_dataset, batch_size, num_folds, param_grid)
         print(f"Best Params: {best_params}, Best Loss: {best_loss}")
 
-        final_model = self.create_model(X_train.shape[1:], **best_params)
+        final_model = self.create_model(train_dataset.element_spec[0].shape[1:], **best_params)
         final_model.summary()
         checkpoint = keras.callbacks.ModelCheckpoint("best_model.keras", monitor='val_accuracy', mode='max', verbose=0, save_best_only=True)
         early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)

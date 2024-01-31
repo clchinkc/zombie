@@ -533,6 +533,7 @@ https://arxiv.org/abs/2308.03526
 https://github.com/deepmind/mujoco
 https://github.com/ill-inc/biomes-game
 https://www.biomes.gg/
+https://en.m.wikipedia.org/wiki/Multi-agent_pathfinding
 
 Multiagent Reinforcement Learning (MARL) is a subfield of artificial intelligence and reinforcement learning that focuses on scenarios where multiple agents interact within a shared environment. In this setting, each agent aims to make decisions that maximize their cumulative rewards, while taking into account the actions and strategies of other agents.
 

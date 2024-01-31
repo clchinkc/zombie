@@ -3608,6 +3608,14 @@ Modular Reinforcement Learning
 """
 
 """
+https://tomorrowsci.com/animals/20240120_01/
+"""
+
+"""
+algorithm to control a group of agents in grid-based system
+"""
+
+"""
 https://www.youtube.com/watch?v=gxAaO2rsdIs
 https://github.com/3b1b/videos/blob/master/_2020/sir.py
 https://www.youtube.com/watch?v=D__UaR5MQao
