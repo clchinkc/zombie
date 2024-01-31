@@ -389,7 +389,11 @@ Sanger彈道
 https://zh.m.wikipedia.org/zh-hk/%E5%BC%B9%E9%81%93%E5%AD%A6
 """
 
+"""
+https://en.m.wikipedia.org/wiki/Missile_guidance
 
+missile optimal control theory
+"""
 
 """
 Let’s synthesize a comprehensive overview of missile technology development over time by incorporating the previously provided information:

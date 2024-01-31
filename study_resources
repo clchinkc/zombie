@@ -183,6 +183,7 @@ https://github.com/Friedrich94326/AI_and_Data_Science/tree/Python/Python/Project
 https://github.com/hkbus
 https://g0vhk-io.github.io/HKAddressParser/#/
 https://github.com/AdamGetbags/googleTrendsAPI/blob/main/keywordSearchData.py
+https://dev.to/thenomadevel/top-7-ai-open-source-projects-to-contribute-to-in-2023-3ff5
 
 Must read books
 https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
@@ -508,6 +509,8 @@ https://github.com/openai/spinningup
 https://www.cs.cornell.edu/~helou/IMRL.pdf
 https://arxiv.org/abs/1812.07544
 https://arxiv.org/abs/1802.06070
+https://huggingface.co/papers/2307.10936
+https://www.researchgate.net/publication/351225438_Expert_iteration
 
 From this list, we can identify common properties that make learning easier. None of the properties below are required for learning, but satisfying more of them is definitively better.
 
@@ -1367,6 +1370,7 @@ Phi-2
 https://makersuite.google.com/app/apikey
 https://python.langchain.com/docs/integrations/chat/google_generative_ai
 https://twitter.com/LangChainAI/status/1734982565352845428?ref_src=twsrc%5Etfw%7Ctwcamp%5Etweetembed%7Ctwterm%5E1734982565352845428%7Ctwgr%5Eed12d765421df8d620af7916bb47d761ca52beab%7Ctwcon%5Es1_&ref_url=https%3A%2F%2Fanalyticsindiamag.com%2Flangchain-integrates-gemini-pro-api-enables-multimodal-capabilities%2F
+Filter prompt and rail prompt in langchain
 whisper
 https://www.kocpc.com.tw/archives/520051
 https://huggingface.co/FlagAlpha/Llama2-Chinese-7b-Chat
@@ -1377,7 +1381,14 @@ tinyllama
 CKIP-Llama-2-7b
 CKIP-Llama-2-7b-chat
 https://axk51013.medium.com/%E5%B0%88%E6%AC%84-ckip-llama-2%E7%9C%9F%E7%9A%84%E6%9C%89%E9%80%99%E9%BA%BC%E7%88%9B%E5%97%8E-%E6%B7%BA%E8%AB%87llms%E7%9A%84training%E8%88%87data%E7%9A%84%E9%97%9C%E4%BF%82-67a4eb4a5077
-https://huggingface.co/docs/transformers/transformers_agents
+CodeLlama-70B
+CodeLlama-70B-Python
+CodeLlama-70B-Instruct
+https://leptonai.medium.com/build-ai-the-easy-way-2a8b68c63723
+https://www.lepton.ai/
+https://www.lepton.ai/playground/sdxl
+https://search.lepton.run/
+https://github.com/leptonai/search_with_lepton
 
 bard api
 https://github.com/dsdanielpark/Bard-API
@@ -1389,6 +1400,11 @@ https://console.cloud.google.com/marketplace/product/colab-marketplace-image-pub
 Huggingface api
 https://huggingface.co/docs/transformers/transformers_agents
 Huggingface free inference API
+
+ai voice
+rvc v2 colab
+https://github.com/prophesier/diff-svc
+https://huggingface.co/coivmn?sort_models=likes#models
 
 Command line application
 https://github.com/lxgr-linux/pokete
