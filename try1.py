@@ -2118,7 +2118,7 @@ class GANObserver:
         real_data = self.capture_grid_state()
         self.real_data_samples.append(real_data)
     
-    def train_gan(self, epochs, batch_size, discriminator_interval=5, generator_interval=1):
+    def train_gan(self, epochs, batch_size, discriminator_interval=1, generator_interval=1):
         valid = np.ones((batch_size, 1))
         fake = np.zeros((batch_size, 1))
 
@@ -2130,23 +2130,28 @@ class GANObserver:
                 # Select a random batch of real data
                 idx = np.random.randint(0, len(self.real_data_samples), batch_size)
                 real_imgs = np.array([keras.utils.to_categorical(self.real_data_samples[i], num_classes=4) for i in idx])
+                real_dataset = tf.data.Dataset.from_tensor_slices((real_imgs, valid)).batch(batch_size)
 
-                # Generate a batch of new images
+                # Generate a batch of generated images
                 noise = np.random.normal(0, 1, (batch_size, self.latent_dim))
                 gen_imgs = self.generator.predict(noise, verbose=0)
+                fake_dataset = tf.data.Dataset.from_tensor_slices((gen_imgs, fake)).batch(batch_size)
 
                 # Train the discriminator
-                d_loss_real = self.discriminator.train_on_batch(real_imgs, valid)
-                d_loss_fake = self.discriminator.train_on_batch(gen_imgs, fake)
-                d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
-                d_loss_total += np.array(d_loss)
+                self.discriminator.trainable = True
+                d_loss_real = self.discriminator.fit(real_dataset, epochs=discriminator_interval, verbose=0)
+                d_loss_fake = self.discriminator.fit(fake_dataset, epochs=discriminator_interval, verbose=0)
+                d_loss_total[0] += 0.5 * np.add(d_loss_real.history['loss'][-1], d_loss_fake.history['loss'][-1])
+                d_loss_total[1] += 0.5 * np.add(d_loss_real.history['accuracy'][-1], d_loss_fake.history['accuracy'][-1])
 
             for _ in range(generator_interval):
                 noise = np.random.normal(0, 1, (batch_size, self.latent_dim))
-                self.discriminator.trainable = False
+                noise_dataset = tf.data.Dataset.from_tensor_slices((noise, valid)).batch(batch_size)
+
                 # Train the generator
-                g_loss = self.gan.train_on_batch(noise, valid)
-                g_loss_total += g_loss
+                self.discriminator.trainable = False
+                g_loss = self.gan.fit(noise_dataset, epochs=generator_interval, verbose=0)
+                g_loss_total += g_loss.history['loss'][-1]
 
             d_loss_avg = d_loss_total / discriminator_interval
             g_loss_avg = g_loss_total / generator_interval

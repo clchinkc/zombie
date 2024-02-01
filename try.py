@@ -14,10 +14,6 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 
 
-# Function to convert one-hot encoded data to single-channel format
-def one_hot_to_single_channel(data):
-    return np.argmax(data, axis=-1)
-
 # Define the generator
 def build_generator(latent_dim, data_shape):
     model = Sequential()
@@ -73,23 +69,25 @@ def train_gan(gan, generator, discriminator, latent_dim, epochs, batch_size, dat
 
             # Generate real images (random one-hot encoded grids)
             real_imgs = to_categorical(np.random.randint(0, 4, (batch_size, *data_shape)), num_classes=4)
+            
+            real_dataset = tf.data.Dataset.from_tensor_slices((real_imgs, valid)).batch(batch_size)
+            fake_dataset = tf.data.Dataset.from_tensor_slices((gen_imgs, fake)).batch(batch_size)
 
             # Train the discriminator
             discriminator.trainable = True
-            d_loss_real = discriminator.train_on_batch(real_imgs, valid)
-            d_loss_fake = discriminator.train_on_batch(gen_imgs, fake)
-            d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
-            
-            d_loss_total += np.array(d_loss)
+            d_loss_real = discriminator.fit(real_dataset, epochs=discriminator_interval, verbose=0)
+            d_loss_fake = discriminator.fit(fake_dataset, epochs=discriminator_interval, verbose=0)
+            d_loss_total[0] += 0.5 * np.add(d_loss_real.history['loss'][-1], d_loss_fake.history['loss'][-1])
+            d_loss_total[1] += 0.5 * np.add(d_loss_real.history['accuracy'][-1], d_loss_fake.history['accuracy'][-1])
 
         for _ in range(generator_interval):
             noise = np.random.normal(0, 1, (batch_size, latent_dim))
 
             # Train the generator (via the GAN model)
             discriminator.trainable = False
-            g_loss = gan.train_on_batch(noise, valid)
-            
-            g_loss_total += g_loss
+            noise_dataset = tf.data.Dataset.from_tensor_slices((noise, valid)).batch(batch_size)
+            g_loss = gan.fit(noise_dataset, epochs=generator_interval, verbose=0)
+            g_loss_total += g_loss.history['loss'][-1]
 
         # Calculate average losses
         d_loss_avg = d_loss_total / discriminator_interval
@@ -101,9 +99,9 @@ def train_gan(gan, generator, discriminator, latent_dim, epochs, batch_size, dat
     # Generate a sample data after training
     sample_noise = np.random.normal(0, 1, (1, latent_dim))
     generated_data = generator.predict(sample_noise, verbose=0)
-    generated_data_class = np.argmax(generated_data, axis=-1)
+    generated_data_class = np.argmax(generated_data, axis=-1).reshape(data_shape)
     print("Generated Data (class representation):")
-    print(generated_data_class[0])
+    print(generated_data_class)
 
 # Set dimensions and shapes
 latent_dim = 100
@@ -115,4 +113,4 @@ discriminator = build_discriminator(data_shape)
 gan = build_gan(generator, discriminator)
 
 # Train GAN
-train_gan(gan, generator, discriminator, latent_dim, epochs=10, batch_size=16, data_shape=data_shape, discriminator_interval=2, generator_interval=1)
+train_gan(gan, generator, discriminator, latent_dim, epochs=10, batch_size=32, data_shape=data_shape, discriminator_interval=2, generator_interval=1)
