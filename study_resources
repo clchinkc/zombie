@@ -2095,6 +2095,7 @@ fastapi - web framework, better than flask
 sqlmodel - connect fastapi app with database like sqlite, mysql
 httpx - http client
 python-dotenv - load environment variables
+deepl api - translate
 
 Job oriented courses
 https://careerhackers.io/chp-landing/
