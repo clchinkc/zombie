@@ -50,6 +50,53 @@ ImageDataGenerator, evaluate_generator, predict_generator
 """
 
 """
+Future frame prediction in a 2D grid state, such as a zombie apocalypse simulation, involves predicting the next state of the grid based on its current state. This task can be framed as a sequence prediction or a type of image-to-image translation, depending on how the data is represented. Let's examine how each type of GAN could potentially be applied to this task:
+
+1. **Normal GAN**: 
+   - **Application**: It's not typically used for sequential or temporal data prediction like future frame prediction. Normal GANs are better suited for generating independent samples from noise.
+   - **Limitations**: They lack the mechanism to condition the generation on previous states, which is crucial for accurate future frame prediction.
+
+2. **Conditional GAN**:
+   - **Application**: More suitable than normal GANs as they can condition the generation on additional information, such as the current state of the grid or other relevant features (like the number of zombies, resources, etc.).
+   - **Limitations**: While better than normal GANs for this task, conditional GANs may still struggle with temporal consistency and accurate prediction of future states, as they are not inherently designed for sequence prediction.
+
+3. **Pix2Pix GAN**:
+   - **Application**: Can be quite effective for future frame prediction if the task is framed as an image-to-image translation problem, where the input image is the current grid state and the output image is the next grid state.
+   - **Limitations**: Requires paired examples for training (current state and next state), which might be challenging to obtain in a complex, dynamic simulation like a zombie apocalypse.
+
+4. **CycleGAN**:
+   - **Application**: Useful for future frame prediction in cases where you don't have paired examples. For instance, if you have a lot of unpaired data of different states of the grid but not the exact next states, CycleGAN can learn to translate one state to another.
+   - **Limitations**: Might not maintain perfect temporal consistency, as it's not explicitly designed for sequential data. The cycle-consistency loss helps but doesn't guarantee accurate frame-to-frame predictions.
+
+In summary, for a task like future frame prediction in a zombie apocalypse simulation, **conditional GANs** and **Pix2Pix GANs** are likely to be more suitable. Conditional GANs offer the ability to include additional context, and Pix2Pix can effectively handle the image-to-image translation aspect of the task. However, the choice depends on the specific nature of your data and the availability of training examples. If paired training data is scarce, a CycleGAN could be considered, though with the caveat of potential inconsistencies.
+
+Conditional GAN
+https://machinelearningmastery.com/how-to-develop-a-conditional-generative-adversarial-network-from-scratch/
+
+Pix2Pix GAN
+https://machinelearningmastery.com/how-to-develop-a-pix2pix-gan-for-image-to-image-translation/
+
+CycleGAN
+https://machinelearningmastery.com/cyclegan-tutorial-with-keras/
+
+
+Improved WGAN
+https://github.com/keras-team/keras-contrib/blob/master/examples/improved_wgan.py
+https://towardsdatascience.com/demystified-wasserstein-gan-with-gradient-penalty-ba5e9b905ead
+https://keras.io/examples/generative/wgan_gp/
+
+BEGAN: Boundary Equibilibrium Generative Adversarial Networks
+https://towardsdatascience.com/wasserstein-distance-gan-began-and-progressively-growing-gan-7e099f38da96
+https://github.com/artcg/BEGAN
+
+Improved Boundary Equilibrium Generative Adversarial Networks
+https://wlouyang.github.io/Papers/iBegan.pdf
+
+Energy based GAN (EBGAN) & Boundary Equilibrium GAN (BEGAN)
+https://jonathan-hui.medium.com/gan-energy-based-gan-ebgan-boundary-equilibrium-gan-began-4662cceb7824
+"""
+
+"""
 sklearn.preprocessing.LabelBinarizer
 https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelBinarizer.html
 

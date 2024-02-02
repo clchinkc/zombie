@@ -511,6 +511,7 @@ https://arxiv.org/abs/1812.07544
 https://arxiv.org/abs/1802.06070
 https://huggingface.co/papers/2307.10936
 https://www.researchgate.net/publication/351225438_Expert_iteration
+https://github.com/openai/retro
 
 From this list, we can identify common properties that make learning easier. None of the properties below are required for learning, but satisfying more of them is definitively better.
 
