@@ -26,7 +26,7 @@ def build_generator(latent_dim, data_shape):
     return model
 
 # Define the critic
-def build_critic(data_shape, clip_value):
+def build_critic(data_shape):
     model = Sequential()
     model.add(Input(shape=(*data_shape, 4)))
     # Apply weight clipping in Conv2D layers
@@ -39,7 +39,7 @@ def build_critic(data_shape, clip_value):
     return model
 
 # Update GAN building function
-def build_wgan(generator, critic, clip_value):
+def build_wgan(generator, critic):
     # Wasserstein loss function
     def wasserstein_loss(y_true, y_pred):
         return tf.reduce_mean(y_true * y_pred)
@@ -102,9 +102,9 @@ def train_wgan(gan, generator, critic, latent_dim, epochs, batch_size, data_shap
 latent_dim = 100
 data_shape = (10, 10)
 
-critic = build_critic(data_shape, clip_value)
+critic = build_critic(data_shape)
 generator = build_generator(latent_dim, data_shape)
-wgan = build_wgan(generator, critic, clip_value)
+wgan = build_wgan(generator, critic)
 
 train_wgan(wgan, generator, critic, latent_dim, epochs=10, batch_size=32, data_shape=data_shape, 
            critic_interval=5, generator_interval=1)
