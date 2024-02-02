@@ -2072,7 +2072,7 @@ class GANObserver:
         self.latent_dim = latent_dim
         self.data_shape = (self.subject.school.size, self.subject.school.size)
         self.generator = self.build_generator()
-        self.discriminator = self.build_discriminator()
+        self.critic = self.build_critic()
         self.gan = self.build_gan()
         self.real_data_samples = []
 
@@ -2086,24 +2086,27 @@ class GANObserver:
         model.add(layers.Softmax(axis=-1))
         return model
 
-    def build_discriminator(self):
+    def build_critic(self):
         model = keras.models.Sequential()
         model.add(layers.Input(shape=(*self.data_shape, 4)))
-        model.add(layers.Conv2D(128, kernel_size=(3, 3), padding='valid', activation="elu"))
+        model.add(layers.Conv2D(128, kernel_size=(3, 3), padding='valid', activation="elu", kernel_constraint=lambda w: tf.clip_by_value(w, -0.01, 0.01)))
         model.add(layers.BatchNormalization())
-        model.add(layers.Conv2D(64, kernel_size=(3, 3), padding='valid', activation="elu"))
+        model.add(layers.Conv2D(32, kernel_size=(3, 3), padding='valid', activation="elu", kernel_constraint=lambda w: tf.clip_by_value(w, -0.01, 0.01)))
         model.add(layers.BatchNormalization())
         model.add(layers.Flatten())
-        model.add(layers.Dense(1, activation='sigmoid'))
+        model.add(layers.Dense(1, activation='linear'))
         return model
 
     def build_gan(self):
-        self.discriminator.compile(loss='binary_crossentropy', optimizer=keras.optimizers.Adam(), metrics=['accuracy'])
-        self.discriminator.trainable = False
+        # Wasserstein loss function
+        def wasserstein_loss(y_true, y_pred):
+            return tf.reduce_mean(y_true * y_pred)
+        self.critic.compile(loss=wasserstein_loss, optimizer=keras.optimizers.RMSprop())
+        self.critic.trainable = False
         gan_input = layers.Input(shape=(self.latent_dim,))
-        gan_output = self.discriminator(self.generator(gan_input))
+        gan_output = self.critic(self.generator(gan_input))
         gan = keras.models.Model(gan_input, gan_output)
-        gan.compile(loss='binary_crossentropy', optimizer=keras.optimizers.Adam())
+        gan.compile(loss=wasserstein_loss, optimizer=keras.optimizers.RMSprop())
         return gan
 
     def capture_grid_state(self):
@@ -2118,15 +2121,14 @@ class GANObserver:
         real_data = self.capture_grid_state()
         self.real_data_samples.append(real_data)
     
-    def train_gan(self, epochs, batch_size, discriminator_interval=1, generator_interval=1):
-        valid = np.ones((batch_size, 1))
-        fake = np.zeros((batch_size, 1))
+    def train_gan(self, epochs, batch_size, critic_interval=2, generator_interval=1):
+        valid = -np.ones((batch_size, 1))
+        fake = np.ones((batch_size, 1))
 
         for epoch in range(epochs):
-            d_loss_total = np.zeros(2)
-            g_loss_total = 0
+            c_loss_real, c_loss_fake, g_loss_total = 0, 0, 0
             
-            for _ in range(discriminator_interval):
+            for _ in range(critic_interval):
                 # Select a random batch of real data
                 idx = np.random.randint(0, len(self.real_data_samples), batch_size)
                 real_imgs = np.array([keras.utils.to_categorical(self.real_data_samples[i], num_classes=4) for i in idx])
@@ -2138,26 +2140,26 @@ class GANObserver:
                 fake_dataset = tf.data.Dataset.from_tensor_slices((gen_imgs, fake)).batch(batch_size)
 
                 # Train the discriminator
-                self.discriminator.trainable = True
-                d_loss_real = self.discriminator.fit(real_dataset, epochs=discriminator_interval, verbose=0)
-                d_loss_fake = self.discriminator.fit(fake_dataset, epochs=discriminator_interval, verbose=0)
-                d_loss_total[0] += 0.5 * np.add(d_loss_real.history['loss'][-1], d_loss_fake.history['loss'][-1])
-                d_loss_total[1] += 0.5 * np.add(d_loss_real.history['accuracy'][-1], d_loss_fake.history['accuracy'][-1])
+                self.critic.trainable = True
+                c_real_loss = self.critic.fit(real_dataset, epochs=critic_interval, verbose=0)
+                c_fake_loss = self.critic.fit(fake_dataset, epochs=critic_interval, verbose=0)
+                c_loss_real += c_real_loss.history['loss'][-1]
+                c_loss_fake += c_fake_loss.history['loss'][-1]
 
             for _ in range(generator_interval):
                 noise = np.random.normal(0, 1, (batch_size, self.latent_dim))
                 noise_dataset = tf.data.Dataset.from_tensor_slices((noise, valid)).batch(batch_size)
 
                 # Train the generator
-                self.discriminator.trainable = False
+                self.critic.trainable = False
                 g_loss = self.gan.fit(noise_dataset, epochs=generator_interval, verbose=0)
                 g_loss_total += g_loss.history['loss'][-1]
 
-            d_loss_avg = d_loss_total / discriminator_interval
+            c_loss_real_avg = c_loss_real / critic_interval
+            c_loss_fake_avg = c_loss_fake / critic_interval
             g_loss_avg = g_loss_total / generator_interval
 
-            # Print progress
-            print(f"Epoch: {epoch} [D loss: {d_loss_avg[0]}, acc.: {d_loss_avg[1]}] [G loss: {g_loss_avg}]")
+            print(f"Epoch {epoch}/{epochs} [Critic: real loss: {c_loss_real_avg:.4f}, fake loss: {c_loss_fake_avg:.4f}] [Generator loss: {g_loss_avg:.4f}]")
 
     def display_observation(self):
         num_samples = 1
