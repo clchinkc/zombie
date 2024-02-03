@@ -1503,6 +1503,7 @@ class PredictionObserver(Observer):
             super().__init__(**kwargs)
             self.rate = rate
 
+        @tf.function
         def call(self, inputs, training=None):
             if not training:
                 return inputs
@@ -1554,7 +1555,8 @@ class PredictionObserver(Observer):
         if use_attention:
             # Attention Mechanism
             reshaped_x = layers.Reshape((-1, input_shape[1]*input_shape[2]*filters))(x)
-            attention_output = layers.MultiHeadAttention(num_heads=4, key_dim=filters//4, dropout=dropout_rate)(reshaped_x, reshaped_x)
+            attention_output = layers.MultiHeadAttention(num_heads=4, key_dim=filters//16, dropout=dropout_rate,
+                                        kernel_regularizer=keras.regularizers.l2(l2_regularizer))(reshaped_x, reshaped_x)
             reshaped_attention_output = layers.Reshape((-1, input_shape[1], input_shape[2], filters))(attention_output)
             
             # Adding residual connection
@@ -1571,7 +1573,7 @@ class PredictionObserver(Observer):
         x = layers.Reshape((input_shape[1], input_shape[2], filters))(x)
 
         # Output layer
-        outputs = layers.Conv2D(filters=4, kernel_size=(1, 1), activation='softmax', padding='same')(x)
+        outputs = layers.Conv2D(filters=4, kernel_size=(1, 1), activation='softmax')(x)
         
         # Create and compile the model
         model = keras.models.Model(inputs=inputs, outputs=outputs)
@@ -1617,9 +1619,9 @@ class PredictionObserver(Observer):
         agent_count_loss = count_loss(y_true, y_pred)
 
         combined_loss = (tf.math.multiply(focal_loss_weight, focal_loss) +
-                         tf.math.multiply(crossentropy_loss_weight, crossentropy_loss) +
-                         tf.math.multiply(weighted_loss_weight, weighted_loss) +
-                         tf.math.multiply(count_loss_weight, agent_count_loss))
+                        tf.math.multiply(crossentropy_loss_weight, crossentropy_loss) +
+                        tf.math.multiply(weighted_loss_weight, weighted_loss) +
+                        tf.math.multiply(count_loss_weight, agent_count_loss))
         return combined_loss
 
     def cosine_annealing_scheduler(self, max_update=20, base_lr=0.01, final_lr=0.001, warmup_steps=5, warmup_begin_lr=0.001, cycle_length=10, exp_decay_rate=0.5):
@@ -1691,14 +1693,12 @@ class PredictionObserver(Observer):
 
         return best_params, best_loss
 
-    def train_model(self, num_steps=5, num_folds=5, batch_size=16, n_basic_samples=100, n_advanced_samples=50):
+    def train_model(self, model, num_steps=5, num_folds=5, batch_size=16, n_basic_samples=100, n_advanced_samples=50):
+        # X should have shape (samples, timesteps, width, height, channels)
+        # y should have shape (samples, width, height, channels)
         X, y = self.prepare_data(num_steps)
         augmented_X, augmented_y, modified_X, modified_y = self.augment_data(X, y)
         X_boot, y_boot = self.bootstrap_samples(augmented_X, augmented_y, modified_X, modified_y, n_basic_samples, n_advanced_samples)
-
-        # X should have shape (samples, timesteps, width, height, channels)
-        # y should have shape (samples, width, height, channels)
-
         X_train, X_test, y_train, y_test = train_test_split(X_boot, y_boot, test_size=0.2, random_state=42)
         
         train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
@@ -1709,26 +1709,26 @@ class PredictionObserver(Observer):
         class_weights = self.compute_class_weights(y_train)
         PredictionObserver.class_weights = tf.Variable(class_weights, dtype=tf.float32)
 
-        param_grid = {
-            'filters': [16],
-            'kernel_size': [(3, 3)],
-            'dropout_rate': [0.25, 0.5],
-            'l2_regularizer': [0.001]
-        }
-
-        best_params, best_loss = self.tune_hyperparameters(train_dataset, batch_size, num_folds, param_grid)
-        print(f"Best Params: {best_params}, Best Loss: {best_loss}")
-
-        final_model = self.create_model(train_dataset.element_spec[0].shape[1:], **best_params)
-        final_model.summary()
+        if model is None:
+            param_grid = {
+                'filters': [16],
+                'kernel_size': [(3, 3)],
+                'dropout_rate': [0.25, 0.5],
+                'l2_regularizer': [0.001]
+            }
+            best_params, best_loss = self.tune_hyperparameters(train_dataset, batch_size, num_folds, param_grid)
+            print(f"Best Params: {best_params}, Best Loss: {best_loss}")
+            model = self.create_model(train_dataset.element_spec[0].shape[1:], **best_params)
+        
+        model.summary()
         checkpoint = keras.callbacks.ModelCheckpoint("best_model.keras", monitor='val_accuracy', mode='max', verbose=0, save_best_only=True)
         early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
         lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
-        final_model.fit(train_dataset, epochs=20, verbose=0, callbacks=[checkpoint, early_stopping, lr_scheduler], validation_data=test_dataset)
-        test_loss, test_f1_score = self.evaluate_model(final_model, X_test, y_test)
+        model.fit(train_dataset, epochs=20, verbose=0, callbacks=[checkpoint, early_stopping, lr_scheduler], validation_data=test_dataset)
+        test_loss, test_f1_score = self.evaluate_model(model, X_test, y_test)
         print(f"Loss on the test set: {test_loss}")
         print(f"F1 Score on the test set: {test_f1_score}")
-        return final_model
+        return model
 
     def evaluate_model(self, model, X_test, y_test):
         test_loss = model.evaluate(X_test, y_test, verbose=0)[0]
@@ -1741,22 +1741,11 @@ class PredictionObserver(Observer):
         return test_loss, test_f1_score
 
     def monte_carlo_prediction(self, model, input_data, n_predictions=100):
-        # List to hold predictions
-        predictions = []
-
-        # Perform n_predictions forward passes with dropout enabled
-        for _ in range(n_predictions):
-            # Enable training mode temporarily to activate dropout layers
-            model._training = True
-            prediction = model.predict(input_data, verbose=0)
-            predictions.append(prediction)
-
-            # Reset training mode
-            model._training = False
-
-        # Compute standard deviation across predictions
-        prediction_std = np.std(predictions, axis=0)
-
+        batched_input = np.repeat(np.array(input_data), n_predictions, axis=0)
+        model._training = True
+        batched_predictions = model.predict_on_batch(batched_input)
+        model._training = False
+        prediction_std = np.std(batched_predictions, axis=0)
         return prediction_std
 
     def plot_combined_heatmaps(self, past_grid_state, actual, predicted, uncertainty):
@@ -1796,23 +1785,26 @@ class PredictionObserver(Observer):
         # Flatten the grid states to 2D arrays for NRMSE calculation
         actual_flat = actual.reshape((self.subject.school.size, self.subject.school.size))
         predicted_flat = predicted.reshape((self.subject.school.size, self.subject.school.size))
-
         # Calculate RMSE
         mse = np.mean((actual_flat - predicted_flat) ** 2)
         rmse = np.sqrt(mse)
-
         # Normalize RMSE
         range_actual = actual_flat.max() - actual_flat.min()
         nrmse = rmse / range_actual if range_actual != 0 else float('inf')
         
         return nrmse
 
-    def display_observation(self):
-        if not os.path.exists("best_model.keras"):
-            self.model = self.train_model()
-        elif getattr(self, "model", None) is None or self.model is None:
+    def display_observation(self, train_model=False):
+        if os.path.exists("best_model.keras"):
             self.model = keras.models.load_model("best_model.keras", custom_objects={'combined_loss_function': PredictionObserver.combined_loss_function, 'ChannelWiseDropout': PredictionObserver.ChannelWiseDropout})
-        if not isinstance(self.model, keras.models.Model):
+        else:
+            self.model = getattr(self, "model", None)
+        if train_model:
+            self.model = self.train_model(self.model)
+
+        if self.model is None:
+            raise ValueError("Model is None. Please train the model first.")
+        elif not isinstance(self.model, keras.models.Model) or not self.model.built:
             raise ValueError("Model is not properly instantiated.")
 
         past_grid_state = self.grid_history[-6:-1]

@@ -70,6 +70,9 @@ Future frame prediction in a 2D grid state, such as a zombie apocalypse simulati
 
 In summary, for a task like future frame prediction in a zombie apocalypse simulation, **conditional GANs** and **Pix2Pix GANs** are likely to be more suitable. Conditional GANs offer the ability to include additional context, and Pix2Pix can effectively handle the image-to-image translation aspect of the task. However, the choice depends on the specific nature of your data and the availability of training examples. If paired training data is scarce, a CycleGAN could be considered, though with the caveat of potential inconsistencies.
 
+Deep Convolutional Generative Adversarial Network
+https://www.tensorflow.org/tutorials/generative/dcgan
+
 Conditional GAN
 https://machinelearningmastery.com/how-to-develop-a-conditional-generative-adversarial-network-from-scratch/
 
@@ -77,6 +80,7 @@ Pix2Pix GAN
 https://machinelearningmastery.com/how-to-develop-a-pix2pix-gan-for-image-to-image-translation/
 
 CycleGAN
+https://www.tensorflow.org/tutorials/generative/cyclegan
 https://machinelearningmastery.com/cyclegan-tutorial-with-keras/
 
 
@@ -120,12 +124,6 @@ https://medium.com/the-modern-scientist/are-your-models-well-calibrated-92cb4e6c
 A Simple Framework for Contrastive Learning of Visual Representations
 https://arxiv.org/abs/2002.05709
 
-Deep Convolutional Generative Adversarial Network
-https://www.tensorflow.org/tutorials/generative/dcgan
-
-CycleGAN
-https://www.tensorflow.org/tutorials/generative/cyclegan
-
 tensorboard
 https://keras.io/api/callbacks/tensorboard/
 
@@ -134,6 +132,9 @@ https://proceedings.mlr.press/v28/wan13.html
 
 Quasi-Recurrent Neural Networks
 https://arxiv.org/abs/1611.01576
+
+tf dataset
+https://www.tensorflow.org/guide/data_performance
 """
 
 """
