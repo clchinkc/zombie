@@ -1482,6 +1482,48 @@ class PredictionObserver(Observer):
         
         return bootstrapped_X, bootstrapped_y
 
+    def channel_wise_dropout(self, rate):
+        def dropout_func(inputs, training=None):
+            if training:
+                # Get the input shape
+                input_shape = inputs.shape
+                noise_shape = (input_shape[0], 1, 1, input_shape[-1])
+
+                # Apply dropout
+                dropout_mask = tf.nn.dropout(tf.ones(noise_shape), rate=rate)
+                return inputs * dropout_mask
+            else:
+                return inputs
+
+        return keras.layers.Lambda(lambda x: dropout_func(x))
+
+    @keras.saving.register_keras_serializable()
+    class ChannelWiseDropout(keras.layers.Layer):
+        def __init__(self, rate, **kwargs):
+            super().__init__(**kwargs)
+            self.rate = rate
+
+        def call(self, inputs, training=None):
+            if not training:
+                return inputs
+
+            # Get noise shape
+            input_shape = tf.shape(inputs)
+            batch_size = tf.slice(input_shape, [0], [1])
+            channels = tf.slice(input_shape, [tf.subtract(tf.size(input_shape), 1)], [1])
+            noise_shape = tf.concat(
+                [batch_size, tf.ones(tf.subtract(tf.rank(inputs), 2), dtype=tf.int32), channels], axis=0)
+
+            # Apply dropout
+            dropout_mask = tf.nn.dropout(tf.ones(noise_shape), rate=self.rate)
+            dropout_mask = tf.broadcast_to(dropout_mask, input_shape)
+            return inputs * dropout_mask
+
+        def get_config(self):
+            config = super().get_config()
+            config.update({"rate": self.rate})
+            return config
+
     def create_model(self, input_shape, filters, kernel_size, dropout_rate, l2_regularizer, use_attention=True):
         # Input layer
         inputs = layers.Input(shape=input_shape)
@@ -1495,6 +1537,7 @@ class PredictionObserver(Observer):
         # LayerNormalization and Dropout after the first ConvLSTM2D
         x = layers.LayerNormalization()(convlstm1)
         x = layers.GaussianDropout(dropout_rate)(x)
+        x = self.ChannelWiseDropout(dropout_rate)(x)
         
         # Second ConvLSTM2D layer
         convlstm2 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='gelu', padding='same', 
@@ -1506,11 +1549,12 @@ class PredictionObserver(Observer):
         # LayerNormalization and Dropout after combining with the residual connection
         x = layers.LayerNormalization()(x)
         x = layers.GaussianDropout(dropout_rate)(x)
+        x = self.ChannelWiseDropout(dropout_rate)(x)
         
         if use_attention:
             # Attention Mechanism
             reshaped_x = layers.Reshape((-1, input_shape[1]*input_shape[2]*filters))(x)
-            attention_output = layers.MultiHeadAttention(num_heads=4, key_dim=filters, dropout=dropout_rate)(reshaped_x, reshaped_x)
+            attention_output = layers.MultiHeadAttention(num_heads=4, key_dim=filters//4, dropout=dropout_rate)(reshaped_x, reshaped_x)
             reshaped_attention_output = layers.Reshape((-1, input_shape[1], input_shape[2], filters))(attention_output)
             
             # Adding residual connection
@@ -1519,6 +1563,7 @@ class PredictionObserver(Observer):
             # LayerNormalization and Dropout after combining with the residual connection
             x = layers.LayerNormalization()(x)
             x = layers.GaussianDropout(dropout_rate)(x)
+            x = self.ChannelWiseDropout(dropout_rate)(x)
         
         # Reducing over the time dimension using GlobalAveragePooling
         x = layers.Reshape((-1, input_shape[1]*input_shape[2]*filters))(x)
@@ -1649,8 +1694,6 @@ class PredictionObserver(Observer):
     def train_model(self, num_steps=5, num_folds=5, batch_size=16, n_basic_samples=100, n_advanced_samples=50):
         X, y = self.prepare_data(num_steps)
         augmented_X, augmented_y, modified_X, modified_y = self.augment_data(X, y)
-
-        # Bootstrapping the data
         X_boot, y_boot = self.bootstrap_samples(augmented_X, augmented_y, modified_X, modified_y, n_basic_samples, n_advanced_samples)
 
         # X should have shape (samples, timesteps, width, height, channels)
@@ -1659,14 +1702,13 @@ class PredictionObserver(Observer):
         X_train, X_test, y_train, y_test = train_test_split(X_boot, y_boot, test_size=0.2, random_state=42)
         
         train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
-        train_dataset = train_dataset.shuffle(buffer_size=1024).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+        train_dataset = train_dataset.shuffle(buffer_size=min(len(X_train), 1024)).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
         test_dataset = tf.data.Dataset.from_tensor_slices((X_test, y_test))
         test_dataset = test_dataset.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
         
         class_weights = self.compute_class_weights(y_train)
         PredictionObserver.class_weights = tf.Variable(class_weights, dtype=tf.float32)
 
-        # Define hyperparameter search space
         param_grid = {
             'filters': [16],
             'kernel_size': [(3, 3)],
@@ -1769,7 +1811,7 @@ class PredictionObserver(Observer):
         if not os.path.exists("best_model.keras"):
             self.model = self.train_model()
         elif getattr(self, "model", None) is None or self.model is None:
-            self.model = keras.models.load_model("best_model.keras", custom_objects={'combined_loss_function': PredictionObserver.combined_loss_function})
+            self.model = keras.models.load_model("best_model.keras", custom_objects={'combined_loss_function': PredictionObserver.combined_loss_function, 'ChannelWiseDropout': PredictionObserver.ChannelWiseDropout})
         if not isinstance(self.model, keras.models.Model):
             raise ValueError("Model is not properly instantiated.")
 
@@ -2065,6 +2107,110 @@ class PygameObserver(Observer):
         while True:
             self.handle_events()
 
+class GANObserver:
+    def __init__(self, population, latent_dim=100):
+        self.subject = population
+        self.subject.attach_observer(self)
+        self.latent_dim = latent_dim
+        self.data_shape = (self.subject.school.size, self.subject.school.size)
+        self.generator = self.build_generator()
+        self.critic = self.build_critic()
+        self.gan = self.build_gan()
+        self.real_data_samples = []
+
+    def build_generator(self):
+        model = keras.models.Sequential()
+        model.add(layers.Input(shape=(self.latent_dim,)))
+        model.add(layers.Dense(128, activation="elu"))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Dense(int(np.prod(self.data_shape)) * 4))
+        model.add(layers.Reshape((*self.data_shape, 4)))
+        model.add(layers.Softmax(axis=-1))
+        return model
+
+    def build_critic(self):
+        model = keras.models.Sequential()
+        model.add(layers.Input(shape=(*self.data_shape, 4)))
+        model.add(layers.Conv2D(128, kernel_size=(3, 3), padding='valid', activation="elu", kernel_constraint=lambda w: tf.clip_by_value(w, -0.01, 0.01)))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Conv2D(32, kernel_size=(3, 3), padding='valid', activation="elu", kernel_constraint=lambda w: tf.clip_by_value(w, -0.01, 0.01)))
+        model.add(layers.BatchNormalization())
+        model.add(layers.Flatten())
+        model.add(layers.Dense(1, activation='linear'))
+        return model
+
+    def build_gan(self):
+        # Wasserstein loss function
+        def wasserstein_loss(y_true, y_pred):
+            return tf.reduce_mean(y_true * y_pred)
+        self.critic.compile(loss=wasserstein_loss, optimizer=keras.optimizers.RMSprop())
+        self.critic.trainable = False
+        gan_input = layers.Input(shape=(self.latent_dim,))
+        gan_output = self.critic(self.generator(gan_input))
+        gan = keras.models.Model(gan_input, gan_output)
+        gan.compile(loss=wasserstein_loss, optimizer=keras.optimizers.RMSprop())
+        return gan
+
+    def capture_grid_state(self):
+        grid_state = np.zeros((self.subject.school.size, self.subject.school.size))
+        for i in range(self.subject.school.size):
+            for j in range(self.subject.school.size):
+                individual = self.subject.school.get_individual((i, j))
+                grid_state[i, j] = individual.health_state.value if individual else 0
+        return grid_state
+
+    def update(self):
+        real_data = self.capture_grid_state()
+        self.real_data_samples.append(real_data)
+    
+    def train_gan(self, epochs, batch_size, critic_interval=2, generator_interval=1):
+        valid = -np.ones((batch_size, 1))
+        fake = np.ones((batch_size, 1))
+
+        for epoch in range(epochs):
+            c_loss_real, c_loss_fake, g_loss_total = 0, 0, 0
+            
+            for _ in range(critic_interval):
+                # Select a random batch of real data
+                idx = np.random.randint(0, len(self.real_data_samples), batch_size)
+                real_imgs = np.array([keras.utils.to_categorical(self.real_data_samples[i], num_classes=4) for i in idx])
+                real_dataset = tf.data.Dataset.from_tensor_slices((real_imgs, valid)).batch(batch_size)
+
+                # Generate a batch of generated images
+                noise = np.random.normal(0, 1, (batch_size, self.latent_dim))
+                gen_imgs = self.generator.predict(noise, verbose=0)
+                fake_dataset = tf.data.Dataset.from_tensor_slices((gen_imgs, fake)).batch(batch_size)
+
+                # Train the discriminator
+                self.critic.trainable = True
+                c_real_loss = self.critic.fit(real_dataset, epochs=critic_interval, verbose=0)
+                c_fake_loss = self.critic.fit(fake_dataset, epochs=critic_interval, verbose=0)
+                c_loss_real += c_real_loss.history['loss'][-1]
+                c_loss_fake += c_fake_loss.history['loss'][-1]
+
+            for _ in range(generator_interval):
+                noise = np.random.normal(0, 1, (batch_size, self.latent_dim))
+                noise_dataset = tf.data.Dataset.from_tensor_slices((noise, valid)).batch(batch_size)
+
+                # Train the generator
+                self.critic.trainable = False
+                g_loss = self.gan.fit(noise_dataset, epochs=generator_interval, verbose=0)
+                g_loss_total += g_loss.history['loss'][-1]
+
+            c_loss_real_avg = c_loss_real / critic_interval
+            c_loss_fake_avg = c_loss_fake / critic_interval
+            g_loss_avg = g_loss_total / generator_interval
+
+            print(f"Epoch {epoch}/{epochs} [Critic: real loss: {c_loss_real_avg:.4f}, fake loss: {c_loss_fake_avg:.4f}] [Generator loss: {g_loss_avg:.4f}]")
+
+    def display_observation(self):
+        num_samples = 1
+        self.train_gan(epochs=10, batch_size=32)
+        noise = np.random.normal(0, 1, (num_samples, self.latent_dim))
+        generated_data = self.generator.predict(noise, verbose=0)
+        generated_data = np.argmax(generated_data, axis=-1).reshape((self.subject.school.size, self.subject.school.size))
+        print(generated_data)
+
 
 def main():
     set_seed(0)
@@ -2081,6 +2227,7 @@ def main():
     prediction_observer = PredictionObserver(school_sim)
     # fft_observer = FFTAnalysisObserver(school_sim)
     # pygame_observer = PygameObserver(school_sim)
+    # gan_observer = GANObserver(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
@@ -2098,6 +2245,7 @@ def main():
     prediction_observer.display_observation()
     # fft_observer.display_observation(mode='static') # "animation" or "static"
     # pygame_observer.display_observation()
+    # gan_observer.display_observation()
 
 
 if __name__ == "__main__":

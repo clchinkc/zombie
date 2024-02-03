@@ -103,9 +103,6 @@ https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelBin
 Probability Calibration for 3-class classification
 https://scikit-learn.org/stable/auto_examples/calibration/plot_calibration_multiclass.html#sphx-glr-auto-examples-calibration-plot-calibration-multiclass-py
 
-channel-wise dropout
-https://stackoverflow.com/questions/55906129/what-is-the-difference-between-dropout-monte-carlo-dropout-and-channel-wis?rq=3
-
 cudnn
 https://github.com/tensorflow/tensorflow/issues/61700
 https://docs.nvidia.com/deeplearning/cudnn/install-guide/index.html
