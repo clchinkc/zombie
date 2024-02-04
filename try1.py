@@ -54,7 +54,7 @@ from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum, auto
-from functools import cached_property, partial
+from functools import cached_property
 from itertools import product
 from typing import Any, Optional
 
@@ -70,7 +70,6 @@ import pygame
 import scipy
 import seaborn as sns
 import tensorflow as tf
-from keras import backend as K
 from keras import layers
 from matplotlib import animation, colors, patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -82,8 +81,8 @@ from plotly.subplots import make_subplots
 from scipy import stats
 from scipy.interpolate import interp1d
 from skimage.metrics import structural_similarity as ssim
-from sklearn.metrics import f1_score, mean_squared_error
-from sklearn.model_selection import ParameterGrid, ShuffleSplit, train_test_split
+from sklearn.metrics import f1_score
+from sklearn.model_selection import ParameterGrid, train_test_split
 from sklearn.utils import resample
 from sklearn.utils.class_weight import compute_class_weight
 
@@ -1532,8 +1531,8 @@ class PredictionObserver(Observer):
         # First ConvLSTM2D layer
         x = layers.LayerNormalization()(inputs)
         x = layers.GaussianDropout(dropout_rate)(x)
-        convlstm1 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='gelu', padding='same', 
-                                        return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer))(x)
+        convlstm1 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='gelu', padding='same', return_sequences=True,
+                                    recurrent_dropout=dropout_rate, recurrent_regularizer=keras.regularizers.l2(l2_regularizer), kernel_regularizer=keras.regularizers.l2(l2_regularizer), bias_regularizer=keras.regularizers.l2(l2_regularizer))(x)
         
         # LayerNormalization and Dropout after the first ConvLSTM2D
         x = layers.LayerNormalization()(convlstm1)
@@ -1541,8 +1540,8 @@ class PredictionObserver(Observer):
         x = self.ChannelWiseDropout(dropout_rate)(x)
         
         # Second ConvLSTM2D layer
-        convlstm2 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='gelu', padding='same', 
-                                        return_sequences=True, kernel_regularizer=keras.regularizers.l2(l2_regularizer))(x)
+        convlstm2 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='gelu', padding='same', return_sequences=True,
+                                    recurrent_dropout=dropout_rate, recurrent_regularizer=keras.regularizers.l2(l2_regularizer), kernel_regularizer=keras.regularizers.l2(l2_regularizer), bias_regularizer=keras.regularizers.l2(l2_regularizer))(x)
         
         # Adding residual connection
         x = layers.Add()([convlstm1, convlstm2])
@@ -1556,11 +1555,11 @@ class PredictionObserver(Observer):
             # Attention Mechanism
             reshaped_x = layers.Reshape((-1, input_shape[1]*input_shape[2]*filters))(x)
             attention_output = layers.MultiHeadAttention(num_heads=4, key_dim=filters//16, dropout=dropout_rate,
-                                        kernel_regularizer=keras.regularizers.l2(l2_regularizer))(reshaped_x, reshaped_x)
+                                        kernel_regularizer=keras.regularizers.l2(l2_regularizer), bias_regularizer=keras.regularizers.l2(l2_regularizer))(reshaped_x, reshaped_x)
             reshaped_attention_output = layers.Reshape((-1, input_shape[1], input_shape[2], filters))(attention_output)
             
             # Adding residual connection
-            x = layers.Add()([x, reshaped_attention_output])
+            x = layers.Multiply()([x, reshaped_attention_output])
             
             # LayerNormalization and Dropout after combining with the residual connection
             x = layers.LayerNormalization()(x)
@@ -1713,8 +1712,8 @@ class PredictionObserver(Observer):
             param_grid = {
                 'filters': [16],
                 'kernel_size': [(3, 3)],
-                'dropout_rate': [0.25, 0.5],
-                'l2_regularizer': [0.001]
+                'dropout_rate': [0.1, 0.3],
+                'l2_regularizer': [0.0001]
             }
             best_params, best_loss = self.tune_hyperparameters(train_dataset, batch_size, num_folds, param_grid)
             print(f"Best Params: {best_params}, Best Loss: {best_loss}")
@@ -1794,7 +1793,7 @@ class PredictionObserver(Observer):
         
         return nrmse
 
-    def display_observation(self, train_model=False):
+    def display_observation(self, train_model=True):
         if os.path.exists("best_model.keras"):
             self.model = keras.models.load_model("best_model.keras", custom_objects={'combined_loss_function': PredictionObserver.combined_loss_function, 'ChannelWiseDropout': PredictionObserver.ChannelWiseDropout})
         else:

@@ -76,6 +76,9 @@ plt.ylabel('Population')
 plt.legend()
 plt.show()
 
+# https://zh.m.wikipedia.org/zh-tw/%E6%9C%80%E4%BC%98%E6%8E%A7%E5%88%B6
+# https://www.zhihu.com/question/22686770?utm_id=0
+
 """
 Simulating a zombie apocalypse is an unconventional application of control theory, and it involves modeling various aspects, such as human and zombie movement, human behavior, transmission dynamics, and so on. You might be interested in incorporating different techniques to create a realistic model. Here's a brief guide on how you can approach this task:
 

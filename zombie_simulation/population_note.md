@@ -130,8 +130,17 @@ https://keras.io/api/callbacks/tensorboard/
 DropConnect
 https://proceedings.mlr.press/v28/wan13.html
 
+Zoneout
+https://arxiv.org/abs/1606.01305
+
 Quasi-Recurrent Neural Networks
 https://arxiv.org/abs/1611.01576
+
+IndRNN
+https://github.com/Sunnydreamrain/IndRNN_Theano_Lasagne
+
+stateful rnn
+https://stackoverflow.com/questions/58276337/proper-way-to-feed-time-series-data-to-stateful-lstm/58277760#58277760
 
 tf dataset
 https://www.tensorflow.org/guide/data_performance
@@ -164,6 +173,11 @@ The attention scores returned by an attention mechanism, like the one in your Ke
 
 In summary, attention scores are not only a mechanism for improving model performance but also a powerful tool for understanding, interpreting, and enhancing your models. They can be particularly valuable in domains where explainability and insight into the model's decision process are crucial.
 
+"""
+
+"""
+Copy individual
+Test population file
 """
 
 """
@@ -3736,8 +3750,6 @@ https://www.cs.cmu.edu/afs/cs/usr/pstone/public/papers/97MAS-survey/node46.html#
 
 
 
-
-
 https://www.cs.cmu.edu/afs/cs/usr/pstone/public/papers/97MAS-survey/node30.html#seccom
 """
 
@@ -3745,6 +3757,10 @@ https://www.cs.cmu.edu/afs/cs/usr/pstone/public/papers/97MAS-survey/node30.html#
 https://www.restack.io/docs/flowise-ai-knowledge-types-of-ai-agents-flowise
 https://www.simplilearn.com/what-is-intelligent-agent-in-ai-types-function-article
 https://cloud.tencent.com/developer/article/2355811
+"""
+
+"""
+兵棋推演
 """
 
 """
