@@ -1542,7 +1542,7 @@ class PredictionObserver(Observer):
         # Second ConvLSTM2D layer
         convlstm2 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='gelu', padding='same', return_sequences=True,
                                     recurrent_dropout=dropout_rate, recurrent_regularizer=keras.regularizers.l2(l2_regularizer), kernel_regularizer=keras.regularizers.l2(l2_regularizer), bias_regularizer=keras.regularizers.l2(l2_regularizer))(x)
-        
+
         # Adding residual connection
         x = layers.Add()([convlstm1, convlstm2])
         

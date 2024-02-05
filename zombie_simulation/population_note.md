@@ -16,7 +16,7 @@ Include features that represent how individuals are moving in the grid. This can
 Integrating Features into Model Training
 When preparing the data for model training, integrate these features along with the grid state. You may need to adjust the input shape of your ConvLSTM model accordingly to accommodate the additional features.
 Make sure that the model architecture is adjusted to accept the additional feature vectors. The key is to ensure that the model can process both the spatial grid state and the additional engineered features effectively.
-Improved Model Architecture: U-net structure (ConvLSTM + Deconvolution), 3D ConvNets or Transformer models
+Improved Model Architecture: U-net structure (ConvLSTM + Deconvolution), 3D ConvNets, Gated Convolutional Networks, or Transformer models
 
 Ensemble Methods: Combine predictions from multiple models to improve accuracy.
 
@@ -69,6 +69,9 @@ Future frame prediction in a 2D grid state, such as a zombie apocalypse simulati
    - **Limitations**: Might not maintain perfect temporal consistency, as it's not explicitly designed for sequential data. The cycle-consistency loss helps but doesn't guarantee accurate frame-to-frame predictions.
 
 In summary, for a task like future frame prediction in a zombie apocalypse simulation, **conditional GANs** and **Pix2Pix GANs** are likely to be more suitable. Conditional GANs offer the ability to include additional context, and Pix2Pix can effectively handle the image-to-image translation aspect of the task. However, the choice depends on the specific nature of your data and the availability of training examples. If paired training data is scarce, a CycleGAN could be considered, though with the caveat of potential inconsistencies.
+
+Custom train_step
+https://keras.io/guides/custom_train_step_in_tensorflow/
 
 Deep Convolutional Generative Adversarial Network
 https://www.tensorflow.org/tutorials/generative/dcgan
@@ -129,6 +132,8 @@ https://keras.io/api/callbacks/tensorboard/
 
 DropConnect
 https://proceedings.mlr.press/v28/wan13.html
+https://pypi.org/project/dropconnect-tensorflow/
+https://github.com/teelinsan/KerasDropconnect/tree/master
 
 Zoneout
 https://arxiv.org/abs/1606.01305
