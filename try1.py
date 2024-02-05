@@ -44,6 +44,7 @@ This structured approach allows for a comprehensive simulation of a zombie apoca
 
 from __future__ import annotations
 
+import builtins
 import math
 import os
 import random
@@ -53,6 +54,7 @@ from abc import ABC, abstractmethod
 from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum, auto
 from functools import cached_property
 from itertools import product
@@ -85,6 +87,7 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import ParameterGrid, train_test_split
 from sklearn.utils import resample
 from sklearn.utils.class_weight import compute_class_weight
+from tensorboard import default, program
 
 
 def set_seed(seed):
@@ -1580,7 +1583,7 @@ class PredictionObserver(Observer):
         optimizer = keras.optimizers.Nadam()
         
         custom_loss = self.combined_loss_function
-        model.compile(optimizer=optimizer, loss=custom_loss, metrics=['accuracy'])
+        model.compile(optimizer=optimizer, loss=custom_loss, metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.TopKCategoricalAccuracy(k=2)])
         
         return model
 
@@ -1720,10 +1723,12 @@ class PredictionObserver(Observer):
             model = self.create_model(train_dataset.element_spec[0].shape[1:], **best_params)
         
         model.summary()
-        checkpoint = keras.callbacks.ModelCheckpoint("best_model.keras", monitor='val_accuracy', mode='max', verbose=0, save_best_only=True)
         early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
         lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
-        model.fit(train_dataset, epochs=20, verbose=0, callbacks=[checkpoint, early_stopping, lr_scheduler], validation_data=test_dataset)
+        checkpoint = keras.callbacks.ModelCheckpoint("best_model.keras", monitor="val_categorical_accuracy", mode='max', verbose=0, save_best_only=True)
+        self.log_dir = "./logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+        tensorboard = keras.callbacks.TensorBoard(log_dir=self.log_dir, histogram_freq=1, write_graph=False)
+        model.fit(train_dataset, epochs=20, verbose=0, callbacks=[early_stopping, lr_scheduler, checkpoint, tensorboard], validation_data=test_dataset)
         test_loss, test_f1_score = self.evaluate_model(model, X_test, y_test)
         print(f"Loss on the test set: {test_loss}")
         print(f"F1 Score on the test set: {test_f1_score}")
@@ -1831,6 +1836,16 @@ class PredictionObserver(Observer):
         print(f"SSIM: {ssim_value:.3f}")
         nrmse_value = self.calculate_nrmse(self.grid_history[-1].astype(int), reshaped_grid_state)
         print(f"NRMSE: {nrmse_value:.3f}")
+        
+        tb = program.TensorBoard(plugins=default.get_plugins())
+        tb.configure(argv=[None, '--logdir', self.log_dir])
+        url = tb.launch()
+        print(f"TensorBoard is running at {url}")
+        # Wait for user to close TensorBoard
+        print("Press Enter to stop TensorBoard and exit the script.")
+        builtins.input()
+        # After pressing Enter, the script will continue from here
+        print("Stopping TensorBoard and exiting the script.")
 
 
 class FFTAnalysisObserver(Observer):

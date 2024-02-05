@@ -575,10 +575,18 @@ for line, score in results:
 # distilbert-base-nli-stsb-mean-tokens - STSb performance: 85.16
 
 # siamese network text similarity
+# https://keras.io/examples/nlp/sentence_embeddings_with_sbert/
+# https://keras.io/examples/nlp/semantic_similarity_with_keras_nlp/
 
 # Boyer-Moore String Search Algorithm
 
 # https://medium.com/@ocaelen/exploring-the-novel-features-of-xgboost-2-0-1cf39919577f
+
+# Metric Learning
+# https://contrib.scikit-learn.org/metric-learn/introduction.html
+# https://towardsdatascience.com/metric-learning-tips-n-tricks-2e4cfee6b75b
+# https://paperswithcode.com/task/metric-learning
+# https://medium.com/@jyotsana.cg/deep-metric-learning-part-1-4c2dc7d7ca17
 
 # skyline query (Multi-criteria Decision Making)
 

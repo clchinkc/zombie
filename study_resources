@@ -30,6 +30,7 @@ Ecommerce store and website
 Docker + Compose + Python
 web scrape + yfinance api + lstm model + plotly
 
+https://medium.com/@tenyks_blogger/multi-modal-image-search-with-embeddings-vector-dbs-cee61c70a88a
 
 Project ideas
 A website like quilbot that rephrase sentences where a population of text similar to input text is held and the best fit is optimised using genetic algorithm, fitness is document level text similarity, gene is word
@@ -426,6 +427,7 @@ https://github.com/maxim5/time-series-machine-learning
 https://kernc.github.io/backtesting.py/
 Write a stock strategy backtest environment.
 
+
 Data Science
 The tutorial will cover the following topics:
 Data processing and analysis, including data cleaning, applying data science techniques, data extraction and manipulation.
@@ -512,6 +514,8 @@ https://arxiv.org/abs/1802.06070
 https://huggingface.co/papers/2307.10936
 https://www.researchgate.net/publication/351225438_Expert_iteration
 https://github.com/openai/retro
+Decision Transformer: Reinforcement Learning via Sequence Modeling
+Online Decision Transformer
 
 From this list, we can identify common properties that make learning easier. None of the properties below are required for learning, but satisfying more of them is definitively better.
 
@@ -1390,6 +1394,9 @@ https://www.lepton.ai/
 https://www.lepton.ai/playground/sdxl
 https://search.lepton.run/
 https://github.com/leptonai/search_with_lepton
+https://ai.plainenglish.io/crewai-solor-hermes-langchain-ollama-super-ai-agent-0ee348404428
+Mixtral 8x7B Instruct v0.1
+https://pub.towardsai.net/productionizing-generative-ai-applications-3fe310d95e9b
 
 bard api
 https://github.com/dsdanielpark/Bard-API
@@ -1857,6 +1864,7 @@ https://ai.plainenglish.io/revolutionizing-machine-learning-with-weak-supervisio
 https://medium.com/tide-engineering-team/how-snorkel-a-semi-supervised-learning-technique-solved-invoice-accounting-at-tide-f4a300b8021d
 https://github.com/snorkel-team/snorkel
 https://ldzhangyx.github.io/2018/11/20/vae/
+https://ai.plainenglish.io/how-i-deployed-a-machine-learning-model-for-the-first-time-b82b9ea831e0
 
 Visualizing map
 https://zhuanlan.zhihu.com/p/388573380

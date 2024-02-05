@@ -128,7 +128,8 @@ A Simple Framework for Contrastive Learning of Visual Representations
 https://arxiv.org/abs/2002.05709
 
 tensorboard
-https://keras.io/api/callbacks/tensorboard/
+https://www.tensorflow.org/tensorboard/image_summaries
+https://www.tensorflow.org/tensorboard/migrate
 
 DropConnect
 https://proceedings.mlr.press/v28/wan13.html
