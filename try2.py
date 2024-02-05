@@ -91,7 +91,7 @@ figure = image_grid()
 with file_writer.as_default():
     tf.summary.image("Training data", plot_to_image(figure), step=0)
 
-tb = program.TensorBoard(plugins=default.get_plugins())
+tb = program.TensorBoard()
 tb.configure(argv=[None, '--logdir', log_dir])
 url = tb.launch()
 print(f"TensorBoard is running at {url}")

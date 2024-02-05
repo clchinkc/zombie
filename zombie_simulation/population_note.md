@@ -128,6 +128,7 @@ A Simple Framework for Contrastive Learning of Visual Representations
 https://arxiv.org/abs/2002.05709
 
 tensorboard
+https://zhuanlan.zhihu.com/p/471198169?utm_id=0
 https://www.tensorflow.org/tensorboard/image_summaries
 https://www.tensorflow.org/tensorboard/migrate
 
