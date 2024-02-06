@@ -121,6 +121,9 @@ https://www.sciencedirect.com/science/article/pii/S0957417423010904
 Agnostic explainable artificial intelligence (XAI) : An introduction with simple code examples
 https://medium.com/the-modern-scientist/agnostic-explainable-artificial-intelligence-xai-f998309a0c09
 
+Learning Interpretability Tool
+https://pair-code.github.io/lit/
+
 Are your models well calibrated ?
 https://medium.com/the-modern-scientist/are-your-models-well-calibrated-92cb4e6c1a65
 
@@ -129,8 +132,8 @@ https://arxiv.org/abs/2002.05709
 
 tensorboard
 https://zhuanlan.zhihu.com/p/471198169?utm_id=0
-https://www.tensorflow.org/tensorboard/image_summaries
-https://www.tensorflow.org/tensorboard/migrate
+https://blog.tensorflow.org/2019/12/introducing-tensorboarddev-new-way-to.html
+https://www.tensorflow.org/tensorboard/fairness-indicators
 
 DropConnect
 https://proceedings.mlr.press/v28/wan13.html
@@ -3803,6 +3806,24 @@ https://tomorrowsci.com/animals/20240120_01/
 
 """
 algorithm to control a group of agents in grid-based system
+"""
+
+"""
+Using an adjacency list in a Python zombie apocalypse simulation can be a great way to model the connections between different locations in your simulated world. An adjacency list is a way to represent a graph, which is a set of nodes (or vertices) and the connections (or edges) between them. In the context of a zombie apocalypse simulation, the nodes could represent different locations (like cities, towns, buildings, etc.), and the edges could represent the pathways or roads between these locations.
+
+Here's how you can use an adjacency list in your simulation:
+
+Representing the Map: Use the nodes in the adjacency list to represent different locations in your simulation. Each node could have attributes like resources available, number of survivors, number of zombies, etc.
+
+Pathways Between Locations: The edges in the adjacency list can represent the pathways or routes between different locations. These can be used to simulate movement of zombies and survivors from one location to another.
+
+Simulating Movement: You can use the adjacency list to determine where zombies and survivors can move. For instance, if there's a direct connection (edge) between two nodes (locations), then characters can move between these locations.
+
+Spreading the Zombie Outbreak: You can simulate the spread of the zombie outbreak using the adjacency list. If a node becomes infected (i.e., zombies are present), you can use the adjacency list to determine which neighboring nodes are at risk of being infected next.
+
+Strategic Decisions: Survivors can use the adjacency list to make strategic decisions, like which routes to take to avoid zombies, where to find resources, or where to establish safe zones.
+
+Scalability: An adjacency list is an efficient way to represent sparse graphs (where there are not connections between every pair of nodes), which is likely in a zombie apocalypse scenario where not every location is directly connected to every other location.
 """
 
 """

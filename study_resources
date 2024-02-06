@@ -322,6 +322,7 @@ https://zhuanlan.zhihu.com/p/441451881
 https://zhuanlan.zhihu.com/p/424195019
 TSMixer
 https://towardsdatascience.com/deepar-mastering-time-series-forecasting-with-deep-learning-bc717771ce85
+https://towardsdatascience.com/evaluating-uplift-models-8a078996a113
 
 time series database
 InfluxDB 3.0
@@ -930,6 +931,7 @@ https://www.discount-courses.com/courses/unreal-engine-5-fundamentals
 https://www.charlieintel.com/games/best-combos-in-game-dev-tycoon-212706/
 
 Godot
+https://www.sandromaglione.com/articles/introduction-to-godot-game-engine-beginner
 https://github.com/godotengine/godot-vscode-plugin
 https://stackoverflow.com/questions/72820929/godot-wont-open-vscode-editor
 https://www.showwcase.com/show/34429/effortless-scripting-in-godot-4-with-visual-studio-code-a-step-by-step-guide
@@ -1397,6 +1399,11 @@ https://github.com/leptonai/search_with_lepton
 https://ai.plainenglish.io/crewai-solor-hermes-langchain-ollama-super-ai-agent-0ee348404428
 Mixtral 8x7B Instruct v0.1
 https://pub.towardsai.net/productionizing-generative-ai-applications-3fe310d95e9b
+https://huggingface.co/chat
+https://huggingface.co/meta-llama/Llama-2-13b-chat-hf
+https://huggingface.co/spaces/huggingface-projects/llama-2-7b-chat
+https://huggingface.co/spaces/ysharma/Explore_llamav2_with_TGI
+https://huggingface.co/James-WYang/BigTranslate
 
 bard api
 https://github.com/dsdanielpark/Bard-API
@@ -1740,13 +1747,21 @@ These are the 5 critical elements of excel that one should not miss:
 5] Message Principle - Going through each worksheet is tiring for the user. Even he/she does not have time to review each sheet and learn how you reached your final result. So, what is the solution? Give a proper headline, summary and notes to each worksheet.
 
 Recommendation system
-https://github.com/anthonyli358/spotify-recommender-systems
 https://github.com/Qing93/anime_recommend
 https://zhuanlan.zhihu.com/p/22494721
 https://whuhan2013.github.io/blog/2016/11/07/flask-mysql-learn/
 https://github.com/yudong-94/My-Movie-Recommender
 https://zhuanlan.zhihu.com/p/365181933
 https://github.com/jc-LeeHub/Recommend-System-tf2.0
+https://blog.csdn.net/fgg1234567890/article/details/115190048
+
+spotify
+spotify top songs machine learning
+https://github.com/anthonyli358/spotify-recommender-systems
+https://blog.tensorflow.org/2023/10/simulated-spotify-listening-experiences-reinforcement-learning-tensorflow-tf-agents.html
+https://www.analyticsvidhya.com/blog/2023/03/solving-spotify-multiclass-genre-classification-problem/
+https://blog.devgenius.io/data-engineering-project-2-building-spotify-etl-using-python-and-airflow-432dd8e4ffa3
+https://twitter.com/SHL0MS/status/1652842277788692480
 
 API
 Here are the summarized functions of each API mentioned:
@@ -1795,6 +1810,7 @@ KerasNLP
 https://www.kaggle.com/models
 https://tfhub.dev/
 https://opus.nlpl.eu/
+https://web.stanford.edu/class/cs224n/slides/
 
 Kaggle
 https://zhuanlan.zhihu.com/p/472915303

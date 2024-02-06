@@ -582,6 +582,8 @@ for line, score in results:
 
 # https://medium.com/@ocaelen/exploring-the-novel-features-of-xgboost-2-0-1cf39919577f
 
+# https://neon.tech/blog/pg-embedding-extension-for-vector-search
+
 # Metric Learning
 # https://contrib.scikit-learn.org/metric-learn/introduction.html
 # https://towardsdatascience.com/metric-learning-tips-n-tricks-2e4cfee6b75b
