@@ -1411,6 +1411,10 @@ OLMo 7B
 OLMo 1B
 Dolma開源資料集
 https://blog.research.google/2024/01/introducing-aspire-for-selective.html
+https://uplimit.com/course/building-ai-products-with-openai
+https://thenewstack.io/llamaindex-and-the-new-world-of-llm-orchestration-frameworks/
+https://towardsdatascience.com/document-oriented-agents-a-journey-with-vector-databases-llms-langchain-fastapi-and-docker-be0efcd229f4
+https://www.analyticsvidhya.com/blog/2023/07/build-your-own-large-language-models/
 
 bard api
 https://github.com/dsdanielpark/Bard-API
@@ -1764,6 +1768,7 @@ https://github.com/yudong-94/My-Movie-Recommender
 https://zhuanlan.zhihu.com/p/365181933
 https://github.com/jc-LeeHub/Recommend-System-tf2.0
 https://blog.csdn.net/fgg1234567890/article/details/115190048
+https://developer.aliyun.com/article/1144370
 
 spotify
 spotify top songs machine learning
@@ -2131,6 +2136,8 @@ sqlmodel - connect fastapi app with database like sqlite, mysql
 httpx - http client
 python-dotenv - load environment variables
 deepl api - translate
+dask - parallel computing
+
 
 Job oriented courses
 https://careerhackers.io/chp-landing/
