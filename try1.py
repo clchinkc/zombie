@@ -2115,12 +2115,12 @@ class PygameObserver(Observer):
             self.handle_events()
 
 class GANObserver:
-    def __init__(self, population, latent_dim=100, learning_rate=0.00005):
+    def __init__(self, population, learning_rate=0.00005):
         self.subject = population
         self.subject.attach_observer(self)
-        self.latent_dim = latent_dim
         self.learning_rate = learning_rate
         self.data_shape = (self.subject.school.size, self.subject.school.size)
+        self.latent_dim = np.prod(self.data_shape)
         self.generator = self.build_generator()
         self.critic = self.build_critic()
         self.gan = self.build_gan()

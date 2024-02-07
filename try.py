@@ -23,13 +23,13 @@ def build_generator(latent_dim, data_shape, num_classes):
     label_embedding = Dense(latent_dim, use_bias=False)(label_input)
     merged_input = Add()([noise_input, label_embedding])
 
-    x = Reshape((5, 5, -1))(merged_input)
+    x = Reshape((*data_shape, -1))(merged_input)
     x = BatchNormalization()(x)
-    x = Conv2DTranspose(128, kernel_size=(4, 4), strides=(2, 2), padding='same', activation="elu")(x)
+    x = Conv2DTranspose(128, kernel_size=(3, 3), strides=(1, 1), padding='same', activation="elu")(x)
     x = BatchNormalization()(x)
-    x = Conv2DTranspose(32, kernel_size=(4, 4), strides=(1, 1), padding='same', activation="elu")(x)
+    x = Conv2DTranspose(32, kernel_size=(3, 3), strides=(1, 1), padding='same', activation="elu")(x)
     x = BatchNormalization()(x)
-    x = Conv2DTranspose(num_classes, kernel_size=(4, 4), strides=(1, 1), padding='same', activation="elu")(x)
+    x = Conv2DTranspose(num_classes, kernel_size=(3, 3), strides=(1, 1), padding='same', activation="elu")(x)
     x = Softmax(axis=-1)(x)
 
     return Model(inputs=[noise_input, label_input], outputs=x)
@@ -118,8 +118,8 @@ def train_wgan(gan, generator, critic, latent_dim, epochs, batch_size, data_shap
     print("Generated Data (class representation):")
     print(generated_data_class)
 
-latent_dim = 100
 data_shape = (10, 10)
+latent_dim = np.prod(np.array(data_shape))
 num_classes = 4
 
 generator = build_generator(latent_dim, data_shape, num_classes)
