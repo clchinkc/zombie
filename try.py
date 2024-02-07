@@ -4,8 +4,8 @@ from keras.layers import (
     Add,
     BatchNormalization,
     Conv2D,
+    Conv2DTranspose,
     Dense,
-    Embedding,
     Flatten,
     Input,
     Reshape,
@@ -20,39 +20,38 @@ def build_generator(latent_dim, data_shape, num_classes):
     noise_input = Input(shape=(latent_dim,))
     label_input = Input(shape=(1,))
 
-    label_embedding = Embedding(num_classes, latent_dim)(label_input)
+    label_embedding = Dense(latent_dim, use_bias=False)(label_input)
     merged_input = Add()([noise_input, label_embedding])
 
-    model = Sequential([
-        Dense(128, activation="elu"),
-        BatchNormalization(),
-        Dense(np.prod(data_shape) * 4),  # Multiply by 4 for one-hot encoding
-        Reshape((*data_shape, 4)),
-        Softmax(axis=-1)
-    ])
+    x = Reshape((5, 5, -1))(merged_input)
+    x = BatchNormalization()(x)
+    x = Conv2DTranspose(128, kernel_size=(4, 4), strides=(2, 2), padding='same', activation="elu")(x)
+    x = BatchNormalization()(x)
+    x = Conv2DTranspose(32, kernel_size=(4, 4), strides=(1, 1), padding='same', activation="elu")(x)
+    x = BatchNormalization()(x)
+    x = Conv2DTranspose(num_classes, kernel_size=(4, 4), strides=(1, 1), padding='same', activation="elu")(x)
+    x = Softmax(axis=-1)(x)
 
-    output = model(merged_input)
-    return Model([noise_input, label_input], output)
+    return Model(inputs=[noise_input, label_input], outputs=x)
 
 # Define the critic
 def build_critic(data_shape, num_classes):
-    image_input = Input(shape=(*data_shape, 4))
+    image_input = Input(shape=(*data_shape, num_classes))
     label_input = Input(shape=(1,))
 
-    label_embedding = Embedding(num_classes, int(np.prod(data_shape)) * 4)(label_input)
-    label_embedding = Reshape((*data_shape, 4))(label_embedding)
+    label_embedding = Dense(int(np.prod(data_shape)) * num_classes, use_bias=False)(label_input)
+    label_embedding = Reshape((*data_shape, num_classes))(label_embedding)
     
     merged_input = Add()([image_input, label_embedding])
 
-    model = Sequential([
-        Conv2D(128, kernel_size=(3, 3), padding='valid', activation="elu"),
-        BatchNormalization(),
-        Flatten(),
-        Dense(1, activation='linear')
-    ])
+    x = Conv2D(128, kernel_size=(3, 3), padding='valid', activation="elu", kernel_constraint=lambda w: tf.clip_by_value(w, -0.01, 0.01))(merged_input)
+    x = BatchNormalization()(x)
+    x = Conv2D(32, kernel_size=(3, 3), padding='valid', activation="elu", kernel_constraint=lambda w: tf.clip_by_value(w, -0.01, 0.01))(x)  # Additional Conv2D as per reference
+    x = BatchNormalization()(x)
+    x = Flatten()(x)
+    x = Dense(1, activation='linear')(x)
 
-    output = model(merged_input)
-    return Model([image_input, label_input], output)
+    return Model(inputs=[image_input, label_input], outputs=x)
 
 # Update GAN building function
 def build_wgan(generator, critic):

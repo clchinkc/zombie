@@ -1534,6 +1534,7 @@ class PredictionObserver(Observer):
         # First ConvLSTM2D layer
         x = layers.LayerNormalization()(inputs)
         x = layers.GaussianDropout(dropout_rate)(x)
+        x = self.ChannelWiseDropout(dropout_rate)(x)
         convlstm1 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='gelu', padding='same', return_sequences=True,
                                     recurrent_dropout=dropout_rate, recurrent_regularizer=keras.regularizers.l2(l2_regularizer), kernel_regularizer=keras.regularizers.l2(l2_regularizer), bias_regularizer=keras.regularizers.l2(l2_regularizer))(x)
         

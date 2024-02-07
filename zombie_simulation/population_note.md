@@ -37,7 +37,7 @@ Feature Importance Analysis:
 Provide a global view of feature importance, helping users to understand which aspects of the scenario are generally most predictive of future outcomes.
 
 data augmentation on features other than grid state
-better multi-input model
+better multi-input prediction model
 
 Layer-wise relevance propagation
 Grad-CAM or LIME
