@@ -13,7 +13,6 @@ from keras.layers import (
 )
 from keras.models import Model, Sequential
 from keras.optimizers import RMSprop
-from keras.utils import to_categorical
 
 
 # Define the generator

@@ -101,6 +101,10 @@ https://wlouyang.github.io/Papers/iBegan.pdf
 
 Energy based GAN (EBGAN) & Boundary Equilibrium GAN (BEGAN)
 https://jonathan-hui.medium.com/gan-energy-based-gan-ebgan-boundary-equilibrium-gan-began-4662cceb7824
+
+diffusion GAN
+https://github.com/Zhendong-Wang/Diffusion-GAN
+https://nvlabs.github.io/denoising-diffusion-gan/
 """
 
 """
