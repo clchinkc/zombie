@@ -3831,6 +3831,12 @@ Scalability: An adjacency list is an efficient way to represent sparse graphs (w
 """
 
 """
+https://www.nature.com/articles/s41467-021-25874-z
+https://www.nature.com/articles/s41598-023-48338-4
+https://www.nature.com/articles/s42256-020-00267-x
+"""
+
+"""
 https://www.youtube.com/watch?v=gxAaO2rsdIs
 https://github.com/3b1b/videos/blob/master/_2020/sir.py
 https://www.youtube.com/watch?v=D__UaR5MQao
