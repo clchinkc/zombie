@@ -2122,7 +2122,9 @@ class GANObserver:
         self.data_shape = (self.subject.school.size, self.subject.school.size)
         self.latent_dim = np.prod(self.data_shape)
         self.generator = self.build_generator()
+        self.generator.summary()
         self.critic = self.build_critic()
+        self.critic.summary()
         self.gan = self.build_gan()
         self.real_data_samples = []
         self.timesteps = []
@@ -2213,8 +2215,8 @@ class GANObserver:
 
                 # Train the discriminator
                 self.critic.trainable = True
-                c_real_loss = self.critic.fit(real_dataset, epochs=critic_interval, verbose=0)
-                c_fake_loss = self.critic.fit(fake_dataset, epochs=critic_interval, verbose=0)
+                c_real_loss = self.critic.fit(real_dataset, epochs=1, verbose=0)
+                c_fake_loss = self.critic.fit(fake_dataset, epochs=1, verbose=0)
                 c_loss_real += c_real_loss.history['loss'][-1]
                 c_loss_fake += c_fake_loss.history['loss'][-1]
 
@@ -2225,7 +2227,7 @@ class GANObserver:
 
                 # Train the generator
                 self.critic.trainable = False
-                g_loss = self.gan.fit(noise_dataset, epochs=generator_interval, verbose=0)
+                g_loss = self.gan.fit(noise_dataset, epochs=1, verbose=0)
                 g_loss_total += g_loss.history['loss'][-1]
 
             c_loss_real_avg = c_loss_real / critic_interval

@@ -1534,6 +1534,7 @@ class PredictionObserver(Observer):
         # First ConvLSTM2D layer
         x = layers.LayerNormalization()(inputs)
         x = layers.GaussianDropout(dropout_rate)(x)
+        x = self.ChannelWiseDropout(dropout_rate)(x)
         convlstm1 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='gelu', padding='same', return_sequences=True,
                                     recurrent_dropout=dropout_rate, recurrent_regularizer=keras.regularizers.l2(l2_regularizer), kernel_regularizer=keras.regularizers.l2(l2_regularizer), bias_regularizer=keras.regularizers.l2(l2_regularizer))(x)
         
@@ -2114,47 +2115,68 @@ class PygameObserver(Observer):
             self.handle_events()
 
 class GANObserver:
-    def __init__(self, population, latent_dim=100):
+    def __init__(self, population, learning_rate=0.00005):
         self.subject = population
         self.subject.attach_observer(self)
-        self.latent_dim = latent_dim
+        self.learning_rate = learning_rate
         self.data_shape = (self.subject.school.size, self.subject.school.size)
+        self.latent_dim = np.prod(self.data_shape)
         self.generator = self.build_generator()
+        self.generator.summary()
         self.critic = self.build_critic()
+        self.critic.summary()
         self.gan = self.build_gan()
         self.real_data_samples = []
+        self.timesteps = []
 
     def build_generator(self):
-        model = keras.models.Sequential()
-        model.add(layers.Input(shape=(self.latent_dim,)))
-        model.add(layers.Dense(128, activation="elu"))
-        model.add(layers.BatchNormalization())
-        model.add(layers.Dense(int(np.prod(self.data_shape)) * 4))
-        model.add(layers.Reshape((*self.data_shape, 4)))
-        model.add(layers.Softmax(axis=-1))
+        noise_input = layers.Input(shape=(self.latent_dim,))
+        timestep_input = layers.Input(shape=(1,))
+        timestep_dense = layers.Dense(self.latent_dim, use_bias=False)(timestep_input)
+
+        merged_input = layers.Add()([noise_input, timestep_dense])
+        
+        x = layers.Dense(128, activation="elu")(merged_input)
+        x = layers.BatchNormalization()(x)
+        x = layers.Dense(int(np.prod(self.data_shape)) * 4, activation="elu")(x)
+        x = layers.Reshape((*self.data_shape, 4))(x)
+        x = layers.Softmax(axis=-1)(x)
+        
+        model = keras.models.Model(inputs=[noise_input, timestep_input], outputs=x)
         return model
 
     def build_critic(self):
-        model = keras.models.Sequential()
-        model.add(layers.Input(shape=(*self.data_shape, 4)))
-        model.add(layers.Conv2D(128, kernel_size=(3, 3), padding='valid', activation="elu", kernel_constraint=lambda w: tf.clip_by_value(w, -0.01, 0.01)))
-        model.add(layers.BatchNormalization())
-        model.add(layers.Conv2D(32, kernel_size=(3, 3), padding='valid', activation="elu", kernel_constraint=lambda w: tf.clip_by_value(w, -0.01, 0.01)))
-        model.add(layers.BatchNormalization())
-        model.add(layers.Flatten())
-        model.add(layers.Dense(1, activation='linear'))
+        data_input = layers.Input(shape=(*self.data_shape, 4))
+        timestep_input = layers.Input(shape=(1,))
+        timestep_dense = layers.Dense(int(np.prod(self.data_shape)) * 4, use_bias=False)(timestep_input)
+        timestep_reshaped = layers.Reshape((*self.data_shape, 4))(timestep_dense)
+        
+        merged_input = layers.Add()([data_input, timestep_reshaped])
+        
+        x = layers.Conv2D(128, kernel_size=(3, 3), padding='valid', activation="elu", kernel_constraint=lambda w: tf.clip_by_value(w, -0.01, 0.01))(merged_input)
+        x = layers.BatchNormalization()(x)
+        x = layers.Conv2D(32, kernel_size=(3, 3), padding='valid', activation="elu", kernel_constraint=lambda w: tf.clip_by_value(w, -0.01, 0.01))(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Flatten()(x)
+        x = layers.Dense(1, activation='linear')(x)
+        
+        model = keras.models.Model(inputs=[data_input, timestep_input], outputs=x)
         return model
 
     def build_gan(self):
         # Wasserstein loss function
         def wasserstein_loss(y_true, y_pred):
             return tf.reduce_mean(y_true * y_pred)
-        self.critic.compile(loss=wasserstein_loss, optimizer=keras.optimizers.RMSprop())
+
+        self.critic.compile(loss=wasserstein_loss, optimizer=keras.optimizers.RMSprop(learning_rate=self.learning_rate))
         self.critic.trainable = False
-        gan_input = layers.Input(shape=(self.latent_dim,))
-        gan_output = self.critic(self.generator(gan_input))
-        gan = keras.models.Model(gan_input, gan_output)
-        gan.compile(loss=wasserstein_loss, optimizer=keras.optimizers.RMSprop())
+
+        noise_input, timestep_input = self.generator.inputs
+        generated_image = self.generator.output
+        critic_output = self.critic([generated_image, timestep_input])
+
+        gan = keras.models.Model([noise_input, timestep_input], critic_output)
+        gan.compile(loss=wasserstein_loss, optimizer=keras.optimizers.RMSprop(learning_rate=self.learning_rate))
         return gan
 
     def capture_grid_state(self):
@@ -2168,6 +2190,7 @@ class GANObserver:
     def update(self):
         real_data = self.capture_grid_state()
         self.real_data_samples.append(real_data)
+        self.timesteps.append(np.array([self.subject.timestep]))
     
     def train_gan(self, epochs, batch_size, critic_interval=2, generator_interval=1):
         valid = -np.ones((batch_size, 1))
@@ -2178,42 +2201,46 @@ class GANObserver:
             
             for _ in range(critic_interval):
                 # Select a random batch of real data
-                idx = np.random.randint(0, len(self.real_data_samples), batch_size)
-                real_imgs = np.array([keras.utils.to_categorical(self.real_data_samples[i], num_classes=4) for i in idx])
-                real_dataset = tf.data.Dataset.from_tensor_slices((real_imgs, valid)).batch(batch_size)
+                idx = tf.random.uniform([batch_size], minval=0, maxval=len(self.real_data_samples), dtype=tf.int32)
+                real_indices = tf.stack([tf.convert_to_tensor(self.real_data_samples[i], dtype=tf.int32) for i in idx.numpy()])
+                real_imgs = tf.one_hot(real_indices, depth=4)
+                timesteps_sample = tf.gather(self.timesteps, idx)
+                real_dataset = tf.data.Dataset.from_tensor_slices(((real_imgs, timesteps_sample), valid)).batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
                 # Generate a batch of generated images
-                noise = np.random.normal(0, 1, (batch_size, self.latent_dim))
-                gen_imgs = self.generator.predict(noise, verbose=0)
-                fake_dataset = tf.data.Dataset.from_tensor_slices((gen_imgs, fake)).batch(batch_size)
+                noise = tf.random.normal([batch_size, self.latent_dim])
+                timesteps_noise = tf.gather(self.timesteps, tf.random.uniform([batch_size], minval=0, maxval=len(self.timesteps), dtype=tf.int32))
+                gen_imgs = self.generator.predict([noise, timesteps_noise], verbose=0)
+                fake_dataset = tf.data.Dataset.from_tensor_slices(((gen_imgs, timesteps_noise), fake)).batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
                 # Train the discriminator
                 self.critic.trainable = True
-                c_real_loss = self.critic.fit(real_dataset, epochs=critic_interval, verbose=0)
-                c_fake_loss = self.critic.fit(fake_dataset, epochs=critic_interval, verbose=0)
+                c_real_loss = self.critic.fit(real_dataset, epochs=1, verbose=0)
+                c_fake_loss = self.critic.fit(fake_dataset, epochs=1, verbose=0)
                 c_loss_real += c_real_loss.history['loss'][-1]
                 c_loss_fake += c_fake_loss.history['loss'][-1]
 
             for _ in range(generator_interval):
-                noise = np.random.normal(0, 1, (batch_size, self.latent_dim))
-                noise_dataset = tf.data.Dataset.from_tensor_slices((noise, valid)).batch(batch_size)
+                noise = tf.random.normal([batch_size, self.latent_dim])
+                timesteps_noise = tf.gather(self.timesteps, tf.random.uniform([batch_size], minval=0, maxval=len(self.timesteps), dtype=tf.int32))
+                noise_dataset = tf.data.Dataset.from_tensor_slices(((noise, timesteps_noise), valid)).batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
                 # Train the generator
                 self.critic.trainable = False
-                g_loss = self.gan.fit(noise_dataset, epochs=generator_interval, verbose=0)
+                g_loss = self.gan.fit(noise_dataset, epochs=1, verbose=0)
                 g_loss_total += g_loss.history['loss'][-1]
 
             c_loss_real_avg = c_loss_real / critic_interval
             c_loss_fake_avg = c_loss_fake / critic_interval
             g_loss_avg = g_loss_total / generator_interval
 
-            print(f"Epoch {epoch}/{epochs} [Critic: real loss: {c_loss_real_avg:.4f}, fake loss: {c_loss_fake_avg:.4f}] [Generator loss: {g_loss_avg:.4f}]")
+            print(f"Epoch {epoch+1}/{epochs} [Critic: real loss: {c_loss_real_avg:.4f}, fake loss: {c_loss_fake_avg:.4f}] [Generator loss: {g_loss_avg:.4f}]")
 
     def display_observation(self):
-        num_samples = 1
         self.train_gan(epochs=10, batch_size=32)
-        noise = np.random.normal(0, 1, (num_samples, self.latent_dim))
-        generated_data = self.generator.predict(noise, verbose=0)
+        noise = np.random.normal(0, 1, (1, self.latent_dim))
+        current_timestep = np.array([self.subject.timestep]).reshape((1, 1))
+        generated_data = self.generator.predict([noise, current_timestep], verbose=0)
         generated_data = np.argmax(generated_data, axis=-1).reshape((self.subject.school.size, self.subject.school.size))
         print(generated_data)
 
@@ -2230,10 +2257,10 @@ def main():
     # plotly_animator = PlotlyAnimator(school_sim)
     # matplotlib_animator = MatplotlibAnimator(school_sim)
     # tkinter_observer = TkinterObserver(school_sim)
-    prediction_observer = PredictionObserver(school_sim)
+    # prediction_observer = PredictionObserver(school_sim)
     # fft_observer = FFTAnalysisObserver(school_sim)
     # pygame_observer = PygameObserver(school_sim)
-    # gan_observer = GANObserver(school_sim)
+    gan_observer = GANObserver(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=10)
@@ -2248,10 +2275,10 @@ def main():
     # plotly_animator.display_observation()
     # matplotlib_animator.display_observation()
     # tkinter_observer.display_observation()
-    prediction_observer.display_observation()
+    # prediction_observer.display_observation()
     # fft_observer.display_observation(mode='static') # "animation" or "static"
     # pygame_observer.display_observation()
-    # gan_observer.display_observation()
+    gan_observer.display_observation()
 
 
 if __name__ == "__main__":

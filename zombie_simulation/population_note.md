@@ -76,8 +76,14 @@ https://keras.io/guides/custom_train_step_in_tensorflow/
 Deep Convolutional Generative Adversarial Network
 https://www.tensorflow.org/tutorials/generative/dcgan
 
-Conditional GAN
-https://machinelearningmastery.com/how-to-develop-a-conditional-generative-adversarial-network-from-scratch/
+Feature Matching: Forces the generator to match the statistics of the real data features, encouraging it to explore more of the data distribution.
+
+Minibatch Discrimination: Helps the critic to look at multiple samples at once, which can discourage the generator from collapsing to a point where it generates the same output.
+
+Diversity Metrics: Implementing diversity metrics (e.g., Inception Score, Fréchet Inception Distance) can help quantify the diversity and quality of generated samples, providing more objective measures to detect mode collapse.
+
+Techniques improving the performance of Generative Adversarial Networks (GANs)
+https://kavitaanant.medium.com/gan-performance-improvement-ea0a4059ee59
 
 Pix2Pix GAN
 https://machinelearningmastery.com/how-to-develop-a-pix2pix-gan-for-image-to-image-translation/
@@ -91,6 +97,12 @@ Improved WGAN
 https://github.com/keras-team/keras-contrib/blob/master/examples/improved_wgan.py
 https://towardsdatascience.com/demystified-wasserstein-gan-with-gradient-penalty-ba5e9b905ead
 https://keras.io/examples/generative/wgan_gp/
+
+PacGAN: The power of two samples in generative adversarial networks
+https://arxiv.org/pdf/1712.04086.pdf
+
+Improved Techniques for Training GANs
+https://www.researchgate.net/publication/305881127_Improved_Techniques_for_Training_GANs
 
 BEGAN: Boundary Equibilibrium Generative Adversarial Networks
 https://towardsdatascience.com/wasserstein-distance-gan-began-and-progressively-growing-gan-7e099f38da96
