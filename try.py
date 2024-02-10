@@ -7,19 +7,19 @@ from keras.optimizers import RMSprop
 
 
 # Define the generator
-def build_generator(latent_dim, data_shape, num_classes, num_layers=2, filter_size=16, dropout_rate=0.25):
+def build_generator(latent_dim, data_shape, num_classes, num_layers=1, filter_size=16, dropout_rate=0.25):
     noise_input = layers.Input(shape=(latent_dim,))
     timestep_input = layers.Input(shape=(1,))
 
     timestep_dense = layers.Dense(latent_dim, use_bias=False)(timestep_input)
     merged_input = layers.Add()([noise_input, timestep_dense])
 
-    x = layers.Dense((data_shape[0] - 2 * num_layers) * (data_shape[1] - 2 * num_layers) * filter_size)(merged_input)
-    x = layers.Reshape((data_shape[0] - 2 * num_layers, data_shape[1] - 2 * num_layers, filter_size))(x)
+    x = layers.Dense((data_shape[0] - 2 * num_layers - 2) * (data_shape[1] - 2 * num_layers - 2) * filter_size)(merged_input)
+    x = layers.Reshape((data_shape[0] - 2 * num_layers - 2, data_shape[1] - 2 * num_layers - 2, filter_size))(x)
     x = layers.ELU()(x)
     x = layers.Dropout(dropout_rate)(x)
 
-    for _ in range(num_layers - 1):
+    for _ in range(num_layers):
         x = layers.Conv2DTranspose(filter_size, kernel_size=(3, 3), padding='valid')(x)
         x = layers.ELU()(x)
         x = layers.Dropout(dropout_rate)(x)
@@ -72,13 +72,11 @@ def build_wgan(generator, critic):
 
 # Update training procedure
 def train_wgan(gan, generator, critic, latent_dim, epochs, batch_size, data_shape, num_classes, critic_interval=2, generator_interval=1):
-    valid = -np.random.uniform(low=0.95, high=1.0, size=batch_size)
-    fake = np.random.uniform(low=0.95, high=1.0, size=batch_size)
+    valid = -np.random.uniform(low=0.9, high=1.0, size=batch_size)
+    fake = np.random.uniform(low=0.9, high=1.0, size=batch_size)
 
     for epoch in range(epochs):
-        c_loss_real = 0
-        c_loss_fake = 0
-        g_loss_total = 0
+        c_loss_real, c_loss_fake, g_loss_total = 0, 0, 0
         
         for _ in range(critic_interval):
             noise = tf.random.normal([batch_size, latent_dim])

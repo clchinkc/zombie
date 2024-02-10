@@ -92,6 +92,11 @@ CycleGAN
 https://www.tensorflow.org/tutorials/generative/cyclegan
 https://machinelearningmastery.com/cyclegan-tutorial-with-keras/
 
+Relativistic GAN
+https://medium.com/@sunnerli/the-missing-piece-of-gan-d091604a615a
+
+DeconvNet and RedNet
+https://medium.com/@sunnerli/simple-introduction-about-hourglass-like-model-11ee7c30138
 
 Improved WGAN
 https://github.com/keras-team/keras-contrib/blob/master/examples/improved_wgan.py

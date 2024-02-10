@@ -2115,7 +2115,7 @@ class PygameObserver(Observer):
             self.handle_events()
 
 class GANObserver:
-    def __init__(self, population, learning_rate=0.00005):
+    def __init__(self, population, learning_rate=0.00001):
         self.subject = population
         self.subject.attach_observer(self)
         self.learning_rate = learning_rate
@@ -2129,34 +2129,45 @@ class GANObserver:
         self.real_data_samples = []
         self.timesteps = []
 
-    def build_generator(self):
+    def build_generator(self, num_layers=1, filter_size=16, dropout_rate=0.25):
         noise_input = layers.Input(shape=(self.latent_dim,))
         timestep_input = layers.Input(shape=(1,))
+        
         timestep_dense = layers.Dense(self.latent_dim, use_bias=False)(timestep_input)
-
         merged_input = layers.Add()([noise_input, timestep_dense])
         
-        x = layers.Dense(128, activation="elu")(merged_input)
-        x = layers.BatchNormalization()(x)
-        x = layers.Dense(int(np.prod(self.data_shape)) * 4, activation="elu")(x)
-        x = layers.Reshape((*self.data_shape, 4))(x)
-        x = layers.Softmax(axis=-1)(x)
-        
+        x = layers.Dense((self.data_shape[0] - 2 * num_layers - 2) * (self.data_shape[1] - 2 * num_layers - 2) * filter_size)(merged_input)
+        x = layers.Reshape((self.data_shape[0] - 2 * num_layers - 2, self.data_shape[1] - 2 * num_layers - 2, filter_size))(x)
+        x = layers.ELU()(x)
+        x = layers.Dropout(dropout_rate)(x)
+
+        for _ in range(num_layers):
+            x = layers.Conv2DTranspose(filter_size, kernel_size=(3, 3), padding='valid')(x)
+            x = layers.ELU()(x)
+            x = layers.Dropout(dropout_rate)(x)
+
+        x = layers.Conv2DTranspose(4, kernel_size=(3, 3), padding='valid', activation="softmax")(x)
+
         model = keras.models.Model(inputs=[noise_input, timestep_input], outputs=x)
         return model
 
-    def build_critic(self):
+    def build_critic(self, num_layers=1, filter_size=32, dropout_rate=0.25):
         data_input = layers.Input(shape=(*self.data_shape, 4))
         timestep_input = layers.Input(shape=(1,))
+        
         timestep_dense = layers.Dense(int(np.prod(self.data_shape)) * 4, use_bias=False)(timestep_input)
         timestep_reshaped = layers.Reshape((*self.data_shape, 4))(timestep_dense)
-        
         merged_input = layers.Add()([data_input, timestep_reshaped])
         
-        x = layers.Conv2D(128, kernel_size=(3, 3), padding='valid', activation="elu", kernel_constraint=lambda w: tf.clip_by_value(w, -0.01, 0.01))(merged_input)
-        x = layers.BatchNormalization()(x)
-        x = layers.Conv2D(32, kernel_size=(3, 3), padding='valid', activation="elu", kernel_constraint=lambda w: tf.clip_by_value(w, -0.01, 0.01))(x)
-        x = layers.BatchNormalization()(x)
+        x = layers.GaussianNoise(0.1)(merged_input)
+        x = layers.ELU()(x)
+        x = layers.Dropout(dropout_rate)(x)
+
+        for _ in range(num_layers):
+            x = layers.Conv2D(filter_size, kernel_size=(3, 3), padding='valid', kernel_constraint=keras.constraints.MinMaxNorm(min_value=-0.01, max_value=0.01, rate=1.0))(x)
+            x = layers.ELU()(x)
+            x = layers.Dropout(dropout_rate)(x)
+
         x = layers.Flatten()(x)
         x = layers.Dense(1, activation='linear')(x)
         
@@ -2192,9 +2203,9 @@ class GANObserver:
         self.real_data_samples.append(real_data)
         self.timesteps.append(np.array([self.subject.timestep]))
     
-    def train_gan(self, epochs, batch_size, critic_interval=2, generator_interval=1):
-        valid = -np.ones((batch_size, 1))
-        fake = np.ones((batch_size, 1))
+    def train_gan(self, epochs=20, batch_size=128, critic_interval=2, generator_interval=1):
+        valid = -np.random.uniform(low=0.9, high=1.0, size=batch_size)
+        fake = np.random.uniform(low=0.9, high=1.0, size=batch_size)
 
         for epoch in range(epochs):
             c_loss_real, c_loss_fake, g_loss_total = 0, 0, 0
@@ -2237,7 +2248,7 @@ class GANObserver:
             print(f"Epoch {epoch+1}/{epochs} [Critic: real loss: {c_loss_real_avg:.4f}, fake loss: {c_loss_fake_avg:.4f}] [Generator loss: {g_loss_avg:.4f}]")
 
     def display_observation(self):
-        self.train_gan(epochs=10, batch_size=32)
+        self.train_gan()
         noise = np.random.normal(0, 1, (1, self.latent_dim))
         current_timestep = np.array([self.subject.timestep]).reshape((1, 1))
         generated_data = self.generator.predict([noise, current_timestep], verbose=0)
@@ -2263,7 +2274,7 @@ def main():
     gan_observer = GANObserver(school_sim)
 
     # run the population for a given time period
-    school_sim.run_population(num_time_steps=10)
+    school_sim.run_population(num_time_steps=100)
     
     print("Observers:")
     # print(simulation_observer.agent_list)
