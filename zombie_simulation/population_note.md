@@ -46,6 +46,8 @@ Visualize the model's internal activations
 Decision Tree
 Naïve Bayes and Bayesian Belief Network
 
+Curriculum Learning
+
 ImageDataGenerator, evaluate_generator, predict_generator
 """
 
@@ -103,8 +105,17 @@ https://github.com/keras-team/keras-contrib/blob/master/examples/improved_wgan.p
 https://towardsdatascience.com/demystified-wasserstein-gan-with-gradient-penalty-ba5e9b905ead
 https://keras.io/examples/generative/wgan_gp/
 
+Nadam vs AdamW
+Change the L2 regularization of Nadam to weight decay based on AdamW
+Change the squared gradients of Nadam to max norm of the gradients based on Adamax
+Adan
+https://arxiv.org/pdf/2208.06677.pdf
+
 PacGAN: The power of two samples in generative adversarial networks
 https://arxiv.org/pdf/1712.04086.pdf
+
+BigGAN
+https://xiaosean5408.medium.com/biggan%E7%B0%A1%E4%BB%8B-large-scale-gan-training-for-high-fidelity-natural-image-synthesis-df349a5f811c
 
 Improved Techniques for Training GANs
 https://www.researchgate.net/publication/305881127_Improved_Techniques_for_Training_GANs
@@ -166,6 +177,7 @@ https://arxiv.org/abs/1606.01305
 
 Quasi-Recurrent Neural Networks
 https://arxiv.org/abs/1611.01576
+https://github.com/salesforce/awd-lstm-lm
 
 IndRNN
 https://github.com/Sunnydreamrain/IndRNN_Theano_Lasagne

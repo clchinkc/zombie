@@ -526,6 +526,7 @@ if __name__ == '__main__':
 # n-step value estimates may use rnns.
 # AlphaGo Zero: adding a policy head rather than having policy and value in separate nets led to a huge gain, combining l2 and cross entropy loss
 # https://blog.csdn.net/wxc971231/article/details/127567643
+# https://github.com/fg91/Deep-Q-Learning/tree/master
 
 # https://github.com/Lostefra/ReinforcementLearningToy/tree/main format
 # https://github.com/telkhir/Deep-RL format
