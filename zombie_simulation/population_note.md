@@ -39,6 +39,7 @@ Provide a global view of feature importance, helping users to understand which a
 data augmentation on features other than grid state
 better multi-input prediction model
 
+https://towardsdatascience.com/how-to-visualize-convolutional-features-in-40-lines-of-code-70b7d87b0030
 Layer-wise relevance propagation
 Grad-CAM or LIME
 Visualize the model's internal activations
