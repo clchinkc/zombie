@@ -84,9 +84,13 @@ Feature Matching: Forces the generator to match the statistics of the real data 
 Minibatch Discrimination: Helps the critic to look at multiple samples at once, which can discourage the generator from collapsing to a point where it generates the same output.
 
 Diversity Metrics: Implementing diversity metrics (e.g., Inception Score, Fréchet Inception Distance) can help quantify the diversity and quality of generated samples, providing more objective measures to detect mode collapse.
+https://zh.m.wikipedia.org/wiki/%E5%A4%9A%E6%A0%B7%E6%80%A7%E6%8C%87%E6%95%B0
 
 Techniques improving the performance of Generative Adversarial Networks (GANs)
 https://kavitaanant.medium.com/gan-performance-improvement-ea0a4059ee59
+
+Improved Techniques for Training GANs
+https://www.researchgate.net/publication/305881127_Improved_Techniques_for_Training_GANs
 
 Pix2Pix GAN
 https://machinelearningmastery.com/how-to-develop-a-pix2pix-gan-for-image-to-image-translation/
@@ -118,9 +122,6 @@ https://arxiv.org/pdf/1712.04086.pdf
 BigGAN
 https://xiaosean5408.medium.com/biggan%E7%B0%A1%E4%BB%8B-large-scale-gan-training-for-high-fidelity-natural-image-synthesis-df349a5f811c
 
-Improved Techniques for Training GANs
-https://www.researchgate.net/publication/305881127_Improved_Techniques_for_Training_GANs
-
 BEGAN: Boundary Equibilibrium Generative Adversarial Networks
 https://towardsdatascience.com/wasserstein-distance-gan-began-and-progressively-growing-gan-7e099f38da96
 https://github.com/artcg/BEGAN
@@ -140,8 +141,10 @@ https://nvlabs.github.io/denoising-diffusion-gan/
 sklearn.preprocessing.LabelBinarizer
 https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelBinarizer.html
 
-Probability Calibration for 3-class classification
-https://scikit-learn.org/stable/auto_examples/calibration/plot_calibration_multiclass.html#sphx-glr-auto-examples-calibration-plot-calibration-multiclass-py
+Neural Network Calibration with Keras
+https://medium.com/the-modern-scientist/are-your-models-well-calibrated-92cb4e6c1a65
+https://scikit-learn.org/stable/auto_examples/calibration/plot_calibration.html#sphx-glr-auto-examples-calibration-plot-calibration-py
+https://towardsdatascience.com/neural-network-calibration-with-keras-76fb7c13a55
 
 cudnn
 https://github.com/tensorflow/tensorflow/issues/61700
@@ -156,9 +159,6 @@ https://medium.com/the-modern-scientist/agnostic-explainable-artificial-intellig
 
 Learning Interpretability Tool
 https://pair-code.github.io/lit/
-
-Are your models well calibrated ?
-https://medium.com/the-modern-scientist/are-your-models-well-calibrated-92cb4e6c1a65
 
 A Simple Framework for Contrastive Learning of Visual Representations
 https://arxiv.org/abs/2002.05709
@@ -3864,6 +3864,14 @@ Scalability: An adjacency list is an efficient way to represent sparse graphs (w
 https://www.nature.com/articles/s41467-021-25874-z
 https://www.nature.com/articles/s41598-023-48338-4
 https://www.nature.com/articles/s42256-020-00267-x
+"""
+
+"""
+While Gaussian Naive Bayes assumes that features follow a continuous normal distribution and is thus suitable for real-valued data, Multinomial Naive Bayes assumes a discrete distribution of feature counts and is particularly well-suited for text data or any other kind of count data.
+"""
+
+"""
+f principle
 """
 
 """

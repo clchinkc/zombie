@@ -82,6 +82,7 @@ As you can guess by the name, an expense tracker is a software application that 
 One project ideda is a multi-player online card game. You could incorporate your knowledge of object-oriented programming, GUI design, and algorithm design to create a fun and engaging game that allows players to compete against each other in a virtual card game. The game could feature a variety of card games, including blackjack, poker, and other popular games, and could utilize a similar GUI and back-end design as the previous projects. Additionally, the game could include features such as real-time chat, leaderboards, and the ability to customize avatars and game settings. This project would be a great way to demonstrate your skills in Python and showcase your ability to build complex, interactive applications.
 
 Another project idea could be a text-based adventure game. This project would involve creating a story with multiple branching paths and choices for the player to make, and implementing a system for tracking the player's progress and displaying the appropriate outcomes based on their choices. This project would involve using object-oriented programming to create the various characters and objects in the game, as well as implementing a system for handling user input and displaying the game's text. Additionally, the game could include features such as a save/load system, multiple endings, and a scoring system. This project would be a great way to showcase your creativity and storytelling abilities, as well as your skills in Python and object-oriented programming.
+https://github.com/ldzhangyx/adarkroom
 
 This Python project uses the tkinter library to create a simple text editor with a Graphical User Interface (GUI). The text editor allows users to open and save files, featuring standard GUI components such as labels, buttons, and entry fields. The code demonstrates how to use tkinter to build the interface, as well as how to implement file handling for opening and saving files. This project is a great way to learn about file handling and GUI programming, and can be further expanded by adding more features like a "find word" function.
 
@@ -128,7 +129,13 @@ Workflow Application - Design a system which requires interaction between users.
 
 Web scrape youtube views or spotify streams using docket virtual machine continuously
 
+https://bibigpt.co/
 
+Whisper
+
+https://orangeblog.notion.site/Cloudflare-51500e9c205543e6b111ec21f9bcd18d
+
+https://edm.bnext.com.tw/member/
 
 GUI programming, algorithm design, string manipulation, multi-thread, database management, and data processing
 
@@ -185,6 +192,7 @@ https://github.com/hkbus
 https://g0vhk-io.github.io/HKAddressParser/#/
 https://github.com/AdamGetbags/googleTrendsAPI/blob/main/keywordSearchData.py
 https://dev.to/thenomadevel/top-7-ai-open-source-projects-to-contribute-to-in-2023-3ff5
+https://replit.com/
 
 Must read books
 https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
@@ -198,6 +206,7 @@ Essential Math for AI
 https://ywh1bkansf.feishu.cn/wiki/QPe5w5g7UisbEkkow8XcDmOpn8e
 线性代数可视化手册
 https://towardsdatascience.com/130-ml-tricks-and-resources-curated-carefully-from-3-years-plus-free-ebook-7832ca4a37ef
+https://github.com/ldzhangyx/free-programming-books-zh_CN
 
 Must learn courses
 史丹福 cs230
@@ -223,6 +232,7 @@ Deep learning in time series analysis
 Machine learning for algorithmic trading
 https://github.com/CyC2018/CS-Notes
 https://axk51013.medium.com/%E9%80%B2%E9%9A%8Edata-science%E6%8A%80%E5%B7%A7%E5%A4%A7%E5%85%A8-%E7%9B%AE%E9%8C%84-9f39ef7b04a3
+https://twitter.com/FinanceYF5/status/1675036558041415681?t=lt2nAYqLYfhaxjxg2FfZ7w&s=08
 
 codespace and docker
 github python/flask codespace
@@ -231,6 +241,12 @@ https://juejin.cn/post/7259372449833828409
 
 colab github
 https://github.com/googlecolab/colabtools/blob/main/notebooks/colab-github-demo.ipynb
+
+colab alternatives
+https://aitechtrend.com/unveiling-the-powerhouses-a-guide-to-google-colab-alternatives/
+
+TPU Research Cloud
+https://sites.research.google/trc/about/
 
 Chart animation
 https://github.com/dexplo/bar_chart_race
@@ -323,6 +339,7 @@ https://zhuanlan.zhihu.com/p/424195019
 TSMixer
 https://towardsdatascience.com/deepar-mastering-time-series-forecasting-with-deep-learning-bc717771ce85
 https://towardsdatascience.com/evaluating-uplift-models-8a078996a113
+https://blog.research.google/2023/04/recent-advances-in-deep-long-horizon.html
 
 time series database
 InfluxDB 3.0
@@ -427,7 +444,9 @@ https://github.com/BenjiKCF/Neural-Network-with-Financial-Time-Series-Data
 https://github.com/maxim5/time-series-machine-learning
 https://kernc.github.io/backtesting.py/
 Write a stock strategy backtest environment.
-
+technical analysis (TA) indicators, such as moving averages (MA), moving average convergence divergence (MACD), Bollinger Bands (BB), relative strength index (RSI), average true range (ATR), and others.
+https://www.blocktempo.com/five-dune-analytics-metrics-to-help-you-filter-out-potential-nft/
+https://www.blocktempo.com/500-return-on-investment-in-ai/
 
 Data Science
 The tutorial will cover the following topics:
@@ -543,6 +562,7 @@ https://github.com/deepmind/mujoco
 https://github.com/ill-inc/biomes-game
 https://www.biomes.gg/
 https://en.m.wikipedia.org/wiki/Multi-agent_pathfinding
+https://www.jiqizhixin.com/articles/2018-07-11-3
 
 Multiagent Reinforcement Learning (MARL) is a subfield of artificial intelligence and reinforcement learning that focuses on scenarios where multiple agents interact within a shared environment. In this setting, each agent aims to make decisions that maximize their cumulative rewards, while taking into account the actions and strategies of other agents.
 
@@ -1059,6 +1079,7 @@ https://youtu.be/hYLte2eoQkw
 https://youtu.be/WIe-ewLxHSY
 https://ossrank.com/p
 https://dev.to/opensauced/choose-your-own-adventure-in-open-source-paths-to-success-167p
+https://github.com/ldzhangyx/translators_CN
 
 Command line
 https://www.commands.dev/
@@ -1083,6 +1104,7 @@ https://github.com/ashutoshpipriye/Awesome-Profile-README-templates
 https://github.com/alecortega/portfolio-template
 https://github.com/othneildrew/Best-README-Template
 https://github.com/anuraghazra/github-readme-stats
+https://github.com/ldzhangyx/ldzhangyx.github.io
 
 Coding interview
 https://www.explainthis.io/zh-hant/about
@@ -1422,6 +1444,8 @@ https://towardsdatascience.com/document-oriented-agents-a-journey-with-vector-da
 https://www.analyticsvidhya.com/blog/2023/07/build-your-own-large-language-models/
 https://wallstreetcn.com/articles/3689905
 https://www.techbang.com/posts/106572-mimicking-jeff-deans-summary-former-google-engineers-share
+https://github.com/ldzhangyx/ChatGPT
+https://github.com/joshGilstrap/ai_study_buddy
 
 bard api
 https://github.com/dsdanielpark/Bard-API
@@ -1441,6 +1465,69 @@ https://huggingface.co/coivmn?sort_models=likes#models
 ai翻唱用的什么软件
 9.28 pdA:/ 复制打开抖音，看看【在学AI的王可的作品】AI翻唱竟然如此简单！？# AI翻唱 # 仅供娱乐... https://v.douyin.com/i5vLmwB/
 
+
+OpenAI's Q*, pronounced "Q-Star," is a state-of-the-art AI model that marries the strengths of Q-learning and the A* search algorithm. Developed by OpenAI's Math Gen and Code Gen teams, Q* is at the forefront of enhancing AI capabilities in complex problem-solving scenarios.
+### Q-Learning in Q*:
+- *Q-learning, a fundamental reinforcement learning algorithm, is a vital component of Q. It's used for selecting the best actions towards achieving a goal, treating words or tokens as states and responses as actions.
+- Q-learning's primary function in Q* is to estimate 'Q-values' or the quality of state-action pairs, representing the expected cumulative reward for taking specific actions in specific states.
+- Q* utilizes these Q-values for dynamic decision-making, constantly updating and refining its strategy to select the most effective actions in varying scenarios.
+### A* Algorithm in Q*:
+- *A search algorithm*, known for its efficiency in pathfinding and graph search, is repurposed in Q for navigating the decision space of the RL environment.
+- Q* employs A* to optimize the sequence of actions, finding the best paths through a series of states to achieve a goal. This involves a heuristic-based approach, using Q-values to inform the potential reward of actions and A* to chart the most promising sequence of these actions.
+- The integration of A* allows Q* to navigate through vast latent network spaces or environmental problem spaces, storing results in memory as the process unfolds.
+### The Synergy in Q*:
+- Q* fuses the goal-oriented action selection of Q-learning with A*'s efficient pathfinding, making it adept at handling complex multi-turn reasoning and optimization.
+- This combination is designed for complex multi-turn decision making, where Q* plans several steps ahead, not just focusing on immediate rewards but on long-term strategic outcomes.
+- Q* combines Q-values with A* heuristics for charting paths through decisions, balancing immediate and future outcomes for optimal long-term planning.
+### Computational Aspects and Application Scope:
+- Implementing Q* requires significant computational resources, involving multiple model forward passes and gradient calculations.
+- It is poised to enhance Reinforcement Learning from Human Feedback (RLHF) by optimizing over multiple interactions, crucial for solving challenging mathematical tasks.
+- Q*’s architecture might be applicable to a wide range of problems, especially those requiring strategic planning and multi-step reasoning.
+### Conclusion:
+Q* can be envisioned as a highly sophisticated AI model, integrating the learning capabilities of Q-learning with the efficient pathfinding of A*, and specifically tailored for environments requiring strategic foresight and long-term planning. This innovative blend could significantly boost AI's proficiency in tasks involving complex, multi-step decision-making and problem-solving, making it a significant development in the field of artificial intelligence.
+### Original post:
+Q* (Q-Star), if real, clearly links two core themes from the RL literature: Q-values and A*, a classic graph search algorithm. Yes, there’s an argument that Q could just refer to the value function of the optimal policy, but this would need to be a fabricated leak for it to be so silly, and OpenAI has pretty much had everything leaked, so fabricating them seems unlikely.1
+My initial hypothesis, which I clearly labeled as a tin hat theory, was a vague merging of Q-learning and A* search. What I didn’t answer is, what is being searched over? My initial guess of searching over dialogue turns is almost certainly wrong due to infrastructure reasons I’ll touch on later.
+As I’ve dug into this in more detail, I’ve become convinced that they are doing something powerful by searching over language/reasoning steps via tree-of-thoughts reasoning, but it is much smaller of a leap than people believe. The reason for the hyperbole is the goal of linking large language model training and usage to the core components of Deep RL that enabled success like AlphaGo: self-play and look-ahead planning.
+Self-play is the idea that an agent can improve its gameplay by playing against slightly different versions of itself because it’ll progressively encounter more challenging situations. In the space of LLMs, it is almost certain that the largest portion of self-play will look like AI Feedback rather than competitive processes.
+Look-ahead planning is the idea of using a model of the world to reason into the future and produce better actions or outputs. The two variants are based on Model Predictive Control (MPC), which is often used on continuous states, and Monte-Carlo Tree Search (MCTS), which works with discrete actions and states.
+To understand how this links together, we need to cover recent results published from OpenAI and others that’ll answer two questions:
+How do we construct a representation of language that we can search over?
+How do we construct a notion of value over compartmentalized and meaningful language chunks (rather than the entire completion)?
+With answers to these, it should be clear how we could use existing RL methods that are used for RLHF. We use an RL optimizer to fine-tune the language model and get higher-quality generations with modular rewards (rather than the full sequence, as is done today).
+Modular reasoning with LLMs: Tree-of-Thoughts (ToT) prompting
+Promoting techniques like “take a deep breath” and “think step by step” are now expanding into advanced methods for inference with parallel computation and heuristics (some fundamentals of search).
+Tree-of-thoughts is really how it sounds. It is a way to prompt a language model to create a tree of reasoning paths that may or may not converge at a correct answer. A comparison to other ways of problem-solving with LLMs was shown in the paper:
+Image.png
+The innovations that make this click are the chunking of reasoning steps and prompting a model to create new reasoning steps. ToT seems like the first “recursive” prompting technique for improving inference performance, which sounds remarkably close to the AI Safety concern of recursively self-improving models (though I am not an expert).
+With the reasoning trees, different methods can be applied to score each vertex (the nodes) or to sample the final path. It can be based on things like minimum length to the most agreed answer, or complex things that require external feedback, which points us back in the direction of RLHF.
+Read the Tree of Thoughts paper here: https://arxiv.org/abs/2305.10601
+Note: there are two more papers that seem worth mentioning here, at least for bookkeeping. 1) a concurrent ToT paper from a solo-author and 2) Language Agent Tree Search which has better links to AlphaGo ideas.
+Fine-grained reward labels in generation: Process Reward Models (PRM)
+The way that most RLHF is done to date has the entire response from a language model get an associated score. To anyone with an RL background, this is disappointing, because it limits the ability for RL methods to make connections about the value of each sub-component of text. Futures have been pointed to where this multi-step optimization comes at the level of multiple dialogue turns, but that is still far-fetched due to the requirement of having humans or some prompt source in the loop.
+This could easily be extended to a self-play style dialogue but is hard to give an LLMs goals that translate to the self-play dynamics of consistently improving. Most of the things we want to do with LLMs are repetitive tasks without near-infinite ceilings on performance like the game of Go.
+On the other hand, there is a type of LLM use case that naturally abstracts to contained chunks of text: step-by-step reasoning, best exemplified by math problems.
+Process Reward Models (PRMs) have been a topic I’ve heard a lot about from RLHF folks off the record for the last 6 months. It turns out there is a lot of literature on these models, but very little on how to use them with RL.
+The core idea of a PRM is to assign a score to each step of reasoning, rather than a complete message. An example from the OpenAI paper Let’s Verify Step by Step is shown below:
+Image.png
+And the funny feedback interface they used (which will be replaced by AIs), but is instructive:
+Screenshot 2023-11-23 at 3.48.54 PM.png
+This allows finer-tuned generation with reasoning problems, by sampling over the maximum average reward or other metrics, instead of just relying on one score (standard RMs are called outcome RMs in this literature). Using Best-of-N sampling, essentially generating a bunch of times and using the one that scored the highest by the reward model (the inference time cousin of Rejection Sampling popularized with Llama 2), PRMs outperform standard RMs on reasoning tasks.
+To date, most of the resources for PRMs just show how to use them at inference time. The true power will come when this signal is optimized against training. To create the richest optimization setting, having the ability to generate diverse reasoning pathways for scoring and learning from is essential. This is where Tree-of-Thoughts comes in. The prompting from ToT gives diversity to the generations, which a policy can learn to exploit with access to a PRM.
+For more resources on PRMs, see the following:
+Let’s Verify Step by Step: a good introduction to PRMs.
+Solving math word problems with process- and outcome-based feedback: the canonical citation in all PRM and reasoning works in 2023.
+Scaling Relationship on Learning Mathematical Reasoning with Large Language Models: A paper that studies the method of rejection sampling for reasoning problems, among other contributions.
+Let's reward step by step: Step-Level reward model as the Navigators for Reasoning
+Additionally, there’s one popular openly available math model that is documented as training with PRMs: Wizard-LM-Math. Second, OpenAI released their fine-grained reward labels from the Verify Step by Step paper for training a PRM earlier this year.
+Putting it together: what Q* could be
+Q* seems to be using PRMs to score Tree of Thoughts reasoning data that then is optimized with Offline RL. This wouldn’t look too different from existing RLHF toolings that use offline algorithms like DPO or ILQL that do not need to generate from the LLM during training. The ‘trajectory’ seen by the RL algorithm is the sequence of reasoning steps, so we’re finally doing RLHF in a multi-step fashion rather than contextual bandits!
+Given that the rumors I’ve heard already indicated OpenAI was using offline RL for RLHF (which doesn’t say that much), this doesn’t seem like a big leap to me. The intricacies of this method involve collecting the right prompts, having a model to generate great reasoning steps, and most importantly: accurately scoring tens of thousands of completions.
+This last step is where the rumored “vast computing resources”: use AI to label every step with a score instead of humans. Synthetic data is king, and with trees rather than single-width paths (via chain-of-thought) giving more and more options later on to arrive at the right answer.
+The ton of compute resources tracks with the rumor that I’ve heard one or more of the big tech players (Google, Anthropic, Cohere, etc) are creating a pretraining-sized dataset from process supervision or RLAIF-like methods, which would take 10s of thousands of GPU hours easily. The gap to openly available models in this area worries me.
+All of this said while the core ideas seem clear to me, implementing this takes levels of model whispering few poses. Distribution control, massive inference, and RL finickiness are well beyond my knowledge or experience. All of this information just seems so natural. All the evaluations for ToT and PRMs are on reasoning problems like math, which is what all the news articles were saying this leaked method was about. Even if it isn’t Q*, it would be a fun experiment.
+Super-scale AI feedback data and the future
+As I’ve written about before, AI Feedback and Constitutional AI are underrepresented in public awareness. Synthetic data represents the shortest path to expanding datasets. In the short term, it’s clear we can create some useful data with this. What is not clear is the extent to which it can be scaled — ie can it replace internet scale data entirely?
 
 Command line application
 https://github.com/lxgr-linux/pokete
@@ -1496,6 +1583,7 @@ https://francis-press.com/papers/12298
 https://www.proquest.com/openview/76f584b3840e0bbfa0261544873e52e7/1?pq-origsite=gscholar&cbl=2046140
 autoscraper python
 https://ithelp.ithome.com.tw/articles/10341040
+https://github.com/REMitchell/python-scraping
 
 search
 https://github.com/meilisearch/meilisearch
@@ -1798,6 +1886,7 @@ PyCurl: Used to send HTTP requests with various methods, set headers and cookies
 PyFacebook: Used to access Facebook user profiles, pages, and posts.
 Google-api-python-client: Used for working with various Google APIs, such as the Google Drive API, Google Maps API, and more.
 aiohttp: Used for building asynchronous HTTP client/server applications to handle a large number of requests and build high-performance web applications and APIs.
+https://stackoverflow.blog/2020/03/02/best-practices-for-rest-api-design/
 
 API + Data analysis + Data visualization
 http://blog.itpub.net/69982434/viewspace-2738661
@@ -1833,6 +1922,7 @@ https://www.kaggle.com/models
 https://tfhub.dev/
 https://opus.nlpl.eu/
 https://web.stanford.edu/class/cs224n/slides/
+https://github.com/ldzhangyx/text-summarization-tensorflow
 
 Kaggle
 https://zhuanlan.zhihu.com/p/472915303
@@ -2148,6 +2238,7 @@ dask - parallel computing
 
 
 Job oriented courses
+https://venturenixlab.co/data-science/
 https://careerhackers.io/chp-landing/
 https://tecky.io/en/courses/SMA/
 https://code.tecky.io/
