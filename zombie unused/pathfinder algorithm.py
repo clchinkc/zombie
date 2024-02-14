@@ -1513,6 +1513,19 @@ Artificial Potential Field
 """
 
 """
+The heuristic function is used in the A* search algorithm to estimate the distance between a node and the goal node. In this implementation, the Euclidean distance is used as the heuristic function to calculate the straight-line distance between the nodes. This helps guide the algorithm towards the goal node and speeds up the search process.
+The edge cost function is used to calculate the cost of moving from one node to another, taking into account the probability of encountering zombies in the destination node. The inverse of the probability of encountering zombies is used as the edge cost, so that nodes with a higher probability of encountering zombies have a higher cost. This encourages the algorithm to avoid unsafe paths and choose a safer path.
+By considering the edge cost in the A* search algorithm, the algorithm can find a shortest path that not only minimizes the actual distance between the start and end nodes but also takes into account the potential danger or difficulty of moving through certain nodes in the graph.
+
+Like the potential field algorithm with other humans as attractive and zombies as repulsive forces?
+
+While both approaches involve assigning costs to different nodes in a graph based on safety, the potential field algorithm is more focused on guiding a robot or agent towards a goal while avoiding obstacles, while the edge cost function in A* search is more focused on finding the shortest and safest path through a graph.
+
+
+Attractive force and repulsive force constants can be determined  goal and obstacle strength
+"""
+
+"""
 # Beam search, a heuristic search algorithm, offers robust applications in a zombie apocalypse simulation, enhancing the depth and complexity of the scenario. Here's an integrated and detailed look at how beam search can be employed across different aspects of such a simulation:
 # 1. **Pathfinding and Navigation**:
 #    - **For Survivors**: Beam search calculates the safest and most efficient paths for survivors to reach destinations like safe zones and resource caches. It evaluates multiple potential paths simultaneously, considering factors such as the shortest distance, zombie density, proximity to resources, and terrain challenges.

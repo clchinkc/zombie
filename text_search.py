@@ -578,6 +578,8 @@ for line, score in results:
 # https://keras.io/examples/nlp/sentence_embeddings_with_sbert/
 # https://keras.io/examples/nlp/semantic_similarity_with_keras_nlp/
 
+# https://til.simonwillison.net/python/gtr-t5-large
+
 # Boyer-Moore String Search Algorithm
 
 # https://medium.com/@ocaelen/exploring-the-novel-features-of-xgboost-2-0-1cf39919577f
