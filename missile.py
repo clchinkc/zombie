@@ -182,6 +182,7 @@ rotation
 dynamics of flight control systems
 orientation and using control surfaces to steer
 thrust vectoring
+quaternion
 control surfaces
 interactions with the weather and environment
 

@@ -46,6 +46,10 @@ Visualize the model's internal activations
 
 Decision Tree
 Naïve Bayes and Bayesian Belief Network
+fundation model like gpt
+transformer
+vae for unsuperised learning
+causal inference
 
 Curriculum Learning
 
@@ -1324,11 +1328,11 @@ Creating a world model for a zombie apocalypse simulation involves defining vari
 12. **Simulation Parameters**: Set parameters that control the speed of zombie infection, the frequency of resource replenishment, and other variables that affect the simulation's difficulty and realism.
 
 Once you've designed the world model, you can use simulation techniques like agent-based modeling or cellular automata to run scenarios and observe how the zombie apocalypse unfolds based on the rules you've defined. Researchers and enthusiasts can use such simulations to explore various strategies for survival, containment, or eradication of the zombie threat in a controlled virtual environment.
-"""
 
-"""
+
 https://arxiv.org/abs/1911.12247
 """
+
 
 """
 Github agent based simulation
@@ -1493,6 +1497,7 @@ Error Guessing: Experience-based prediction of errors and targeted testcase desi
 """
 
 """
+Model view controller pattern
 https://vocus.cc/article/64d38e8cfd897800019af96b
 """
 

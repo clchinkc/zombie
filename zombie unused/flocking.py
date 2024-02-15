@@ -46,7 +46,7 @@ from collections import deque
 import numpy as np
 import pygame
 from pygame.math import Vector2
-from pygame.sprite import Group, Sprite
+from pygame.sprite import Group, LayeredUpdates, Sprite
 from sklearn.neighbors import NearestNeighbors
 
 # Window and Game Constants
@@ -125,7 +125,6 @@ class Agent(ABC):
         return separation + alignment + cohesion
     
     def calculate_separation(self, agents):
-
         steering = Vector2(0, 0)
         total_influence = 0
         epsilon = 1e-10  # small value to prevent division by zero
@@ -165,7 +164,7 @@ class Agent(ABC):
             center_of_mass /= total
         return center_of_mass - self.position
 
-    def add_friction_and_noise(self, force):
+    def calculate_friction_and_noise(self, force):
         FRICTION_COEFF = -0.01
         NOISE_RANGE = 0.02
         friction = FRICTION_COEFF * force
@@ -180,18 +179,23 @@ class Human(Agent):
     def calculate_forces(self, agents):
         humans, zombies = self.get_separated_agent_lists(agents)
         
+        propulsion = self.calculate_propulsion()
         separation = self.calculate_separation(humans) * SEPARATION_WEIGHT
         alignment = self.calculate_alignment(humans) * ALIGNMENT_WEIGHT
         cohesion = self.calculate_cohesion(humans) * COHESION_WEIGHT
         avoidance = self.calculate_avoidance(zombies) * HUMAN_AVOIDANCE_WEIGHT
-        
-        combined_force = separation + alignment + cohesion + avoidance
-        return combined_force + self.add_friction_and_noise(combined_force)
+        friction_and_noise = self.calculate_friction_and_noise(self.velocity)
+        combined_force = propulsion + separation + alignment + cohesion + avoidance + friction_and_noise
+        return combined_force
 
     # Specialized Method
-    def calculate_avoidance(self, agents):
+    def calculate_propulsion(self):
+        # Humans move in a random direction based on their current normalized velocity
+        return self.velocity.normalize()
+    
+    def calculate_avoidance(self, zombies):
         steering = Vector2(0, 0)
-        for agent in agents:
+        for agent in zombies:
             distance = self.position.distance_to(agent.position)
             if distance < HUMAN_AVOIDANCE_RADIUS:  # Humans avoid zombies
                 diff = self.position - agent.position
@@ -206,43 +210,35 @@ class Zombie(Agent):
     def calculate_forces(self, agents):
         humans, _ = self.get_separated_agent_lists(agents)
         
+        propulsion = self.calculate_propulsion()
         attraction = self.calculate_attraction(humans)
-        
-        return attraction + self.add_friction_and_noise(attraction)
+        friction_and_noise = self.calculate_friction_and_noise(self.velocity)
+        combined_force = propulsion + attraction + friction_and_noise
+        return combined_force
 
     # Specialized Method
-    def calculate_attraction(self, agents):
-        closest_human = min(agents, key=lambda human: self.position.distance_to(human.position), default=Human(self.position.x, self.position.y))
+    def calculate_propulsion(self):
+        # Humans move in a random direction based on their current normalized velocity
+        return self.velocity.normalize()
+    
+    def calculate_attraction(self, humans):
+        if not humans:
+            return Vector2(0, 0)
+        closest_human = min(humans, key=lambda human: self.position.distance_to(human.position))
         attraction = (closest_human.position - self.position) * ZOMBIE_ATTRACTION_WEIGHT
         return attraction
 
 
 class AgentSprite(Sprite):
-    def __init__(self, agent):
+    def __init__(self, agent, surface):
         super().__init__()
-        self.image = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA).convert_alpha()
-        self.rect = self.image.get_rect()
+        self.image = surface
         self.agent = agent
+        self.rect = self.image.get_rect(center=(int(agent.position.x), int(agent.position.y)))
 
     def update(self):
         self.agent.move()
-        self.image.fill((0, 0, 0, 0))
-        pygame.draw.circle(self.image, self.agent.color, (int(self.agent.position.x), int(self.agent.position.y)), AGENT_RADIUS)
-        self.rect.topleft = (0, 0)
-
-class TrailSprite(Sprite):
-    def __init__(self, agent):
-        super().__init__()
-        self.image = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA).convert_alpha()
-        self.rect = self.image.get_rect()
-        self.agent = agent
-
-    def update(self):
-        self.image.fill((0, 0, 0, 0))
-        for i, pos in enumerate(reversed(self.agent.history)):
-            color = tuple([int(c * (1 - i / len(self.agent.history))) for c in self.agent.color])
-            pygame.draw.circle(self.image, color + (100,), (int(pos.x), int(pos.y)), AGENT_RADIUS)
-        self.rect.topleft = (0, 0)
+        self.rect.center = (int(self.agent.position.x), int(self.agent.position.y))
 
 
 class Simulation:
@@ -252,6 +248,10 @@ class Simulation:
     def __init__(self, num_humans=80, num_zombies=20):
         pygame.init()
         self.setup_screen()
+        self.human_surface = self.create_agent_surface(HUMAN_COLOR)
+        self.zombie_surface = self.create_agent_surface(ZOMBIE_COLOR)
+        self.trail_map = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA).convert_alpha()
+        self.trail_map.fill(BACKGROUND_COLOR)
         self.create_agents(num_humans, num_zombies)
         self.clock = pygame.time.Clock()
         self.running = True
@@ -260,14 +260,18 @@ class Simulation:
     def setup_screen(self):
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
+    def create_agent_surface(self, color):
+        surface = pygame.Surface((AGENT_RADIUS*2, AGENT_RADIUS*2), pygame.SRCALPHA).convert_alpha()
+        pygame.draw.circle(surface, color, (AGENT_RADIUS, AGENT_RADIUS), AGENT_RADIUS)
+        return surface
+
     def create_agents(self, num_humans, num_zombies):
         self.agents = []
         self.humans = [Human(*self.random_position()) for _ in range(num_humans)]
         self.zombies = [Zombie(*self.random_position()) for _ in range(num_zombies)]
         self.agents.extend(self.humans)
         self.agents.extend(self.zombies)
-        self.agent_sprites = Group([AgentSprite(agent) for agent in self.agents])
-        self.trail_sprites = Group([TrailSprite(agent) for agent in self.agents])
+        self.agent_sprites = LayeredUpdates([AgentSprite(agent, self.human_surface if isinstance(agent, Human) else self.zombie_surface) for agent in self.agents])
         
     def random_position(self):
         position = Vector2(random.uniform(0, WIDTH), random.uniform(0, HEIGHT))
@@ -311,39 +315,65 @@ class Simulation:
     # 3. Agent update methods
 
     def update_agents(self):
-        positions = np.array([agent.position for agent in self.agents])
-        nbrs = NearestNeighbors(n_neighbors=10).fit(positions)
+        # Prepare positions for separate nearest neighbor searches
+        human_positions = np.array([human.position for human in self.humans])
+        zombie_positions = np.array([zombie.position for zombie in self.zombies])
+        
+        human_nbrs = NearestNeighbors(n_neighbors=10).fit(human_positions) if len(human_positions) > 0 else None
+        zombie_nbrs = NearestNeighbors(n_neighbors=10).fit(zombie_positions) if len(zombie_positions) > 0 else None
 
-        self.update_human_agents(nbrs)
-        self.update_zombie_agents(nbrs)
+        # Initialize a list to store humans that need to be converted to zombies
+        humans_to_convert = []
 
-    def update_human_agents(self, nbrs):
+        # Pass the list to the update functions
+        self.update_human_agents(human_nbrs, zombie_nbrs, humans_to_convert)
+        self.update_zombie_agents(human_nbrs)
+
+        # Convert humans to zombies after all updates
+        self.convert_humans_to_zombies(humans_to_convert)
+
+    def update_human_agents(self, human_nbrs, zombie_nbrs, humans_to_convert):
         for human in list(self.humans):  # Using list to avoid RuntimeError due to list modification
-            indices = nbrs.radius_neighbors(np.array([human.position]).reshape(1, -1), radius=HUMAN_DETECTION_RADIUS, return_distance=False)[0]
-            neighbours = [self.agents[i] for i in indices]
-            forces = human.calculate_forces(neighbours)
+            if human_nbrs is not None:
+                human_indices = human_nbrs.radius_neighbors(np.array([human.position]).reshape(1, -1), radius=HUMAN_DETECTION_RADIUS, return_distance=False)[0]
+                human_neighbours = [self.humans[i] for i in human_indices]
+            else:
+                human_neighbours = []
+            if zombie_nbrs is not None:
+                zombie_indices = zombie_nbrs.radius_neighbors(np.array([human.position]).reshape(1, -1), radius=HUMAN_DETECTION_RADIUS, return_distance=False)[0]
+                zombie_neighbours = [self.zombies[i] for i in zombie_indices]
+            else:
+                zombie_neighbours = []
+            
+            forces = human.calculate_forces(human_neighbours + zombie_neighbours)
             human.acceleration += forces
             
             human.move()
 
-            infected = any([human.position.distance_to(zombie.position) < ZOMBIE_INFECTION_RADIUS for zombie in neighbours if isinstance(zombie, Zombie)])
+            # Check for infection and add to the list for conversion
+            infected = any([human.position.distance_to(zombie.position) < ZOMBIE_INFECTION_RADIUS for zombie in zombie_neighbours])
             if infected:
-                self.convert_human_to_zombie(human)
+                humans_to_convert.append(human)
 
-    def convert_human_to_zombie(self, human):
-        self.humans.remove(human)
-        new_zombie = Zombie(human.position.x, human.position.y)
-        self.zombies.append(new_zombie)
-        self.agents.append(new_zombie)
-        for group in [self.agent_sprites, self.trail_sprites]:
-            group.remove([s for s in group if s.agent == human][0])
-            group.add(AgentSprite(new_zombie) if group == self.agent_sprites else TrailSprite(new_zombie))
+    def convert_humans_to_zombies(self, humans_to_convert):
+        for human in list(humans_to_convert):
+            self.humans.remove(human)
+            self.agents.remove(human)
+            new_zombie = Zombie(human.position.x, human.position.y)
+            new_zombie.velocity = human.velocity
+            self.zombies.append(new_zombie)
+            self.agents.append(new_zombie)
+            self.agent_sprites.remove([s for s in self.agent_sprites if s.agent == human])
+            self.agent_sprites.add(AgentSprite(new_zombie, self.zombie_surface))
 
-    def update_zombie_agents(self, nbrs):
-        for zombie in self.zombies:
-            indices = nbrs.radius_neighbors(np.array([zombie.position]).reshape(1, -1), radius=ZOMBIE_DETECTION_RADIUS, return_distance=False)[0]
-            neighbours = [self.agents[i] for i in indices]
-            forces = zombie.calculate_forces(neighbours)
+    def update_zombie_agents(self, human_nbrs):
+        for zombie in list(self.zombies):
+            if human_nbrs is not None:
+                human_indices = human_nbrs.radius_neighbors(np.array([zombie.position]).reshape(1, -1), radius=ZOMBIE_DETECTION_RADIUS, return_distance=False)[0]
+                human_neighbours = [self.humans[i] for i in human_indices]
+            else:
+                human_neighbours = []
+            forces = zombie.calculate_forces(human_neighbours)
             zombie.acceleration += forces
             zombie.move()
 
@@ -351,13 +381,18 @@ class Simulation:
 
     def render_agents(self):
         self.screen.fill(BACKGROUND_COLOR)
-        for group in [self.trail_sprites, self.agent_sprites]:
-            group.update()
-            for sprite in group:
-                self.screen.blit(sprite.image, sprite.rect)
+        self.update_trails()
+        self.screen.blit(self.trail_map, (0, 0))
+        self.agent_sprites.update()
+        self.agent_sprites.draw(self.screen)
         self.display_on_screen_info()
         pygame.display.flip()
-        self.clock.tick(120)
+        self.clock.tick(60)
+
+    def update_trails(self):
+        self.trail_map.fill((0, 0, 0, 10), special_flags=pygame.BLEND_RGBA_SUB)
+        for agent in self.agents:
+            pygame.draw.circle(self.trail_map, agent.color + (90,), (int(agent.position.x), int(agent.position.y)), AGENT_RADIUS)
 
     def display_on_screen_info(self):
         font = pygame.font.SysFont('Arial', 20)
@@ -381,9 +416,27 @@ Use pygame.sprite.groupcollide() to check for collisions between humans and zomb
 
 Highlight agents not in sync with the flock (moving with large forces) by changing their color.
 
-Window size can be number of cell in each side of the grid times size of each cell in the grid.
-
 Please update the code according to these comments on pygame optimization.
+"""
+
+"""
+To improve the efficiency of your simulation, consider the following optimization strategies:
+
+### Use Vectorized Operations for Distance Calculations
+- **NumPy for Vectorized Calculations**: Utilize NumPy's vectorized operations to compute distances and other vector-based calculations instead of Python loops. This can significantly speed up operations like separation, alignment, and cohesion for agents.
+
+### Optimize Drawing and Rendering
+- **Minimize Draw Calls**: Reduce the number of draw calls by batch processing drawing operations where possible. For instance, drawing all agents of the same type in a single operation can be more efficient than individual draw calls for each agent.
+
+### Directly Manage NumPy Arrays for Positions
+- **Maintain Separate Position Arrays**: Keep separate NumPy arrays for human and zombie positions throughout the simulation. Update these arrays directly when agents move or are converted, rather than converting back and forth between lists and arrays.
+- **Update Positions in Batch**: When possible, update agent positions in the arrays using batch operations. This approach is more efficient than updating positions individually but may require careful tracking of indices and conditions.
+
+### Implementation Considerations
+- **Tracking Indices**: To update positions directly in NumPy arrays, you may need to track the indices of humans and zombies within these arrays. This adds complexity but can lead to performance improvements by avoiding the reconstruction of position arrays at each simulation step.
+- **Vectorized Distance Calculations**: For operations that involve computing distances between agents (e.g., nearest neighbor searches), leverage NumPy's ability to perform these calculations in a vectorized manner for efficiency gains.
+
+Please implement some of them and leave the other to the next update.
 """
 
 """
