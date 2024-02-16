@@ -29,6 +29,7 @@ Refine the simulation as needed based on the results of the initial runs. This c
 # https://www.youtube.com/watch?v=r_It_X7v-1E
 # https://github.com/SebLague/Ecosystem-2/tree/master
 # https://github.com/Emergent-Behaviors-in-Biology/community-simulator/blob/master/Tutorial.ipynb
+# 「空間落遲模型」(spatial lag model, SLM)
 
 """
 The spatiotemporal change for a species over time can be written as

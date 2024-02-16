@@ -1,43 +1,4 @@
 
-"""
-Here are some steps you can follow to develop a simulation of flocking behavior using a multi-agent system:
-
-1. **Agent Representation**
-
-Each agent in the simulation should be represented as an entity with properties such as position, velocity, and acceleration. The position of an agent represents its location in the simulation environment. The velocity of an agent represents its speed and direction of movement. The acceleration of an agent represents the rate at which its velocity is changing.
-
-2. **Neighboring Agents**
-
-A mechanism must be defined to determine the neighboring agents for each individual agent. One way to do this is to use a proximity-based approach, such as a fixed radius around each agent. This means that an agent will consider all other agents that are within a certain distance of it to be its neighbors. Another way to determine neighboring agents is to use a k-nearest neighbors approach. This means that an agent will consider the k agents that are closest to it to be its neighbors.
-
-3. **Interaction Rules**
-
-Rules must be defined that govern how agents interact with each other. These rules should incorporate the principles of cohesion, alignment, and separation. The following are some examples of interaction rules:
-
-* **Cohesion:** Agents should move towards the center of mass of their neighbors to maintain a cohesive group.
-* **Alignment:** Agents should align their velocities with the average velocity of their neighbors to achieve a sense of directionality.
-* **Separation:** Agents should maintain a minimum distance from each other to avoid collisions.
-
-The relative weighting of these rules can be adjusted to control the behavior of the flock. For example, if the cohesion rule is given a higher weight than the alignment rule, the flock will tend to form a more cohesive group. If the alignment rule is given a higher weight than the cohesion rule, the flock will tend to move in a more coordinated manner.
-
-4. **Environment Constraints**
-
-The boundaries and obstacles within the simulation environment must be considered. Agents should respond to these constraints to avoid collisions and exhibit realistic flocking behavior. For example, if there is a wall at the edge of the simulation environment, agents should avoid colliding with the wall by changing their direction of movement.
-
-5. **Visualization**
-
-A visual representation of the simulation should be developed, where agents and their interactions are visually displayed. This can help analyze the emergent patterns and behavior of the flock. For example, a visualization of a flock of birds might show the birds moving in a coordinated manner, avoiding obstacles, and changing direction to avoid collisions.
-
-6. **Experimentation and Analysis**
-
-Experiments should be conducted by varying parameters such as the number of agents, initial positions, interaction rules, and environmental constraints. The impact of these variations on the resulting flocking behavior should be analyzed. For example, an experiment might involve varying the number of agents in a flock to see how the flock's behavior changes.
-
-7. **Documentation**
-
-Clear documentation should be provided explaining the implementation details, the reasoning behind your design choices, and the insights gained from the experiments. This documentation can be used to help others understand your work and to build upon your work in the future.
-
-Implement in python.
-"""
 
 import random
 from abc import ABC, abstractmethod
@@ -46,7 +7,7 @@ from collections import deque
 import numpy as np
 import pygame
 from pygame.math import Vector2
-from pygame.sprite import Group, LayeredUpdates, Sprite
+from pygame.sprite import Group, Sprite
 from sklearn.neighbors import NearestNeighbors
 
 # Window and Game Constants
@@ -55,33 +16,33 @@ BACKGROUND_COLOR = (0, 0, 0)
 WORD_COLOR = (255, 255, 255)
 HUMAN_COLOR = (0, 0, 255) # Humans are blue
 ZOMBIE_COLOR = (255, 0, 0) # Zombies are red
+HIGHLIGHT_COLOR = (255, 255, 0)  # Color for highlighting agents
+LARGE_FORCE_THRESHOLD = 2
 
 # Simulation Constants
 ZOMBIE_DETECTION_RADIUS = 50
-ZOMBIE_INFECTION_RADIUS = 10
 ZOMBIE_ATTRACTION_WEIGHT = 1
 HUMAN_DETECTION_RADIUS = 50
 HUMAN_SEPARATION_RADIUS = 20
 HUMAN_AVOIDANCE_RADIUS = 50
-HUMAN_AVOIDANCE_WEIGHT = 100
-
-SEPARATION_WEIGHT = 0.01
-ALIGNMENT_WEIGHT = 0.125
+HUMAN_AVOIDANCE_WEIGHT = 10
+SEPARATION_WEIGHT = 0.1
+ALIGNMENT_WEIGHT = 0.2
 COHESION_WEIGHT = 0.01
 
 # Agent Constants
-AGENT_RADIUS = 5
+AGENT_RADIUS = 10
 AGENT_SPEED = 1
 
 
 class Agent(ABC):
     # Constructor
-    def __init__(self, x, y, color):
+    def __init__(self, x, y):
         self.position = Vector2(x, y)
         self.velocity = Vector2(random.uniform(-1, 1), random.uniform(-1, 1)).normalize() * AGENT_SPEED
         self.acceleration = Vector2(0, 0)
-        self.color = color
         self.history = deque(maxlen=50)
+        self.is_highlighted = False
         
     # Basic Movement Methods
     def move(self):
@@ -115,6 +76,9 @@ class Agent(ABC):
         humans = [a for a in agents if isinstance(a, Human)]
         zombies = [a for a in agents if isinstance(a, Zombie)]
         return humans, zombies
+
+    def is_force_large(self, force):
+        return force.length() > LARGE_FORCE_THRESHOLD
 
     # General Flocking Behaviors
     @abstractmethod
@@ -173,7 +137,7 @@ class Agent(ABC):
 
 class Human(Agent):
     def __init__(self, x, y):
-        super().__init__(x, y, HUMAN_COLOR)
+        super().__init__(x, y)
 
     # Overridden Method for Specific Behavior
     def calculate_forces(self, agents):
@@ -204,7 +168,7 @@ class Human(Agent):
 
 class Zombie(Agent):
     def __init__(self, x, y):
-        super().__init__(x, y, ZOMBIE_COLOR)
+        super().__init__(x, y)
 
     # Overridden Method for Specific Behavior
     def calculate_forces(self, agents):
@@ -230,15 +194,19 @@ class Zombie(Agent):
 
 
 class AgentSprite(Sprite):
-    def __init__(self, agent, surface):
+    def __init__(self, agent, surface, color):
         super().__init__()
         self.image = surface
         self.agent = agent
-        self.rect = self.image.get_rect(center=(int(agent.position.x), int(agent.position.y)))
+        self.color = color
+        self.highlight_color = HIGHLIGHT_COLOR
+        self.radius = AGENT_RADIUS
+        # New attribute for highlight size
+        self.highlight_radius = AGENT_RADIUS + 5  # Highlight is larger than the agent
 
-    def update(self):
-        self.agent.move()
-        self.rect.center = (int(self.agent.position.x), int(self.agent.position.y))
+    @property
+    def rect(self):
+        return self.image.get_rect(center=(int(self.agent.position.x), int(self.agent.position.y)))
 
 
 class Simulation:
@@ -252,6 +220,8 @@ class Simulation:
         self.zombie_surface = self.create_agent_surface(ZOMBIE_COLOR)
         self.trail_map = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA).convert_alpha()
         self.trail_map.fill(BACKGROUND_COLOR)
+        self.highlight_map = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA).convert_alpha()
+        self.highlight_map.fill(BACKGROUND_COLOR)
         self.create_agents(num_humans, num_zombies)
         self.clock = pygame.time.Clock()
         self.running = True
@@ -271,7 +241,9 @@ class Simulation:
         self.zombies = [Zombie(*self.random_position()) for _ in range(num_zombies)]
         self.agents.extend(self.humans)
         self.agents.extend(self.zombies)
-        self.agent_sprites = LayeredUpdates([AgentSprite(agent, self.human_surface if isinstance(agent, Human) else self.zombie_surface) for agent in self.agents])
+        self.human_sprites = Group([AgentSprite(human, self.human_surface, HUMAN_COLOR) for human in self.humans])
+        self.zombie_sprites = Group([AgentSprite(zombie, self.zombie_surface, ZOMBIE_COLOR) for zombie in self.zombies])
+        self.agent_sprites = Group(self.human_sprites, self.zombie_sprites)
         
     def random_position(self):
         position = Vector2(random.uniform(0, WIDTH), random.uniform(0, HEIGHT))
@@ -322,17 +294,16 @@ class Simulation:
         human_nbrs = NearestNeighbors(n_neighbors=10).fit(human_positions) if len(human_positions) > 0 else None
         zombie_nbrs = NearestNeighbors(n_neighbors=10).fit(zombie_positions) if len(zombie_positions) > 0 else None
 
-        # Initialize a list to store humans that need to be converted to zombies
-        humans_to_convert = []
-
         # Pass the list to the update functions
-        self.update_human_agents(human_nbrs, zombie_nbrs, humans_to_convert)
+        self.update_human_agents(human_nbrs, zombie_nbrs)
         self.update_zombie_agents(human_nbrs)
 
         # Convert humans to zombies after all updates
-        self.convert_humans_to_zombies(humans_to_convert)
+        collisions = self.check_collisions()
+        human_to_convert = [human_sprite.agent for human_sprite in collisions]
+        self.convert_humans_to_zombies(human_to_convert)
 
-    def update_human_agents(self, human_nbrs, zombie_nbrs, humans_to_convert):
+    def update_human_agents(self, human_nbrs, zombie_nbrs):
         for human in list(self.humans):  # Using list to avoid RuntimeError due to list modification
             if human_nbrs is not None:
                 human_indices = human_nbrs.radius_neighbors(np.array([human.position]).reshape(1, -1), radius=HUMAN_DETECTION_RADIUS, return_distance=False)[0]
@@ -344,27 +315,32 @@ class Simulation:
                 zombie_neighbours = [self.zombies[i] for i in zombie_indices]
             else:
                 zombie_neighbours = []
-            
             forces = human.calculate_forces(human_neighbours + zombie_neighbours)
             human.acceleration += forces
-            
             human.move()
+            
+            human.is_highlighted = human.is_force_large(forces)
 
-            # Check for infection and add to the list for conversion
-            infected = any([human.position.distance_to(zombie.position) < ZOMBIE_INFECTION_RADIUS for zombie in zombie_neighbours])
-            if infected:
-                humans_to_convert.append(human)
+    def check_collisions(self):
+        # Check for collisions between zombies and humans
+        collisions = pygame.sprite.groupcollide(self.human_sprites, self.zombie_sprites, False, False,
+                                                pygame.sprite.collide_circle)
+        return collisions
 
     def convert_humans_to_zombies(self, humans_to_convert):
         for human in list(humans_to_convert):
+            # Remove human from all lists and groups
             self.humans.remove(human)
             self.agents.remove(human)
+            self.human_sprites.remove([s for s in self.human_sprites if s.agent == human])
+            self.agent_sprites.remove([s for s in self.agent_sprites if s.agent == human])
+            # Add zombie to all lists and groups
             new_zombie = Zombie(human.position.x, human.position.y)
-            new_zombie.velocity = human.velocity
+            new_zombie_sprite = AgentSprite(new_zombie, self.zombie_surface, ZOMBIE_COLOR)
             self.zombies.append(new_zombie)
             self.agents.append(new_zombie)
-            self.agent_sprites.remove([s for s in self.agent_sprites if s.agent == human])
-            self.agent_sprites.add(AgentSprite(new_zombie, self.zombie_surface))
+            self.zombie_sprites.add(new_zombie_sprite)
+            self.agent_sprites.add(new_zombie_sprite)
 
     def update_zombie_agents(self, human_nbrs):
         for zombie in list(self.zombies):
@@ -376,12 +352,16 @@ class Simulation:
             forces = zombie.calculate_forces(human_neighbours)
             zombie.acceleration += forces
             zombie.move()
+            
+            zombie.is_highlighted = zombie.is_force_large(forces)
 
     # 4. Render and display methods
 
     def render_agents(self):
         self.screen.fill(BACKGROUND_COLOR)
         self.update_trails()
+        self.update_highlights()
+        self.screen.blit(self.highlight_map, (0, 0))
         self.screen.blit(self.trail_map, (0, 0))
         self.agent_sprites.update()
         self.agent_sprites.draw(self.screen)
@@ -391,8 +371,14 @@ class Simulation:
 
     def update_trails(self):
         self.trail_map.fill((0, 0, 0, 10), special_flags=pygame.BLEND_RGBA_SUB)
-        for agent in self.agents:
-            pygame.draw.circle(self.trail_map, agent.color + (90,), (int(agent.position.x), int(agent.position.y)), AGENT_RADIUS)
+        for agent in self.agent_sprites:
+            pygame.draw.circle(self.trail_map, agent.color + (90,), (int(agent.agent.position.x), int(agent.agent.position.y)), AGENT_RADIUS)
+
+    def update_highlights(self):
+        self.highlight_map.fill(BACKGROUND_COLOR)
+        for agent_sprite in self.agent_sprites:
+            if agent_sprite.agent.is_highlighted:
+                pygame.draw.circle(self.highlight_map, HIGHLIGHT_COLOR + (128,), agent_sprite.agent.position, AGENT_RADIUS + 5)
 
     def display_on_screen_info(self):
         font = pygame.font.SysFont('Arial', 20)
@@ -403,21 +389,6 @@ class Simulation:
 if __name__ == '__main__':
     Simulation().run()
 
-
-
-"""
-Here are a few suggestions for optimizing this code:
-
-Use pygame.sprite.collide_circle() to check for collisions between sprites.
-
-Use pygame.sprite.spritecollide() to check for collisions between sprites and a group of sprites.
-
-Use pygame.sprite.groupcollide() to check for collisions between humans and zombies more efficiently
-
-Highlight agents not in sync with the flock (moving with large forces) by changing their color.
-
-Please update the code according to these comments on pygame optimization.
-"""
 
 """
 To improve the efficiency of your simulation, consider the following optimization strategies:
@@ -537,4 +508,4 @@ By combining boid algorithms with pathfinding, you can create a more realistic a
 """
 
 # https://github.com/warownia1/PythonCollider
-
+# https://stackoverflow.com/questions/28997397/pygame-use-of-pygame-sprite-layeredupdates
