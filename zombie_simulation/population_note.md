@@ -35,14 +35,23 @@ Provide interactive visualizations (using Plotly or Bokeh) where users can hover
 
 Feature Importance Analysis:
 Provide a global view of feature importance, helping users to understand which aspects of the scenario are generally most predictive of future outcomes.
+Permutation Feature Importance: This involves shuffling each feature in the validation set (one at a time) and measuring the decrease in the model's performance. The intuition is that shuffling an important feature would significantly reduce model performance, indicating its importance.
+Layer-wise Relevance Propagation (LRP): A technique for decomposing the prediction of a deep network back into the input space, showing which pixels contribute to the classification decision.
+Gradient-based Feature Importance: This involves using the gradients of the output with respect to the input features to measure their importance. This is similar to what is done in saliency maps.
+https://stackoverflow.com/questions/45361559/feature-importance-chart-in-neural-network-using-keras-in-python
+https://towardsdatascience.com/how-to-visualize-convolutional-features-in-40-lines-of-code-70b7d87b0030
+Layer-wise relevance propagation
+ELI5
+https://eli5.readthedocs.io/en/latest/overview.html
+explain predictions of image classifiers via Grad-CAM visualizations.
+LIME
+https://arxiv.org/abs/1606.05386
+https://github.com/marcotcr/lime
+LIME permutes the covariates around a single observation and predicts output using the trained model. Then a weighted local-linear regression is fit to the model outputs and the permuted covariates (for regression anyway). This returns a coefficient for each observation. It does not attempt to explain global behaviour although that is something you can easily do by running LIME for every observation and examining the coefficients.
+Visualize the model's internal activations
 
 data augmentation on features other than grid state
 better multi-input prediction model
-
-https://towardsdatascience.com/how-to-visualize-convolutional-features-in-40-lines-of-code-70b7d87b0030
-Layer-wise relevance propagation
-Grad-CAM or LIME
-Visualize the model's internal activations
 
 Decision Tree
 Naïve Bayes and Bayesian Belief Network
@@ -87,7 +96,7 @@ Feature Matching: Forces the generator to match the statistics of the real data 
 
 Minibatch Discrimination: Helps the critic to look at multiple samples at once, which can discourage the generator from collapsing to a point where it generates the same output.
 
-Diversity Metrics: Implementing diversity metrics (e.g., Inception Score, Fréchet Inception Distance) can help quantify the diversity and quality of generated samples, providing more objective measures to detect mode collapse.
+Diversity Metrics: Implementing diversity metrics (e.g. Fréchet Inception Distance) can help quantify the diversity and quality of generated samples, providing more objective measures to detect mode collapse.
 https://zh.m.wikipedia.org/wiki/%E5%A4%9A%E6%A0%B7%E6%80%A7%E6%8C%87%E6%95%B0
 
 Techniques improving the performance of Generative Adversarial Networks (GANs)

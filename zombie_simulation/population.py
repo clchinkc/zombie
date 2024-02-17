@@ -1311,10 +1311,19 @@ class TkinterObserver(Observer):
 
 
 class PredictionObserver(Observer):
-    def __init__(self, population: Population) -> None:
+    def __init__(self, population: Population, data_dir="./simulation_data") -> None:
         self.subject = population
         self.subject.attach_observer(self)
+        self.data_dir = data_dir
         self.grid_history = []
+        self.load_previous_data()
+
+    def load_previous_data(self):
+        self.grid_history_path = os.path.join(self.data_dir, "grid_history.npz")
+        if os.path.exists(self.grid_history_path):
+            with np.load(self.grid_history_path) as data:
+                self.grid_history = data["grid_history"].tolist()
+        print(f"Loaded {len(self.grid_history)} grid states from previous simulation.")
 
     def update(self) -> None:
         current_grid_state = self.capture_grid_state()
@@ -1799,18 +1808,28 @@ class PredictionObserver(Observer):
         
         return nrmse
 
+    def save_simulation_data(self):
+        if not os.path.exists(self.data_dir):
+            os.makedirs(self.data_dir)
+        np.savez(self.grid_history_path, grid_history=self.grid_history)
+
     def display_observation(self, train_model=True):
         if os.path.exists("best_model.keras"):
             self.model = keras.models.load_model("best_model.keras", custom_objects={'combined_loss_function': PredictionObserver.combined_loss_function, 'ChannelWiseDropout': PredictionObserver.ChannelWiseDropout})
+            print("Loaded the best model from previous training.")
         else:
             self.model = getattr(self, "model", None)
+            print("No saved model found.")
         if train_model:
             self.model = self.train_model(self.model)
+            print(f"Trained the model with {len(self.grid_history)-1} data.")
 
         if self.model is None:
             raise ValueError("Model is None. Please train the model first.")
         elif not isinstance(self.model, keras.models.Model) or not self.model.built:
             raise ValueError("Model is not properly instantiated.")
+
+        self.save_simulation_data()
 
         past_grid_state = self.grid_history[-6:-1]
         argmax_past_grid_state = keras.utils.to_categorical(past_grid_state, num_classes=4)
@@ -2268,10 +2287,10 @@ def main():
     # plotly_animator = PlotlyAnimator(school_sim)
     # matplotlib_animator = MatplotlibAnimator(school_sim)
     # tkinter_observer = TkinterObserver(school_sim)
-    # prediction_observer = PredictionObserver(school_sim)
+    prediction_observer = PredictionObserver(school_sim)
     # fft_observer = FFTAnalysisObserver(school_sim)
     # pygame_observer = PygameObserver(school_sim)
-    gan_observer = GANObserver(school_sim)
+    # gan_observer = GANObserver(school_sim)
 
     # run the population for a given time period
     school_sim.run_population(num_time_steps=100)
@@ -2286,10 +2305,10 @@ def main():
     # plotly_animator.display_observation()
     # matplotlib_animator.display_observation()
     # tkinter_observer.display_observation()
-    # prediction_observer.display_observation()
+    prediction_observer.display_observation()
     # fft_observer.display_observation(mode='static') # "animation" or "static"
     # pygame_observer.display_observation()
-    gan_observer.display_observation()
+    # gan_observer.display_observation()
 
 
 if __name__ == "__main__":
