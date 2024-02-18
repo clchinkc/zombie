@@ -92,9 +92,11 @@ https://keras.io/guides/custom_train_step_in_tensorflow/
 Deep Convolutional Generative Adversarial Network
 https://www.tensorflow.org/tutorials/generative/dcgan
 
+KL divergence
+JS divergence
+
 Feature Matching: Forces the generator to match the statistics of the real data features, encouraging it to explore more of the data distribution.
 
-Minibatch Discrimination: Helps the critic to look at multiple samples at once, which can discourage the generator from collapsing to a point where it generates the same output.
 
 Diversity Metrics: Implementing diversity metrics (e.g. Fréchet Inception Distance) can help quantify the diversity and quality of generated samples, providing more objective measures to detect mode collapse.
 https://zh.m.wikipedia.org/wiki/%E5%A4%9A%E6%A0%B7%E6%80%A7%E6%8C%87%E6%95%B0
@@ -148,6 +150,11 @@ https://jonathan-hui.medium.com/gan-energy-based-gan-ebgan-boundary-equilibrium-
 diffusion GAN
 https://github.com/Zhendong-Wang/Diffusion-GAN
 https://nvlabs.github.io/denoising-diffusion-gan/
+
+Self-Attention GAN
+
+List of GANs
+https://github.com/hindupuravinash/the-gan-zoo
 """
 
 """
