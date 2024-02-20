@@ -28,12 +28,14 @@ def build_generator(latent_dim, data_shape, num_classes, num_layers=1, filter_si
     return model
 
 # Define the critic
-def build_critic(data_shape, num_classes, num_layers=1, filter_size=32, dropout_rate=0.25):
-    data_input = layers.Input(shape=(*data_shape, num_classes))
+def build_critic_pacgan(data_shape, num_classes, num_layers=1, filter_size=32, dropout_rate=0.25, m=2):
+    # Adjust input shape for packed samples
+    packed_data_shape = (data_shape[0], data_shape[1], num_classes * m)
+    data_input = layers.Input(shape=packed_data_shape)
     timestep_input = layers.Input(shape=(1,))
     
-    timestep_dense = layers.Dense(int(np.prod(data_shape)) * num_classes, use_bias=False)(timestep_input)
-    timestep_reshaped = layers.Reshape((*data_shape, num_classes))(timestep_dense)
+    timestep_dense = layers.Dense(int(np.prod(data_shape)) * num_classes * m, use_bias=False)(timestep_input)
+    timestep_reshaped = layers.Reshape(packed_data_shape)(timestep_dense)
     merged_input = layers.Add()([data_input, timestep_reshaped])
     
     x = layers.GaussianNoise(0.1)(merged_input)
@@ -53,11 +55,15 @@ def build_critic(data_shape, num_classes, num_layers=1, filter_size=32, dropout_
 
 # Define WGAN with Gradient Penalty
 def gradient_penalty(batch_size, real_images, fake_images, critic, labels, strength):
-    alpha = tf.random.uniform([batch_size, 1, 1, 1], minval=0, maxval=1)
-    interpolated_images = real_images * alpha + fake_images * (1 - alpha)
+    alpha_shape = [batch_size, 1, 1, 1]
+    alpha = tf.random.uniform(shape=alpha_shape, minval=0, maxval=1)
+    
+    interpolated_images = (real_images * alpha) + (fake_images * (1 - alpha))
+    
     with tf.GradientTape() as tape:
         tape.watch(interpolated_images)
         prediction = critic([interpolated_images, labels], training=True)
+    
     gradients = tape.gradient(prediction, [interpolated_images])
     gradients_norm = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=[1, 2, 3]))
     penalty = tf.reduce_mean((gradients_norm - 1.0) ** 2) * strength
@@ -73,57 +79,61 @@ def build_wgan(generator, critic):
     generator_optimizer = keras.optimizers.Nadam(learning_rate=0.00005)
     
     critic.compile(loss=wasserstein_loss, optimizer=critic_optimizer)
-    critic.trainable = False
+    generator.compile(loss=wasserstein_loss, optimizer=generator_optimizer)
 
-    noise_input, label_input = generator.input
-    generated_image = generator([noise_input, label_input])
-    critic_output = critic([generated_image, label_input])
-    gan = keras.models.Model([noise_input, label_input], critic_output)
-    gan.compile(loss=wasserstein_loss, optimizer=generator_optimizer)
+    return critic, generator, critic_optimizer, generator_optimizer
 
-    return gan, critic, generator, critic_optimizer, generator_optimizer
-
-
-@tf.function
-def critic_training_step(critic, generator, batch_size, latent_dim, num_classes, critic_optimizer, real_images, labels):
-    noise = tf.random.normal([batch_size, latent_dim])
-    fake_labels = tf.random.uniform([batch_size, 1], 0, num_classes, dtype=tf.int32)
+# Define training steps
+def critic_training_step(critic, generator, batch_size, latent_dim, num_classes, critic_optimizer, real_images, real_labels, m):
+    noise = tf.random.normal([batch_size * m, latent_dim])
+    fake_labels = tf.random.uniform([batch_size * m, 1], 0, num_classes, dtype=tf.int32)
     
     with tf.GradientTape() as tape:
         fake_images = generator([noise, fake_labels], training=True)
-        real_output = critic([real_images, labels], training=True)
-        fake_output = critic([fake_images, fake_labels], training=True)
+        fake_images_packed = tf.reshape(fake_images, (batch_size, data_shape[0], data_shape[1], num_classes * m))
+        
+        real_images_packed = tf.reshape(real_images, (batch_size, data_shape[0], data_shape[1], num_classes * m))
+        real_labels_packed = real_labels[:batch_size]
+        
+        real_output = critic([real_images_packed, real_labels_packed], training=True)
+        fake_output = critic([fake_images_packed, real_labels_packed], training=True)
+        
         critic_real_loss = tf.reduce_mean(fake_output)
         critic_fake_loss = -tf.reduce_mean(real_output)
-        gp = gradient_penalty(batch_size, real_images, fake_images, critic, labels, strength=10.0)
+        gp = gradient_penalty(batch_size, real_images_packed, fake_images_packed, critic, real_labels_packed, strength=10.0)
+        
         critic_loss = critic_real_loss + critic_fake_loss + gp
     
     critic_gradients = tape.gradient(critic_loss, critic.trainable_variables)
     critic_optimizer.apply_gradients(zip(critic_gradients, critic.trainable_variables)) if critic_gradients else None
+    
     return critic_loss, critic_real_loss, critic_fake_loss
 
-@tf.function
-def generator_training_step(generator, critic, batch_size, latent_dim, num_classes, generator_optimizer):
-    noise = tf.random.normal([batch_size, latent_dim])
-    fake_labels = tf.random.uniform([batch_size, 1], 0, num_classes, dtype=tf.int32)
+def generator_training_step(generator, critic, batch_size, latent_dim, num_classes, generator_optimizer, m):
+    noise = tf.random.normal([batch_size * m, latent_dim])
+    fake_labels = tf.random.uniform([batch_size * m, 1], 0, num_classes, dtype=tf.int32)
     
     with tf.GradientTape() as tape:
         generated_images = generator([noise, fake_labels], training=True)
-        gen_output = critic([generated_images, fake_labels], training=True)
+        generated_images_packed = tf.reshape(generated_images, (batch_size, data_shape[0], data_shape[1], num_classes * m))
+        packed_labels = fake_labels[:batch_size]
+
+        gen_output = critic([generated_images_packed, packed_labels], training=True)
         generator_loss = -tf.reduce_mean(gen_output)
     
     generator_gradients = tape.gradient(generator_loss, generator.trainable_variables)
     generator_optimizer.apply_gradients(zip(generator_gradients, generator.trainable_variables)) if generator_gradients else None
+    
     return generator_loss
 
-def train_wgan(gan, generator, critic, critic_optimizer, generator_optimizer, data_shape, num_classes, latent_dim, epochs, batch_size, critic_interval, generator_interval):
+def train_wgan(generator, critic, critic_optimizer, generator_optimizer, data_shape, num_classes, latent_dim, epochs, batch_size, critic_interval, generator_interval, m=2):
     for epoch in range(epochs):
         critic_losses, critic_real_losses, critic_fake_losses, generator_losses = [], [], [], []
         for _ in range(critic_interval):
-            real_labels = tf.random.uniform([batch_size, 1], 0, num_classes, dtype=tf.int32)
-            real_images = tf.one_hot(tf.random.uniform([batch_size, *data_shape], 0, num_classes, dtype=tf.int32), depth=num_classes)
+            real_labels = tf.random.uniform([batch_size * m, 1], 0, num_classes, dtype=tf.int32)
+            real_images = tf.one_hot(tf.random.uniform([batch_size * m, *data_shape], 0, num_classes, dtype=tf.int32), depth=num_classes)
             critic_loss, critic_real_loss, critic_fake_loss = critic_training_step(
-                critic, generator, batch_size, latent_dim, num_classes, critic_optimizer, real_images, real_labels
+                critic, generator, batch_size, latent_dim, num_classes, critic_optimizer, real_images, real_labels, m
             )
             critic_losses.append(critic_loss)
             critic_real_losses.append(critic_real_loss)
@@ -131,7 +141,7 @@ def train_wgan(gan, generator, critic, critic_optimizer, generator_optimizer, da
             
         for _ in range(generator_interval):
             generator_loss = generator_training_step(
-                generator, critic, batch_size, latent_dim, num_classes, generator_optimizer
+                generator, critic, batch_size, latent_dim, num_classes, generator_optimizer, m
             )
             generator_losses.append(generator_loss)
         
@@ -154,11 +164,11 @@ num_classes = 4
 
 generator = build_generator(latent_dim, data_shape, num_classes)
 generator.summary()
-critic = build_critic(data_shape, num_classes)
+critic = build_critic_pacgan(data_shape, num_classes)
 critic.summary()
-gan, critic, generator, critic_optimizer, generator_optimizer = build_wgan(generator, critic)
+critic, generator, critic_optimizer, generator_optimizer = build_wgan(generator, critic)
 
 # Train the model
-train_wgan(gan, generator, critic, critic_optimizer, generator_optimizer, data_shape, num_classes, latent_dim, epochs=20, batch_size=512, critic_interval=5, generator_interval=1)
+train_wgan(generator, critic, critic_optimizer, generator_optimizer, data_shape, num_classes, latent_dim, epochs=10, batch_size=16, critic_interval=5, generator_interval=1)
 
 # Use tf.Data.dataset, fit after defining custom training loop
