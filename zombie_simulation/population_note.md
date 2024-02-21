@@ -137,6 +137,9 @@ https://arxiv.org/pdf/1712.04086.pdf
 BigGAN
 https://xiaosean5408.medium.com/biggan%E7%B0%A1%E4%BB%8B-large-scale-gan-training-for-high-fidelity-natural-image-synthesis-df349a5f811c
 
+ACGAN
+https://arxiv.org/abs/2111.01118
+
 BEGAN: Boundary Equibilibrium Generative Adversarial Networks
 https://towardsdatascience.com/wasserstein-distance-gan-began-and-progressively-growing-gan-7e099f38da96
 https://github.com/artcg/BEGAN
