@@ -157,7 +157,7 @@ https://nvlabs.github.io/denoising-diffusion-gan/
 Self-Attention GAN
 
 List of GANs
-https://github.com/hindupuravinash/the-gan-zoo      
+https://github.com/hindupuravinash/the-gan-zoo
 """
 
 """
@@ -3906,6 +3906,28 @@ While Gaussian Naive Bayes assumes that features follow a continuous normal dist
 
 """
 f principle
+"""
+
+"""
+Control theory
+In optimal control theory, the Lagrange multipliers are interpreted as costate variables, and Lagrange multipliers are reformulated as the minimization of the Hamiltonian, in Pontryagin's minimum principle.
+
+Nonlinear programming
+The Lagrange multiplier method has several generalizations. In nonlinear programming there are several multiplier rules, e.g. the Carathéodory–John Multiplier Rule and the Convex Multiplier Rule, for inequality constraints.
+
+Safe Reinforcement Learning
+The method of Lagrange multipliers applies to constrained Markov decision processes. It naturally produces gradient-based primal-dual algorithms in safe reinforcement learning.
+"""
+
+"""
+use list to store the items in the backpack and the skills of the player
+use double cross linked list to access the other players in the area of interest
+use stack to store opened user interface
+use queue to store the tasks to be done
+use tree to store the map of the game
+use dictionary tree to store the name of the players for prefix search
+use adjacency list to generate a infinite and logically reasonable animation
+use Directed Acyclic Graph to store the sorting of tasks depending on the finish of the previous task
 """
 
 """
