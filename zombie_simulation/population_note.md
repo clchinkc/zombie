@@ -157,10 +157,20 @@ https://nvlabs.github.io/denoising-diffusion-gan/
 Self-Attention GAN
 
 List of GANs
-https://github.com/hindupuravinash/the-gan-zoo
+https://github.com/hindupuravinash/the-gan-zoo      
 """
 
 """
+transfer from tensorflow to keras 3.0
+
+use gemma in keras 3.0
+https://blog.google/technology/developers/gemma-open-models/
+https://ai.google.dev/gemma?hl=zh-tw
+https://developers.googleblog.com/2024/02/gemma-models-in-keras.html
+https://keras.io/api/keras_nlp/
+https://ai.google.dev/gemma/docs/get_started
+https://ai.google.dev/gemma/docs/lora_tuning
+
 sklearn.preprocessing.LabelBinarizer
 https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.LabelBinarizer.html
 
