@@ -107,6 +107,8 @@ https://kavitaanant.medium.com/gan-performance-improvement-ea0a4059ee59
 Improved Techniques for Training GANs
 https://www.researchgate.net/publication/305881127_Improved_Techniques_for_Training_GANs
 
+Improving the improved training of wasserstein GANs: A consistency term and its dual effect.
+
 Pix2Pix GAN
 https://machinelearningmastery.com/how-to-develop-a-pix2pix-gan-for-image-to-image-translation/
 
@@ -120,10 +122,8 @@ https://medium.com/@sunnerli/the-missing-piece-of-gan-d091604a615a
 DeconvNet and RedNet
 https://medium.com/@sunnerli/simple-introduction-about-hourglass-like-model-11ee7c30138
 
-Improved WGAN
+custom training loop
 https://github.com/keras-team/keras-contrib/blob/master/examples/improved_wgan.py
-https://towardsdatascience.com/demystified-wasserstein-gan-with-gradient-penalty-ba5e9b905ead
-https://keras.io/examples/generative/wgan_gp/
 
 Nadam vs AdamW
 Change the L2 regularization of Nadam to weight decay based on AdamW
@@ -156,11 +156,29 @@ https://nvlabs.github.io/denoising-diffusion-gan/
 
 Self-Attention GAN
 
+Brock, A., J. Donahue, and K. Simonyan (2018). Large scale gan training for high fidelity natural image synthesis. arXiv preprint arXiv:1809.11096.
+
+Yaz, Y., C.-S. Foo, S. Winkler, K.-H. Yap, G. Piliouras, V. Chandrasekhar, et al. (2018). The unusual effectiveness of averaging in gan training. In International Conference on Learning Representations.
+
+Yujia Li, Alexander Schwing, Kuan-Chieh Wang, and Richard Zemel. Dualing gans. In Advances in Neural Information Processing Systems 30, pages 5611–5621. 2017.
+
+Tim Salimans, Ian Goodfellow, Wojciech Zaremba, Vicki Cheung, Alec Radford, and Xi Chen.
+Improved techniques for training gans. In Advances in Neural Information Processing Systems,
+pages 2234–2242, 2016.
+
+Performance metrics
+Ivo Danihelka, Balaji Lakshminarayanan, Benigno Uria, Daan Wierstra, and Peter Dayan. Comparison of Maximum Likelihood and GAN-based training of Real NVPs. arXiv:1705.05263, 2017.
+Daniel Jiwoong Im, He Ma, Graham Taylor, and Kristin Branson. Quantitatively Evaluating GANs With Divergences Proposed for Training. arXiv:1803.01045, 2018.
+Ishaan Gulrajani, Colin Raffel, and Luke Metz. Towards GAN Benchmarks Which Require Generalization. To appear at ICLR 2019.
+
+
 List of GANs
 https://github.com/hindupuravinash/the-gan-zoo
 """
 
 """
+Use #%% for changing to jupyter
+
 transfer from tensorflow to keras 3.0
 
 use gemma in keras 3.0
