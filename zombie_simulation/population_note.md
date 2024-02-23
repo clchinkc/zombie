@@ -131,9 +131,6 @@ Change the squared gradients of Nadam to max norm of the gradients based on Adam
 Adan
 https://arxiv.org/pdf/2208.06677.pdf
 
-PacGAN: The power of two samples in generative adversarial networks
-https://arxiv.org/pdf/1712.04086.pdf
-
 BigGAN
 https://xiaosean5408.medium.com/biggan%E7%B0%A1%E4%BB%8B-large-scale-gan-training-for-high-fidelity-natural-image-synthesis-df349a5f811c
 
@@ -156,21 +153,80 @@ https://nvlabs.github.io/denoising-diffusion-gan/
 
 Self-Attention GAN
 
+MMD GAN: Towards Deeper Understanding of Moment Matching Network
+
 Brock, A., J. Donahue, and K. Simonyan (2018). Large scale gan training for high fidelity natural image synthesis. arXiv preprint arXiv:1809.11096.
 
 Yaz, Y., C.-S. Foo, S. Winkler, K.-H. Yap, G. Piliouras, V. Chandrasekhar, et al. (2018). The unusual effectiveness of averaging in gan training. In International Conference on Learning Representations.
 
 Yujia Li, Alexander Schwing, Kuan-Chieh Wang, and Richard Zemel. Dualing gans. In Advances in Neural Information Processing Systems 30, pages 5611–5621. 2017.
 
-Tim Salimans, Ian Goodfellow, Wojciech Zaremba, Vicki Cheung, Alec Radford, and Xi Chen.
-Improved techniques for training gans. In Advances in Neural Information Processing Systems,
-pages 2234–2242, 2016.
+Tim Salimans, Ian Goodfellow, Wojciech Zaremba, Vicki Cheung, Alec Radford, and Xi Chen. Improved techniques for training gans. In Advances in Neural Information Processing Systems, pages 2234–2242, 2016.
+
+Yuhuai Wu, Yuri Burda, Ruslan Salakhutdinov, and Roger Grosse. On the quantitative analysis of decoder-based generative models. arXiv preprint arXiv:1611.04273, 2016.
+
+Vincent Dumoulin, Ishmael Belghazi, Ben Poole, Alex Lamb, Martin Arjovsky, Olivier Mastropietro, and Aaron Courville. Adversarially learned inference. arXiv preprint arXiv:1606.00704, 2016.
+
+Tim Salimans, Ian Goodfellow, Wojciech Zaremba, Vicki Cheung, Alec Radford, and Xi Chen. Improved techniques for training gans. In Advances in Neural Information Processing Systems, pages 2234–2242, 2016.
+
+Akash Srivastava, Lazar Valkov, Chris Russell, Michael Gutmann, and Charles Sutton. Veegan: Reducing mode collapse in gans using implicit variational learning. arXiv preprint arXiv:1705.07761, 2017.
+
+Shibani Santurkar, Ludwig Schmidt, and Aleksander Madry. A classification-based perspective on GAN distributions. arXiv preprint arXiv:1711.00970, 2017.
+
+Eitan Richardson and Yair Weiss. On gans and gmms. arXiv preprint arXiv:1805.12462, 2018.
+
+Tu Nguyen, Trung Le, Hung Vu, and Dinh Phung. Dual discriminator generative adversarial nets. In Advances in Neural Information Processing Systems, pages 2667–2677, 2017.
+
+Sanjeev Arora, Rong Ge, Yingyu Liang, Tengyu Ma, and Yi Zhang. Generalization and equilibrium in generative adversarial nets (GANs). arXiv preprint arXiv:1703.00573, 2017.
+
+Understanding GANs: the LQG Setting
+
+https://ycts.github.io/weeklypapers/SeqGAN/
+
+regularization
+
+Ishaan Gulrajani, Faruk Ahmed, Martin Arjovsky, Vincent Dumoulin, and Aaron Courville. Improved training of Wasserstein GANs. arXiv preprint arXiv:1704.00028, 2017.
+
+Lars Mescheder, Sebastian Nowozin, and Andreas Geiger. The numerics of gans. In Advances in Neural Information Processing Systems 30, pages 1823–1833. 2017.
+
+Vaishnavh Nagarajan and J. Zico Kolter. Gradient descent gan optimization is locally stable. In I. Guyon, U. V. Luxburg, S. Bengio, H. Wallach, R. Fergus, S. Vishwanathan, and R. Garnett, editors, Advances in Neural Information Processing Systems 30, pages 5591–5600. 2017.
+
+Kevin Roth, Aurelien Lucchi, Sebastian Nowozin, and Thomas Hofmann. Stabilizing training of generative adversarial networks through regularization. In Advances in Neural Information Processing Systems, pages 2015–2025, 2017.
+
+Martin Heusel, Hubert Ramsauer, Thomas Unterthiner, Bernhard Nessler, and Sepp Hochreiter. Gans trained by a two time-scale update rule converge to a local nash equilibrium. In Advances in Neural Information Processing Systems 30, pages 6629–6640. 2017.
+
+Takeru Miyato, Toshiki Kataoka, Masanori Koyama, and Yuichi Yoshida. Spectral normalization for generative adversarial networks. In International Conference on Learning Representations (ICLR), 2018.
+
+Solution to mode collapse
+
+Tong Che, Yanran Li, Athul Paul Jacob, Yoshua Bengio, and Wenjie Li. Mode regularized generative adversarial networks. arXiv preprint arXiv:1612.02136, 2016.
+
+Jeff Donahue, Philipp Kr¨ahenb¨uhl, and Trevor Darrell. Adversarial feature learning. arXiv preprint arXiv:1605.09782, 2016.
+
+Vincent Dumoulin, Ishmael Belghazi, Ben Poole, Alex Lamb, Martin Arjovsky, Olivier Mastropietro, and Aaron Courville. Adversarially learned inference. arXiv preprint arXiv:1606.00704, 2016.
+
+Tu Nguyen, Trung Le, Hung Vu, and Dinh Phung. Dual discriminator generative adversarial nets. In Advances in Neural Information Processing Systems, pages 2667–2677, 2017.
+
+Yunus Saatci and Andrew Wilson. Bayesian gans. In Advances in Neural Information Processing Systems, pages 3624–3633, 2017.
+
+Tim Salimans, Ian Goodfellow, Wojciech Zaremba, Vicki Cheung, Alec Radford, and Xi Chen. Improved techniques for training gans. In Advances in Neural Information Processing Systems, pages 2234–2242, 2016.
+
+Akash Srivastava, Lazar Valkov, Chris Russell, Michael Gutmann, and Charles Sutton. Veegan: Reducing mode collapse in gans using implicit variational learning. arXiv preprint arXiv:1705.07761, 2017.
+
+The discriminator’s loss function is log(1 + exp(−D(real data))) + log(1 +exp(D(generated data))). The generator’s loss function is log(1 + exp(D(real data))) + log(1 +exp(−D(generated data))). 
+
+Neural network divergence has much better generalization properties than Jensen-Shannon divergence or Wasserstein distance.
 
 Performance metrics
 Ivo Danihelka, Balaji Lakshminarayanan, Benigno Uria, Daan Wierstra, and Peter Dayan. Comparison of Maximum Likelihood and GAN-based training of Real NVPs. arXiv:1705.05263, 2017.
 Daniel Jiwoong Im, He Ma, Graham Taylor, and Kristin Branson. Quantitatively Evaluating GANs With Divergences Proposed for Training. arXiv:1803.01045, 2018.
 Ishaan Gulrajani, Colin Raffel, and Luke Metz. Towards GAN Benchmarks Which Require Generalization. To appear at ICLR 2019.
 
+Generator Training with Probability Ratio Clipping
+Discriminator Training with Sample Re-weighting
+https://github.com/Holmeswww/PPOGAN
+https://proceedings.neurips.cc/paper/2020/file/3eb46aa5d93b7a5939616af91addfa88-Paper.pdf
+paper read, both method in github can be tried
 
 List of GANs
 https://github.com/hindupuravinash/the-gan-zoo
