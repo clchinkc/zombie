@@ -95,8 +95,6 @@ https://www.tensorflow.org/tutorials/generative/dcgan
 KL divergence
 JS divergence
 
-Feature Matching: Forces the generator to match the statistics of the real data features, encouraging it to explore more of the data distribution.
-
 
 Diversity Metrics: Implementing diversity metrics (e.g. Fréchet Inception Distance) can help quantify the diversity and quality of generated samples, providing more objective measures to detect mode collapse.
 https://zh.m.wikipedia.org/wiki/%E5%A4%9A%E6%A0%B7%E6%80%A7%E6%8C%87%E6%95%B0
@@ -131,11 +129,10 @@ Change the squared gradients of Nadam to max norm of the gradients based on Adam
 Adan
 https://arxiv.org/pdf/2208.06677.pdf
 
-BigGAN
-https://xiaosean5408.medium.com/biggan%E7%B0%A1%E4%BB%8B-large-scale-gan-training-for-high-fidelity-natural-image-synthesis-df349a5f811c
-
 ACGAN
 https://arxiv.org/abs/2111.01118
+
+orthogonal regulatization in BigGAN
 
 BEGAN: Boundary Equibilibrium Generative Adversarial Networks
 https://towardsdatascience.com/wasserstein-distance-gan-began-and-progressively-growing-gan-7e099f38da96
@@ -151,7 +148,19 @@ diffusion GAN
 https://github.com/Zhendong-Wang/Diffusion-GAN
 https://nvlabs.github.io/denoising-diffusion-gan/
 
-Self-Attention GAN
+use Spectral Normalization in generator to replace gradient penalty
+https://arxiv.org/abs/1802.05957
+
+self attention gan
+https://arxiv.org/abs/1805.08318
+
+McGan: Mean and Covariance Feature Matching GAN
+Feature Matching: Forces the generator to match the statistics of the real data features, encouraging it to explore more of the data distribution.
+use feature space mapping in discriminators
+https://arxiv.org/abs/1702.08398
+
+Geometric GAN
+https://arxiv.org/abs/1705.02894
 
 MMD GAN: Towards Deeper Understanding of Moment Matching Network
 
@@ -178,6 +187,10 @@ Eitan Richardson and Yair Weiss. On gans and gmms. arXiv preprint arXiv:1805.124
 Tu Nguyen, Trung Le, Hung Vu, and Dinh Phung. Dual discriminator generative adversarial nets. In Advances in Neural Information Processing Systems, pages 2667–2677, 2017.
 
 Sanjeev Arora, Rong Ge, Yingyu Liang, Tengyu Ma, and Yi Zhang. Generalization and equilibrium in generative adversarial nets (GANs). arXiv preprint arXiv:1703.00573, 2017.
+
+J. Zhao, M. Mathieu, and Y. LeCun, “Energy-based generative adversarial network,” arXiv preprint arXiv:1609.03126, 2017.
+
+S. Nowozin, B. Cseke, and R. Tomioka, “f-GAN: Training generative neural samplers using variational divergence minimization,” in Advances in Neural Information Processing Systems, 2016, pp. 271–279.
 
 Understanding GANs: the LQG Setting
 
