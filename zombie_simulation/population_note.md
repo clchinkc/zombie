@@ -113,9 +113,12 @@ https://machinelearningmastery.com/how-to-develop-a-pix2pix-gan-for-image-to-ima
 CycleGAN
 https://www.tensorflow.org/tutorials/generative/cyclegan
 https://machinelearningmastery.com/cyclegan-tutorial-with-keras/
+https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
 
 Relativistic GAN
+Use real data to train generator too trying to map them
 https://medium.com/@sunnerli/the-missing-piece-of-gan-d091604a615a
+https://github.com/SunnerLi/RelativisticGAN_Demo
 
 DeconvNet and RedNet
 https://medium.com/@sunnerli/simple-introduction-about-hourglass-like-model-11ee7c30138
@@ -130,7 +133,13 @@ Adan
 https://arxiv.org/pdf/2208.06677.pdf
 
 ACGAN
+Output a label prob with the realness prob in the discriminator. Add the categorical cross entropy loss for training. Keep the label input in the generator.
+https://blog.csdn.net/LOVEmy134611/article/details/109094647
+ReACGAN - improvement over ACGAN
 https://arxiv.org/abs/2111.01118
+
+cGANs with Projection Discriminator
+https://arxiv.org/abs/1802.05637
 
 orthogonal regulatization in BigGAN
 
