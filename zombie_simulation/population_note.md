@@ -259,6 +259,8 @@ Use #%% for changing to jupyter
 
 transfer from tensorflow to keras 3.0
 
+Autoregressive to predict multiple timestep for the prediction observer
+
 use gemma in keras 3.0
 https://blog.google/technology/developers/gemma-open-models/
 https://ai.google.dev/gemma?hl=zh-tw

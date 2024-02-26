@@ -597,6 +597,12 @@ for line, score in results:
 # Spelling correction using nltk / character n-gram / fuzzy
 # http://norvig.com/spell-correct.html
 
+# https://github.com/languagetool-org/languagetool
+
+# https://explorer.globe.engineer/
+
+# https://www.ithome.com.tw/news/161350
+
 # https://github.com/Friedrich94326/IR_using_chunking
 
 # https://course.spacy.io/zh/

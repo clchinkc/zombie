@@ -90,10 +90,10 @@ This Python project uses the tkinter library to create a simple text editor with
 Post-it Notes
 Post-it notes are an excellent way to note down trivial chores so that you don’t forget to do them. In this project, we’ll make a virtual version of the physical, adhesive post-it notes. The main goal of building this application is to allow users to carry their post-it notes wherever they go (since it is on a digital platform). The application should have an option for account creation, different layouts for post-it notes, and a categorization feature to allow users to segment their notes. You can consider using Django for this project since it has an in-built user authentication feature.
 
+https://github.com/usememos/memos
 
 Plagiarism Checker
 Content writing is one of the most prolific online businesses. The market lacks a free tool that can be used to check for plagiarism in documents. You can use a natural language processing library along with the Google search API to create a program that searches the first few pages of Google and checks for plagiarism.
-
 
 
 
@@ -136,6 +136,8 @@ Whisper
 https://orangeblog.notion.site/Cloudflare-51500e9c205543e6b111ec21f9bcd18d
 
 https://edm.bnext.com.tw/member/
+
+https://treehacks-2023.devpost.com/project-gallery
 
 GUI programming, algorithm design, string manipulation, multi-thread, database management, and data processing
 
@@ -345,6 +347,7 @@ time series database
 InfluxDB 3.0
 https://thenewstack.io/predictive-analytics-using-a-time-series-database/
 https://iter01.com/559859.html
+https://github.com/time-series-foundation-models/lag-llama
 
 financial analysis
 quantitative finance python
@@ -1455,6 +1458,9 @@ https://archive.is/7t3it
 https://www.ithome.com.tw/news/161333
 Gemini 1.5 Pro
 https://github.com/LargeWorldModel/LWM
+https://github.com/facebookresearch/DiT
+https://github.com/phidatahq/phidata
+https://groq.com/
 
 bard api
 https://github.com/dsdanielpark/Bard-API
@@ -1873,6 +1879,7 @@ https://zhuanlan.zhihu.com/p/365181933
 https://github.com/jc-LeeHub/Recommend-System-tf2.0
 https://blog.csdn.net/fgg1234567890/article/details/115190048
 https://developer.aliyun.com/article/1144370
+https://github.com/tensorflow/recommenders-addons
 
 spotify
 spotify top songs machine learning
@@ -1881,6 +1888,7 @@ https://blog.tensorflow.org/2023/10/simulated-spotify-listening-experiences-rein
 https://www.analyticsvidhya.com/blog/2023/03/solving-spotify-multiclass-genre-classification-problem/
 https://blog.devgenius.io/data-engineering-project-2-building-spotify-etl-using-python-and-airflow-432dd8e4ffa3
 https://twitter.com/SHL0MS/status/1652842277788692480
+https://github.com/KRTirtho/spotube
 
 API
 Here are the summarized functions of each API mentioned:
