@@ -171,6 +171,10 @@ https://arxiv.org/abs/1702.08398
 Geometric GAN
 https://arxiv.org/abs/1705.02894
 
+VQGAN
+
+gan vs vae vs diffusion model
+
 MMD GAN: Towards Deeper Understanding of Moment Matching Network
 
 Brock, A., J. Donahue, and K. Simonyan (2018). Large scale gan training for high fidelity natural image synthesis. arXiv preprint arXiv:1809.11096.
