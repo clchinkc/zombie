@@ -198,6 +198,9 @@ https://replit.com/
 https://github.com/TertiumQuid/cthulhu-casebook
 https://github.com/yihong0618/bilingual_book_maker
 https://github.com/yihong0618/gitblog/issues/259
+solve minimax of sudoku using backtracking
+markov_chain_composer
+Pathfinding-Visualizer
 
 Must read books
 https://hands1ml.apachecn.org/#/ # Sklearn 与 TensorFlow 机器学习实用指南第二版
@@ -453,6 +456,9 @@ Write a stock strategy backtest environment.
 technical analysis (TA) indicators, such as moving averages (MA), moving average convergence divergence (MACD), Bollinger Bands (BB), relative strength index (RSI), average true range (ATR), and others.
 https://www.blocktempo.com/five-dune-analytics-metrics-to-help-you-filter-out-potential-nft/
 https://www.blocktempo.com/500-return-on-investment-in-ai/
+https://github.com/nickmccullum/algorithmic-trading-python
+Hidden Markov Model for Stock Trading
+Short‑term stock market price trend prediction using a comprehensive deep learning system
 
 Data Science
 The tutorial will cover the following topics:
@@ -542,6 +548,7 @@ https://www.researchgate.net/publication/351225438_Expert_iteration
 https://github.com/openai/retro
 Decision Transformer: Reinforcement Learning via Sequence Modeling
 Online Decision Transformer
+Beating the World’s Best at Super Smash Bros. Melee with Deep Reinforcement Learning
 
 From this list, we can identify common properties that make learning easier. None of the properties below are required for learning, but satisfying more of them is definitively better.
 

@@ -265,6 +265,8 @@ transfer from tensorflow to keras 3.0
 
 Autoregressive to predict multiple timestep for the prediction observer
 
+human input moving strategy
+
 use gemma in keras 3.0
 https://blog.google/technology/developers/gemma-open-models/
 https://ai.google.dev/gemma?hl=zh-tw
@@ -4030,6 +4032,10 @@ use tree to store the map of the game
 use dictionary tree to store the name of the players for prefix search
 use adjacency list to generate a infinite and logically reasonable animation
 use Directed Acyclic Graph to store the sorting of tasks depending on the finish of the previous task
+"""
+
+"""
+Fisher kernel
 """
 
 """
