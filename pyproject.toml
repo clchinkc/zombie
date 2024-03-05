@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "zombie_simulation"
+version = "0.0.1"
+authors = [
+  { name="clchinkc", email="clchin@connect.ust.hk" },
+]
+description = "A simple zombie simulation"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/clchinkc/zombie"
+Issues = "https://github.com/clchinkc/zombie/issues"
