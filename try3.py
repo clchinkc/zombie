@@ -44,7 +44,9 @@ This structured approach allows for a comprehensive simulation of a zombie apoca
 
 from __future__ import annotations
 
+import builtins
 import math
+import os
 import random
 import time
 import tkinter as tk
@@ -52,28 +54,47 @@ from abc import ABC, abstractmethod
 from collections import Counter
 from copy import deepcopy
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum, auto
 from functools import cached_property
 from itertools import product
 from typing import Any, Optional
 
+import keras
+import matplotlib.animation as animation
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import pygame
+import scipy
 import seaborn as sns
-from keras import layers, models
+import tensorflow as tf
+from keras import layers
 from matplotlib import animation, colors, patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.table import Table
 from matplotlib.transforms import Bbox
+from numpy.fft import fft, fft2, fftshift
 from plotly.subplots import make_subplots
 from scipy import stats
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
+from scipy.interpolate import interp1d
+from skimage.metrics import structural_similarity as ssim
+from sklearn.metrics import f1_score
+from sklearn.model_selection import ParameterGrid, train_test_split
+from sklearn.utils import resample
+from sklearn.utils.class_weight import compute_class_weight
+from tensorboard import default, program
+
+
+def set_seed(seed):
+    tf.random.set_seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    random.seed(seed)
 
 
 class HealthState(Enum):
@@ -1290,10 +1311,19 @@ class TkinterObserver(Observer):
 
 
 class PredictionObserver(Observer):
-    def __init__(self, population: Population) -> None:
+    def __init__(self, population: Population, data_dir="./simulation_data") -> None:
         self.subject = population
         self.subject.attach_observer(self)
+        self.data_dir = data_dir
         self.grid_history = []
+        self.load_previous_data()
+
+    def load_previous_data(self):
+        self.grid_history_path = os.path.join(self.data_dir, "grid_history.npz")
+        if os.path.exists(self.grid_history_path):
+            with np.load(self.grid_history_path) as data:
+                self.grid_history = data["grid_history"].tolist()
+        print(f"Loaded {len(self.grid_history)} grid states from previous simulation.")
 
     def update(self) -> None:
         current_grid_state = self.capture_grid_state()
@@ -1309,55 +1339,944 @@ class PredictionObserver(Observer):
 
     def prepare_data(self, N):
         X, y = [], []
-        for i in range(N, len(self.grid_history)):
-            X.append(np.array(self.grid_history[i-N:i]))
-            y.append(np.array(self.grid_history[i]))
+        for i in range(N, len(self.grid_history[:-1])):
+            X.append(np.array([keras.utils.to_categorical(frame, num_classes=4) for frame in self.grid_history[i - N:i]]))
+            y.append(np.array(keras.utils.to_categorical(self.grid_history[i], num_classes=4)))
         return np.array(X), np.array(y)
 
-    def train_model(self):
-        N = 5
-        X, y = self.prepare_data(N)
+    def augment_data(self, X, y):
+        augmented_X, augmented_y = self.basic_augmentation(X, y)
+        modified_X, modified_y = self.advanced_augmentation(augmented_X, augmented_y)
+        return augmented_X, augmented_y, modified_X, modified_y
 
-        # Reshape for ConvLSTM input
-        X = X.reshape((-1, X.shape[1], X.shape[2], X.shape[3], 1))
-        y = y.reshape((-1, y.shape[1], y.shape[2], 1))
+    def basic_augmentation(self, X, y):
+        augmented_X = []
+        augmented_y = []
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+        for i in range(len(X)):
+            # Original data
+            augmented_X.append(X[i])
+            augmented_y.append(y[i])
 
-        # ConvLSTM model
-        model = models.Sequential([
-            layers.ConvLSTM2D(filters=16, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=True, input_shape=X_train.shape[1:]),
-            layers.Dropout(0.2),
-            layers.LayerNormalization(),
-            layers.ConvLSTM2D(filters=32, kernel_size=(3, 3), activation='relu', padding='same', return_sequences=False),
-            layers.Dropout(0.2),
-            layers.LayerNormalization(),
-            layers.Conv2D(filters=1, kernel_size=(3, 3), activation='linear', padding='same')
-        ])
+            # Horizontal flip
+            X_hor_flip = np.flip(X[i], axis=1)
+            y_hor_flip = np.flip(y[i], axis=0)
+            augmented_X.append(X_hor_flip)
+            augmented_y.append(y_hor_flip)
 
-        model.compile(optimizer='adam', loss='mean_squared_error')
-        model.fit(X_train, y_train, epochs=20, validation_split=0.2)
+            # Vertical flip
+            X_ver_flip = np.flip(X[i], axis=2)
+            y_ver_flip = np.flip(y[i], axis=1)
+            augmented_X.append(X_ver_flip)
+            augmented_y.append(y_ver_flip)
 
-        self.model = model
+            # Rotations 90, 180, 270 degrees
+            for angle in [90, 180, 270]:
+                X_rotated = scipy.ndimage.rotate(X[i], angle, axes=(1, 2), reshape=False)
+                y_rotated = scipy.ndimage.rotate(y[i], angle, axes=(0, 1), reshape=False)
+                augmented_X.append(X_rotated)
+                augmented_y.append(y_rotated)
+                
+            # Translations
+            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                X_translated = np.roll(X[i], (dx, dy), axis=(1, 2))
+                y_translated = np.roll(y[i], (dx, dy), axis=(0, 1))
+                augmented_X.append(X_translated)
+                augmented_y.append(y_translated)
 
-        # Evaluate the model
-        predictions = self.model.predict(X_test)
-        mse = mean_squared_error(y_test.reshape(y_test.shape[0], -1), predictions.reshape(predictions.shape[0], -1))
-        print(f"Model Mean Squared Error: {mse}")
+        augmented_X = np.array(augmented_X)
+        augmented_y = np.array(augmented_y)
+        return augmented_X, augmented_y
 
-    def display_observation(self):
-        if getattr(self, "model", None) is None:
-            self.train_model()
-        past_grid_state = self.grid_history[-5:]
-        print(self.grid_history[-1])
-        input_data = np.array(past_grid_state).reshape((1, -1, self.subject.school.size, self.subject.school.size, 1))
-        predicted_grid_state = self.model.predict(input_data)
-        reshaped_grid_state = predicted_grid_state.reshape((self.subject.school.size, self.subject.school.size))
+    def advanced_augmentation(self, augmented_X, augmented_y, modification_rate=0.01, noise_level=0.01, time_distortion_weights=(0.7, 0.2, 0.1), warping_strength=0.1, num_agents_to_move=1):
+        modified_X = []
+        modified_y = []
+
+        for i in range(len(augmented_X)):
+            # Cell Type Modification Augmentation
+            X_cell_mod = np.copy(augmented_X[i])
+            num_modifications = int(modification_rate * X_cell_mod.size)
+            indices = np.random.choice(X_cell_mod.size, num_modifications, replace=False)
+            new_values = np.random.choice(np.array([0, 1, 2, 3]), num_modifications)
+            np.put(X_cell_mod, indices, new_values)
+            modified_X.append(X_cell_mod)
+            modified_y.append(augmented_y[i])
+
+            # Jittering Augmentation
+            noise = noise_level * np.random.randn(*augmented_X[i].shape)
+            X_noise_inject = augmented_X[i] + noise
+            X_noise_inject = np.clip(X_noise_inject, 0, 3)  # Ensure the noisy data is within valid range
+            modified_X.append(X_noise_inject)
+            modified_y.append(augmented_y[i])
+
+            # Time-Distortion Augmentation
+            X_time_distort = np.copy(augmented_X[i])
+            num_weights = len(time_distortion_weights)
+            for t in range(num_weights - 1, augmented_X[i].shape[0]):
+                X_time_distort[t] = sum(time_distortion_weights[j] * X_time_distort[t - j] for j in range(num_weights))
+            modified_X.append(X_time_distort)
+            modified_y.append(augmented_y[i])
+            
+            # Time Warping Augmentation
+            num_knots = max(int(warping_strength * augmented_X[i].shape[1]), 2)
+            seq_length = augmented_X.shape[1]
+            original_indices = np.linspace(0, seq_length - 1, seq_length)
+            knot_positions = np.linspace(0, seq_length - 1, num=num_knots, dtype=int)
+            knot_offsets = warping_strength * np.random.randn(num_knots)
+            warp_indices = np.clip(knot_positions + knot_offsets, 0, seq_length - 1)
+            warp_function = interp1d(knot_positions, warp_indices, kind='linear', bounds_error=False)
+            new_indices = warp_function(original_indices)
+            new_indices = np.clip(new_indices, 0, seq_length - 1)
+            signal = augmented_X[i]
+            interp_function = interp1d(original_indices, signal, axis=0, kind='linear', bounds_error=False)
+            warped_signal = interp_function(new_indices)
+            warped_signal = np.clip(warped_signal, 0, 3)
+
+            modified_X.append(warped_signal)
+            modified_y.append(augmented_y[i])
+
+            # Move a specified number of agents augmentation
+            X_moved = np.copy(augmented_X[i])
+            y_moved = np.copy(augmented_y[i])
+            width, height = X_moved.shape[1], X_moved.shape[2]
+
+            # Identify agent positions in both X and y
+            agent_positions = np.argwhere(np.any(X_moved > 0, axis=-1) & np.any(y_moved > 0, axis=-1))
+            np.random.shuffle(agent_positions)
+
+            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                moved_agents = 0
+
+                for t, x, y in agent_positions:
+                    if moved_agents >= num_agents_to_move:
+                        break
+
+                    new_x, new_y = x + dx, y + dy
+                    if 0 <= new_x < width and 0 <= new_y < height:
+                        # Check the validity of the new position
+                        if not np.any(X_moved[:, max(0, new_x - 1):min(width, new_x + 2), max(0, new_y - 1):min(height, new_y + 2), :]) and not np.any(y_moved[new_x, new_y, :]):
+                            # Move the agent across all timesteps
+                            X_moved[:, x, y, :], X_moved[:, new_x, new_y, :] = X_moved[:, new_x, new_y, :], X_moved[:, x, y, :]
+                            y_moved[x, y, :], y_moved[new_x, new_y, :] = y_moved[new_x, new_y, :], y_moved[x, y, :]
+                            moved_agents += 1
+
+            modified_X.append(X_moved)
+            modified_y.append(y_moved)
+
+        return np.array(modified_X), np.array(modified_y)
+
+    def bootstrap_samples(self, basic_X, basic_y, advanced_X, advanced_y, n_basic_samples, n_advanced_samples):
+        # Function to compute a representation score for each sample
+        def compute_representation_score(y):
+            # Assuming y is one-hot encoded, shape: (samples, width, height, classes)
+            # Sum over width and height dimensions for each class
+            state_presence = np.sum(y, axis=(1, 2))
+            # Ignore state 0 (majority state) and sum the presence of all other states
+            representation_score = np.sum(state_presence[:, 1:], axis=1)
+            return representation_score
+
+        # Compute representation scores for basic and advanced data
+        basic_y_scores = compute_representation_score(basic_y)
+        advanced_y_scores = compute_representation_score(advanced_y)
+
+        # Convert scores to categorical strata (e.g., 'low', 'medium', 'high')
+        # Adjust the quantile thresholds as per your specific data distribution
+        basic_y_strata = pd.qcut(pd.Series(basic_y_scores), q=[0, .33, .66, 1], labels=False, duplicates='drop').fillna(0)
+        advanced_y_strata = pd.qcut(pd.Series(advanced_y_scores), q=[0, .33, .66, 1], labels=False, duplicates='drop').fillna(0)
+
+        # Stratified resampling
+        bootstrapped_basic_X, bootstrapped_basic_y = resample(basic_X, basic_y, n_samples=n_basic_samples, replace=True, stratify=basic_y_strata)
+        bootstrapped_advanced_X, bootstrapped_advanced_y = resample(advanced_X, advanced_y, n_samples=n_advanced_samples, replace=True, stratify=advanced_y_strata)
+        
+        bootstrapped_X = np.concatenate((bootstrapped_basic_X, bootstrapped_advanced_X), axis=0)
+        bootstrapped_y = np.concatenate((bootstrapped_basic_y, bootstrapped_advanced_y), axis=0)
+        
+        return bootstrapped_X, bootstrapped_y
+
+    def channel_wise_dropout(self, rate):
+        def dropout_func(inputs, training=None):
+            if training:
+                # Get the input shape
+                input_shape = inputs.shape
+                noise_shape = (input_shape[0], 1, 1, input_shape[-1])
+
+                # Apply dropout
+                dropout_mask = tf.nn.dropout(tf.ones(noise_shape), rate=rate)
+                return inputs * dropout_mask
+            else:
+                return inputs
+
+        return keras.layers.Lambda(lambda x: dropout_func(x))
+
+    @keras.saving.register_keras_serializable()
+    class ChannelWiseDropout(keras.layers.Layer):
+        def __init__(self, rate, **kwargs):
+            super().__init__(**kwargs)
+            self.rate = rate
+
+        @tf.function
+        def call(self, inputs, training=None):
+            if not training:
+                return inputs
+
+            # Get noise shape
+            input_shape = tf.shape(inputs)
+            batch_size = tf.slice(input_shape, [0], [1])
+            channels = tf.slice(input_shape, [tf.subtract(tf.size(input_shape), 1)], [1])
+            noise_shape = tf.concat(
+                [batch_size, tf.ones(tf.subtract(tf.rank(inputs), 2), dtype=tf.int32), channels], axis=0)
+
+            # Apply dropout
+            dropout_mask = tf.nn.dropout(tf.ones(noise_shape), rate=self.rate)
+            dropout_mask = tf.broadcast_to(dropout_mask, input_shape)
+            return inputs * dropout_mask
+
+        def get_config(self):
+            config = super().get_config()
+            config.update({"rate": self.rate})
+            return config
+
+    def create_model(self, input_shape, filters, kernel_size, dropout_rate, l2_regularizer, use_attention=True):
+        # Input layer
+        inputs = layers.Input(shape=input_shape)
+        
+        # First ConvLSTM2D layer
+        x = layers.LayerNormalization()(inputs)
+        x = layers.GaussianDropout(dropout_rate)(x)
+        x = self.ChannelWiseDropout(dropout_rate)(x)
+        convlstm1 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='gelu', padding='same', return_sequences=True,
+                                    recurrent_dropout=dropout_rate, recurrent_regularizer=keras.regularizers.l2(l2_regularizer), kernel_regularizer=keras.regularizers.l2(l2_regularizer), bias_regularizer=keras.regularizers.l2(l2_regularizer))(x)
+        
+        # LayerNormalization and Dropout after the first ConvLSTM2D
+        x = layers.LayerNormalization()(convlstm1)
+        x = layers.GaussianDropout(dropout_rate)(x)
+        x = self.ChannelWiseDropout(dropout_rate)(x)
+        
+        # Second ConvLSTM2D layer
+        convlstm2 = layers.ConvLSTM2D(filters=filters, kernel_size=kernel_size, activation='gelu', padding='same', return_sequences=True,
+                                    recurrent_dropout=dropout_rate, recurrent_regularizer=keras.regularizers.l2(l2_regularizer), kernel_regularizer=keras.regularizers.l2(l2_regularizer), bias_regularizer=keras.regularizers.l2(l2_regularizer))(x)
+
+        # Adding residual connection
+        x = layers.Add()([convlstm1, convlstm2])
+        
+        # LayerNormalization and Dropout after combining with the residual connection
+        x = layers.LayerNormalization()(x)
+        x = layers.GaussianDropout(dropout_rate)(x)
+        x = self.ChannelWiseDropout(dropout_rate)(x)
+        
+        if use_attention:
+            # Attention Mechanism
+            reshaped_x = layers.Reshape((-1, input_shape[1]*input_shape[2]*filters))(x)
+            attention_output = layers.MultiHeadAttention(num_heads=4, key_dim=filters//16, dropout=dropout_rate,
+                                        kernel_regularizer=keras.regularizers.l2(l2_regularizer), bias_regularizer=keras.regularizers.l2(l2_regularizer))(reshaped_x, reshaped_x)
+            reshaped_attention_output = layers.Reshape((-1, input_shape[1], input_shape[2], filters))(attention_output)
+            
+            # Adding residual connection
+            x = layers.Multiply()([x, reshaped_attention_output])
+            
+            # LayerNormalization and Dropout after combining with the residual connection
+            x = layers.LayerNormalization()(x)
+            x = layers.GaussianDropout(dropout_rate)(x)
+            x = self.ChannelWiseDropout(dropout_rate)(x)
+        
+        # Reducing over the time dimension using GlobalAveragePooling
+        x = layers.Reshape((-1, input_shape[1]*input_shape[2]*filters))(x)
+        x = layers.GlobalAveragePooling1D()(x)
+        x = layers.Reshape((input_shape[1], input_shape[2], filters))(x)
+
+        # Output layer
+        outputs = layers.Conv2D(filters=4, kernel_size=(1, 1), activation='softmax')(x)
+        
+        # Create and compile the model
+        model = keras.models.Model(inputs=inputs, outputs=outputs)
+        
+        optimizer = keras.optimizers.Nadam()
+        
+        custom_loss = self.combined_loss_function
+        model.compile(optimizer=optimizer, loss=custom_loss, metrics=[keras.metrics.CategoricalAccuracy(), keras.metrics.TopKCategoricalAccuracy(k=2)])
+        
+        return model
+
+    def compute_class_weights(self, y):
+        y_indices = np.argmax(y, axis=-1) # Assuming y is one-hot encoded, convert to class indices
+        class_weights = np.zeros((4,))
+        unique_classes = np.unique(y_indices)
+        weights = compute_class_weight('balanced', classes=unique_classes, y=y_indices.flatten())
+        class_weights[unique_classes] = weights
+
+        return class_weights
+
+    @staticmethod
+    @keras.utils.register_keras_serializable()
+    def combined_loss_function(y_true, y_pred, alpha=0.25, gamma=2.0, label_smoothing=0.1, focal_loss_weight=0.25, weighted_loss_weight=0.25, crossentropy_loss_weight=0.25, count_loss_weight=0.25):
+        weights = PredictionObserver.class_weights
+        focal_loss_fn = keras.losses.CategoricalFocalCrossentropy(alpha=alpha, gamma=gamma)
+        crossentropy_loss_fn = keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing)
+
+        def weighted_categorical_crossentropy(y_true, y_pred):
+            y_pred /= tf.reduce_sum(y_pred, axis=-1, keepdims=True)
+            y_pred = tf.clip_by_value(y_pred, keras.backend.epsilon(), 1 - keras.backend.epsilon())
+            loss = y_true * tf.math.log(y_pred) * weights
+            loss = -tf.reduce_sum(loss, -1)
+            return loss
+
+        def count_loss(y_true, y_pred):
+            true_count = tf.reduce_sum(y_true[..., 1], axis=[1, 2])
+            pred_count = tf.reduce_sum(y_pred[..., 1], axis=[1, 2])
+            return tf.reduce_mean(tf.square(true_count - pred_count))
+
+        focal_loss = focal_loss_fn(y_true, y_pred)
+        crossentropy_loss = crossentropy_loss_fn(y_true, y_pred)
+        weighted_loss = weighted_categorical_crossentropy(y_true, y_pred)
+        agent_count_loss = count_loss(y_true, y_pred)
+
+        combined_loss = (tf.math.multiply(focal_loss_weight, focal_loss) +
+                        tf.math.multiply(crossentropy_loss_weight, crossentropy_loss) +
+                        tf.math.multiply(weighted_loss_weight, weighted_loss) +
+                        tf.math.multiply(count_loss_weight, agent_count_loss))
+        return combined_loss
+
+    def cosine_annealing_scheduler(self, max_update=20, base_lr=0.01, final_lr=0.001, warmup_steps=5, warmup_begin_lr=0.001, cycle_length=10, exp_decay_rate=0.5):
+        # Pre-compute constants for efficiency
+        warmup_slope = (base_lr - warmup_begin_lr) / warmup_steps
+        max_steps = max_update - warmup_steps
+
+        def schedule(epoch):
+            if epoch < warmup_steps:
+                # Warmup phase with a linear increase
+                return warmup_begin_lr + warmup_slope * epoch
+            elif epoch < max_update:
+                # Main learning phase with cosine annealing
+                return final_lr + (base_lr - final_lr) * (1 + math.cos(math.pi * (epoch - warmup_steps) / max_steps)) / 2
+            else:
+                # Post-max_update phase with warm restarts and cosine annealing
+                adjusted_epoch = epoch - max_update
+                cycles = math.floor(1 + (adjusted_epoch - 1) / cycle_length)
+                x = adjusted_epoch - (cycles * cycle_length)
+
+                # Apply exponential decay to base_lr only when a new cycle begins
+                decayed_lr = base_lr * (exp_decay_rate ** cycles)
+
+                # Apply cosine annealing within the cycle
+                cycle_base_lr = max(decayed_lr, final_lr)
+                lr = final_lr + (cycle_base_lr - final_lr) * (1 - math.cos(math.pi * x / cycle_length)) / 2
+                return max(lr, final_lr)  # Ensure lr does not go below final_lr
+
+        return schedule
+
+    def tune_hyperparameters(self, train_dataset, batch_size, num_folds, param_grid):
+        best_loss = float('inf')
+        best_params = {}
+        
+        dataset_size = len(list(train_dataset.as_numpy_iterator()))
+        fold_size = dataset_size // num_folds
+
+        for params in ParameterGrid(param_grid):
+            fold_loss_scores = []
+
+            for fold in range(num_folds):
+                # Calculate start and end indices for the current fold
+                start_idx = fold * fold_size
+                end_idx = (fold + 1) * fold_size if fold != num_folds - 1 else dataset_size
+
+                # Split the dataset into training and validation sets for the current fold
+                train_data_fold = train_dataset.skip(end_idx).take(dataset_size - end_idx).concatenate(train_dataset.take(start_idx))
+                val_data_fold = train_dataset.skip(start_idx).take(fold_size)
+
+                # Prepare the data folds
+                train_data_fold = train_data_fold.prefetch(tf.data.experimental.AUTOTUNE)
+                val_data_fold = val_data_fold.prefetch(tf.data.experimental.AUTOTUNE)
+
+                early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
+                lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
+                model = self.create_model(train_data_fold.element_spec[0].shape[1:], **params)
+                history = model.fit(train_data_fold, epochs=20, validation_data=val_data_fold, verbose=0, callbacks=[early_stopping, lr_scheduler])
+
+                loss = history.history['val_loss'][-1]
+                fold_loss_scores.append(loss)
+
+            avg_loss = np.mean(fold_loss_scores).item()
+            
+            print(f"Params: {params}, Avg Loss: {avg_loss}")
+
+            if avg_loss < best_loss:
+                best_loss = avg_loss
+                best_params = params
+
+        return best_params, best_loss
+
+    def train_model(self, model, num_steps=5, num_folds=5, batch_size=16, n_basic_samples=100, n_advanced_samples=50):
+        # X should have shape (samples, timesteps, width, height, channels)
+        # y should have shape (samples, width, height, channels)
+        X, y = self.prepare_data(num_steps)
+        augmented_X, augmented_y, modified_X, modified_y = self.augment_data(X, y)
+        X_boot, y_boot = self.bootstrap_samples(augmented_X, augmented_y, modified_X, modified_y, n_basic_samples, n_advanced_samples)
+        X_train, X_test, y_train, y_test = train_test_split(X_boot, y_boot, test_size=0.2, random_state=42)
+        
+        train_dataset = tf.data.Dataset.from_tensor_slices((X_train, y_train))
+        train_dataset = train_dataset.shuffle(buffer_size=min(len(X_train), 1024)).batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+        test_dataset = tf.data.Dataset.from_tensor_slices((X_test, y_test))
+        test_dataset = test_dataset.batch(batch_size).prefetch(tf.data.experimental.AUTOTUNE)
+        
+        class_weights = self.compute_class_weights(y_train)
+        PredictionObserver.class_weights = tf.Variable(class_weights, dtype=tf.float32)
+
+        if model is None:
+            param_grid = {
+                'filters': [16],
+                'kernel_size': [(3, 3)],
+                'dropout_rate': [0.1, 0.3],
+                'l2_regularizer': [0.0001]
+            }
+            best_params, best_loss = self.tune_hyperparameters(train_dataset, batch_size, num_folds, param_grid)
+            print(f"Best Params: {best_params}, Best Loss: {best_loss}")
+            model = self.create_model(train_dataset.element_spec[0].shape[1:], **best_params)
+        
+        model.summary()
+        early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
+        lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
+        checkpoint = keras.callbacks.ModelCheckpoint("best_model.keras", monitor="val_categorical_accuracy", mode='max', verbose=0, save_best_only=True)
+        self.log_dir = "./logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+        tensorboard = keras.callbacks.TensorBoard(log_dir=self.log_dir, histogram_freq=1, write_graph=False)
+        model.fit(train_dataset, epochs=20, verbose=0, callbacks=[early_stopping, lr_scheduler, checkpoint, tensorboard], validation_data=test_dataset)
+        test_loss, test_f1_score = self.evaluate_model(model, X_test, y_test)
+        print(f"Loss on the test set: {test_loss}")
+        print(f"F1 Score on the test set: {test_f1_score}")
+        return model
+
+    def evaluate_model(self, model, X_test, y_test):
+        test_loss = model.evaluate(X_test, y_test, verbose=0)[0]
+        
+        y_pred = model.predict(X_test, verbose=0)
+        y_test_flat = y_test.argmax(axis=-1).flatten()
+        y_pred_flat = y_pred.argmax(axis=-1).flatten()
+        test_f1_score = f1_score(y_test_flat, y_pred_flat, average='micro')
+
+        return test_loss, test_f1_score
+
+    def monte_carlo_prediction(self, model, input_data, n_predictions=100):
+        batched_input = np.repeat(np.array(input_data), n_predictions, axis=0)
+        model._training = True
+        batched_predictions = model.predict_on_batch(batched_input)
+        model._training = False
+        prediction_std = np.std(batched_predictions, axis=0)
+        return prediction_std
+
+    def plot_combined_heatmaps(self, past_grid_state, actual, predicted, uncertainty):
+        fig, axs = plt.subplots(2, 5, figsize=(20, 8), constrained_layout=True)
+
+        # Plot the input timesteps
+        for i in range(5):
+            sns.heatmap(past_grid_state[i], ax=axs[0, i], cmap='viridis', cbar=True, square=True, vmin=0, vmax=3)
+            axs[0, i].set_title(f"Input Time {i+1}")
+            axs[0, i].axis('off')
+
+        # Plot the actual, predicted, and uncertainty heatmaps
+        sns.heatmap(actual, ax=axs[1, 0], cmap='viridis', cbar=True, square=True, vmin=0, vmax=3)
+        axs[1, 0].set_title("Actual State")
+        axs[1, 0].axis('off')
+
+        sns.heatmap(predicted, ax=axs[1, 1], cmap='viridis', cbar=True, square=True, vmin=0, vmax=3)
+        axs[1, 1].set_title("Predicted State")
+        axs[1, 1].axis('off')
+
+        sns.heatmap(uncertainty, ax=axs[1, 2], cmap='hot', cbar=True, square=True)
+        axs[1, 2].set_title("Uncertainty")
+        axs[1, 2].axis('off')
+
+        for i in range(3, 5):
+            axs[1, i].axis('off')  # Hide unused subplots
+
+        plt.show()
+
+    def calculate_ssim(self, actual, predicted):
+        # Flatten the grid states to 2D arrays for SSIM calculation
+        actual_flat = actual.astype(float).reshape((self.subject.school.size, self.subject.school.size))
+        predicted_flat = predicted.astype(float).reshape((self.subject.school.size, self.subject.school.size))
+        return ssim(actual_flat, predicted_flat, data_range=3)
+
+    def calculate_nrmse(self, actual, predicted):
+        # Flatten the grid states to 2D arrays for NRMSE calculation
+        actual_flat = actual.reshape((self.subject.school.size, self.subject.school.size))
+        predicted_flat = predicted.reshape((self.subject.school.size, self.subject.school.size))
+        # Calculate RMSE
+        mse = np.mean((actual_flat - predicted_flat) ** 2)
+        rmse = np.sqrt(mse)
+        # Normalize RMSE
+        range_actual = actual_flat.max() - actual_flat.min()
+        nrmse = rmse / range_actual if range_actual != 0 else float('inf')
+        
+        return nrmse
+
+    def save_simulation_data(self):
+        if not os.path.exists(self.data_dir):
+            os.makedirs(self.data_dir)
+        np.savez(self.grid_history_path, grid_history=self.grid_history)
+
+    def display_observation(self, train_model=True):
+        if os.path.exists("best_model.keras"):
+            self.model = keras.models.load_model("best_model.keras", custom_objects={'combined_loss_function': PredictionObserver.combined_loss_function, 'ChannelWiseDropout': PredictionObserver.ChannelWiseDropout})
+            print("Loaded the best model from previous training.")
+        else:
+            self.model = getattr(self, "model", None)
+            print("No saved model found.")
+        if train_model:
+            self.model = self.train_model(self.model)
+            print(f"Trained the model with {len(self.grid_history)-1} data.")
+
+        if self.model is None:
+            raise ValueError("Model is None. Please train the model first.")
+        elif not isinstance(self.model, keras.models.Model) or not self.model.built:
+            raise ValueError("Model is not properly instantiated.")
+
+        self.save_simulation_data()
+
+        past_grid_state = self.grid_history[-6:-1]
+        argmax_past_grid_state = keras.utils.to_categorical(past_grid_state, num_classes=4)
+        input_data = np.array(argmax_past_grid_state).reshape((1, -1, self.subject.school.size, self.subject.school.size, 4))
+        predicted_grid_state = self.model.predict(input_data, verbose=0)
+        argmax_predicted_grid_state = np.argmax(predicted_grid_state, axis=-1)
+        reshaped_grid_state = argmax_predicted_grid_state.reshape((self.subject.school.size, self.subject.school.size))
+        
+        prediction_std = self.monte_carlo_prediction(self.model, input_data, n_predictions=100)
+        state_uncertainty = np.max(prediction_std, axis=-1).reshape((self.subject.school.size, self.subject.school.size))
+        
+        self.plot_combined_heatmaps(past_grid_state, self.grid_history[-1].astype(int), reshaped_grid_state, state_uncertainty)
+        
+        print("Actual State:")
+        print(self.grid_history[-1].astype(int))
+        print("Predicted State:")
         reformatted_grid_state = np.round(reshaped_grid_state, 1)
         print(reformatted_grid_state)
+        print("Uncertainty (Std in Predicted Probabilities):")
+        reformatted_state_uncertainty = np.array2string(state_uncertainty, formatter={'float_kind':lambda x: "{:.0e}".format(x)})
+        print(reformatted_state_uncertainty)
+        
+        ssim_value = self.calculate_ssim(self.grid_history[-1].astype(int), reshaped_grid_state)
+        print(f"SSIM: {ssim_value:.3f}")
+        nrmse_value = self.calculate_nrmse(self.grid_history[-1].astype(int), reshaped_grid_state)
+        print(f"NRMSE: {nrmse_value:.3f}")
+        
+        tb = program.TensorBoard(plugins=default.get_plugins())
+        tb.configure(argv=[None, '--logdir', self.log_dir])
+        url = tb.launch()
+        print(f"TensorBoard is running at {url}")
+        # Wait for user to close TensorBoard
+        print("Press Enter to stop TensorBoard and exit the script.")
+        builtins.input()
+        # After pressing Enter, the script will continue from here
+        print("Stopping TensorBoard and exiting the script.")
+
+
+class FFTAnalysisObserver(Observer):
+    def __init__(self, population):
+        self.subject = population
+        self.subject.attach_observer(self)
+        self.spatial_data = []
+        self.time_series_data = []
+
+    def update(self):
+        if self.subject.timestep == 1:
+            print("Initializing FFT Analysis")
+            self.time_series_data.append(0)
+        self.spatial_data.append(self.capture_grid_state())
+        self.time_series_data.append(self.count_zombies())
+
+    def capture_grid_state(self):
+        grid_state = np.zeros((self.subject.school.size, self.subject.school.size))
+        for individual in self.subject.agent_list:
+            grid_state[individual.location] = individual.health_state.value if individual else 0
+        return grid_state
+
+    def count_zombies(self):
+        return sum(ind.health_state == HealthState.ZOMBIE for ind in self.subject.agent_list)
+
+    def perform_fft_analysis(self):
+        self.spatial_fft = [fftshift(fft2(frame)) for frame in self.spatial_data]
+        self.time_series_fft = fft(self.time_series_data)
+        magnitudes = np.abs(self.time_series_fft)
+        self.frequencies = np.fft.fftfreq(len(self.time_series_data), d=1)
+        self.dominant_frequencies = self.frequencies[np.argsort(-magnitudes)[:5]]
+        self.dominant_periods = [1 / freq if freq != 0 else float('inf') for freq in self.dominant_frequencies]
+
+    def create_spatial_animation(self):
+        fig, ax = plt.subplots()
+        ax.set_title("Spatial Data Over Time")
+        im = ax.imshow(self.spatial_data[0], cmap='viridis', animated=True)
+        plt.colorbar(im, ax=ax, orientation='vertical')
+        time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes, color="white")
+
+        def update(frame):
+            im.set_array(self.spatial_data[frame])
+            time_text.set_text(f"Time Step: {frame}")
+            return [im, time_text]
+
+        ani = animation.FuncAnimation(fig, update, frames=len(self.spatial_data), interval=50, blit=True)
+        plt.show()
+
+    def create_spatial_fft_animation(self):
+        fig, ax = plt.subplots()
+        ax.set_title("FFT of Spatial Data Over Time")
+        fft_data = np.log(np.abs(self.spatial_fft[0]) + 1e-10)
+        im = ax.imshow(fft_data, cmap='hot', animated=True)
+        plt.colorbar(im, ax=ax, orientation='vertical')
+        time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes, color="white")
+
+        def update(frame):
+            fft_data = np.log(np.abs(self.spatial_fft[frame]) + 1e-10)
+            im.set_array(fft_data)
+            time_text.set_text(f"Time Step: {frame}")
+            return [im, time_text]
+
+        ani = animation.FuncAnimation(fig, update, frames=len(self.spatial_data), interval=50, blit=True)
+        plt.show()
+
+    def create_time_series_animation(self):
+        fig, ax = plt.subplots()
+        ax.set_title("Time Series Data")
+        line, = ax.plot([], [], lw=2)
+        ax.set_xlim(-1, len(self.time_series_data) + 1)
+        ax.set_ylim(-1, max(self.time_series_data) + 1)
+
+        # Mark periods and dominant frequencies on the plot
+        plotted_periods = set()
+        for period in self.dominant_periods:
+            if period != float('inf') and period not in plotted_periods and period > 0:
+                ax.axvline(x=period, color='r', linestyle='--', label=f'Period: {period:.2f} steps')
+                plotted_periods.add(period)
+
+        def update(frame):
+            line.set_data(np.arange(frame), self.time_series_data[:frame])
+            return line,
+
+        ani = animation.FuncAnimation(fig, func=update, frames=len(self.time_series_data)+1, interval=50, blit=True)
+        ax.legend(loc='upper right')
+        plt.show()
+
+    def create_time_series_fft_animation(self):
+        fig, ax = plt.subplots()
+        ax.set_title("FFT of Time Series Data")
+        line, = ax.plot([], [], lw=2, label='FFT')
+        ax.set_xlim(min(self.frequencies), max(self.frequencies))
+        ax.set_ylim(-1, max(np.abs(self.time_series_fft)) + 1)
+
+        # Mark dominant frequencies on the plot
+        plotted_frequencies = set()
+        for freq in self.dominant_frequencies:
+            if freq not in plotted_frequencies:
+                ax.axvline(x=freq, color='r', linestyle='--', label=f'Frequency: {freq:.2f}')
+                plotted_frequencies.add(freq)
+
+        def update(frame):
+            frame_data = self.time_series_data[:frame + 1]
+            fft_frame = fft(frame_data)
+            freqs = np.fft.fftfreq(len(frame_data), d=1)
+            line.set_data(freqs, np.abs(fft_frame))
+            return line,
+
+        ani = animation.FuncAnimation(fig, func=update, frames=len(self.time_series_data)+1, interval=50, blit=True)
+        ax.legend(loc='upper right')
+        plt.show()
+
+    def plot_final_spatial_data(self, ax):
+        ax.imshow(self.spatial_data[-1], cmap='viridis')
+        ax.set_title("Final Spatial Data")
+        ax.figure.colorbar(ax.images[0], ax=ax, orientation='vertical')
+
+    def plot_fft_final_spatial_data(self, ax):
+        ax.imshow(np.log(np.abs(self.spatial_fft[-1]) + 1e-10), cmap='hot')
+        ax.set_title("FFT of Final Spatial Data")
+        ax.figure.colorbar(ax.images[0], ax=ax, orientation='vertical')
+
+    def plot_time_series_data(self, ax):
+        ax.plot(self.time_series_data)
+        for period in self.dominant_periods:
+            if period != float('inf') and period > 0:
+                ax.axvline(x=period, color='r', linestyle='--', label=f'Period: {period:.2f} steps')
+        ax.set_title("Time Series Data")
+        ax.set_xlabel("Time Step")
+        ax.set_ylabel("Number of Zombies")
+        ax.legend()
+
+    def plot_fft_time_series_data(self, ax):
+        ax.plot(self.frequencies, np.abs(self.time_series_fft))
+        for freq in self.dominant_frequencies:
+            ax.axvline(x=freq, color='r', linestyle='--', label=f'Frequency: {freq:.2f}')
+        ax.set_title("FFT of Time Series Data")
+        ax.set_xlabel("Frequency")
+        ax.set_ylabel("Amplitude")
+        ax.legend()
+        ax.grid(True)
+
+    def display_observation(self, mode='static'):
+        if not self.spatial_data or not self.time_series_data:
+            print("No data available for FFT analysis.")
+            return
+
+        self.perform_fft_analysis()
+
+        if mode == 'animation':
+            self.create_spatial_animation()
+            self.create_spatial_fft_animation()
+            self.create_time_series_animation()
+            self.create_time_series_fft_animation()
+        elif mode == 'static':
+            fig, axs = plt.subplots(2, 2, figsize=(16, 16), constrained_layout=True)
+
+            self.plot_final_spatial_data(axs[0, 0])
+            self.plot_fft_final_spatial_data(axs[0, 1])
+            self.plot_time_series_data(axs[1, 0])
+            self.plot_fft_time_series_data(axs[1, 1])
+
+            plt.show()
+
+class PygameObserver(Observer):
+    def __init__(self, population, cell_size=30, fps=10, font_size=18):
+        self.subject = population
+        self.subject.attach_observer(self)
+
+        # Define the cell size, the frames per second, and font size
+        self.cell_size = cell_size
+        self.fps = fps
+        self.font_size = font_size
+        self.is_paused = False
+
+        # Colors
+        self.colors = {
+            HealthState.HEALTHY: (0, 255, 0),  # Green
+            HealthState.INFECTED: (255, 165, 0),  # Orange
+            HealthState.ZOMBIE: (255, 0, 0),  # Red
+            HealthState.DEAD: (128, 128, 128),  # Gray
+            'background': (255, 255, 255),  # White
+            'grid_line': (200, 200, 200),  # Light Gray
+            'text': (0, 0, 0)  # Black
+        }
+
+        # Initialize Pygame and the screen
+        pygame.init()
+        self.screen_size = self.subject.school.size * self.cell_size
+        self.screen = pygame.display.set_mode((self.screen_size, self.screen_size + 50))  # Additional space for stats
+        pygame.display.set_caption("Zombie Apocalypse Simulation")
+
+        # Clock for controlling the frame rate
+        self.clock = pygame.time.Clock()
+        self.font = pygame.font.SysFont("Arial", self.font_size)
+
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.handle_quit_event()
+            elif event.type == pygame.KEYDOWN:
+                self.handle_keydown_events(event)
+
+    def handle_quit_event(self):
+        pygame.quit()
+        exit()
+
+    def handle_keydown_events(self, event):
+        if event.key == pygame.K_SPACE:
+            self.toggle_pause()
+        elif event.key == pygame.K_r:
+            main()
+
+    def toggle_pause(self):
+        self.is_paused = not self.is_paused
+        if self.is_paused:
+            self.display_pause_message()
+
+    def update(self):
+        if self.is_paused:
+            while self.is_paused:
+                self.handle_events()  # Continue to handle events while paused to catch unpause event
+                pygame.time.wait(10)  # Wait for a short period to reduce CPU usage while paused
+        else:
+            self.handle_events()  # Handle events for unpausing or quitting
+            self.draw_grid()
+            self.display_stats()
+            pygame.display.flip()
+            self.clock.tick(self.fps)
+            time.sleep(0.5)
+
+    def draw_grid(self):
+        # If not paused, fill the background and draw individuals
+        if not self.is_paused:
+            self.screen.fill(self.colors['background'])
+            self.draw_individuals()
+
+    def draw_individuals(self):
+        for individual in self.subject.agent_list:
+            x, y = individual.location
+            rect = pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size)
+            pygame.draw.rect(self.screen, self.colors[individual.health_state], rect)
+            pygame.draw.rect(self.screen, self.colors['grid_line'], rect, 1)  # Draw grid line
+
+    def display_stats(self):
+        stats_text = f"Healthy: {self.subject.num_healthy}, Infected: {self.subject.num_infected}, Zombie: {self.subject.num_zombie}, Dead: {self.subject.num_dead}"
+        text_surface = self.font.render(stats_text, True, self.colors['text'])
+        self.screen.fill(self.colors['background'], (0, self.screen_size, self.screen_size, 50))  # Clear stats area
+        self.screen.blit(text_surface, (5, self.screen_size + 5))
+
+    def display_pause_message(self):
+        dark_surface = pygame.Surface((self.screen_size, self.screen_size))
+        dark_surface.set_alpha(128)
+        dark_surface.fill(self.colors['background'])
+        self.screen.blit(dark_surface, (0, 0))
+        pause_text = "Simulation Paused. Press 'Space' to resume."
+        text_surface = self.font.render(pause_text, True, self.colors['text'])
+        self.screen.blit(text_surface, (self.screen_size / 2 - text_surface.get_width() / 2, self.screen_size / 2 - text_surface.get_height() / 2))
+
+    def display_observation(self):
+        end_text = "Simulation Ended. Press 'R' to Restart."
+        text_surface = self.font.render(end_text, True, self.colors['text'])
+        self.screen.blit(text_surface, (self.screen_size / 2 - text_surface.get_width() / 2, self.screen_size / 2 - text_surface.get_height() / 2))
+        pygame.display.flip()
+        while True:
+            self.handle_events()
+
+class GANObserver:
+    def __init__(self, population, learning_rate=0.00001):
+        self.subject = population
+        self.subject.attach_observer(self)
+        self.learning_rate = learning_rate
+        self.data_shape = (self.subject.school.size, self.subject.school.size)
+        self.latent_dim = np.prod(self.data_shape)
+        self.generator = self.build_generator()
+        self.generator.summary()
+        self.critic = self.build_critic()
+        self.critic.summary()
+        self.gan = self.build_gan()
+        self.real_data_samples = []
+        self.timesteps = []
+
+    def build_generator(self, num_layers=1, filter_size=16, dropout_rate=0.25):
+        noise_input = layers.Input(shape=(self.latent_dim,))
+        timestep_input = layers.Input(shape=(1,))
+        
+        timestep_dense = layers.Dense(self.latent_dim, use_bias=False)(timestep_input)
+        merged_input = layers.Add()([noise_input, timestep_dense])
+        
+        x = layers.Dense((self.data_shape[0] - 2 * num_layers - 2) * (self.data_shape[1] - 2 * num_layers - 2) * filter_size)(merged_input)
+        x = layers.Reshape((self.data_shape[0] - 2 * num_layers - 2, self.data_shape[1] - 2 * num_layers - 2, filter_size))(x)
+        x = layers.ELU()(x)
+        x = layers.Dropout(dropout_rate)(x)
+
+        for _ in range(num_layers):
+            x = layers.Conv2DTranspose(filter_size, kernel_size=(3, 3), padding='valid')(x)
+            x = layers.ELU()(x)
+            x = layers.Dropout(dropout_rate)(x)
+
+        x = layers.Conv2DTranspose(4, kernel_size=(3, 3), padding='valid', activation="softmax")(x)
+
+        model = keras.models.Model(inputs=[noise_input, timestep_input], outputs=x)
+        return model
+
+    def build_critic(self, num_layers=1, filter_size=32, dropout_rate=0.25):
+        data_input = layers.Input(shape=(*self.data_shape, 4))
+        timestep_input = layers.Input(shape=(1,))
+        
+        timestep_dense = layers.Dense(int(np.prod(self.data_shape)) * 4, use_bias=False)(timestep_input)
+        timestep_reshaped = layers.Reshape((*self.data_shape, 4))(timestep_dense)
+        merged_input = layers.Add()([data_input, timestep_reshaped])
+        
+        x = layers.GaussianNoise(0.1)(merged_input)
+        x = layers.ELU()(x)
+        x = layers.Dropout(dropout_rate)(x)
+
+        for _ in range(num_layers):
+            x = layers.Conv2D(filter_size, kernel_size=(3, 3), padding='valid', kernel_constraint=keras.constraints.MinMaxNorm(min_value=-0.01, max_value=0.01, rate=1.0))(x)
+            x = layers.ELU()(x)
+            x = layers.Dropout(dropout_rate)(x)
+
+        x = layers.Flatten()(x)
+        x = layers.Dense(1, activation='linear')(x)
+        
+        model = keras.models.Model(inputs=[data_input, timestep_input], outputs=x)
+        return model
+
+    def build_gan(self):
+        # Wasserstein loss function
+        def wasserstein_loss(y_true, y_pred):
+            return tf.reduce_mean(y_true * y_pred)
+
+        self.critic.compile(loss=wasserstein_loss, optimizer=keras.optimizers.RMSprop(learning_rate=self.learning_rate))
+        self.critic.trainable = False
+
+        noise_input, timestep_input = self.generator.inputs
+        generated_image = self.generator.output
+        critic_output = self.critic([generated_image, timestep_input])
+
+        gan = keras.models.Model([noise_input, timestep_input], critic_output)
+        gan.compile(loss=wasserstein_loss, optimizer=keras.optimizers.RMSprop(learning_rate=self.learning_rate))
+        return gan
+
+    def capture_grid_state(self):
+        grid_state = np.zeros((self.subject.school.size, self.subject.school.size))
+        for i in range(self.subject.school.size):
+            for j in range(self.subject.school.size):
+                individual = self.subject.school.get_individual((i, j))
+                grid_state[i, j] = individual.health_state.value if individual else 0
+        return grid_state
+
+    def update(self):
+        real_data = self.capture_grid_state()
+        self.real_data_samples.append(real_data)
+        self.timesteps.append(np.array([self.subject.timestep]))
+    
+    def train_gan(self, epochs=20, batch_size=128, critic_interval=2, generator_interval=1):
+        valid = -np.random.uniform(low=0.9, high=1.0, size=batch_size)
+        fake = np.random.uniform(low=0.9, high=1.0, size=batch_size)
+
+        for epoch in range(epochs):
+            c_loss_real, c_loss_fake, g_loss_total = 0, 0, 0
+            
+            for _ in range(critic_interval):
+                # Select a random batch of real data
+                idx = tf.random.uniform([batch_size], minval=0, maxval=len(self.real_data_samples), dtype=tf.int32)
+                real_indices = tf.stack([tf.convert_to_tensor(self.real_data_samples[i], dtype=tf.int32) for i in idx.numpy()])
+                real_imgs = tf.one_hot(real_indices, depth=4)
+                timesteps_sample = tf.gather(self.timesteps, idx)
+                real_dataset = tf.data.Dataset.from_tensor_slices(((real_imgs, timesteps_sample), valid)).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+                # Generate a batch of generated images
+                noise = tf.random.normal([batch_size, self.latent_dim])
+                timesteps_noise = tf.gather(self.timesteps, tf.random.uniform([batch_size], minval=0, maxval=len(self.timesteps), dtype=tf.int32))
+                gen_imgs = self.generator.predict([noise, timesteps_noise], verbose=0)
+                fake_dataset = tf.data.Dataset.from_tensor_slices(((gen_imgs, timesteps_noise), fake)).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+                # Train the discriminator
+                self.critic.trainable = True
+                c_real_loss = self.critic.fit(real_dataset, epochs=1, verbose=0)
+                c_fake_loss = self.critic.fit(fake_dataset, epochs=1, verbose=0)
+                c_loss_real += c_real_loss.history['loss'][-1]
+                c_loss_fake += c_fake_loss.history['loss'][-1]
+
+            for _ in range(generator_interval):
+                noise = tf.random.normal([batch_size, self.latent_dim])
+                timesteps_noise = tf.gather(self.timesteps, tf.random.uniform([batch_size], minval=0, maxval=len(self.timesteps), dtype=tf.int32))
+                noise_dataset = tf.data.Dataset.from_tensor_slices(((noise, timesteps_noise), valid)).batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+                # Train the generator
+                self.critic.trainable = False
+                g_loss = self.gan.fit(noise_dataset, epochs=1, verbose=0)
+                g_loss_total += g_loss.history['loss'][-1]
+
+            c_loss_real_avg = c_loss_real / critic_interval
+            c_loss_fake_avg = c_loss_fake / critic_interval
+            g_loss_avg = g_loss_total / generator_interval
+
+            print(f"Epoch {epoch+1}/{epochs} [Critic: real loss: {c_loss_real_avg:.4f}, fake loss: {c_loss_fake_avg:.4f}] [Generator loss: {g_loss_avg:.4f}]")
+
+    def display_observation(self):
+        self.train_gan()
+        noise = np.random.normal(0, 1, (1, self.latent_dim))
+        current_timestep = np.array([self.subject.timestep]).reshape((1, 1))
+        generated_data = self.generator.predict([noise, current_timestep], verbose=0)
+        generated_data = np.argmax(generated_data, axis=-1).reshape((self.subject.school.size, self.subject.school.size))
+        print(generated_data)
 
 
 def main():
+    set_seed(0)
 
     # create a SchoolZombieApocalypse object
     school_sim = Population(school_size=10, population_size=10)
@@ -1367,11 +2286,14 @@ def main():
     # simulation_animator = SimulationAnimator(school_sim)
     # plotly_animator = PlotlyAnimator(school_sim)
     # matplotlib_animator = MatplotlibAnimator(school_sim)
-    tkinter_observer = TkinterObserver(school_sim)
+    # tkinter_observer = TkinterObserver(school_sim)
     # prediction_observer = PredictionObserver(school_sim)
+    # fft_observer = FFTAnalysisObserver(school_sim)
+    # pygame_observer = PygameObserver(school_sim)
+    gan_observer = GANObserver(school_sim)
 
     # run the population for a given time period
-    school_sim.run_population(num_time_steps=10)
+    school_sim.run_population(num_time_steps=100)
     
     print("Observers:")
     # print(simulation_observer.agent_list)
@@ -1382,13 +2304,14 @@ def main():
     # simulation_animator.display_observation(format="bar") # "bar" or "scatter" or "table"
     # plotly_animator.display_observation()
     # matplotlib_animator.display_observation()
-    tkinter_observer.display_observation()
+    # tkinter_observer.display_observation()
     # prediction_observer.display_observation()
-
+    # fft_observer.display_observation(mode='static') # "animation" or "static"
+    # pygame_observer.display_observation()
+    gan_observer.display_observation()
 
 
 if __name__ == "__main__":
     main()
-
 
 
