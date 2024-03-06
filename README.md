@@ -14,7 +14,7 @@ This project simulates a zombie apocalypse in a school setting, employing variou
 - **Visualization and Analysis:** Includes graphical tools (Matplotlib, Seaborn, Pygame, Tkinter) for visualizing the simulation progress and outcomes.
 - **Machine Learning Analysis:** Applies predictive modeling to forecast future states of the simulation.
 
-## Installation
+## Installation & Usage
 
 Ensure you have Python 3.8 or newer installed. Clone the repository and install the required dependencies:
 
@@ -24,13 +24,18 @@ cd zombie
 pip install -r requirements.txt
 ```
 
-## Usage
-
 Run the simulation with the following command:
 
 ```bash
 python main.py
 ```
+
+You may also install a stable release through TestPyPI:
+
+```bash
+python -m pip install --index-url https://test.pypi.org/simple/ --no-deps zombie_simulation
+```
+
 
 ### Components
 

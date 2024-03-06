@@ -8,7 +8,7 @@ version = "0.0.1"
 authors = [
   { name="clchinkc", email="clchin@connect.ust.hk" },
 ]
-description = "A simple zombie simulation"
+description = "A comprehensive simulation of a zombie apocalypse set within a school environment, leveraging object-oriented design principles. This project models intricate interactions between humans, zombies, and their surroundings, offering various state management, movement strategies, and grid management functionalities. It includes advanced visualization and analysis tools, employing Python's rich ecosystem (Matplotlib, Seaborn, Pygame, Tkinter) for dynamic representations of the simulation's progress. Moreover, it integrates machine learning for predictive analytics and Generative Adversarial Networks (GANs) for forecasting simulation outcomes. The simulation is customizable, allowing users to adjust parameters such as school size, population, and simulation duration. Contributions are welcome to enhance its features and capabilities."
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
