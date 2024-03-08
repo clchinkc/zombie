@@ -179,3 +179,7 @@ GitHub.sublime-settings
 # Visual Studio Code
 .vscode/*
 .history
+
+# Personal ignore files
+population_note.md
+save/*

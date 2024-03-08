@@ -1571,28 +1571,31 @@ class PygameObserver(Observer):
             self.handle_events()
 
 class GANObserver:
-    def __init__(self, population, learning_rate=0.00001):
+    def __init__(self, population, learning_rate=0.00005):
         self.subject = population
         self.subject.attach_observer(self)
         self.learning_rate = learning_rate
         self.data_shape = (self.subject.school.size, self.subject.school.size)
-        self.latent_dim = np.prod(self.data_shape)
+        self.latent_dim = self.subject.school.size
+        self.num_classes = 4
         self.generator = self.build_generator()
         self.generator.summary()
         self.critic = self.build_critic()
         self.critic.summary()
-        self.gan = self.build_gan()
+        self.critic, self.generator, self.critic_optimizer, self.generator_optimizer = self.build_gan(self.critic, self.generator)
         self.real_data_samples = []
         self.timesteps = []
 
     def build_generator(self, num_layers=1, filter_size=16, dropout_rate=0.25):
-        noise_input = layers.Input(shape=(self.latent_dim,))
+        noise_input = layers.Input(shape=self.data_shape + (1,))
         timestep_input = layers.Input(shape=(1,))
         
-        timestep_dense = layers.Dense(self.latent_dim, use_bias=False)(timestep_input)
-        merged_input = layers.Add()([noise_input, timestep_dense])
+        timestep_dense = layers.Dense(self.data_shape[0] * self.data_shape[1], use_bias=False)(timestep_input)
+        timestep_reshaped = layers.Reshape(self.data_shape + (1,))(timestep_dense)
+        merged_input = layers.Add()([noise_input, timestep_reshaped])
         
-        x = layers.Dense((self.data_shape[0] - 2 * num_layers - 2) * (self.data_shape[1] - 2 * num_layers - 2) * filter_size)(merged_input)
+        x = layers.Flatten()(merged_input)
+        x = layers.Dense((self.data_shape[0] - 2 * num_layers - 2) * (self.data_shape[1] - 2 * num_layers - 2) * filter_size)(x)
         x = layers.Reshape((self.data_shape[0] - 2 * num_layers - 2, self.data_shape[1] - 2 * num_layers - 2, filter_size))(x)
         x = layers.ELU()(x)
         x = layers.Dropout(dropout_rate)(x)
@@ -1602,17 +1605,18 @@ class GANObserver:
             x = layers.ELU()(x)
             x = layers.Dropout(dropout_rate)(x)
 
-        x = layers.Conv2DTranspose(4, kernel_size=(3, 3), padding='valid', activation="softmax")(x)
+        x = layers.Conv2DTranspose(self.num_classes, kernel_size=(3, 3), padding='valid', activation="softmax")(x)
 
         model = keras.models.Model(inputs=[noise_input, timestep_input], outputs=x)
         return model
 
-    def build_critic(self, num_layers=1, filter_size=32, dropout_rate=0.25):
-        data_input = layers.Input(shape=(*self.data_shape, 4))
-        timestep_input = layers.Input(shape=(1,))
+    def build_critic(self, num_layers=1, filter_size=32, dropout_rate=0.25, m=2):
+        # pacgan implementation
+        data_input = layers.Input(shape=self.data_shape + (self.num_classes * m,))
+        timestep_input = layers.Input(shape=(m,))
         
-        timestep_dense = layers.Dense(int(np.prod(self.data_shape)) * 4, use_bias=False)(timestep_input)
-        timestep_reshaped = layers.Reshape((*self.data_shape, 4))(timestep_dense)
+        timestep_dense = layers.Dense(int(np.prod(self.data_shape)) * self.num_classes * m, use_bias=False)(timestep_input)
+        timestep_reshaped = layers.Reshape(self.data_shape + (self.num_classes * m,))(timestep_dense)
         merged_input = layers.Add()([data_input, timestep_reshaped])
         
         x = layers.GaussianNoise(0.1)(merged_input)
@@ -1630,21 +1634,34 @@ class GANObserver:
         model = keras.models.Model(inputs=[data_input, timestep_input], outputs=x)
         return model
 
-    def build_gan(self):
+    @staticmethod
+    def gradient_penalty(batch_size, real_images, fake_images, critic, labels, strength):
+        alpha_shape = [batch_size, 1, 1, 1]
+        alpha = tf.random.uniform(shape=alpha_shape, minval=0, maxval=1)
+        
+        interpolated_images = (real_images * alpha) + (fake_images * (1 - alpha))
+        
+        with tf.GradientTape() as tape:
+            tape.watch(interpolated_images)
+            prediction = critic([interpolated_images, labels], training=True)
+        
+        gradients = tape.gradient(prediction, [interpolated_images])
+        gradients_norm = tf.sqrt(tf.reduce_sum(tf.square(gradients), axis=[1, 2, 3]))
+        penalty = tf.reduce_mean((gradients_norm - 1.0) ** 2) * strength
+        return penalty
+
+    def build_gan(self, critic, generator):
         # Wasserstein loss function
         def wasserstein_loss(y_true, y_pred):
             return tf.reduce_mean(y_true * y_pred)
 
-        self.critic.compile(loss=wasserstein_loss, optimizer=keras.optimizers.RMSprop(learning_rate=self.learning_rate))
-        self.critic.trainable = False
+        critic_optimizer = keras.optimizers.Nadam(learning_rate=self.learning_rate)
+        generator_optimizer = keras.optimizers.Nadam(learning_rate=self.learning_rate)
 
-        noise_input, timestep_input = self.generator.inputs
-        generated_image = self.generator.output
-        critic_output = self.critic([generated_image, timestep_input])
-
-        gan = keras.models.Model([noise_input, timestep_input], critic_output)
-        gan.compile(loss=wasserstein_loss, optimizer=keras.optimizers.RMSprop(learning_rate=self.learning_rate))
-        return gan
+        critic.compile(loss=wasserstein_loss, optimizer=critic_optimizer)
+        generator.compile(loss=wasserstein_loss, optimizer=generator_optimizer)
+        
+        return critic, generator, critic_optimizer, generator_optimizer
 
     def capture_grid_state(self):
         grid_state = np.zeros((self.subject.school.size, self.subject.school.size))
@@ -1658,54 +1675,82 @@ class GANObserver:
         real_data = self.capture_grid_state()
         self.real_data_samples.append(real_data)
         self.timesteps.append(np.array([self.subject.timestep]))
-    
-    def train_gan(self, epochs=20, batch_size=128, critic_interval=2, generator_interval=1):
-        valid = -np.random.uniform(low=0.9, high=1.0, size=batch_size)
-        fake = np.random.uniform(low=0.9, high=1.0, size=batch_size)
 
-        for epoch in range(epochs):
-            c_loss_real, c_loss_fake, g_loss_total = 0, 0, 0
+    @staticmethod
+    def critic_training_step(critic, generator, data_shape, batch_size, num_classes, critic_optimizer, real_images, real_labels, gradient_penalty, m):
+        noise = tf.random.normal([batch_size * m, data_shape[0], data_shape[1], 1])
+        fake_labels = tf.random.uniform([batch_size * m, 1], 0, num_classes, dtype=tf.int32)
+        
+        with tf.GradientTape() as tape:
+            fake_images = generator([noise, fake_labels], training=True)
+            fake_images_packed = tf.reshape(fake_images, (batch_size, data_shape[0], data_shape[1], num_classes * m))
             
+            selected_indices = tf.random.shuffle(tf.range(start=0, limit=batch_size * m, delta=1))
+            shuffled_real_images = tf.gather(real_images, selected_indices, axis=0)
+            real_images_packed = tf.reshape(shuffled_real_images, (batch_size, data_shape[0], data_shape[1], num_classes * m))
+            shuffled_real_labels = tf.gather(real_labels, selected_indices, axis=0)
+            real_labels_packed = tf.reshape(shuffled_real_labels, (batch_size, m))
+            
+            real_output = critic([real_images_packed, real_labels_packed], training=True)
+            fake_output = critic([fake_images_packed, real_labels_packed], training=True)
+            
+            critic_real_loss = tf.reduce_mean(fake_output)
+            critic_fake_loss = -tf.reduce_mean(real_output)
+            gp = gradient_penalty(batch_size, real_images_packed, fake_images_packed, critic, real_labels_packed, strength=10.0)
+            
+            critic_loss = critic_real_loss + critic_fake_loss + gp
+        
+        critic_gradients = tape.gradient(critic_loss, critic.trainable_variables)
+        critic_optimizer.apply_gradients(zip(critic_gradients, critic.trainable_variables)) if critic_gradients else None
+        
+        return critic_loss, critic_real_loss, critic_fake_loss
+
+    @staticmethod
+    def generator_training_step(generator, critic, data_shape, batch_size, num_classes, generator_optimizer, m):
+        noise = tf.random.normal([batch_size * m, data_shape[0], data_shape[1], 1])
+        fake_labels = tf.random.uniform([batch_size * m, 1], 0, num_classes, dtype=tf.int32)
+        
+        with tf.GradientTape() as tape:
+            generated_images = generator([noise, fake_labels], training=True)
+            generated_images_packed = tf.reshape(generated_images, (batch_size, data_shape[0], data_shape[1], num_classes * m))
+            packed_labels = tf.reshape(fake_labels, (batch_size, m))
+
+            gen_output = critic([generated_images_packed, packed_labels], training=True)
+            generator_loss = -tf.reduce_mean(gen_output)
+        
+        generator_gradients = tape.gradient(generator_loss, generator.trainable_variables)
+        generator_optimizer.apply_gradients(zip(generator_gradients, generator.trainable_variables)) if generator_gradients else None
+        
+        return generator_loss
+
+    def train_gan(self, epochs=20, batch_size=128, critic_interval=2, generator_interval=1, m=2):
+        for epoch in range(epochs):
+            critic_losses, critic_real_losses, critic_fake_losses, generator_losses = [], [], [], []
             for _ in range(critic_interval):
-                # Select a random batch of real data
-                idx = tf.random.uniform([batch_size], minval=0, maxval=len(self.real_data_samples), dtype=tf.int32)
-                real_indices = tf.stack([tf.convert_to_tensor(self.real_data_samples[i], dtype=tf.int32) for i in idx.numpy()])
-                real_imgs = tf.one_hot(real_indices, depth=4)
-                timesteps_sample = tf.gather(self.timesteps, idx)
-                real_dataset = tf.data.Dataset.from_tensor_slices(((real_imgs, timesteps_sample), valid)).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-
-                # Generate a batch of generated images
-                noise = tf.random.normal([batch_size, self.latent_dim])
-                timesteps_noise = tf.gather(self.timesteps, tf.random.uniform([batch_size], minval=0, maxval=len(self.timesteps), dtype=tf.int32))
-                gen_imgs = self.generator.predict([noise, timesteps_noise], verbose=0)
-                fake_dataset = tf.data.Dataset.from_tensor_slices(((gen_imgs, timesteps_noise), fake)).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-
-                # Train the discriminator
-                self.critic.trainable = True
-                c_real_loss = self.critic.fit(real_dataset, epochs=1, verbose=0)
-                c_fake_loss = self.critic.fit(fake_dataset, epochs=1, verbose=0)
-                c_loss_real += c_real_loss.history['loss'][-1]
-                c_loss_fake += c_fake_loss.history['loss'][-1]
-
+                real_labels = tf.random.uniform([batch_size * m, 1], 0, self.num_classes, dtype=tf.int32)
+                real_images = tf.one_hot(tf.random.uniform([batch_size * m, *self.data_shape], 0, self.num_classes, dtype=tf.int32), depth=self.num_classes)
+                critic_loss, critic_real_loss, critic_fake_loss = self.critic_training_step(
+                    self.critic, self.generator, self.data_shape, batch_size, self.num_classes, self.critic_optimizer, real_images, real_labels, self.gradient_penalty, m
+                )
+                critic_losses.append(critic_loss)
+                critic_real_losses.append(critic_real_loss)
+                critic_fake_losses.append(critic_fake_loss)
+                
             for _ in range(generator_interval):
-                noise = tf.random.normal([batch_size, self.latent_dim])
-                timesteps_noise = tf.gather(self.timesteps, tf.random.uniform([batch_size], minval=0, maxval=len(self.timesteps), dtype=tf.int32))
-                noise_dataset = tf.data.Dataset.from_tensor_slices(((noise, timesteps_noise), valid)).batch(batch_size).prefetch(tf.data.AUTOTUNE)
-
-                # Train the generator
-                self.critic.trainable = False
-                g_loss = self.gan.fit(noise_dataset, epochs=1, verbose=0)
-                g_loss_total += g_loss.history['loss'][-1]
-
-            c_loss_real_avg = c_loss_real / critic_interval
-            c_loss_fake_avg = c_loss_fake / critic_interval
-            g_loss_avg = g_loss_total / generator_interval
-
-            print(f"Epoch {epoch+1}/{epochs} [Critic: real loss: {c_loss_real_avg:.4f}, fake loss: {c_loss_fake_avg:.4f}] [Generator loss: {g_loss_avg:.4f}]")
+                generator_loss = self.generator_training_step(
+                    self.generator, self.critic, self.data_shape, batch_size, self.num_classes, self.generator_optimizer, m
+                )
+                generator_losses.append(generator_loss)
+            
+            avg_critic_loss = np.mean([loss.numpy() for loss in critic_losses])
+            avg_critic_real_loss = np.mean([loss.numpy() for loss in critic_real_losses])
+            avg_critic_fake_loss = np.mean([loss.numpy() for loss in critic_fake_losses])
+            avg_generator_loss = np.mean([loss.numpy() for loss in generator_losses])
+            print(f"Epoch {epoch + 1}/{epochs} \t[ Critic Loss: {avg_critic_loss:.4f}, Critic Real Loss: {avg_critic_real_loss:.4f}, Critic Fake Loss: {avg_critic_fake_loss:.4f}, Generator Loss: {avg_generator_loss:.4f} ]")
 
     def display_observation(self):
         self.train_gan()
-        noise = np.random.normal(0, 1, (1, self.latent_dim))
+        noise = np.random.normal(0, 1, (1, self.data_shape[0], self.data_shape[1], 1))
         current_timestep = np.array([self.subject.timestep]).reshape((1, 1))
         generated_data = self.generator.predict([noise, current_timestep], verbose=0)
         generated_data = np.argmax(generated_data, axis=-1).reshape((self.subject.school.size, self.subject.school.size))
