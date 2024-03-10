@@ -181,5 +181,5 @@ GitHub.sublime-settings
 .history
 
 # Personal ignore files
-population_note.md
 save/*
+try/*
