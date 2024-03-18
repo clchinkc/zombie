@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import builtins
+import io
 import math
 import os
 import time
 import tkinter as tk
 from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from datetime import datetime
 
@@ -22,6 +24,7 @@ import scipy
 import seaborn as sns
 import tensorflow as tf
 from keras import layers
+from keras.callbacks import LambdaCallback
 from matplotlib import animation, colors, patches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -31,6 +34,8 @@ from plotly.subplots import make_subplots
 from population import Population
 from scipy import stats
 from scipy.interpolate import interp1d
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from skimage.metrics import structural_similarity as ssim
 from sklearn.metrics import f1_score
 from sklearn.model_selection import ParameterGrid, train_test_split
@@ -38,6 +43,7 @@ from sklearn.utils import resample
 from sklearn.utils.class_weight import compute_class_weight
 from states import HealthState
 from tensorboard import default, program
+from webdriver_manager.chrome import ChromeDriverManager
 
 # Observer Pattern
 
@@ -753,6 +759,8 @@ class PredictionObserver(Observer):
         self.data_dir = data_dir
         self.grid_history = []
         self.load_previous_data()
+        self.log_dir = "./logs/fit" + datetime.now().strftime("%Y%m%d-%H%M%S")
+        self.file_writer = tf.summary.create_file_writer(self.log_dir + "/image")
 
     def load_previous_data(self):
         self.grid_history_path = os.path.join(self.data_dir, "grid_history.npz")
@@ -1169,12 +1177,12 @@ class PredictionObserver(Observer):
             model = self.create_model(train_dataset.element_spec[0].shape[1:], **best_params)
         
         model.summary()
-        early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=2, verbose=0)
+        early_stopping = keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, verbose=0)
         lr_scheduler = keras.callbacks.LearningRateScheduler(self.cosine_annealing_scheduler())
         checkpoint = keras.callbacks.ModelCheckpoint(os.path.join(self.data_dir, "best_model.keras"), monitor="val_categorical_accuracy", mode='max', verbose=0, save_best_only=True)
-        self.log_dir = "./logs/fit/" + datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard = keras.callbacks.TensorBoard(log_dir=self.log_dir, histogram_freq=1, write_graph=False)
-        model.fit(train_dataset, epochs=20, verbose=0, callbacks=[early_stopping, lr_scheduler, checkpoint, tensorboard], validation_data=test_dataset)
+        image_callback = LambdaCallback(on_epoch_end=lambda epoch, logs: self.log_image_summary(epoch, model))
+        model.fit(train_dataset, epochs=20, verbose=0, callbacks=[early_stopping, lr_scheduler, checkpoint, tensorboard, image_callback], validation_data=test_dataset)
         test_loss, test_f1_score = self.evaluate_model(model, X_test, y_test)
         print(f"Loss on the test set: {test_loss}")
         print(f"F1 Score on the test set: {test_f1_score}")
@@ -1249,6 +1257,80 @@ class PredictionObserver(Observer):
             os.makedirs(self.data_dir)
         np.savez(self.grid_history_path, grid_history=self.grid_history)
 
+    def log_image_summary(self, epoch, model):
+        def plot_to_image(figure):
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png')
+            plt.close(figure)
+            buf.seek(0)
+            image = tf.image.decode_png(buf.getvalue())
+            image = tf.expand_dims(image, 0)
+            return image
+
+        def create_comparison_figure(original, actual, predicted, uncertainty):
+            # Convert from categorical to scalar values
+            original = np.argmax(original, axis=-1)
+            actual = actual.astype(int)
+            predicted = np.argmax(predicted, axis=-1)
+            uncertainty = np.max(uncertainty, axis=-1)
+            
+            num_original_images = original.shape[0]
+            figure = plt.figure(figsize=(2 * num_original_images, 4), constrained_layout=True)
+
+            # Plotting original states
+            for i in range(num_original_images):
+                ax = figure.add_subplot(2, num_original_images + 3, i + 1)
+                ax.imshow(original[i], cmap='viridis')
+                ax.axis('off')
+                ax.set_title("Original" if i == 0 else "")
+
+            # Plotting actual state in the second row, first position
+            ax = figure.add_subplot(2, num_original_images + 3, num_original_images + 4)
+            ax.imshow(actual, cmap='viridis')
+            ax.axis('off')
+            ax.set_title("Actual")
+
+            # Plotting predicted state in the second row, second position
+            ax = figure.add_subplot(2, num_original_images + 3, num_original_images + 5)
+            ax.imshow(predicted[0], cmap='viridis')
+            ax.axis('off')
+            ax.set_title("Predicted")
+
+            # Plotting uncertainty in the second row, third position
+            ax = figure.add_subplot(2, num_original_images + 3, num_original_images + 6)
+            ax.imshow(uncertainty, cmap='hot', interpolation='nearest')
+            ax.axis('off')
+            ax.set_title("Uncertainty")
+                
+            return figure
+
+        original = np.array([keras.utils.to_categorical(frame, num_classes=4) for frame in self.grid_history[-6:-1]])
+        actual_state = self.grid_history[-1]
+        predicted = model.predict(original.reshape((1, -1, self.subject.school.size, self.subject.school.size, 4)), verbose=0)
+        uncertainty = self.monte_carlo_prediction(model, original.reshape((1, -1, self.subject.school.size, self.subject.school.size, 4)), n_predictions=100)
+
+        figure = create_comparison_figure(original, actual_state, predicted, uncertainty)
+        image = plot_to_image(figure)
+
+        # Log the image to TensorBoard
+        with self.file_writer.as_default():
+            tf.summary.image("Comparison: Original, Actual, Predicted, Uncertainty", image, step=epoch)
+
+    def run_tensorboard(self):
+        tb = program.TensorBoard(plugins=default.get_plugins())
+        tb.configure(argv=[None, '--logdir', self.log_dir])
+        tb.launch()
+        tensorboard_url = 'http://localhost:6006/'
+        print(f"TensorBoard is running at {tensorboard_url}")
+
+        # Start Chrome with Selenium
+        chrome_service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=chrome_service)
+        driver.get(tensorboard_url)
+        print(f"Chrome started at {tensorboard_url}")
+
+        return driver
+
     def display_observation(self, train_model=True):
         if os.path.exists(os.path.join(self.data_dir, "best_model.keras")):
             self.model = keras.models.load_model(os.path.join(self.data_dir, "best_model.keras"), custom_objects={'combined_loss_function': PredictionObserver.combined_loss_function, 'ChannelWiseDropout': PredictionObserver.ChannelWiseDropout})
@@ -1259,6 +1341,10 @@ class PredictionObserver(Observer):
         if train_model:
             self.model = self.train_model(self.model)
             print(f"Trained the model with {len(self.grid_history)-1} data.")
+        elif self.model is not None:
+            print("Model already exists. Skipping training.")
+        else:
+            raise ValueError("Model is None. Please train the model first.")
 
         if self.model is None:
             raise ValueError("Model is None. Please train the model first.")
@@ -1292,16 +1378,18 @@ class PredictionObserver(Observer):
         print(f"SSIM: {ssim_value:.3f}")
         nrmse_value = self.calculate_nrmse(self.grid_history[-1].astype(int), reshaped_grid_state)
         print(f"NRMSE: {nrmse_value:.3f}")
-        
-        tb = program.TensorBoard(plugins=default.get_plugins())
-        tb.configure(argv=[None, '--logdir', self.log_dir])
-        url = tb.launch()
-        print(f"TensorBoard is running at {url}")
-        # Wait for user to close TensorBoard
-        print("Press Enter to stop TensorBoard and exit the script.")
-        builtins.input()
-        # After pressing Enter, the script will continue from here
-        print("Stopping TensorBoard and exiting the script.")
+
+        if train_model:
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(self.run_tensorboard)
+                driver = future.result()
+
+                builtins.input("Press Enter to stop TensorBoard and close the Chrome window.")
+
+                # Close Chrome
+                driver.quit()
+            # After pressing Enter, the script will continue from here
+            print("Stopping TensorBoard and exiting the script.")
 
 
 class FFTAnalysisObserver(Observer):
