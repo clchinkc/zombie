@@ -757,8 +757,8 @@ class PredictionObserver(Observer):
         self.subject = population
         self.subject.attach_observer(self)
         self.data_dir = data_dir
-        self.grid_history = []
         self.load_previous_data()
+        self.current_grid_history = []
         self.log_dir = "./logs/fit" + datetime.now().strftime("%Y%m%d-%H%M%S")
         self.file_writer = tf.summary.create_file_writer(self.log_dir + "/image")
 
@@ -766,12 +766,14 @@ class PredictionObserver(Observer):
         self.grid_history_path = os.path.join(self.data_dir, "grid_history.npz")
         if os.path.exists(self.grid_history_path):
             with np.load(self.grid_history_path) as data:
-                self.grid_history = data["grid_history"].tolist()
-        print(f"Loaded {len(self.grid_history)} grid states from previous simulation.")
+                self.past_grid_history = data["grid_history"].tolist()
+        else:
+            self.past_grid_history = []
+        print(f"Loaded {len(self.past_grid_history)} grid states from previous simulation.")
 
     def update(self) -> None:
         current_grid_state = self.capture_grid_state()
-        self.grid_history.append(current_grid_state)
+        self.current_grid_history.append(current_grid_state)
 
     def capture_grid_state(self):
         grid_state = np.zeros((self.subject.school.size, self.subject.school.size))
@@ -782,10 +784,11 @@ class PredictionObserver(Observer):
         return grid_state
 
     def prepare_data(self, N):
+        combined_grid_history = self.past_grid_history + self.current_grid_history
         X, y = [], []
-        for i in range(N, len(self.grid_history[:-1])):
-            X.append(np.array([keras.utils.to_categorical(frame, num_classes=4) for frame in self.grid_history[i - N:i]]))
-            y.append(np.array(keras.utils.to_categorical(self.grid_history[i], num_classes=4)))
+        for i in range(N, len(combined_grid_history[:-1])):
+            X.append(np.array([keras.utils.to_categorical(frame, num_classes=4) for frame in combined_grid_history[i - N:i]]))
+            y.append(np.array(keras.utils.to_categorical(combined_grid_history[i], num_classes=4)))
         return np.array(X), np.array(y)
 
     def augment_data(self, X, y):
@@ -1149,6 +1152,65 @@ class PredictionObserver(Observer):
 
         return best_params, best_loss
 
+    def log_image_summary(self, epoch, model):
+        def plot_to_image(figure):
+            buf = io.BytesIO()
+            plt.savefig(buf, format='png')
+            plt.close(figure)
+            buf.seek(0)
+            image = tf.image.decode_png(buf.getvalue())
+            image = tf.expand_dims(image, 0)
+            return image
+
+        def create_comparison_figure(original, actual, predicted, uncertainty):
+            # Convert from categorical to scalar values
+            original = np.argmax(original, axis=-1)
+            actual = actual.astype(int)
+            predicted = np.argmax(predicted, axis=-1)
+            uncertainty = np.max(uncertainty, axis=-1)
+            
+            num_original_images = original.shape[0]
+            figure = plt.figure(figsize=(2 * num_original_images, 4), constrained_layout=True)
+
+            # Plotting original states
+            for i in range(num_original_images):
+                ax = figure.add_subplot(2, num_original_images + 3, i + 1)
+                ax.imshow(original[i], cmap='viridis')
+                ax.axis('off')
+                ax.set_title("Original" if i == 0 else "")
+
+            # Plotting actual state in the second row, first position
+            ax = figure.add_subplot(2, num_original_images + 3, num_original_images + 4)
+            ax.imshow(actual, cmap='viridis')
+            ax.axis('off')
+            ax.set_title("Actual")
+
+            # Plotting predicted state in the second row, second position
+            ax = figure.add_subplot(2, num_original_images + 3, num_original_images + 5)
+            ax.imshow(predicted[0], cmap='viridis')
+            ax.axis('off')
+            ax.set_title("Predicted")
+
+            # Plotting uncertainty in the second row, third position
+            ax = figure.add_subplot(2, num_original_images + 3, num_original_images + 6)
+            ax.imshow(uncertainty, cmap='hot', interpolation='nearest')
+            ax.axis('off')
+            ax.set_title("Uncertainty")
+                
+            return figure
+
+        original = np.array([keras.utils.to_categorical(frame, num_classes=4) for frame in self.current_grid_history[-6:-1]])
+        actual_state = self.current_grid_history[-1]
+        predicted = model.predict(original.reshape((1, -1, self.subject.school.size, self.subject.school.size, 4)), verbose=0)
+        uncertainty = self.monte_carlo_prediction(model, original.reshape((1, -1, self.subject.school.size, self.subject.school.size, 4)), n_predictions=100)
+
+        figure = create_comparison_figure(original, actual_state, predicted, uncertainty)
+        image = plot_to_image(figure)
+
+        # Log the image to TensorBoard
+        with self.file_writer.as_default():
+            tf.summary.image("Comparison: Original, Actual, Predicted, Uncertainty", image, step=epoch)
+
     def train_model(self, model, num_steps=5, num_folds=5, batch_size=16, n_basic_samples=100, n_advanced_samples=50):
         # X should have shape (samples, timesteps, width, height, channels)
         # y should have shape (samples, width, height, channels)
@@ -1255,66 +1317,16 @@ class PredictionObserver(Observer):
     def save_simulation_data(self):
         if not os.path.exists(self.data_dir):
             os.makedirs(self.data_dir)
-        np.savez(self.grid_history_path, grid_history=self.grid_history)
-
-    def log_image_summary(self, epoch, model):
-        def plot_to_image(figure):
-            buf = io.BytesIO()
-            plt.savefig(buf, format='png')
-            plt.close(figure)
-            buf.seek(0)
-            image = tf.image.decode_png(buf.getvalue())
-            image = tf.expand_dims(image, 0)
-            return image
-
-        def create_comparison_figure(original, actual, predicted, uncertainty):
-            # Convert from categorical to scalar values
-            original = np.argmax(original, axis=-1)
-            actual = actual.astype(int)
-            predicted = np.argmax(predicted, axis=-1)
-            uncertainty = np.max(uncertainty, axis=-1)
-            
-            num_original_images = original.shape[0]
-            figure = plt.figure(figsize=(2 * num_original_images, 4), constrained_layout=True)
-
-            # Plotting original states
-            for i in range(num_original_images):
-                ax = figure.add_subplot(2, num_original_images + 3, i + 1)
-                ax.imshow(original[i], cmap='viridis')
-                ax.axis('off')
-                ax.set_title("Original" if i == 0 else "")
-
-            # Plotting actual state in the second row, first position
-            ax = figure.add_subplot(2, num_original_images + 3, num_original_images + 4)
-            ax.imshow(actual, cmap='viridis')
-            ax.axis('off')
-            ax.set_title("Actual")
-
-            # Plotting predicted state in the second row, second position
-            ax = figure.add_subplot(2, num_original_images + 3, num_original_images + 5)
-            ax.imshow(predicted[0], cmap='viridis')
-            ax.axis('off')
-            ax.set_title("Predicted")
-
-            # Plotting uncertainty in the second row, third position
-            ax = figure.add_subplot(2, num_original_images + 3, num_original_images + 6)
-            ax.imshow(uncertainty, cmap='hot', interpolation='nearest')
-            ax.axis('off')
-            ax.set_title("Uncertainty")
-                
-            return figure
-
-        original = np.array([keras.utils.to_categorical(frame, num_classes=4) for frame in self.grid_history[-6:-1]])
-        actual_state = self.grid_history[-1]
-        predicted = model.predict(original.reshape((1, -1, self.subject.school.size, self.subject.school.size, 4)), verbose=0)
-        uncertainty = self.monte_carlo_prediction(model, original.reshape((1, -1, self.subject.school.size, self.subject.school.size, 4)), n_predictions=100)
-
-        figure = create_comparison_figure(original, actual_state, predicted, uncertainty)
-        image = plot_to_image(figure)
-
-        # Log the image to TensorBoard
-        with self.file_writer.as_default():
-            tf.summary.image("Comparison: Original, Actual, Predicted, Uncertainty", image, step=epoch)
+        # Only save current grid history if it has multiple states
+        if len(self.current_grid_history) > 1 and any(
+            not np.array_equal(self.current_grid_history[i], self.current_grid_history[i + 1])
+            for i in range(len(self.current_grid_history) - 1)
+        ):
+            self.past_grid_history.extend(self.current_grid_history)
+            np.savez(self.grid_history_path, grid_history=self.past_grid_history)
+            print(f"Saved {len(self.past_grid_history)} states to {self.grid_history_path}")
+        else:
+            print("No new states to save. There are {self.past_grid_history} states in the history.")
 
     def run_tensorboard(self):
         tb = program.TensorBoard(plugins=default.get_plugins())
@@ -1340,7 +1352,7 @@ class PredictionObserver(Observer):
             print("No saved model found.")
         if train_model:
             self.model = self.train_model(self.model)
-            print(f"Trained the model with {len(self.grid_history)-1} data.")
+            print(f"Trained the model with {len(self.current_grid_history)+len(self.past_grid_history)-1} states.")
         elif self.model is not None:
             print("Model already exists. Skipping training.")
         else:
@@ -1353,7 +1365,7 @@ class PredictionObserver(Observer):
 
         self.save_simulation_data()
 
-        past_grid_state = self.grid_history[-6:-1]
+        past_grid_state = self.current_grid_history[-6:-1]
         argmax_past_grid_state = keras.utils.to_categorical(past_grid_state, num_classes=4)
         input_data = np.array(argmax_past_grid_state).reshape((1, -1, self.subject.school.size, self.subject.school.size, 4))
         predicted_grid_state = self.model.predict(input_data, verbose=0)
@@ -1363,10 +1375,10 @@ class PredictionObserver(Observer):
         prediction_std = self.monte_carlo_prediction(self.model, input_data, n_predictions=100)
         state_uncertainty = np.max(prediction_std, axis=-1).reshape((self.subject.school.size, self.subject.school.size))
         
-        self.plot_combined_heatmaps(past_grid_state, self.grid_history[-1].astype(int), reshaped_grid_state, state_uncertainty)
+        self.plot_combined_heatmaps(past_grid_state, self.current_grid_history[-1].astype(int), reshaped_grid_state, state_uncertainty)
         
         print("Actual State:")
-        print(self.grid_history[-1].astype(int))
+        print(self.current_grid_history[-1].astype(int))
         print("Predicted State:")
         reformatted_grid_state = np.round(reshaped_grid_state, 1)
         print(reformatted_grid_state)
@@ -1374,9 +1386,9 @@ class PredictionObserver(Observer):
         reformatted_state_uncertainty = np.array2string(state_uncertainty, formatter={'float_kind':lambda x: "{:.0e}".format(x)})
         print(reformatted_state_uncertainty)
         
-        ssim_value = self.calculate_ssim(self.grid_history[-1].astype(int), reshaped_grid_state)
+        ssim_value = self.calculate_ssim(self.current_grid_history[-1].astype(int), reshaped_grid_state)
         print(f"SSIM: {ssim_value:.3f}")
-        nrmse_value = self.calculate_nrmse(self.grid_history[-1].astype(int), reshaped_grid_state)
+        nrmse_value = self.calculate_nrmse(self.current_grid_history[-1].astype(int), reshaped_grid_state)
         print(f"NRMSE: {nrmse_value:.3f}")
 
         if train_model:
