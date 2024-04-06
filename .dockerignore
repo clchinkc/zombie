@@ -1,0 +1,6 @@
+# Ignore everything
+**
+
+# Allow only the necessary files
+!src/zombie_simulation/**
+!requirements.txt

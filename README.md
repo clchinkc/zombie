@@ -14,21 +14,27 @@ This project simulates a zombie apocalypse in a school setting, employing variou
 - **Visualization and Analysis:** Includes graphical tools (Matplotlib, Seaborn, Pygame, Tkinter) for visualizing the simulation progress and outcomes.
 - **Machine Learning Analysis:** Applies predictive modeling to forecast future states of the simulation.
 
+
 ## Installation & Usage
 
-Ensure you have Python 3.8 or newer installed. Clone the repository and install the required dependencies:
+Ensure you have Python 3.8 or newer installed for manual setup. For Docker, Docker must be installed on your system.
 
-```bash
-git clone https://github.com/clchinkc/zombie.git
-cd zombie
-pip install -r requirements.txt
-```
+### Manual Installation
 
-Run the simulation with the following command:
+1. Clone the repository and install the required dependencies:
 
-```bash
-python main.py
-```
+    ```bash
+    git clone https://github.com/clchinkc/zombie.git
+    pip install -r requirements.txt
+    ```
+
+2. Run the simulation:
+
+    ```bash
+    python main.py
+    ```
+
+### Installation Through TestPyPI
 
 You may also install a stable release through TestPyPI:
 
@@ -36,8 +42,26 @@ You may also install a stable release through TestPyPI:
 python -m pip install --index-url https://test.pypi.org/simple/ --no-deps zombie_simulation
 ```
 
+### Using Docker
 
-### Components
+To run the simulation using Docker, follow these steps:
+
+1. Build the Docker Image:
+
+    ```bash
+    docker build -t zombie-simulation .
+    ```
+
+2. Run the Simulation in a Docker Container:
+
+    ```bash
+    docker run -it --rm zombie-simulation
+    ```
+
+    Note that the docker container will not display the graphical output. To view the graphical output, you can run the simulation locally.
+
+
+## Components
 
 - **Person Class:** Models an individual within the school, including attributes like location, state, and health.
 - **Zombie Class:** Represents zombies with specific behaviors like attacking and infecting.
@@ -45,7 +69,7 @@ python -m pip install --index-url https://test.pypi.org/simple/ --no-deps zombie
 - **Simulation Function:** Initializes and runs the simulation, updating and tracking the progress.
 - **Visualization and Analysis Tools:** Provide graphical representations and analytical insights into the simulation's progression.
 
-### Observers
+## Observers
 
 The project includes several observers for analysis and visualization:
 

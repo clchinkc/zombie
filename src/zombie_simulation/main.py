@@ -32,14 +32,14 @@ def main():
     school_sim = Population(school_size=10, population_size=10)
 
     # create Observer objects
-    # simulation_observer = SimulationObserver(school_sim)
-    # simulation_animator = SimulationAnimator(school_sim)
-    # plotly_animator = PlotlyAnimator(school_sim)
-    # matplotlib_animator = MatplotlibAnimator(school_sim)
-    # tkinter_observer = TkinterObserver(school_sim)
-    # prediction_observer = PredictionObserver(school_sim)
-    # fft_observer = FFTAnalysisObserver(school_sim)
-    # pygame_observer = PygameObserver(school_sim)
+    # simulation_observer = SimulationObserver(school_sim)    # matplotlib not working in docker
+    # simulation_animator = SimulationAnimator(school_sim)    # matplotlib not working in docker
+    # plotly_animator = PlotlyAnimator(school_sim)    # plotly not working in docker
+    # matplotlib_animator = MatplotlibAnimator(school_sim)    # matplotlib not working in docker
+    # tkinter_observer = TkinterObserver(school_sim)  # tkinter not working in docker
+    # prediction_observer = PredictionObserver(school_sim)    # selenium and matplotlib not working in docker
+    # fft_observer = FFTAnalysisObserver(school_sim)    # matplotlib not working in docker
+    # pygame_observer = PygameObserver(school_sim)    # pygame not working in docker
     gan_observer = GANObserver(school_sim)
 
     # run the population for a given time period

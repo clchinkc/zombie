@@ -955,7 +955,7 @@ class PredictionObserver(Observer):
 
         return keras.layers.Lambda(lambda x: dropout_func(x))
 
-    @keras.saving.register_keras_serializable()
+    @keras.utils.register_keras_serializable()
     class ChannelWiseDropout(keras.layers.Layer):
         def __init__(self, rate, **kwargs):
             super().__init__(**kwargs)
